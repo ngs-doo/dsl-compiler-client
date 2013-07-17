@@ -1,0 +1,78 @@
+# NAME
+  DSL Platform Compiler - CommandLine Client
+
+# SYNOPSIS
+  java -jar dsl-clc.jar [option1] [option2] # defaults to the "update" action
+  java -jar dsl-clc.jar [option1] [option2] ... [action]
+
+# DESCRIPTION
+  The CommandLine Client transmits the DSL files over to the DSL Platform,
+  schedules system upgrades and returns compiled sources and/or binaries.
+
+# OPTIONS
+  -h, --help
+        Prints out this help.
+
+  -u<username>, --username=<username>
+  -p<password>, --password=<password>
+        Credentials do not need to be provided - the client will attempt to
+        read the last credentials from cache if present, and prompt otherwise.
+
+  -i<project ID>, --project-id=<project ID>
+        Unique identifier of your project, you can find it on
+        https://panel.dsl-platform.com/
+
+  -n<namespace>, --namespace=<namespace>
+        Overrides the default (empty) package prefix for generated sources
+
+  -d<dsl path>, --dsl-path=<dsl path>
+        Path to the directory which will be recursively scanned for
+        DSL files (by default, only *.dsl files will be read)
+
+  -o<output path>, --output-path=<output path>
+        Generated code and binaries will be anchored to this path.
+        WARNING: This path will be managed by the CommandLine Client,
+        and should not be used for other purposes to prevent data loss!
+
+  -f, --project-ini-path
+        Path to the project.ini file, allowing most (or all) of the
+        parameters to be read from a single source.
+
+  --
+        Stops parsing arguments after this marker.
+
+# ACTIONS
+  To manually override the default action, use one of the following:
+
+  parse
+        Parses DSL for mistakes and compiles embedded expressions.
+
+  diff
+        Inspects differences between your last successful update and the present state.
+
+  update (default)
+        Upgrades your database schema, updates the application server and compiles the newest code libraries.
+
+# ADVANCED OPTIONS
+
+  --skip-diff
+        Skips the confirmation on the diff screen during update
+
+  --confirm-unsafe
+        Allows automatic confirmation of unsafe schema migrations
+
+  -l<language>, --language=<language>
+        Language which should be targeted by the compilation.
+        If multiple languages should be targeted, separate them with a comma.
+
+  -c<cache path>, --cache-path=<cache path>
+        Path where the Commandline Client will cache authentication information, to allow for
+        username/password rememberance. Defaults to "~/.dsl-platform/".
+
+# ADVANCED ACTIONS - USE WITH CAUTION!
+
+  clean
+        Cleans all the data from your project database, this action is irreversible
+  clone
+        Creates a copy of your project, cloning the current database into a separate one.
+        A new project will be represented by the returned project ID.
