@@ -1,6 +1,3 @@
-/**
- * Copyright (C) 2013 Nova Generacija Softvera d.o.o. (HR), <https://dsl-platform.com/>
- */
 package com.dslplatform.compiler.client.api;
 
 import java.io.ByteArrayOutputStream;
@@ -20,10 +17,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Environment;
 import com.dslplatform.compiler.client.api.params.Param;
 import com.dslplatform.compiler.client.api.params.Target;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class ApiCall {
     private static final String API_URL;
