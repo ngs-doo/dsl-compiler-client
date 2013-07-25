@@ -1,11 +1,8 @@
-/**
- * Copyright (C) 2013 Nova Generacija Softvera d.o.o. (HR), <https://dsl-platform.com/>
- */
 package com.dslplatform.compiler.client.api.params;
 
 import java.nio.charset.Charset;
 
-import org.apache.commons.codec.binary.Base64;
+import com.dslplatform.compiler.client.api.commons.codec.binary.Base64;
 
 public class Credentials implements Auth {
     public final String user;
