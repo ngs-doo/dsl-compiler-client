@@ -9,9 +9,9 @@ import java.util.SortedMap;
 import java.util.regex.Pattern;
 
 import com.dslplatform.compiler.client.api.commons.FileLoader;
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.params.Environment;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class DSLLoader {
     private final Logger logger;

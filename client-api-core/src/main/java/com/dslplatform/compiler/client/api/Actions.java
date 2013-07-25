@@ -2,7 +2,6 @@ package com.dslplatform.compiler.client.api;
 
 import java.io.IOException;
 
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Action;
 import com.dslplatform.compiler.client.api.params.Auth;
 import com.dslplatform.compiler.client.api.params.DSL;
@@ -15,6 +14,7 @@ import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseProcessor;
 import com.dslplatform.compiler.client.api.processors.UpdateProcessor;
 import com.dslplatform.compiler.client.api.processors.UpdateUnsafeProcessor;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class Actions {
     private final Logger logger;

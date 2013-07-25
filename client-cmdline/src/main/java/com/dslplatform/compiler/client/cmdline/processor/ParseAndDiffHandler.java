@@ -3,17 +3,17 @@ package com.dslplatform.compiler.client.cmdline.processor;
 import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Arguments;
 import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
-import com.dslplatform.compiler.client.cmdline.login.Login;
-import com.dslplatform.compiler.client.cmdline.output.Output;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
-import com.dslplatform.compiler.client.cmdline.prompt.Prompt;
+import com.dslplatform.compiler.client.io.Login;
+import com.dslplatform.compiler.client.io.Output;
+import com.dslplatform.compiler.client.io.Prompt;
+import com.dslplatform.compiler.client.io.Logger;
 
-public class ParseAndDiffHandler extends HandlerAbstract {
+public class ParseAndDiffHandler extends BaseHandler {
     private final Logger logger;
     private final Prompt prompt;
     private final Output output;
@@ -35,10 +35,10 @@ public class ParseAndDiffHandler extends HandlerAbstract {
     }
 
     public void apply(final Arguments arguments) throws IOException {
-        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
         final DSL dsl = arguments.getDsl();
-        final ProjectID projectID = getOrPromptProjectID(arguments);
+        final ProjectID projectID = arguments.getProjectID();
 
+        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
         final ParseAndDiffProcessor pdp = actions.parseAndDiff(authProvider.getAuth(), dsl, projectID);
 
         if (pdp.isAuthorized()) {

@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import com.dslplatform.compiler.client.api.commons.Hash;
 
 public class HashBodyMapTool {
+
     public static Map<String, PathAction> compareHashBodyMaps(
             final Map<Hash, SortedSet<String>> oldBodies,
             final Map<Hash, SortedSet<String>> newBodies) {
@@ -35,12 +36,13 @@ public class HashBodyMapTool {
             final Hash destinationHashBody = newEntry.getKey();
 
             for (final String destinationPath : destinationPaths) {
+
                 final Hash sourceHashBody = oldMap.get(destinationPath);
 
+                // old file exists at new file path
                 if (sourceHashBody != null) {
-                    // old file exists at new file path
+                    // check if file was changed
                     if (destinationHashBody.equals(sourceHashBody)) {
-                        // check if file was changed
                         ret.put(destinationPath, new PathAction(
                                 destinationPath, null, sourceHashBody,
                                 ChangeAction.NO_CHANGE));

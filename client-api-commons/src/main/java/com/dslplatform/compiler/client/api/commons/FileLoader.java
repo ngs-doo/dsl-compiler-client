@@ -1,6 +1,3 @@
-/**
- * Copyright (C) 2013 Nova Generacija Softvera d.o.o. (HR), <https://dsl-platform.com/>
- */
 package com.dslplatform.compiler.client.api.commons;
 
 import java.io.File;
@@ -14,9 +11,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
-
-import com.dslplatform.compiler.client.api.logging.Logger;
+import com.dslplatform.compiler.client.api.commons.io.FileUtils;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class FileLoader {
     /** Used to skip already loaded files */
@@ -38,7 +34,7 @@ public class FileLoader {
     private static final String DEFAULT_PATTERN = ".*";
 
     public FileLoader addPath(final String path) throws IOException {
-        return addPath( path, DEFAULT_PATTERN);
+        return addPath(path, DEFAULT_PATTERN);
     }
 
     public FileLoader addPath(final String path, final String pattern) throws IOException {
@@ -46,7 +42,7 @@ public class FileLoader {
     }
 
     public FileLoader addPath(final String rootPath, final String path, final Pattern pattern) throws IOException {
-        logger.trace("Adding file: " + path);
+        logger.debug("Adding file: " + path);
         final File file = new File(path);
 
         if (file.isDirectory()) {

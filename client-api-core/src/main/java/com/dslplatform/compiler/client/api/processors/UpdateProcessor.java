@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.api.processors;
 
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.transport.Message;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class UpdateProcessor extends UpdateUnsafeProcessor {
     public UpdateProcessor(final Logger logger) {
@@ -19,17 +19,14 @@ public class UpdateProcessor extends UpdateUnsafeProcessor {
     }
 
     @Override
-    public void process(final Message message) {
-        logger.trace("Received message: " + message.messageType + " " + message.info);
-
+    public boolean processInner(final Message message) {
         switch (message.messageType) {
             case CONFIRM:
                 confirmation = message.info;
-                break;
+                return true;
 
             default:
-                super.process(message);
-                break;
+                return super.processInner(message);
         }
     }
 }

@@ -2,7 +2,8 @@ package com.dslplatform.compiler.client.api.commons;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import org.apache.commons.codec.digest.DigestUtils;
+
+import com.dslplatform.compiler.client.api.commons.codec.digest.DigestUtils;
 
 public class Hash implements Serializable {
     public final byte[] hash;
