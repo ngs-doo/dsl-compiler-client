@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.commons.io;
+package com.dslplatform.compiler.client.api.commons.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
