@@ -1,21 +1,23 @@
 package com.dslplatform.compiler.client.cmdline.params;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-
-import com.dslplatform.compiler.client.api.logging.Logger;
+import com.dslplatform.compiler.client.api.commons.io.IOUtils;
 import com.dslplatform.compiler.client.api.params.ArgumentsValidator;
+import com.dslplatform.compiler.client.io.Logger;
+import com.dslplatform.compiler.client.io.Output;
 
 public class ArgumentsParser extends ArgumentsValidator {
-    private Logger logger;
+    private final Logger logger;
+    private final Output output;
 
-    public ArgumentsParser(final Logger logger, final String[] args) throws IOException {
+    public ArgumentsParser(
+            final Logger logger,
+            final Output output,
+            final String[] args) throws IOException {
         super(logger);
         this.logger = logger;
+        this.output = output;
         parseArguments(args);
     }
 
@@ -210,8 +212,7 @@ public class ArgumentsParser extends ArgumentsValidator {
                             throw new IllegalArgumentException("Missing project ini path argument!");
                         logger.trace("Project ini path as empty, reading next argument: " + projectIniPath);
                     }
-
-                    setProjectIniParams(projectIniPath);
+                    setProjectIniPath(projectIniPath);
                     continue;
                 }
             }
@@ -221,70 +222,6 @@ public class ArgumentsParser extends ArgumentsValidator {
             // parse action, new arguments are joined with old ones (specific combinations of multiple actions are allowed)
             logger.trace("No specific handler has been found, assuming that this parameter is an action: " + arg);
             addActions(arg);
-        }
-    }
-
-    // =================================================================================================================
-
-    private void setProjectIniParams(final String projectIniPath) throws IOException {
-        final Properties properties = new Properties();
-
-        {
-            final InputStream is = new FileInputStream(projectIniPath);
-            try {
-                properties.load(is);
-                logger.trace("Successfully loaded project ini properties");
-            }
-            catch (final IOException e) {
-                throw new IOException("An error occured whilst reading the project ini configuration", e);
-            }
-            finally {
-                is.close();
-            }
-        }
-
-        if (Boolean.parseBoolean(properties.getProperty("skip-diff"))) {
-            logger.trace("Parsed --skip-diff parameter, setting skip diff to 'true'");
-            setSkipDiff(true);
-        }
-
-        if (Boolean.parseBoolean(properties.getProperty("confirm-unsafe"))) {
-            logger.trace("Parsed --confirm-unsafe parameter, setting confirm unsafe required to 'false'");
-            setConfirmUnsafeRequired(false);
-        }
-
-        {
-            final String username = properties.getProperty("username");
-            logger.trace("Parsed username parameter, overwriting old username: " + username);
-            if (username != null) setUsername(username);
-        }{
-            final String password = properties.getProperty("password");
-            logger.trace("Parsed password parameter, overwriting old password: ****");
-            if (password != null) setPassword(password);
-        }{
-            final String projectID = properties.getProperty("project-id");
-            logger.trace("Parsed project ID parameter, overwriting old project ID: " + projectID);
-            if (projectID != null) setProjectID(projectID);
-        }{
-            final String languages = properties.getProperty("language");
-            logger.trace("Parsed language parameter, adding languages to the list: " + languages);
-            if (languages != null) addLanguages(languages);
-        }{
-            final String packageName = properties.getProperty("namespace");
-            logger.trace("Parsed namespace parameter, overwriting old namespace: " + packageName);
-            if (packageName != null) setPackageName(packageName);
-        }{
-            final String dslPath = properties.getProperty("dsl-path");
-            logger.trace("Parsed DSL path parameter, adding DSL path to the list: " + dslPath);
-            if (dslPath != null) addDslPath(dslPath);
-        }{
-            final String outputPath = properties.getProperty("output-path");
-            logger.trace("Parsed output path parameter, overwriting old output path: " + outputPath);
-            if (outputPath != null) setOutputPath(outputPath);
-        }{
-            final String cachePath = properties.getProperty("cache-path");
-            logger.trace("Parsed cache path parameter, overwriting old cache path: " + cachePath);
-            if (cachePath != null) setCachePath(cachePath);
         }
     }
 
@@ -306,13 +243,13 @@ public class ArgumentsParser extends ArgumentsValidator {
 
     // =================================================================================================================
 
-    private static void exitWithHelp() {
+    private void exitWithHelp() {
         try {
             final String helpText = new String(IOUtils.toByteArray(
                     ArgumentsParser.class.getResourceAsStream("/dsl-clc-help.txt")), "UTF-8");
-            System.out.println(helpText);
+            output.println(helpText);
         } catch (final Exception e) {
-            System.out.println("Could not display the help file!");
+            output.println("Could not display the help file!");
         }
         System.exit(0);
     }

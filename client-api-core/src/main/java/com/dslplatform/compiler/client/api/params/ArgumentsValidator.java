@@ -1,12 +1,18 @@
 package com.dslplatform.compiler.client.api.params;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashSet;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
 import com.dslplatform.compiler.client.api.DSLLoader;
-import com.dslplatform.compiler.client.api.logging.Logger;
+import com.dslplatform.compiler.client.api.commons.PathExpander;
+import com.dslplatform.compiler.client.io.Logger;
+import com.dslplatform.compiler.client.io.Logger.Level;
 
 public abstract class ArgumentsValidator implements Arguments {
     /** If no action is specified, default to UPDATE */
@@ -22,7 +28,7 @@ public abstract class ArgumentsValidator implements Arguments {
     private static final String DEFAULT_CACHE_PATH = "~/.dsl-platform";
 
     /** By default, we aren't logging anything */
-    private static final Logger.Level DEFAULT_LOGGING_LEVEL = Logger.Level.NONE;
+    private static final Logger.Level DEFAULT_LOGGING_LEVEL = Logger.Level.ERROR;
 
     // =================================================================================================================
 
@@ -39,16 +45,20 @@ public abstract class ArgumentsValidator implements Arguments {
 
     private final Set<String> dslPaths = new LinkedHashSet<String>();
     private String outputPath = null;
-    private String cachePath = null;
 
+    private String cachePath = null;
     private String loggingLevel = null;
+
+    private String projectIniPath = null;
 
     // =================================================================================================================
 
     private final Logger logger;
+    private final PathExpander pathExpander;
 
     public ArgumentsValidator(final Logger logger) {
-        this.logger = logger;;
+        this.logger = logger;
+        this.pathExpander = new PathExpander(logger);
     }
 
     private Action consollidateActions() {
@@ -134,7 +144,9 @@ public abstract class ArgumentsValidator implements Arguments {
 
     @Override
     public ProjectID getProjectID() {
-        if (projectID == null) return null;
+        if (projectID == null) {
+            throw new NullPointerException("Project ID was not defined!");
+        }
 
         try {
             return new ProjectID(UUID.fromString(projectID));
@@ -200,23 +212,29 @@ public abstract class ArgumentsValidator implements Arguments {
     }
 
     @Override
-    public String getOutputPath() {
-        if (outputPath == null)
-            throw new IllegalArgumentException("Output path has not been specified!");
-
-        return outputPath;
-    }
-
-    @Override
-    public String getCachePath() {
-        if (cachePath == null) {
-            logger.debug("No cache path was specified, defaulting to: " + DEFAULT_CACHE_PATH);
-            return DEFAULT_CACHE_PATH;
+    public File getOutputPath() {
+        if (outputPath != null) {
+            return pathExpander.expandPath(outputPath);
         }
-        return cachePath;
+
+        throw new NullPointerException("Output path was not defined!");
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public File getCachePath() {
+        final String cachePath;
+        if (this.cachePath == null) {
+            logger.debug("No cache path was specified, defaulting to: " + DEFAULT_CACHE_PATH);
+            cachePath = DEFAULT_CACHE_PATH;
+        }
+        else {
+            cachePath = this.cachePath;
+        }
+
+        return pathExpander.expandPath(cachePath);
+    }
 
     @Override
     public Logger.Level getLoggingLevel() {
@@ -235,6 +253,14 @@ public abstract class ArgumentsValidator implements Arguments {
         return level;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public File getProjectIniPath() {
+        return projectIniPath == null
+                ? null
+                : pathExpander.expandPath(projectIniPath);
+    }
 
     // =================================================================================================================
 
@@ -298,6 +324,8 @@ public abstract class ArgumentsValidator implements Arguments {
         this.outputPath = outputPath;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     protected void setCachePath(final String cachePath) {
         logger.debug("Setting cache path: " + cachePath);
         this.cachePath = cachePath;
@@ -306,5 +334,78 @@ public abstract class ArgumentsValidator implements Arguments {
     protected void setLoggingLevel(final String loggingLevel) {
         logger.debug("Setting logger level: " + loggingLevel);
         this.loggingLevel = loggingLevel;
+        logger.setLevel(Level.valueOf(loggingLevel.toUpperCase()));
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    protected void setProjectIniPath(final String projectIniPath) throws IOException {
+        this.projectIniPath = projectIniPath;
+
+        final Properties properties = new Properties();
+        {
+            final InputStream is = new FileInputStream(getProjectIniPath());
+            try {
+                properties.load(is);
+                logger.debug("Successfully loaded project ini properties");
+            }
+            catch (final IOException e) {
+                throw new IOException("An error occured whilst reading the project ini configuration", e);
+            }
+            finally {
+                is.close();
+            }
+        }
+
+        if (Boolean.parseBoolean(properties.getProperty("skip-diff"))) {
+            logger.debug("Parsed --skip-diff parameter, setting skip diff to 'true'");
+            setSkipDiff(true);
+        }
+
+        if (Boolean.parseBoolean(properties.getProperty("confirm-unsafe"))) {
+            logger.debug("Parsed --confirm-unsafe parameter, setting confirm unsafe required to 'false'");
+            setConfirmUnsafeRequired(false);
+        }
+
+        {
+            final String username = properties.getProperty("username");
+            logger.debug("Parsed username parameter, overwriting old username: " + username);
+            if (username != null) setUsername(username);
+        }{
+            final String password = properties.getProperty("password");
+            logger.debug("Parsed password parameter, overwriting old password: ****");
+            if (password != null) setPassword(password);
+        }{
+            final String projectID = properties.getProperty("project-id");
+            logger.debug("Parsed project ID parameter, overwriting old project ID: " + projectID);
+            if (projectID != null) setProjectID(projectID);
+        }
+
+        {
+            final String languages = properties.getProperty("language");
+            logger.debug("Parsed language parameter, adding languages to the list: " + languages);
+            if (languages != null) addLanguages(languages);
+        }{
+            final String packageName = properties.getProperty("namespace");
+            logger.debug("Parsed namespace parameter, overwriting old namespace: " + packageName);
+            if (packageName != null) setPackageName(packageName);
+        }
+
+        {
+            final String dslPath = properties.getProperty("dsl-path");
+            logger.debug("Parsed DSL path parameter, adding DSL path to the list: " + dslPath);
+            if (dslPath != null) addDslPath(dslPath);
+        }{
+            final String outputPath = properties.getProperty("output-path");
+            logger.debug("Parsed output path parameter, overwriting old output path: " + outputPath);
+            if (outputPath != null) setOutputPath(outputPath);
+        }
+
+        {
+            final String cachePath = properties.getProperty("cache-path");
+            logger.debug("Parsed cache path parameter, overwriting old cache path: " + cachePath);
+            if (cachePath != null) setCachePath(cachePath);
+        }
+    }
+
 }

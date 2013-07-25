@@ -1,16 +1,16 @@
 package com.dslplatform.compiler.client.cmdline.params;
 
+import java.io.File;
 import java.util.UUID;
 
 import com.dslplatform.compiler.client.api.Cache;
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Arguments;
 import com.dslplatform.compiler.client.api.params.Auth;
 import com.dslplatform.compiler.client.api.params.Credentials;
-import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.api.params.Token;
-import com.dslplatform.compiler.client.cmdline.login.Login;
-import com.dslplatform.compiler.client.cmdline.prompt.Prompt;
+import com.dslplatform.compiler.client.io.Logger;
+import com.dslplatform.compiler.client.io.Login;
+import com.dslplatform.compiler.client.io.Prompt;
 
 public class AuthProvider {
     private final Logger logger;
@@ -48,10 +48,10 @@ public class AuthProvider {
     }
 
     private Credentials makeCredentials() {
-        logger.trace("Attempting to make credentials from arguments ...");
+        logger.debug("Attempting to make credentials from arguments ...");
 
         final String username = arguments.getUsername();
-        logger.trace("AuthProvider received username from arguments: " + username);
+        logger.debug("AuthProvider received username from arguments: " + username);
 
         final String password = arguments.getPassword();
         logger.trace("AuthProvider received password from arguments: " + (password == null ? null : "****"));
@@ -64,16 +64,29 @@ public class AuthProvider {
         return new Credentials(username, password);
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+
     private Cache getCache() {
-        final String cachePath = arguments.getCachePath();
-        logger.trace("AuthProvider received cache path from arguments: " + cachePath);
+        final File cachePath = arguments.getCachePath();
+        logger.debug("AuthProvider received cache path from arguments: " + cachePath);
 
-        final ProjectID projectID = arguments.getProjectID();
-        final UUID pid = projectID == null ? null : projectID.projectID;
-        logger.trace("AuthProvider received project ID from arguments: " + pid);
+        UUID projectID = null;
+        try {
+            projectID = arguments.getProjectID().projectID;
+            logger.debug("AuthProvider received project ID from arguments: " + projectID);
+        }
+        catch (final NullPointerException e) {}
 
-        final Cache cache = new Cache(logger, cachePath, pid);
+        final Cache cache = new Cache(logger, cachePath, projectID);
         return cache;
+    }
+
+    public boolean isToken() {
+        return auth instanceof Token;
+    }
+
+    public void setToken(final byte[] token) {
+        getCache().set(token);
     }
 
     private Token readToken() {
@@ -90,20 +103,14 @@ public class AuthProvider {
         return new Token(cookie);
     }
 
-    private Credentials promptCredentials() {
-        logger.trace("Token authentication failed, trying to prompt for missing info ...");
-        return login.acquireCredentials(arguments.getUsername(), arguments.getPassword());
-    }
-
-    public boolean isToken() {
-        return auth instanceof Token;
-    }
-
-    public void setToken(final byte[] token) {
-        getCache().set(token);
-    }
-
     public void removeToken() {
         getCache().delete();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private Credentials promptCredentials() {
+        logger.debug("Token authentication failed, trying to prompt for missing info ...");
+        return login.acquireCredentials(arguments.getUsername(), arguments.getPassword());
     }
 }
