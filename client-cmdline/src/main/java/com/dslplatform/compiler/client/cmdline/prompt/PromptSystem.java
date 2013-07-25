@@ -4,7 +4,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class PromptReader implements Prompt {
+import com.dslplatform.compiler.client.io.Output;
+import com.dslplatform.compiler.client.io.Prompt;
+
+public class PromptSystem implements Prompt {
+    private final Output output;
+
+    public PromptSystem(final Output output) {
+        this.output = output;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
     @Override
     public char readCharacter(final String message, final String allowed) {
         while(true) {
@@ -18,12 +32,11 @@ public class PromptReader implements Prompt {
 
     @Override
     public String readLine(final String message, final Character mask) {
-        System.out.print(message);
+        output.print(message);
         return readBuffered(mask);
     }
 
     protected String readBuffered(final Character mask) {
-
         final BufferedReader br = new BufferedReader(
             new InputStreamReader(System.in));
         try {

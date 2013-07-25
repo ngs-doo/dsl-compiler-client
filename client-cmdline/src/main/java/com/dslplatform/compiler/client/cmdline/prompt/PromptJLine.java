@@ -1,19 +1,44 @@
-/*
 package com.dslplatform.compiler.client.cmdline.prompt;
+
+import java.io.IOException;
 
 import jline.console.ConsoleReader;
 
+import com.dslplatform.compiler.client.io.Output;
+import com.dslplatform.compiler.client.io.Prompt;
+
 public class PromptJLine implements Prompt {
+    private final Output output;
+
+    public PromptJLine(final Output output) {
+        this.output = output;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        try {
+            Class.forName("jline.console.ConsoleReader");
+            return true;
+        }
+        catch (final ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     @Override
     public char readCharacter(final String message, final String allowed) {
         try {
-            System.out.print(message);
+            output.print(message);
             final ConsoleReader console = new ConsoleReader();
-            return (char) console.readCharacter(allowed.toCharArray());
+            try {
+                return (char) console.readCharacter(allowed.toCharArray());
+            }
+            finally {
+                console.shutdown();
+            }
         }
-        catch (final Throwable t) {
-            t.printStackTrace();
-            throw new IllegalArgumentException(t);
+        catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -21,13 +46,17 @@ public class PromptJLine implements Prompt {
     public String readLine(final String message, final Character mask) {
         try {
             final ConsoleReader console = new ConsoleReader();
-            return mask != null
-                    ? console.readLine(message, mask)
-                    : console.readLine(message);
+            try {
+                return mask != null
+                        ? console.readLine(message, mask)
+                        : console.readLine(message);
+            }
+            finally {
+                console.shutdown();
+            }
         }
-        catch (final Throwable t) {
-            throw new IllegalArgumentException(t);
+        catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
-*/

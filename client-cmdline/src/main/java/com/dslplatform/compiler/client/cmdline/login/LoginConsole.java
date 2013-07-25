@@ -1,8 +1,9 @@
 package com.dslplatform.compiler.client.cmdline.login;
 
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Credentials;
-import com.dslplatform.compiler.client.cmdline.prompt.Prompt;
+import com.dslplatform.compiler.client.io.Logger;
+import com.dslplatform.compiler.client.io.Login;
+import com.dslplatform.compiler.client.io.Prompt;
 
 public class LoginConsole implements Login {
     private final Logger logger;
@@ -29,6 +30,10 @@ public class LoginConsole implements Login {
         }
     }
 
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
 
     @Override
     public Credentials acquireCredentials(final String defaultUsername, final String defaultPassword) {

@@ -26,7 +26,7 @@ public class Main {
                     System.out.println("Could not launch client version: " + version);
                 }
                 else {
-                    System.out.println(e.getMessage());
+                    System.out.println("Error: " + e.getMessage());
                 }
                 System.exit(-1);
             }

@@ -8,13 +8,13 @@ import javax.swing.SwingWorker;
 
 import com.dslplatform.compiler.client.api.ApiCall;
 import com.dslplatform.compiler.client.api.RunningTask;
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.api.params.Action;
 import com.dslplatform.compiler.client.api.params.Credentials;
 import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.transport.Message;
 import com.dslplatform.compiler.client.api.transport.MessageType;
 import com.dslplatform.compiler.client.gui.windows.login.LoginResponse.Status;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
     private final Logger logger;
@@ -39,7 +39,7 @@ public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
             final HashMap<String, String> mockDSL = new HashMap<String, String>();
             mockDSL.put("auth.dsl", "module Auth;");
 
-            publish(new LoginResponse(Status.PENDINDG, "Connecting to the server ..."));
+            publish(new LoginResponse(Status.PENDING, "Connecting to the server ..."));
 
             final RunningTask rt = apiCall.call(
                 Action.PARSE,
@@ -47,7 +47,7 @@ public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
                 new DSL(mockDSL)
             );
 
-            publish(new LoginResponse(Status.PENDINDG, "Connection established, authenticating ..."));
+            publish(new LoginResponse(Status.PENDING, "Connection established, authenticating ..."));
 
             for(final Message message : rt.getMessages()) {
                 if (message.messageType == MessageType.SUCCESS) {

@@ -1,9 +1,12 @@
-package com.dslplatform.compiler.client.api.logging;
+package com.dslplatform.compiler.client.io;
 
 public interface Logger {
     public static enum Level {
-        ALL, TRACE, DEBUG, INFO, WARN, ERROR, NONE;
+        OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL;
     }
+
+    public boolean isAvailable();
+    public void setLevel(final Level level);
 
     public void trace(final String message);
     public void debug(final String message);

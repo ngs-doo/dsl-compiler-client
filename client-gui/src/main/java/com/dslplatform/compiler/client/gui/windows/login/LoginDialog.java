@@ -25,13 +25,13 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import com.dslplatform.compiler.client.api.ApiCall;
-import com.dslplatform.compiler.client.api.logging.Logger;
 import com.dslplatform.compiler.client.gui.icon.Icon;
 import com.dslplatform.compiler.client.gui.icon.IconUpdater;
 import com.dslplatform.compiler.client.gui.windows.login.LoginResponse.Status;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class LoginDialog extends JFrame
-        implements ActionListener, MouseListener, WindowListener {
+        implements ActionListener, MouseListener, WindowListener, KeyEventDispatcher {
 
     private LoginResponse response          = new LoginResponse(Status.CANCELED, "Login process interupted");
     private LoginRequest  request           = null;
@@ -49,40 +49,21 @@ public class LoginDialog extends JFrame
     private final JLabel labelProgressMessage;
     private final JButton buttonLogin;
 
-    private class DefaultKeyEventDispatcher implements KeyEventDispatcher {
-      @Override
-      public boolean dispatchKeyEvent(KeyEvent e) {
-        switch (e.getID()) {
-          case  KeyEvent.KEY_PRESSED :
-            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) System.exit(0);
-            if (e.isControlDown()) checkRemember.setVisible(true);
-            break;
-          case KeyEvent.KEY_RELEASED :
-            checkRemember.setVisible(false);
-            break;
-          case KeyEvent.KEY_TYPED :
-            break;
-        }
-        return false;
-      }
-    }
-
     public static LoginDialogResult show(
             final Logger logger,
             final ApiCall apiCall,
-            final String username,
-            final String password,
+            final String defaultUsername,
+            final String defaultPassword,
             final boolean remember) {
 
-      final LoginDialog ld = new LoginDialog(logger, apiCall, username, password, remember);
+      final LoginDialog ld =
+              new LoginDialog(logger, apiCall, defaultUsername, defaultPassword, remember);
 
-      LoginDialogResult ret;
       try {
-        ret = new LoginDialogResult(ld.getRequest(), ld.getResponse());
+          return new LoginDialogResult(ld.getRequest(), ld.getResponse());
       } catch (InterruptedException e) {
-        ret = new LoginDialogResult(null, new LoginResponse(Status.ERROR, e.getMessage()));
+          return new LoginDialogResult(null, new LoginResponse(Status.ERROR, e.getMessage()));
       }
-      return ret;
     }
 
     private final Logger logger;
@@ -91,8 +72,8 @@ public class LoginDialog extends JFrame
     private LoginDialog(
             final Logger logger,
             final ApiCall apiCall,
-            final String username,
-            final String password,
+            final String defaultUsername,
+            final String defaultPassword,
             final boolean remember) {
         super("DSL Platform - GUI Client");
 
@@ -102,8 +83,8 @@ public class LoginDialog extends JFrame
         new IconUpdater(this);
         addWindowListener(this);
 
-        KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-        manager.addKeyEventDispatcher(new DefaultKeyEventDispatcher());
+        final KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+        manager.addKeyEventDispatcher(this);
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
@@ -138,7 +119,9 @@ public class LoginDialog extends JFrame
 
         textUsername = new JTextField();
         textUsername.setBounds(WIDTH >>> 2, 112, ((WIDTH * 3) >>> 2) - (WIDTH >>> 3), 20);
-        textUsername.setText(username);
+        if (defaultUsername != null) {
+            textUsername.setText(defaultUsername);
+        }
         getContentPane().add(textUsername);
 
         labelPassword = new JLabel("Password");
@@ -149,7 +132,9 @@ public class LoginDialog extends JFrame
 
         textPassword = new JPasswordField();
         textPassword.setBounds(WIDTH >>> 2, 136, ((WIDTH * 3) >>> 2) - (WIDTH >>> 3), 20);
-        textPassword.setText(password);
+        if (defaultPassword != null) {
+            textPassword.setText(defaultPassword);
+        }
         getContentPane().add(textPassword);
 
         checkRemember = new JCheckBox("Remember?");
@@ -170,23 +155,26 @@ public class LoginDialog extends JFrame
         getContentPane().add(buttonLogin);
         getRootPane().setDefaultButton(buttonLogin);
 
-        (username.isEmpty() ? textUsername :
-            password.isEmpty() ? textPassword :
-                buttonLogin).requestFocusInWindow();
-
-        setRequest(new LoginRequest(username, password, remember));
+        setRequest(new LoginRequest(defaultUsername, defaultPassword, remember));
         setVisible(true);
+
+        (textUsername.getText().isEmpty()
+                ? textUsername
+                : textPassword.getPassword().length == 0
+                    ? textPassword
+                    : buttonLogin).requestFocusInWindow();
     }
 
     private static final long serialVersionUID = 0L;
 
     private void displayMessage(final Status status, final String message) {
         final Color color =
-                status.equals(Status.PENDINDG)  ? Color.blue :
-                status.equals(Status.EMPTY)     ? Color.red :
-                status.equals(Status.INVALID)   ? Color.red :
-                status.equals(Status.ERROR)     ? Color.red :
-                status.equals(Status.SUCCESS)        ? Color.green.darker() : Color.black;
+                status == Status.PENDING ? Color.blue :
+                status == Status.EMPTY   ? Color.red :
+                status == Status.INVALID ? Color.red :
+                status == Status.ERROR   ? Color.red :
+                status == Status.SUCCESS ? Color.green.darker()
+                                         : Color.black;
 
         labelProgressMessage.setForeground(color);
         labelProgressMessage.setText(message);
@@ -303,7 +291,7 @@ public class LoginDialog extends JFrame
     @Override
     public void windowClosing(final WindowEvent e) {
         if (!isProcessFinished) {
-          System.out.println("> Process not finished, dialog close initiated by button!");
+          logger.warn("Process not finished, closing of the dialog was initiated by the user!");
           response = new LoginResponse(Status.CANCELED, "Login process canceled by user!");
         }
         finish();
@@ -311,7 +299,7 @@ public class LoginDialog extends JFrame
 
     @Override
     public void windowClosed(final WindowEvent e) {
-      System.out.println("> Login Dialog CLOSED!");
+        logger.debug("Login window closed.");
     }
 
     @Override
@@ -329,4 +317,20 @@ public class LoginDialog extends JFrame
       if (checkRemember != null) checkRemember.setVisible(false);
     }
 
+    @Override
+    public boolean dispatchKeyEvent(final KeyEvent e) {
+        switch (e.getID()) {
+            case  KeyEvent.KEY_PRESSED:
+                // if (e.getKeyCode() == KeyEvent.VK_ESCAPE) System.exit(0);
+                if (e.isControlDown()) checkRemember.setVisible(true);
+                return false;
+
+            case KeyEvent.KEY_RELEASED :
+                checkRemember.setVisible(false);
+                return false;
+
+            default:
+                return false;
+        }
+    }
 }
