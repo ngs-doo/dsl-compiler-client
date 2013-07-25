@@ -5,9 +5,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import com.dslplatform.compiler.client.api.commons.HashUtil;
-import com.dslplatform.compiler.client.api.logging.Logger;
-
-import org.apache.commons.io.FileUtils;
+import com.dslplatform.compiler.client.api.commons.io.FileUtils;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class Cache {
     private final Logger logger;
@@ -15,25 +14,11 @@ public class Cache {
     private final File cachePath;
     private final File file;
 
-    public Cache(final Logger logger, final String cachePath, final UUID projectID) {
+    public Cache(final Logger logger, final File cachePath, final UUID projectID) {
         this.logger = logger;
 
-        final String expandedCachePath;
-        if (cachePath.charAt(0) == '~') {
-            logger.trace("Expanding cache path: " + cachePath);
-
-            expandedCachePath =
-                System.getProperty("user.home") +
-                cachePath.substring(1);
-
-            logger.trace("Cache path expanded to: " + expandedCachePath);
-        }
-        else {
-            expandedCachePath = cachePath;
-        }
-
-        this.cachePath = new File(expandedCachePath).getAbsoluteFile();
-        logger.debug("Cache path set to: " + expandedCachePath);
+        this.cachePath = cachePath;
+        logger.debug("Cache path set to: " + cachePath);
 
         final String projectIDHash = String.format("%08X.cache",
                 projectID == null ? 0 : HashUtil.hashCode(projectID));
