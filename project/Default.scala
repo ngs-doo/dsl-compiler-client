@@ -80,7 +80,11 @@ trait Default {
       )
 
     , unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(_ :: Nil)
-    , unmanagedSourceDirectories in Test := Nil
+    , unmanagedSourceDirectories in Test <<= (scalaSource in Test)(_ :: Nil)
+    , libraryDependencies ++= Seq(
+        "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+      , "junit" % "junit" % "4.11" % "test"
+      )
 
     , publishArtifact in (Compile, packageDoc) := false
     , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
@@ -93,6 +97,7 @@ trait Default {
       autoScalaLibrary := false
     , crossPaths := false
     , unmanagedSourceDirectories in Compile <<= (javaSource in Compile)(_ :: Nil)
+    , unmanagedSourceDirectories in Test <<= (javaSource in Test, scalaSource in Test)(_ :: _ :: Nil)
     )
 
   lazy val assemblyPublishSettings = assemblySettings ++ Seq(

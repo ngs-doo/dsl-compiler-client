@@ -9,7 +9,7 @@ trait Client extends Build with Default {
     id.toLowerCase
   , file(id.toLowerCase)
   , settings = javaSettings ++ Seq(
-      version := "0.7.8-SNAPSHOT"
+      version := "0.7.8"
     , name := "DSL-Compiler-" + id
     , organization := "com.dslplatform"
     , initialCommands := "import com.dslplatform.compiler.client._"
@@ -18,11 +18,7 @@ trait Client extends Build with Default {
 }
 
 object Client extends Client {
-  lazy val apiLogging    = clientProject("Client-API-Logging") settings(
-    libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-classic" % "1.0.13" % "provided"
-    )
-  )
+  lazy val apiLogging    = clientProject("Client-API-Logging")
 
   lazy val apiCommons    = clientProject("Client-API-Commons") inject(apiLogging)
   lazy val apiDiff       = clientProject("Client-API-Diff") inject(apiCommons)
@@ -31,16 +27,24 @@ object Client extends Client {
   lazy val apiTransport  = clientProject("Client-API-Transport")
   lazy val apiParams     = clientProject("Client-API-Params") inject(apiCommons)
 
-  lazy val apiInterfaces = clientProject("Client-API-Interfaces") inject(apiTransport, apiParams)
-  lazy val apiCore       = clientProject("Client-API-Core") inject(apiInterfaces, apiDiff, apiCache)
+  lazy val apiInterface  = clientProject("Client-API-Interface") inject(apiTransport, apiParams)
+  lazy val apiCore       = clientProject("Client-API-Core") inject(apiInterface, apiDiff, apiCache)
 
-  lazy val cmdline       = clientProject("Client-CmdLine") inject(apiCore)
+  lazy val cmdline       = clientProject("Client-CmdLine") inject(apiCore) settings(
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-api" % "1.7.5" % "provided"
+    , "org.apache.logging.log4j" % "log4j-api" % "2.0-beta8" % "provided"
+    , "org.fusesource.jansi" % "jansi" % "1.11" % "provided"
+    , "jline" % "jline" % "2.10" % "provided"
+    )
+  )
   lazy val gui           = clientProject("Client-GUI") inject(apiCore)
 
-  lazy val client        = clientProject("Client-Assembly") inject(cmdline, gui) settings(
+  lazy val release       = clientProject("Client-Assembly") inject(cmdline, gui) settings(
     assemblyPublishSettings ++ Seq(
       mainClass in assembly := Some("com.dslplatform.compiler.client.Main")
     , jarName   in assembly := "dsl-clc.jar"
+    , test      in assembly := {}
     ): _*
   )
 

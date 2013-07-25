@@ -69,10 +69,15 @@
         Path where the Commandline Client will cache authentication information, to allow for
         username/password rememberance. Defaults to "~/.dsl-platform/".
 
+  -v<logging-level>, --logging-level=<logging level>
+        Logging level for debugging messages which are streamed to stderr.
+        Level is "error" by default, can be: "off", "error", "warn", "info", "debug", "trace" or "all"
+
 # ADVANCED ACTIONS - USE WITH CAUTION!
 
   clean
         Cleans all the data from your project database, this action is irreversible
+
   clone
         Creates a copy of your project, cloning the current database into a separate one.
         A new project will be represented by the returned project ID.

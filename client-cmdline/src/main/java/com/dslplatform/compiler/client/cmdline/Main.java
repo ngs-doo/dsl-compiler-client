@@ -4,40 +4,19 @@ import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
 import com.dslplatform.compiler.client.api.ApiCall;
-import com.dslplatform.compiler.client.api.logging.Logger;
-import com.dslplatform.compiler.client.api.logging.Logger.Level;
-import com.dslplatform.compiler.client.api.logging.LoggerSystemOut;
 import com.dslplatform.compiler.client.api.params.Arguments;
-import com.dslplatform.compiler.client.cmdline.login.Login;
-import com.dslplatform.compiler.client.cmdline.login.LoginConsole;
-import com.dslplatform.compiler.client.cmdline.output.Output;
-import com.dslplatform.compiler.client.cmdline.output.OutputConsole;
 import com.dslplatform.compiler.client.cmdline.params.ArgumentsParser;
 import com.dslplatform.compiler.client.cmdline.processor.DiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseAndDiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseHandler;
 import com.dslplatform.compiler.client.cmdline.processor.UpdateHandler;
 import com.dslplatform.compiler.client.cmdline.processor.UpdateUnsafeHandler;
-import com.dslplatform.compiler.client.cmdline.prompt.Prompt;
-import com.dslplatform.compiler.client.cmdline.prompt.PromptConsole;
+import com.dslplatform.compiler.client.io.Logger;
+import com.dslplatform.compiler.client.io.Login;
+import com.dslplatform.compiler.client.io.Output;
+import com.dslplatform.compiler.client.io.Prompt;
 
 public class Main {
-    public static void main(final String[] args) {
-        try {
-            final Logger logger = new LoggerSystemOut(Level.NONE);
-            final Prompt prompt = new PromptConsole();
-            final Output output = new OutputConsole();
-            final Login login = new LoginConsole(logger, prompt);
-
-            new Main(logger, prompt, output, login).process(args);
-            System.exit(0);
-        }
-        catch (final Exception e) {
-            System.out.println(e.getMessage());
-            System.exit(-1);
-        }
-    }
-
     private final Logger logger;
     private final Prompt prompt;
     private final Output output;
@@ -57,7 +36,7 @@ public class Main {
     public void process(final String[] args) throws IOException {
         final ApiCall apiCall = new ApiCall(logger);
         final Actions actions = new Actions(logger, apiCall);
-        final Arguments params = new ArgumentsParser(logger, args);
+        final Arguments params = new ArgumentsParser(logger, output, args);
 
         switch (params.getAction()) {
             case PARSE:
