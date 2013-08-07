@@ -39,9 +39,6 @@ public class BaseHandler {
             final Arguments arguments,
             final SortedMap<String, byte[]> fileBodies) throws IOException {
 
-        final File projectIniPath = arguments.getProjectIniPath();
-        updateProjectIni(fileBodies, projectIniPath);
-
         final File op = arguments.getOutputPath();
         if (!op.exists()) op.mkdirs();
 
@@ -53,7 +50,9 @@ public class BaseHandler {
 
         for(final Map.Entry<String, byte[]> entry : fileBodies.entrySet()) {
             final String filename = cleanFilename(entry.getKey());
-            newFilesLoader.addBytes(filename, entry.getValue());
+            if (!isProjectIni(filename)) {
+                newFilesLoader.addBytes(filename, entry.getValue());
+            }
         }
 
         final Map<Hash, SortedSet<String>> newHash = newFilesLoader.getHashBodyMap();
@@ -99,6 +98,9 @@ public class BaseHandler {
                     break;
             }
         }
+
+        final File projectIniPath = arguments.getProjectIniPath();
+        updateProjectIni(fileBodies, projectIniPath);
     }
 
     private boolean updateProjectIni(
@@ -127,9 +129,13 @@ public class BaseHandler {
         return true;
     }
 
+    private boolean isProjectIni(final String path){
+        return path.endsWith("ava/project.ini");
+    }
+
     private Map.Entry<String, byte[]> findProjectIni(final Map<String, byte[]>fileBodies) {
         for(final Map.Entry<String, byte[]> file: fileBodies.entrySet()) {
-            if (file.getKey().endsWith("ava/project.ini")) return file;
+            if (isProjectIni(file.getKey())) return file;
         }
 
         return null;

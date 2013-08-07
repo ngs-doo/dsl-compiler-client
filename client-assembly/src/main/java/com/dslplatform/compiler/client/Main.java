@@ -20,8 +20,8 @@ import com.dslplatform.compiler.client.io.Prompt;
 public class Main {
     private static Logger getLogger() {
         for (final Logger logger : new Logger[] {
-                    new LoggerSlf4j(),
-                    new LoggerLog4J(),
+//                    new LoggerSlf4j(),
+//                    new LoggerLog4J(),
                     new LoggerSystem(Level.ERROR)
                 }) {
 
@@ -37,7 +37,7 @@ public class Main {
 
     private static Output getOutput(final Logger logger) {
         for (final Output output : new Output[] {
-                    new OutputJAnsi(),
+//                    new OutputJAnsi(),
                     new OutputConsole(),
                     new OutputSystem()
                 }) {
@@ -56,7 +56,7 @@ public class Main {
 
     private static Prompt getPrompt(final Logger logger, final Output output) {
         for (final Prompt prompt : new Prompt[] {
-                    new PromptJLine(output),
+//                    new PromptJLine(output),
                     new PromptConsole(output),
                     new PromptSystem(output)
                 }) {
@@ -111,7 +111,7 @@ public class Main {
             System.exit(0);
         }
         catch (final Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
             System.exit(-1);
         }
     }

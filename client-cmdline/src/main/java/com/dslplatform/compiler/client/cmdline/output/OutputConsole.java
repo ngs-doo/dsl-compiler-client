@@ -20,6 +20,7 @@ public class OutputConsole implements Output {
     public void print(final String message) {
         if (isAvailable()) {
             console.writer().print(message);
+            console.flush();
         }
     }
 
@@ -27,6 +28,7 @@ public class OutputConsole implements Output {
     public void println(final String message) {
         if (isAvailable()) {
             console.writer().println(message);
+            console.flush();
         }
     }
 }

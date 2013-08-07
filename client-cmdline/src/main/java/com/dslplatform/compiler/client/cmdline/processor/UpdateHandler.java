@@ -83,6 +83,7 @@ public class UpdateHandler extends BaseHandler {
             }
 
             if (!pdp.isAutoConfirm()) {
+                logger.trace("Not autoconfirmed, prompting for confirmation.");
                 final char confirmation =
                         prompt.readCharacter("Confirm [Y]es/[N]o: ", "ynYN");
 
@@ -96,12 +97,14 @@ public class UpdateHandler extends BaseHandler {
         final Language[] languages = arguments.getLanguages();
         final PackageName packageName = arguments.getPackageName();
 
+        logger.trace("About to call update.");
         final UpdateProcessor up = actions.update(
                 authProvider.getAuth(), dsl, projectID, packageName, languages);
 
         final UpdateUnsafeProcessor uqp;
 
         if (up.needsConfirmation()) {
+            logger.trace("Needs confirmation on update.");
             output.println(up.getConfirmationMessage());
 
             final char confirmation =
@@ -118,6 +121,7 @@ public class UpdateHandler extends BaseHandler {
             uqp = uup;
         }
         else {
+            logger.trace("Updated without needing confirmation.");
             uqp = up;
         }
 
