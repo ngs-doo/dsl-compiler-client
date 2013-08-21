@@ -16,6 +16,7 @@ public enum Language implements Param {
   , JAVA        ("Java")
   , JAVASCRIPT  ("JavaScript")
   , KNOCKOUT    ("Knockout")
+  , KOTLIN      ("Kotlin")
   , LUA         ("Lua")
   , MATLAB      ("MATLAB")
   , MERCURY     ("Mercury")

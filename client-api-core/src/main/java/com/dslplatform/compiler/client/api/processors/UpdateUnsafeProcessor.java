@@ -27,6 +27,11 @@ public class UpdateUnsafeProcessor extends BaseProcessor {
     @Override
     public boolean processInner(final Message message) {
         switch (message.messageType) {
+            case ERROR:
+                successful = false;
+                messages.add(message.info);
+                logger.trace(message.info);
+
             case DUMP_FILE:
                 fileBodies.put(message.info, message.content);
                 return true;

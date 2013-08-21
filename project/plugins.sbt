@@ -18,7 +18,7 @@ externalResolvers <<= resolvers map { r =>
 // | See also: Scala IDE downloads (http://download.scala-ide.org/)                      |
 // +-------------------------------------------------------------------------------------+
 
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.2.0")
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "2.3.0")
 
 // +-------------------------------------------------------------------------------------+
 // | Dependency graph SBT plugin (https://github.com/jrudolph/sbt-dependency-graph)      |

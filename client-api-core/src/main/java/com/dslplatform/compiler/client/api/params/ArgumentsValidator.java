@@ -386,8 +386,8 @@ public abstract class ArgumentsValidator implements Arguments {
             logger.debug("Parsed language parameter, adding languages to the list: " + languages);
             if (languages != null) addLanguages(languages);
         }{
-            final String packageName = properties.getProperty("namespace");
-            logger.debug("Parsed namespace parameter, overwriting old namespace: " + packageName);
+            final String packageName = properties.getProperty("package-name");
+            logger.debug("Parsed package name parameter, overwriting old package name: " + packageName);
             if (packageName != null) setPackageName(packageName);
         }
 
@@ -407,5 +407,4 @@ public abstract class ArgumentsValidator implements Arguments {
             if (cachePath != null) setCachePath(cachePath);
         }
     }
-
 }

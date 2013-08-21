@@ -129,6 +129,12 @@ public class UpdateHandler extends BaseHandler {
             output.println(message);
         }
 
-        updateFiles(arguments, uqp.getFileBodies());
+        if (uqp.isSuccessful()) {
+            updateFiles(arguments, uqp.getFileBodies());
+        }
+        else {
+            output.println("An error occured while updating:");
+            output.println(uqp.getResponse());
+        }
     }
 }

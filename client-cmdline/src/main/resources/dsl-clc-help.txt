@@ -22,7 +22,7 @@
         Unique identifier of your project, you can find it on
         https://panel.dsl-platform.com/
 
-  -n<namespace>, --namespace=<namespace>
+  -n<package-name>, --package-name=<package-name>
         Overrides the default (empty) package prefix for generated sources
 
   -d<dsl path>, --dsl-path=<dsl path>

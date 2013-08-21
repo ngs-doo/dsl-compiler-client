@@ -15,9 +15,7 @@ trait Default {
 
     lazy val settings = Seq(
       resolvers := Seq(NGSNexus, NGSReleases, NGSSnapshots)
-    , externalResolvers <<= resolvers map { r =>
-        Resolver.withDefaultResolvers(r, mavenCentral = false)
-      }
+    , externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
     )
   }
 
@@ -27,9 +25,9 @@ trait Default {
     import Repositories._
 
     val settings = Seq(
-      publishTo <<= version { version => Some(
-        if (version endsWith "SNAPSHOT") NGSSnapshots else NGSReleases
-      )}
+      publishTo := Some(
+        if (version.value endsWith "SNAPSHOT") NGSSnapshots else NGSReleases
+      )
     , credentials += Credentials(Path.userHome / ".config" / "ngs-util_master" / "nexus.config")
     )
   }
@@ -57,7 +55,7 @@ trait Default {
       )
 
     , crossScalaVersions := Seq("2.10.2")
-    , scalaVersion <<= crossScalaVersions(_.head)
+    , scalaVersion := crossScalaVersions.value.head
     , scalacOptions := Seq(
         "-unchecked"
       , "-deprecation"
@@ -79,8 +77,8 @@ trait Default {
       , "-Yinline-warnings"
       )
 
-    , unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(_ :: Nil)
-    , unmanagedSourceDirectories in Test <<= (scalaSource in Test)(_ :: Nil)
+    , unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
+    , unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
     , libraryDependencies ++= Seq(
         "org.scalatest" %% "scalatest" % "1.9.1" % "test"
       , "junit" % "junit" % "4.11" % "test"
@@ -96,8 +94,8 @@ trait Default {
   lazy val javaSettings = scalaSettings ++ Seq(
       autoScalaLibrary := false
     , crossPaths := false
-    , unmanagedSourceDirectories in Compile <<= (javaSource in Compile)(_ :: Nil)
-    , unmanagedSourceDirectories in Test <<= (javaSource in Test, scalaSource in Test)(_ :: _ :: Nil)
+    , unmanagedSourceDirectories in Compile := (javaSource in Compile).value :: Nil
+    , unmanagedSourceDirectories in Test := (javaSource in Test).value :: (scalaSource in Test).value :: Nil
     )
 
   lazy val assemblyPublishSettings = assemblySettings ++ Seq(

@@ -126,15 +126,15 @@ public class ArgumentsParser extends ArgumentsValidator {
             }
 
             {   // parse package name (namespace), new arguments overwrite old ones
-                String packageName = startsWith(arg, "-n", "--namespace=");
+                String packageName = startsWith(arg, "-n", "--package-name=");
                 if (packageName != null) {
-                    logger.trace("Parsed namespace parameter, overwriting old namespace: " + packageName);
+                    logger.trace("Parsed package name parameter, overwriting old package name: " + packageName);
                     if (packageName.isEmpty()) {
                         if (!last) {
                             packageName = args[++index];
-                            logger.trace("Namespace argument was empty, reading next argument: " + packageName);
+                            logger.trace("Package name argument was empty, reading next argument: " + packageName);
                             if (packageName.isEmpty()) {
-                                logger.debug("Files will be compiled without a namespace");
+                                logger.debug("Files will be compiled without a package name");
                             }
                         }
                     }

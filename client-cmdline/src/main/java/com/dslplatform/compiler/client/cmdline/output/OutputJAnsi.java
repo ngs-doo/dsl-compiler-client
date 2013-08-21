@@ -30,6 +30,7 @@ public class OutputJAnsi implements Output {
     public void print(final String message) {
         if (isAvailable()) {
             AnsiConsole.out.print(message);
+            AnsiConsole.out.flush();
         }
     }
 
@@ -37,6 +38,7 @@ public class OutputJAnsi implements Output {
     public void println(final String message) {
         if (isAvailable()) {
             AnsiConsole.out.println(message);
+            AnsiConsole.out.flush();
         }
     }
 }
