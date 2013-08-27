@@ -72,11 +72,9 @@ public class FileLoader {
         logger.trace("Reading file: " + realPath);
         final byte[] content = FileUtils.readFileToByteArray(file);
 
-
         final String rootCanonicalPath = new File(rootPath).getCanonicalPath();
-        final String relativePath = realPath.substring(rootCanonicalPath.length()+1);
+        final String relativePath = realPath.substring(rootCanonicalPath.length() + 1);
         addBytes(relativePath, content);
-
     }
 
     public void addBytes(final String realPath, final byte[] content) {

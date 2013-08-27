@@ -322,11 +322,12 @@ public class LoginDialog extends JFrame
         switch (e.getID()) {
             case  KeyEvent.KEY_PRESSED:
                 // if (e.getKeyCode() == KeyEvent.VK_ESCAPE) System.exit(0);
-                if (e.isControlDown()) checkRemember.setVisible(true);
+                // Temporarily disabled, TODO disable remember me if unchecked
+                // if (e.isControlDown()) checkRemember.setVisible(true);
                 return false;
 
             case KeyEvent.KEY_RELEASED :
-                checkRemember.setVisible(false);
+                // checkRemember.setVisible(false);
                 return false;
 
             default:

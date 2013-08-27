@@ -15,7 +15,6 @@ import com.dslplatform.compiler.client.api.commons.io.IOUtils;
 import com.dslplatform.compiler.client.api.diff.HashBodyMapTool;
 import com.dslplatform.compiler.client.api.diff.PathAction;
 import com.dslplatform.compiler.client.api.params.Arguments;
-import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.io.Prompt;
 import com.dslplatform.compiler.client.io.Logger;
 
@@ -37,7 +36,8 @@ public class BaseHandler {
 
     protected void updateFiles(
             final Arguments arguments,
-            final SortedMap<String, byte[]> fileBodies) throws IOException {
+            final SortedMap<String, byte[]> fileBodies,
+            final File outputPath) throws IOException {
 
         final File op = arguments.getOutputPath();
         if (!op.exists()) op.mkdirs();
@@ -48,10 +48,10 @@ public class BaseHandler {
 
         final FileLoader newFilesLoader = new FileLoader(logger);
 
-        for(final Map.Entry<String, byte[]> entry : fileBodies.entrySet()) {
-            final String filename = cleanFilename(entry.getKey());
-            if (!isProjectIni(filename)) {
-                newFilesLoader.addBytes(filename, entry.getValue());
+        for (final Map.Entry<String, byte[]> entry : fileBodies.entrySet()) {
+            final String filenameRaw = entry.getKey();
+            if (!isProjectIni(filenameRaw)) {
+                newFilesLoader.addBytes(cleanFilename(filenameRaw), entry.getValue());
             }
         }
 
@@ -79,13 +79,14 @@ public class BaseHandler {
                 case CREATED:
                 case MODIFIED: {
                     final byte[] body = newFiles.get(hash);
-                    logger.debug(""+body.length);
+                    logger.debug("" + body.length);
                     FileUtils.writeByteArrayToFile(source, body);
                     break;
                 }
 
                 case MOVED:
                     FileUtils.moveFile(source, destination);
+                    checkIfParentEmptyAndDelete(source, outputPath);
                     break;
 
                 case COPY:
@@ -95,6 +96,7 @@ public class BaseHandler {
                 case DELETED_DIR:
                 case DELETED:
                     FileUtils.deleteQuietly(source);
+                    checkIfParentEmptyAndDelete(source, outputPath);
                     break;
             }
         }
@@ -103,34 +105,42 @@ public class BaseHandler {
         updateProjectIni(fileBodies, projectIniPath);
     }
 
+    private void checkIfParentEmptyAndDelete(File source, final File outputPath) {
+        final File parent = source.getParentFile();
+        if (parent.list().length == 0 && ! parent.equals(outputPath)) {
+            FileUtils.deleteQuietly(parent);
+            checkIfParentEmptyAndDelete(parent, outputPath);
+        }
+    }
+
     private boolean updateProjectIni(
             final SortedMap<String, byte[]> fileBodies,
             final File projectIniPath) {
 
         if (projectIniPath == null) return false;
 
-        logger.debug("About to replace project ini " + projectIniPath );
+        logger.trace("About to replace project ini " + projectIniPath );
 
         final Map.Entry<String, byte[]> pib = findProjectIni(fileBodies);
-        if ( pib == null ) {
+        if (pib == null) {
             logger.debug("Java project.ini not found in generated sources.");
             return false;
         }
-        logger.debug("New Project ini found " + pib.getKey());
+        logger.trace("New Project ini found " + pib.getKey());
 
         try {
             FileUtils.writeByteArrayToFile(projectIniPath, pib.getValue());
         } catch (IOException e) {
-            logger.debug("Error writing new project ini" + e.getMessage());
+            logger.trace("Error writing new project ini" + e.getMessage());
             return false;
         }
 
-        logger.debug("Project ini updated: " + new String(pib.getValue(), Charset.forName("UTF-8")));
+        logger.info("Project ini updated: " + new String(pib.getValue(), Charset.forName("UTF-8")));
         return true;
     }
 
     private boolean isProjectIni(final String path){
-        return path.endsWith("ava/project.ini");
+        return path.endsWith("ava/project.ini") || path.endsWith("ava" + slash + "project.ini");
     }
 
     private Map.Entry<String, byte[]> findProjectIni(final Map<String, byte[]>fileBodies) {
@@ -147,7 +157,8 @@ public class BaseHandler {
         final String singleslash = "" + slash;
         if (path.startsWith(singleslash)) return cleanFilename(path.substring(1));
         if (path.startsWith("/")) return cleanFilename(path.substring(1));
-        return  ((isNotLinux) ?
-                      path.replace('/', slash) : path).replace(slashslash, singleslash);
+        return (isNotLinux
+                 ? path.replace('/', slash)
+                 : path.replace(slashslash, singleslash));
         }
 }

@@ -102,6 +102,6 @@ public class UpdateUnsafeHandler extends BaseHandler {
             output.println(message);
         }
 
-        updateFiles(arguments, uup.getFileBodies());
+        updateFiles(arguments, uup.getFileBodies(), arguments.getOutputPath());
    }
 }

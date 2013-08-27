@@ -73,9 +73,9 @@ public class Main {
 
     // --------------------------------------------------------------------
 
-    private static Login getLogin(final Logger logger, final Prompt prompt) {
+    private static Login getLogin(final Logger logger, final Output output, final Prompt prompt) {
         for (final Login login : new Login[] {
-                    new LoginSwing(logger),
+                    new LoginSwing(logger, output),
                     new LoginConsole(logger, prompt)
                 }) {
 
@@ -102,7 +102,7 @@ public class Main {
             final Prompt prompt = getPrompt(logger, output);
             logger.debug("Selected prompt: " + prompt);
 
-            final Login login = getLogin(logger, prompt);
+            final Login login = getLogin(logger, output, prompt);
             logger.debug("Selected login: " + login);
 
             new com.dslplatform.compiler.client.cmdline.Main(

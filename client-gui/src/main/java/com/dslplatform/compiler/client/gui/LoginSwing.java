@@ -8,14 +8,18 @@ import com.dslplatform.compiler.client.gui.windows.login.LoginDialog;
 import com.dslplatform.compiler.client.gui.windows.login.LoginDialogResult;
 import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
+import com.dslplatform.compiler.client.io.Output;
 
 public class LoginSwing implements Login {
     private Logger logger;
+    private Output output;
     private ApiCall apiCall;
 
     public LoginSwing(
-            final Logger logger) {
+            final Logger logger,
+            final Output output) {
         this.logger = logger;
+        this.output = output;
         this.apiCall = new ApiCall(logger);
     }
 
@@ -31,6 +35,7 @@ public class LoginSwing implements Login {
 
         Setup.setLookAndFeel(true);
 
+        output.println("Please enter your credentials in the popup dialog ...");
         final LoginDialogResult result =
                 LoginDialog.show(logger, apiCall, defaultUsername, defaultPassword, true);
 
