@@ -23,7 +23,7 @@
         https://panel.dsl-platform.com/
 
   -n<package-name>, --package-name=<package-name>
-        Overrides the default (empty) package prefix for generated sources
+        Overrides the default package prefix ("model.") for generated sources
 
   -d<dsl path>, --dsl-path=<dsl path>
         Path to the directory which will be recursively scanned for
@@ -34,7 +34,7 @@
         WARNING: This path will be managed by the CommandLine Client,
         and should not be used for other purposes to prevent data loss!
 
-  -f, --project-ini-path
+  -f<project.ini path>, --project-ini-path=<project.ini path>
         Path to the project.ini file, allowing most (or all) of the
         parameters to be read from a single source.
 

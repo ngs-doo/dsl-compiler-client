@@ -23,8 +23,12 @@ public class BaseHandler {
     private final Prompt prompt;
     private final PathExpander pathExpander;
 
+    /*
+      Used dir_separator is / since it works in all platforms.
+      If this should change than code replacing / with platform dependent
+      separator should be moved to server side.
+    */
     private final static char slash = IOUtils.DIR_SEPARATOR;
-    private final static boolean isNotLinux = slash != '/';
 
     protected BaseHandler(
             final Logger logger,
@@ -140,25 +144,20 @@ public class BaseHandler {
     }
 
     private boolean isProjectIni(final String path){
-        return path.endsWith("ava/project.ini") || path.endsWith("ava" + slash + "project.ini");
+        return path.endsWith("ava/project.ini");
     }
 
     private Map.Entry<String, byte[]> findProjectIni(final Map<String, byte[]>fileBodies) {
         for(final Map.Entry<String, byte[]> file: fileBodies.entrySet()) {
             if (isProjectIni(file.getKey())) return file;
         }
-
         return null;
     }
 
+    // Only used to clean linux filename from double and starting slash
     public static String cleanFilename(final String path) {
         if (path == null) return null;
-        final String slashslash = "" + slash + slash;
-        final String singleslash = "" + slash;
-        if (path.startsWith(singleslash)) return cleanFilename(path.substring(1));
         if (path.startsWith("/")) return cleanFilename(path.substring(1));
-        return (isNotLinux
-                 ? path.replace('/', slash)
-                 : path.replace(slashslash, singleslash));
-        }
+        return path.replace("//","/");
+    }
 }

@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import com.dslplatform.compiler.client.api.commons.io.FileUtils;
+import com.dslplatform.compiler.client.api.commons.io.IOUtils;
 import com.dslplatform.compiler.client.io.Logger;
 
 public class FileLoader {
@@ -21,6 +22,7 @@ public class FileLoader {
     /** Used not to allocate buffers for files with identical contents */
     private final Map<Hash, SortedSet<String>> hashBodies = new HashMap<Hash, SortedSet<String>>();
 
+    private final static char slash = IOUtils.DIR_SEPARATOR;
     // -------------------------------------------------------------------------
 
     private final Logger logger;
@@ -77,11 +79,15 @@ public class FileLoader {
         addBytes(relativePath, content);
     }
 
-    public void addBytes(final String realPath, final byte[] content) {
+    public void addBytes(final String rawrealPath, final byte[] content) {
         synchronized (fileBodies) {
-            if (fileBodies.containsKey(realPath)) {
-                return;
-            }
+            // All files with path separator /
+            final String realPath =
+                    (slash == '/')
+                    ? rawrealPath
+                    : rawrealPath.replace(slash, '/');
+
+            if (fileBodies.containsKey(realPath)) return;
 
             final Hash.Body body = new Hash.Body(content);
             SortedSet<String> files = hashBodies.get(body);

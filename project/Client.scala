@@ -9,7 +9,7 @@ trait Client extends Build with Default {
     id.toLowerCase
   , file(id.toLowerCase)
   , settings = javaSettings ++ Seq(
-      version := "0.7.18"
+      version := "0.8.0-SNAPSHOT"
     , organization := "com.dslplatform"
     , name := "DSL-Compiler-" + id
     , initialCommands := "import com.dslplatform.compiler.client._"

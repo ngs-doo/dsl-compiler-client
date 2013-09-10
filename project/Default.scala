@@ -14,7 +14,7 @@ trait Default {
     import Repositories._
 
     lazy val settings = Seq(
-      resolvers := Seq(NGSNexus, NGSReleases, NGSSnapshots)
+      resolvers := Seq(NGSNexus, NGSSnapshots)
     , externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
     )
   }

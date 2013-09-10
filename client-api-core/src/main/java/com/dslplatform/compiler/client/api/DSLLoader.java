@@ -63,6 +63,7 @@ public class DSLLoader {
 
         for (final Map.Entry<String, byte[]> entry : binaryFiles.entrySet()) {
             final String file = entry.getKey();
+            logger.trace("Dsl file path: " + file);
             final byte[] body = entry.getValue();
 
             try {
