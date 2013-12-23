@@ -1,6 +1,5 @@
 package com.dslplatform.compiler.client.cmdline.processor;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
@@ -12,10 +11,10 @@ import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.api.processors.UpdateUnsafeProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
+import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
-import com.dslplatform.compiler.client.io.Logger;
 
 public class UpdateUnsafeHandler extends BaseHandler {
     private final Logger logger;
@@ -47,43 +46,43 @@ public class UpdateUnsafeHandler extends BaseHandler {
         // sanity check to force early failure
         arguments.getOutputPath();
 
-        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
+        final AuthProvider authProvider = new AuthProvider(logger, prompt,
+                login, arguments);
 
         if (!arguments.isSkipDiff()) {
-            final ParseAndDiffProcessor pdp = actions.parseAndDiff(authProvider.getAuth(), dsl, projectID);
+            final ParseAndDiffProcessor pdp = actions.parseAndDiff(
+                    authProvider.getAuth(), dsl, projectID);
 
             if (pdp.isAuthorized()) {
                 authProvider.setToken(pdp.getAuthorization());
-            }
-            else if (authProvider.isToken()) {
+            } else if (authProvider.isToken()) {
                 authProvider.removeToken();
                 apply(arguments);
                 return;
             }
 
-            for(final String diff : pdp.getDiffs()) {
+            for (final String diff : pdp.getDiffs()) {
                 output.println(diff);
             }
 
             output.println(pdp.getResponse());
 
             if (!pdp.isSuccessful()) {
-                final char retry =
-                        prompt.readCharacter("Reload [Y]es/[N]o: ", "ynYN");
+                final char retry = prompt.readCharacter("Reload [Y]es/[N]o: ",
+                        "ynYN");
 
                 if (retry != 'Y' && retry != 'y') {
                     output.println("Update cancelled.");
                     return;
-                }
-                else {
+                } else {
                     apply(arguments);
                     return;
                 }
             }
 
             if (!pdp.isAutoConfirm()) {
-                final char confirmation =
-                        prompt.readCharacter("Confirm [Y]es/[N]o: ", "ynYN");
+                final char confirmation = prompt.readCharacter(
+                        "Confirm [Y]es/[N]o: ", "ynYN");
 
                 if (confirmation != 'Y' && confirmation != 'y') {
                     output.println("Update cancelled.");
@@ -103,5 +102,5 @@ public class UpdateUnsafeHandler extends BaseHandler {
         }
 
         updateFiles(arguments, uup.getFileBodies(), arguments.getOutputPath());
-   }
+    }
 }

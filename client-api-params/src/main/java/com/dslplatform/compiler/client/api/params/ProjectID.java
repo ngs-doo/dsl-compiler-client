@@ -5,14 +5,17 @@ import java.util.UUID;
 public class ProjectID implements Param {
     public final UUID projectID;
 
-    public ProjectID(final UUID projectID) {
+    public ProjectID(
+            final UUID projectID) {
         this.projectID = projectID;
     }
 
     // -------------------------------------------------------------------------
 
     @Override
-    public boolean allowMultiple() { return false; }
+    public boolean allowMultiple() {
+        return false;
+    }
 
     @Override
     public void addToPayload(final XMLOut xO) {

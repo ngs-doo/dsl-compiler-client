@@ -51,10 +51,12 @@ public class AuthProvider {
         logger.debug("Attempting to make credentials from arguments ...");
 
         final String username = arguments.getUsername();
-        logger.debug("AuthProvider received username from arguments: " + username);
+        logger.debug("AuthProvider received username from arguments: "
+                + username);
 
         final String password = arguments.getPassword();
-        logger.trace("AuthProvider received password from arguments: " + (password == null ? null : "****"));
+        logger.trace("AuthProvider received password from arguments: "
+                + (password == null ? null : "****"));
 
         if (username == null || password == null) {
             return null;
@@ -68,14 +70,15 @@ public class AuthProvider {
 
     private Cache getCache() {
         final File cachePath = arguments.getCachePath();
-        logger.debug("AuthProvider received cache path from arguments: " + cachePath);
+        logger.debug("AuthProvider received cache path from arguments: "
+                + cachePath);
 
         UUID projectID = null;
         try {
             projectID = arguments.getProjectID().projectID;
-            logger.debug("AuthProvider received project ID from arguments: " + projectID);
-        }
-        catch (final NullPointerException e) {}
+            logger.debug("AuthProvider received project ID from arguments: "
+                    + projectID);
+        } catch (final NullPointerException e) {}
 
         final Cache cache = new Cache(logger, cachePath, projectID);
         return cache;
@@ -111,6 +114,7 @@ public class AuthProvider {
 
     private Credentials promptCredentials() {
         logger.debug("Token authentication failed, trying to prompt for missing info ...");
-        return login.acquireCredentials(arguments.getUsername(), arguments.getPassword());
+        return login.acquireCredentials(arguments.getUsername(),
+                arguments.getPassword());
     }
 }

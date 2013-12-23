@@ -8,10 +8,10 @@ import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
+import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
-import com.dslplatform.compiler.client.io.Logger;
 
 public class ParseAndDiffHandler extends BaseHandler {
     private final Logger logger;
@@ -38,19 +38,20 @@ public class ParseAndDiffHandler extends BaseHandler {
         final DSL dsl = arguments.getDsl();
         final ProjectID projectID = arguments.getProjectID();
 
-        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
-        final ParseAndDiffProcessor pdp = actions.parseAndDiff(authProvider.getAuth(), dsl, projectID);
+        final AuthProvider authProvider = new AuthProvider(logger, prompt,
+                login, arguments);
+        final ParseAndDiffProcessor pdp = actions.parseAndDiff(
+                authProvider.getAuth(), dsl, projectID);
 
         if (pdp.isAuthorized()) {
             authProvider.setToken(pdp.getAuthorization());
-        }
-        else if (authProvider.isToken()) {
+        } else if (authProvider.isToken()) {
             authProvider.removeToken();
             apply(arguments);
             return;
         }
 
-        for(final String diff : pdp.getDiffs()) {
+        for (final String diff : pdp.getDiffs()) {
             output.println(diff);
         }
 

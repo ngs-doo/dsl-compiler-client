@@ -7,7 +7,8 @@ import com.dslplatform.compiler.client.io.Logger;
 abstract class BaseProcessor implements MessageProcessor {
     protected final Logger logger;
 
-    public BaseProcessor(final Logger logger) {
+    public BaseProcessor(
+            final Logger logger) {
         this.logger = logger;
     }
 
@@ -33,7 +34,8 @@ abstract class BaseProcessor implements MessageProcessor {
 
     @Override
     public void process(final Message message) {
-        logger.debug("Received message: " + message.messageType + " " + message.info);
+        logger.debug("Received message: " + message.messageType + " "
+                + message.info);
 
         switch (message.messageType) {
             case AUTH_ERROR:
@@ -55,7 +57,8 @@ abstract class BaseProcessor implements MessageProcessor {
 
             default:
                 if (!processInner(message)) {
-                    logger.error("Unsupported message received: " + message.messageType + " " + message.info);
+                    logger.error("Unsupported message received: "
+                            + message.messageType + " " + message.info);
                 }
         }
     }

@@ -17,18 +17,22 @@ public enum Action implements Param {
     public final String action;
     public final Map<String, String> metadata;
 
-    private Action(final String action, final KV ...params) {
+    private Action(
+            final String action,
+            final KV... params) {
         this.action = action;
         metadata = new TreeMap<String, String>();
-        for( final KV param : params) {
-          metadata.put(param.key, param.value);
+        for (final KV param : params) {
+            metadata.put(param.key, param.value);
         }
     }
 
     // -------------------------------------------------------------------------
 
     @Override
-    public boolean allowMultiple() { return false; }
+    public boolean allowMultiple() {
+        return false;
+    }
 
     @Override
     public void addToPayload(final XMLOut xO) {
@@ -47,7 +51,9 @@ public enum Action implements Param {
         public final String key;
         public final String value;
 
-        public KV(String key, String value) {
+        public KV(
+                String key,
+                String value) {
             this.key = key;
             this.value = value;
         }

@@ -33,19 +33,22 @@ public class ApiCall {
     static {
         try {
             final Properties apiProperties = new Properties();
-            apiProperties.load(ApiCall.class.getResourceAsStream("api.properties"));
+            apiProperties.load(ApiCall.class
+                    .getResourceAsStream("api.properties"));
 
             API_URL = apiProperties.getProperty("api-url");
             VERSION = apiProperties.getProperty("version");
-            POLL_INTERVAL = Integer.parseInt(apiProperties.getProperty("poll-interval"));
+            POLL_INTERVAL = Integer.parseInt(apiProperties
+                    .getProperty("poll-interval"));
             TIMEOUT = Integer.parseInt(apiProperties.getProperty("timeout"));
 
             final KeyStore truststore = KeyStore.getInstance("jks");
-            truststore.load(ApiCall.class.getResourceAsStream(
-                    apiProperties.getProperty("truststore-name")),
-                    apiProperties.getProperty("truststore-password").toCharArray());
+            truststore.load(ApiCall.class.getResourceAsStream(apiProperties
+                    .getProperty("truststore-name")), apiProperties
+                    .getProperty("truststore-password").toCharArray());
 
-            final TrustManagerFactory tMF = TrustManagerFactory.getInstance("PKIX");
+            final TrustManagerFactory tMF = TrustManagerFactory
+                    .getInstance("PKIX");
             tMF.init(truststore);
 
             final SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -62,9 +65,11 @@ public class ApiCall {
             final byte[] body,
             final String params) throws IOException {
 
-        final URL targetUrl = new URL(API_URL + target.branch + '/' + target.version + params);
+        final URL targetUrl = new URL(API_URL + target.branch + '/'
+                + target.version + params);
 
-        final HttpURLConnection hUC = (HttpURLConnection) targetUrl.openConnection();
+        final HttpURLConnection hUC = (HttpURLConnection) targetUrl
+                .openConnection();
         if (hUC instanceof HttpsURLConnection) {
             final HttpsURLConnection hsUC = (HttpsURLConnection) hUC;
             hsUC.setSSLSocketFactory(socketFactory);
@@ -99,7 +104,8 @@ public class ApiCall {
 
     private final Logger logger;
 
-    public ApiCall(final Logger logger) {
+    public ApiCall(
+            final Logger logger) {
         this.logger = logger;
     }
 
@@ -129,9 +135,7 @@ public class ApiCall {
             final int afterOrdinal,
             final byte[] body) throws IOException {
 
-        return read(target, body,
-                "/response?id=" + requestID +
-                "&timeout=" + pollInterval +
-                "&ordinal=" + afterOrdinal);
+        return read(target, body, "/response?id=" + requestID + "&timeout="
+                + pollInterval + "&ordinal=" + afterOrdinal);
     }
 }

@@ -20,7 +20,8 @@ public class HashBodyMapTool {
         final TreeMap<String, PathAction> ret = new TreeMap<String, PathAction>();
 
         final Map<String, Hash> oldMap = new TreeMap<String, Hash>();
-        for (final Map.Entry<Hash, SortedSet<String>> oldEntry : oldBodies.entrySet()) {
+        for (final Map.Entry<Hash, SortedSet<String>> oldEntry : oldBodies
+                .entrySet()) {
             final Hash oldHash = oldEntry.getKey();
             final SortedSet<String> oldPaths = oldEntry.getValue();
 
@@ -29,7 +30,8 @@ public class HashBodyMapTool {
             }
         }
 
-        for (final Map.Entry<Hash, SortedSet<String>> newEntry : newBodies.entrySet()) {
+        for (final Map.Entry<Hash, SortedSet<String>> newEntry : newBodies
+                .entrySet()) {
             final SortedSet<String> destinationPaths = newEntry.getValue();
             final Hash destinationHashBody = newEntry.getKey();
 

@@ -20,14 +20,15 @@ public class Actions {
     private final Logger logger;
     private final ApiCall apiCall;
 
-    public Actions(final Logger logger, final ApiCall apiCall) {
+    public Actions(
+            final Logger logger,
+            final ApiCall apiCall) {
         this.logger = logger;
         this.apiCall = apiCall;
     }
 
-    public ParseProcessor parse(
-            final Auth auth,
-            final DSL dsl) throws IOException {
+    public ParseProcessor parse(final Auth auth, final DSL dsl)
+            throws IOException {
         final ParseProcessor pr = new ParseProcessor(logger);
         apiCall.call(Action.PARSE, auth, dsl).processMessages(pr);
         return pr;
@@ -47,7 +48,8 @@ public class Actions {
             final DSL dsl,
             final ProjectID projectID) throws IOException {
         final ParseAndDiffProcessor pdp = new ParseAndDiffProcessor(logger);
-        apiCall.call(Action.PARSE_AND_DIFF, auth, dsl, projectID).processMessages(pdp);
+        apiCall.call(Action.PARSE_AND_DIFF, auth, dsl, projectID)
+                .processMessages(pdp);
         return pdp;
     }
 
@@ -90,7 +92,6 @@ public class Actions {
         apiCall.call(params).processMessages(uup);
         return uup;
     }
-
 
 //  public RunningTask Clean(
 //          final Auth auth,

@@ -39,27 +39,27 @@ public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
             final HashMap<String, String> mockDSL = new HashMap<String, String>();
             mockDSL.put("auth.dsl", "module Auth;");
 
-            publish(new LoginResponse(Status.PENDING, "Connecting to the server ..."));
+            publish(new LoginResponse(Status.PENDING,
+                    "Connecting to the server ..."));
 
-            final RunningTask rt = apiCall.call(
-                Action.PARSE,
-                new Credentials(username, password),
-                new DSL(mockDSL)
-            );
+            final RunningTask rt = apiCall.call(Action.PARSE, new Credentials(
+                    username, password), new DSL(mockDSL));
 
-            publish(new LoginResponse(Status.PENDING, "Connection established, authenticating ..."));
+            publish(new LoginResponse(Status.PENDING,
+                    "Connection established, authenticating ..."));
 
-            for(final Message message : rt.getMessages()) {
+            for (final Message message : rt.getMessages()) {
                 if (message.messageType == MessageType.SUCCESS) {
-                    publish(new LoginResponse(Status.SUCCESS, "User authenticated!"));
+                    publish(new LoginResponse(Status.SUCCESS,
+                            "User authenticated!"));
                     return true;
                 }
             }
 
-            publish(new LoginResponse(Status.INVALID, "Invalid username / password!"));
+            publish(new LoginResponse(Status.INVALID,
+                    "Invalid username / password!"));
             return false;
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             publish(new LoginResponse(Status.SUCCESS, e.getMessage()));
             return false;
         }

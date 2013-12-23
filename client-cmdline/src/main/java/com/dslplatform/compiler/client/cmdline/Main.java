@@ -40,28 +40,35 @@ public class Main {
 
         switch (params.getAction()) {
             case PARSE:
-                new ParseHandler(logger, prompt, output, login, actions).apply(params);
+                new ParseHandler(logger, prompt, output, login, actions)
+                        .apply(params);
                 break;
 
             case DIFF:
-                new DiffHandler(logger, prompt, output, login, actions).apply(params);
+                new DiffHandler(logger, prompt, output, login, actions)
+                        .apply(params);
                 break;
 
             case PARSE_AND_DIFF:
-                new ParseAndDiffHandler(logger, prompt, output, login, actions).apply(params);
+                new ParseAndDiffHandler(logger, prompt, output, login, actions)
+                        .apply(params);
                 break;
 
             case UPDATE:
-                new UpdateHandler(logger, prompt,  output, login, actions).apply(params);
+                new UpdateHandler(logger, prompt, output, login, actions)
+                        .apply(params);
                 break;
 
             case UPDATE_UNSAFE:
-                new UpdateUnsafeHandler(logger, prompt,  output, login, actions).apply(params);
+                new UpdateUnsafeHandler(logger, prompt, output, login, actions)
+                        .apply(params);
                 break;
 
             default:
                 throw new IllegalArgumentException(
-                        "The action \"" + params.getAction() + "\" does not exist, or is not supported at the moment.");
+                        "The action \""
+                                + params.getAction()
+                                + "\" does not exist, or is not supported at the moment.");
         }
     }
 }

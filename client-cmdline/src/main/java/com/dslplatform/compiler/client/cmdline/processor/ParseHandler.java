@@ -7,10 +7,10 @@ import com.dslplatform.compiler.client.api.params.Arguments;
 import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.processors.ParseProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
+import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
-import com.dslplatform.compiler.client.io.Logger;
 
 public class ParseHandler {
     private final Logger logger;
@@ -35,13 +35,13 @@ public class ParseHandler {
     public void apply(final Arguments arguments) throws IOException {
         final DSL dsl = arguments.getDsl();
 
-        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
+        final AuthProvider authProvider = new AuthProvider(logger, prompt,
+                login, arguments);
         final ParseProcessor pp = actions.parse(authProvider.getAuth(), dsl);
 
         if (pp.isAuthorized()) {
             authProvider.setToken(pp.getAuthorization());
-        }
-        else if (authProvider.isToken()) {
+        } else if (authProvider.isToken()) {
             authProvider.removeToken();
             apply(arguments);
             return;

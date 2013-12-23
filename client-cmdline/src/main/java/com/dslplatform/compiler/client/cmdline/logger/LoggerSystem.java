@@ -5,7 +5,8 @@ import com.dslplatform.compiler.client.io.Logger;
 public class LoggerSystem implements Logger {
     private Level level;
 
-    public LoggerSystem(final Level level) {
+    public LoggerSystem(
+            final Level level) {
         this.level = level;
     }
 

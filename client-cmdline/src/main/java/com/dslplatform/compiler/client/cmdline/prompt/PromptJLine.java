@@ -10,7 +10,8 @@ import com.dslplatform.compiler.client.io.Prompt;
 public class PromptJLine implements Prompt {
     private final Output output;
 
-    public PromptJLine(final Output output) {
+    public PromptJLine(
+            final Output output) {
         this.output = output;
     }
 
@@ -19,8 +20,7 @@ public class PromptJLine implements Prompt {
         try {
             Class.forName("jline.console.ConsoleReader");
             return true;
-        }
-        catch (final ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             return false;
         }
     }
@@ -32,12 +32,10 @@ public class PromptJLine implements Prompt {
             final ConsoleReader console = new ConsoleReader();
             try {
                 return (char) console.readCharacter(allowed.toCharArray());
-            }
-            finally {
+            } finally {
                 console.shutdown();
             }
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -47,15 +45,12 @@ public class PromptJLine implements Prompt {
         try {
             final ConsoleReader console = new ConsoleReader();
             try {
-                return mask != null
-                        ? console.readLine(message, mask)
-                        : console.readLine(message);
-            }
-            finally {
+                return mask != null ? console.readLine(message, mask) : console
+                        .readLine(message);
+            } finally {
                 console.shutdown();
             }
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }

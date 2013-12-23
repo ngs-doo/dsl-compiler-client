@@ -11,14 +11,12 @@ public class LoggerSlf4j implements Logger {
         try {
             Class.forName("org.slf4j.LoggerFactory");
             logger = new LoggerSlf4jBridge();
-        }
-        catch (final ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             logger = null;
         }
 
         this.logger = logger;
     }
-
 
     @Override
     public boolean isAvailable() {

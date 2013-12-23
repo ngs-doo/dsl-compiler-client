@@ -4,7 +4,8 @@ import com.dslplatform.compiler.client.api.transport.Message;
 import com.dslplatform.compiler.client.io.Logger;
 
 public class UpdateProcessor extends UpdateUnsafeProcessor {
-    public UpdateProcessor(final Logger logger) {
+    public UpdateProcessor(
+            final Logger logger) {
         super(logger);
     }
 

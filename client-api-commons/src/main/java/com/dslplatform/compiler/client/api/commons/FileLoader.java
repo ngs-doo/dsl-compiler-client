@@ -27,7 +27,8 @@ public class FileLoader {
 
     private final Logger logger;
 
-    public FileLoader(final Logger logger) {
+    public FileLoader(
+            final Logger logger) {
         this.logger = logger;
     }
 
@@ -39,33 +40,43 @@ public class FileLoader {
         return addPath(path, DEFAULT_PATTERN);
     }
 
-    public FileLoader addPath(final String path, final String pattern) throws IOException {
+    public FileLoader addPath(final String path, final String pattern)
+            throws IOException {
         return addPath(path, path, Pattern.compile(pattern));
     }
 
-    public FileLoader addPath(final String rootPath, final String path, final Pattern pattern) throws IOException {
+    public FileLoader addPath(
+            final String rootPath,
+            final String path,
+            final Pattern pattern) throws IOException {
         logger.debug("Adding file: " + path);
         final File file = new File(path);
 
         if (file.isDirectory()) {
             for (final String curPath : file.list()) {
-                logger.trace("Recursively adding path \"" + path + "\" via pattern: " + pattern);
+                logger.trace("Recursively adding path \"" + path
+                        + "\" via pattern: " + pattern);
                 addPath(rootPath, path + "/" + curPath, pattern);
             }
         } else if (file.isFile()) {
             final String realPath = file.getCanonicalPath();
-            logger.trace("Checking path \"" + path + "\" via pattern: " + pattern);
+            logger.trace("Checking path \"" + path + "\" via pattern: "
+                    + pattern);
             if (pattern.matcher(realPath).matches()) {
                 addFile(rootPath, realPath, file);
             }
         } else {
-            throw new IOException("File or directory \"" + file + "\" does not exist!");
+            throw new IOException("File or directory \"" + file
+                    + "\" does not exist!");
         }
 
         return this;
     }
 
-    private void addFile(final String rootPath, final String realPath, final File file) throws IOException {
+    private void addFile(
+            final String rootPath,
+            final String realPath,
+            final File file) throws IOException {
         logger.trace("Checking \"" + realPath + "\" for duplicate addition");
         if (fileBodies.containsKey(realPath)) {
             return;
@@ -75,17 +86,16 @@ public class FileLoader {
         final byte[] content = FileUtils.readFileToByteArray(file);
 
         final String rootCanonicalPath = new File(rootPath).getCanonicalPath();
-        final String relativePath = realPath.substring(rootCanonicalPath.length() + 1);
+        final String relativePath = realPath.substring(rootCanonicalPath
+                .length() + 1);
         addBytes(relativePath, content);
     }
 
     public void addBytes(final String rawrealPath, final byte[] content) {
         synchronized (fileBodies) {
             // All files with path separator /
-            final String realPath =
-                    (slash == '/')
-                    ? rawrealPath
-                    : rawrealPath.replace(slash, '/');
+            final String realPath = (slash == '/') ? rawrealPath : rawrealPath
+                    .replace(slash, '/');
 
             if (fileBodies.containsKey(realPath)) return;
 
@@ -107,7 +117,8 @@ public class FileLoader {
     public SortedMap<String, byte[]> getBodies() {
         final SortedMap<String, byte[]> bodies = new TreeMap<String, byte[]>();
         synchronized (fileBodies) {
-            for (final Map.Entry<String, Hash.Body> entry : fileBodies.entrySet()) {
+            for (final Map.Entry<String, Hash.Body> entry : fileBodies
+                    .entrySet()) {
                 bodies.put(entry.getKey(), entry.getValue().body);
             }
         }

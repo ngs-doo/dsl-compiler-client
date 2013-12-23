@@ -10,7 +10,8 @@ import com.dslplatform.compiler.client.io.Prompt;
 public class PromptSystem implements Prompt {
     private final Output output;
 
-    public PromptSystem(final Output output) {
+    public PromptSystem(
+            final Output output) {
         this.output = output;
     }
 
@@ -21,7 +22,7 @@ public class PromptSystem implements Prompt {
 
     @Override
     public char readCharacter(final String message, final String allowed) {
-        while(true) {
+        while (true) {
             final String line = readLine(message, null).trim();
             if (!line.isEmpty()) {
                 final char ch = line.charAt(0);
@@ -37,12 +38,11 @@ public class PromptSystem implements Prompt {
     }
 
     protected String readBuffered(final Character mask) {
-        final BufferedReader br = new BufferedReader(
-            new InputStreamReader(System.in));
+        final BufferedReader br = new BufferedReader(new InputStreamReader(
+                System.in));
         try {
             return br.readLine();
-        }
-        catch (final IOException e){
+        } catch (final IOException e) {
             throw new IllegalArgumentException(e);
         }
     }

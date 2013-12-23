@@ -44,7 +44,8 @@ public class RunningTask {
         return messageList.toArray(new Message[messageList.size()]);
     }
 
-    public Iterable<Message> processMessages(final MessageProcessor processor) throws IOException {
+    public Iterable<Message> processMessages(final MessageProcessor processor)
+            throws IOException {
         final ArrayDeque<Message> messageQueue = new ArrayDeque<Message>();
 
         long endTime = System.currentTimeMillis() + timeout;
@@ -52,7 +53,8 @@ public class RunningTask {
 
         while (true) {
             final byte[] body = new byte[0];
-            final Response response = ApiCall.await(target, requestID, pollInterval, lastOrdinal, body);
+            final Response response = ApiCall.await(target, requestID,
+                    pollInterval, lastOrdinal, body);
 
             for (final Message message : response.getMessages()) {
                 endTime = System.currentTimeMillis() + timeout;
@@ -65,7 +67,8 @@ public class RunningTask {
             }
 
             if (System.currentTimeMillis() > endTime) {
-                throw new IOException("A timeout has been reached for this request");
+                throw new IOException(
+                        "A timeout has been reached for this request");
             }
         }
     }

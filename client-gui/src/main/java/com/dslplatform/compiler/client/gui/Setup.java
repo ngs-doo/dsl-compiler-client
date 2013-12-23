@@ -8,7 +8,8 @@ import javax.swing.JFrame;
 public class Setup {
     public static void setLookAndFeel(final boolean decorated) {
         Toolkit.getDefaultToolkit().setDynamicLayout(decorated);
-        System.setProperty("sun.awt.noerasebackground", String.valueOf(decorated));
+        System.setProperty("sun.awt.noerasebackground",
+                String.valueOf(decorated));
 
         JFrame.setDefaultLookAndFeelDecorated(decorated);
         JDialog.setDefaultLookAndFeelDecorated(decorated);

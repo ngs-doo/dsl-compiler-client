@@ -10,7 +10,8 @@ public interface Param {
     public static class XMLOut {
         private final StringBuilder sB;
 
-        public XMLOut(final String root) {
+        public XMLOut(
+                final String root) {
             sB = new StringBuilder();
             depth = new Stack<String>();
             start(root);
@@ -59,10 +60,8 @@ public interface Param {
         }
 
         public XMLOut text(final String text) {
-            sB.append(text.toString()
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;"));
+            sB.append(text.toString().replace("&", "&amp;")
+                    .replace("<", "&lt;").replace(">", "&gt;"));
             return this;
         }
 
@@ -76,7 +75,8 @@ public interface Param {
 
         @Override
         public String toString() {
-            while (!depth.isEmpty()) end();
+            while (!depth.isEmpty())
+                end();
             return sB.toString();
         }
     }

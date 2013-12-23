@@ -3,12 +3,12 @@ package com.dslplatform.compiler.client.gui.windows.login;
 public class LoginResponse {
 
     public static enum Status {
-      SUCCESS,
-      INVALID,
-      CANCELED,
-      ERROR,
-      EMPTY,
-      PENDING
+        SUCCESS,
+        INVALID,
+        CANCELED,
+        ERROR,
+        EMPTY,
+        PENDING
     }
 
     public final boolean ok;

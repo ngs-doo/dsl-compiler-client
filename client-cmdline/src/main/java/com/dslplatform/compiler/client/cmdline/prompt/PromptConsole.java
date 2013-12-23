@@ -9,7 +9,8 @@ public class PromptConsole implements Prompt {
     private final Output output;
     private final Console console;
 
-    public PromptConsole(final Output output) {
+    public PromptConsole(
+            final Output output) {
         this.output = output;
         console = System.console();
     }
@@ -21,7 +22,7 @@ public class PromptConsole implements Prompt {
 
     @Override
     public char readCharacter(final String message, final String allowed) {
-        while(true) {
+        while (true) {
             final String line = readLine(message, null).trim();
             if (!line.isEmpty()) {
                 final char ch = line.charAt(0);
@@ -33,8 +34,7 @@ public class PromptConsole implements Prompt {
     @Override
     public String readLine(final String message, final Character mask) {
         output.print(message);
-        return mask != null
-            ? new String(console.readPassword())
-            : console.readLine();
+        return mask != null ? new String(console.readPassword()) : console
+                .readLine();
     }
 }

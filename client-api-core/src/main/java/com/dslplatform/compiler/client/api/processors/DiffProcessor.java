@@ -7,7 +7,8 @@ import com.dslplatform.compiler.client.api.transport.Message;
 import com.dslplatform.compiler.client.io.Logger;
 
 public class DiffProcessor extends BaseProcessor {
-    public DiffProcessor(final Logger logger) {
+    public DiffProcessor(
+            final Logger logger) {
         super(logger);
     }
 

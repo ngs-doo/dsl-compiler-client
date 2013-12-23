@@ -27,7 +27,8 @@ public class ArgumentsParser extends ArgumentsValidator {
             exitWithHelp();
         }
 
-        logger.debug(String.format("There were %d arguments provided", args.length));
+        logger.debug(String.format("There were %d arguments provided",
+                args.length));
 
         logger.trace("Running preliminary scan for the help switch");
         for (final String arg : args) {
@@ -42,7 +43,7 @@ public class ArgumentsParser extends ArgumentsValidator {
             }
         }
 
-        for (int index = 0; index < args.length; index ++) {
+        for (int index = 0; index < args.length; index++) {
             final String arg = args[index];
             final boolean last = index == args.length - 1;
 
@@ -70,11 +71,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse username, new arguments overwrite old ones
                 String username = startsWith(arg, "-u", "--username=");
                 if (username != null) {
-                    logger.trace("Parsed username parameter, overwriting old username: " + username);
+                    logger.trace("Parsed username parameter, overwriting old username: "
+                            + username);
                     if (username.isEmpty()) {
                         if (last || (username = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Username cannot be empty!");
-                        logger.trace("Username argument was empty, read next argument: " + username);
+                            throw new IllegalArgumentException(
+                                    "Username cannot be empty!");
+                        logger.trace("Username argument was empty, read next argument: "
+                                + username);
                     }
                     setUsername(username);
                     continue;
@@ -87,7 +91,8 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed password parameter, overwriting old password: ****");
                     if (password.isEmpty()) {
                         if (last || (password = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Password cannot be empty!");
+                            throw new IllegalArgumentException(
+                                    "Password cannot be empty!");
                         logger.trace("Password argument was empty, reading next argument: ****");
                     }
                     setPassword(password);
@@ -98,11 +103,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse projectID, new arguments overwrite old ones
                 String projectID = startsWith(arg, "-i", "--project-id=");
                 if (projectID != null) {
-                    logger.trace("Parsed project ID parameter, overwriting old project ID: " + projectID);
+                    logger.trace("Parsed project ID parameter, overwriting old project ID: "
+                            + projectID);
                     if (projectID.isEmpty()) {
                         if (last || (projectID = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Project ID cannot be empty!");
-                        logger.trace("Project ID argument was empty, reading next argument: " + projectID);
+                            throw new IllegalArgumentException(
+                                    "Project ID cannot be empty!");
+                        logger.trace("Project ID argument was empty, reading next argument: "
+                                + projectID);
                     }
                     setProjectID(projectID);
                     continue;
@@ -114,11 +122,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse language, new arguments are joined with old ones (multiple languages supported)
                 String languages = startsWith(arg, "-l", "--language=");
                 if (languages != null) {
-                    logger.trace("Parsed language parameter, adding languages to the list: " + languages);
+                    logger.trace("Parsed language parameter, adding languages to the list: "
+                            + languages);
                     if (languages.isEmpty()) {
                         if (last || (languages = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Language cannot be empty!");
-                        logger.trace("Language argument was empty, reading next argument: " + languages);
+                            throw new IllegalArgumentException(
+                                    "Language cannot be empty!");
+                        logger.trace("Language argument was empty, reading next argument: "
+                                + languages);
                     }
                     addLanguages(languages);
                     continue;
@@ -128,11 +139,13 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse package name (namespace), new arguments overwrite old ones
                 String packageName = startsWith(arg, "-n", "--package-name=");
                 if (packageName != null) {
-                    logger.trace("Parsed package name parameter, overwriting old package name: " + packageName);
+                    logger.trace("Parsed package name parameter, overwriting old package name: "
+                            + packageName);
                     if (packageName.isEmpty()) {
                         if (!last) {
                             packageName = args[++index];
-                            logger.trace("Package name argument was empty, reading next argument: " + packageName);
+                            logger.trace("Package name argument was empty, reading next argument: "
+                                    + packageName);
                             if (packageName.isEmpty()) {
                                 logger.debug("Files will be compiled without a package name");
                             }
@@ -148,11 +161,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse DSL path, new arguments are joined with old ones (multiple folders)
                 String dslPath = startsWith(arg, "-d", "--dsl-path=");
                 if (dslPath != null) {
-                    logger.trace("Parsed DSL path parameter, adding DSL path to the list: " + dslPath);
+                    logger.trace("Parsed DSL path parameter, adding DSL path to the list: "
+                            + dslPath);
                     if (dslPath.isEmpty()) {
                         if (last || (dslPath = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Missing DSL path argument!");
-                        logger.trace("Dsl path was empty, reading next argument: " + dslPath);
+                            throw new IllegalArgumentException(
+                                    "Missing DSL path argument!");
+                        logger.trace("Dsl path was empty, reading next argument: "
+                                + dslPath);
                     }
                     addDslPath(dslPath);
                     continue;
@@ -162,11 +178,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse output path, new arguments overwrite old ones
                 String outputPath = startsWith(arg, "-o", "--output-path=");
                 if (outputPath != null) {
-                    logger.trace("Parsed output path parameter, overwriting old output path: " + outputPath);
+                    logger.trace("Parsed output path parameter, overwriting old output path: "
+                            + outputPath);
                     if (outputPath.isEmpty()) {
                         if (last || (outputPath = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Missing output path argument!");
-                        logger.trace("Output path was empty, reading next argument: " + outputPath);
+                            throw new IllegalArgumentException(
+                                    "Missing output path argument!");
+                        logger.trace("Output path was empty, reading next argument: "
+                                + outputPath);
                     }
                     setOutputPath(outputPath);
                     continue;
@@ -176,11 +195,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse cache path, new arguments overwrite old ones
                 String cachePath = startsWith(arg, "-o", "--cache-path=");
                 if (cachePath != null) {
-                    logger.trace("Parsed cache path parameter, overwriting old cache path: " + cachePath);
+                    logger.trace("Parsed cache path parameter, overwriting old cache path: "
+                            + cachePath);
                     if (cachePath.isEmpty()) {
                         if (last || (cachePath = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Missing cache path argument!");
-                        logger.trace("Cache path was empty, reading next argument: " + cachePath);
+                            throw new IllegalArgumentException(
+                                    "Missing cache path argument!");
+                        logger.trace("Cache path was empty, reading next argument: "
+                                + cachePath);
                     }
                     setCachePath(cachePath);
                     continue;
@@ -190,11 +212,14 @@ public class ArgumentsParser extends ArgumentsValidator {
             {   // parse logging level, new arguments overwrite old ones
                 String loggingLevel = startsWith(arg, "-v", "--logging-level=");
                 if (loggingLevel != null) {
-                    logger.trace("Parsed logging level parameter, overwriting old logging level: " + loggingLevel);
+                    logger.trace("Parsed logging level parameter, overwriting old logging level: "
+                            + loggingLevel);
                     if (loggingLevel.isEmpty()) {
                         if (last || (loggingLevel = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Missing logging level argument!");
-                        logger.trace("Cache path was empty, reading next argument: " + loggingLevel);
+                            throw new IllegalArgumentException(
+                                    "Missing logging level argument!");
+                        logger.trace("Cache path was empty, reading next argument: "
+                                + loggingLevel);
                     }
                     setLoggingLevel(loggingLevel);
                     continue;
@@ -204,13 +229,17 @@ public class ArgumentsParser extends ArgumentsValidator {
             // =========================================================================================================
 
             {   // parse project ini, immediately expanded with new .ini arguments overwriting old ones
-                String projectIniPath = startsWith(arg, "-f", "--project-ini-path=");
+                String projectIniPath = startsWith(arg, "-f",
+                        "--project-ini-path=");
                 if (projectIniPath != null) {
-                    logger.trace("Parsed project ini path parameter, processing: " + projectIniPath);
+                    logger.trace("Parsed project ini path parameter, processing: "
+                            + projectIniPath);
                     if (projectIniPath.isEmpty()) {
                         if (last || (projectIniPath = args[++index]).isEmpty())
-                            throw new IllegalArgumentException("Missing project ini path argument!");
-                        logger.trace("Project ini path as empty, reading next argument: " + projectIniPath);
+                            throw new IllegalArgumentException(
+                                    "Missing project ini path argument!");
+                        logger.trace("Project ini path as empty, reading next argument: "
+                                + projectIniPath);
                     }
                     setProjectIniPath(projectIniPath);
                     continue;
@@ -220,18 +249,20 @@ public class ArgumentsParser extends ArgumentsValidator {
             // =========================================================================================================
 
             // parse action, new arguments are joined with old ones (specific combinations of multiple actions are allowed)
-            logger.trace("No specific handler has been found, assuming that this parameter is an action: " + arg);
+            logger.trace("No specific handler has been found, assuming that this parameter is an action: "
+                    + arg);
             addActions(arg);
         }
     }
 
     // =================================================================================================================
 
-    private static String startsWith(final String what, final String... switches) {
+    private static String startsWith(
+            final String what,
+            final String... switches) {
         final String trimmed = what.trim();
         for (final String sw : switches) {
-            if (trimmed.startsWith(sw))
-                return what.substring(sw.length());
+            if (trimmed.startsWith(sw)) return what.substring(sw.length());
         }
         return null;
     }
@@ -245,8 +276,9 @@ public class ArgumentsParser extends ArgumentsValidator {
 
     private void exitWithHelp() {
         try {
-            final String helpText = new String(IOUtils.toByteArray(
-                    ArgumentsParser.class.getResourceAsStream("/dsl-clc-help.txt")), "UTF-8");
+            final String helpText = new String(
+                    IOUtils.toByteArray(ArgumentsParser.class
+                            .getResourceAsStream("/dsl-clc-help.txt")), "UTF-8");
             output.println(helpText);
         } catch (final Exception e) {
             output.println("Could not display the help file!");

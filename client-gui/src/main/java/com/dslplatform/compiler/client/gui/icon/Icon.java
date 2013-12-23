@@ -16,15 +16,15 @@ public enum Icon {
     public final ImageIcon icon;
     public final int width, height;
 
-    private Icon(final String path) {
+    private Icon(
+            final String path) {
         try {
             image = ImageIO.read(Icon.class.getResourceAsStream(path));
             icon = new ImageIcon(image);
 
             width = image.getWidth(null);
             height = image.getHeight(null);
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("Could not load icon Resource!");
         }
     }

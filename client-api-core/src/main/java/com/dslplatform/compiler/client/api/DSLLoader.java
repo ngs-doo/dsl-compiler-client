@@ -17,21 +17,28 @@ public class DSLLoader {
     private final Logger logger;
     private final Charset encoding;
 
-    public DSLLoader(final Logger logger) {
+    public DSLLoader(
+            final Logger logger) {
         this(logger, new Environment());
     }
 
-    public DSLLoader(final Logger logger, final String encoding) {
+    public DSLLoader(
+            final Logger logger,
+            final String encoding) {
         this(logger, Charset.forName(encoding));
     }
 
-    public DSLLoader(final Logger logger, final Charset encoding) {
+    public DSLLoader(
+            final Logger logger,
+            final Charset encoding) {
         this.logger = logger;
         this.encoding = encoding;
         this.fileLoader = new FileLoader(logger);
     }
 
-    public DSLLoader(final Logger logger, final Environment environment) {
+    public DSLLoader(
+            final Logger logger,
+            final Environment environment) {
         this(logger, environment.encoding);
     }
 
@@ -41,15 +48,17 @@ public class DSLLoader {
 
     private static final String DSL_PATTERN = ".*\\.dsl$";
 
-    public DSLLoader addPath( final String path) throws IOException {
+    public DSLLoader addPath(final String path) throws IOException {
         return addPath(path, DSL_PATTERN);
     }
 
-    public DSLLoader addPath(final String path, final String pattern) throws IOException {
+    public DSLLoader addPath(final String path, final String pattern)
+            throws IOException {
         return addPath(path, Pattern.compile(pattern));
     }
 
-    public DSLLoader addPath(final String path, final Pattern pattern) throws IOException {
+    public DSLLoader addPath(final String path, final Pattern pattern)
+            throws IOException {
         fileLoader.addPath(path, path, pattern);
         return this;
     }
@@ -69,12 +78,14 @@ public class DSLLoader {
             try {
                 final String text = new String(body, encoding);
                 if (!Arrays.equals(text.getBytes(encoding), body)) {
-                    throw new Exception("Encode/decode via " + encoding + " - check failed");
+                    throw new Exception("Encode/decode via " + encoding
+                            + " - check failed");
                 }
                 dslFiles.put(file, text);
-            }
-            catch (final Exception e) {
-                throw new IOException("File \"" + file + "\" could not be decoded via " + encoding + " encoding", e);
+            } catch (final Exception e) {
+                throw new IOException("File \"" + file
+                        + "\" could not be decoded via " + encoding
+                        + " encoding", e);
 
             }
         }

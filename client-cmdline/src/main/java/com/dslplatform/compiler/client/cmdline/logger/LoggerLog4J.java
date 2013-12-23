@@ -13,8 +13,7 @@ public class LoggerLog4J implements Logger {
         try {
             Class.forName("org.apache.logging.log4j.LogManager");
             logger = new LoggerLog4JBridge();
-        }
-        catch (final ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             logger = null;
         }
 

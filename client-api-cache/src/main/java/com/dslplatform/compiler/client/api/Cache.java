@@ -14,7 +14,10 @@ public class Cache {
     private final File cachePath;
     private final File file;
 
-    public Cache(final Logger logger, final File cachePath, final UUID projectID) {
+    public Cache(
+            final Logger logger,
+            final File cachePath,
+            final UUID projectID) {
         this.logger = logger;
 
         this.cachePath = cachePath;
@@ -35,9 +38,9 @@ public class Cache {
             }
 
             return FileUtils.readFileToByteArray(file);
-        }
-        catch (final IOException e) {
-            logger.error("Could not read from cache: " + file + " (" + e.getMessage() + ")");
+        } catch (final IOException e) {
+            logger.error("Could not read from cache: " + file + " ("
+                    + e.getMessage() + ")");
             return null;
         }
     }
@@ -51,9 +54,9 @@ public class Cache {
         try {
             FileUtils.writeByteArrayToFile(file, body);
             logger.debug("Wrote cache file: " + file);
-        }
-        catch (final IOException e) {
-            logger.error("Could not save cache file: " + file + "(" + e.getMessage() + ")");
+        } catch (final IOException e) {
+            logger.error("Could not save cache file: " + file + "("
+                    + e.getMessage() + ")");
         }
     }
 

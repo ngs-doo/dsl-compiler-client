@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 
 /**
  * General IO stream manipulation utilities.
@@ -124,7 +125,7 @@ public class IOUtils {
      * @param input  the InputStream to close, may be null or already closed
      */
     public static void closeQuietly(final InputStream input) {
-        closeQuietly((Closeable)input);
+        closeQuietly((Closeable) input);
     }
 
     /**
@@ -152,7 +153,7 @@ public class IOUtils {
      * @param output  the OutputStream to close, may be null or already closed
      */
     public static void closeQuietly(final OutputStream output) {
-        closeQuietly((Closeable)output);
+        closeQuietly((Closeable) output);
     }
 
     /**
@@ -201,7 +202,8 @@ public class IOUtils {
      * @throws NullPointerException if the input is null
      * @throws IOException if an I/O error occurs
      */
-    public static byte[] toByteArray(final InputStream input) throws IOException {
+    public static byte[] toByteArray(final InputStream input)
+            throws IOException {
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         copy(input, output);
         return output.toByteArray();
@@ -247,7 +249,8 @@ public class IOUtils {
      * @throws IOException if an I/O error occurs
      * @since 1.1
      */
-    public static int copy(final InputStream input, final OutputStream output) throws IOException {
+    public static int copy(final InputStream input, final OutputStream output)
+            throws IOException {
         final long count = copyLarge(input, output);
         if (count > Integer.MAX_VALUE) {
             return -1;
@@ -271,8 +274,9 @@ public class IOUtils {
      * @throws IOException if an I/O error occurs
      * @since 1.3
      */
-    public static long copyLarge(final InputStream input, final OutputStream output)
-            throws IOException {
+    public static long copyLarge(
+            final InputStream input,
+            final OutputStream output) throws IOException {
         return copyLarge(input, output, new byte[DEFAULT_BUFFER_SIZE]);
     }
 
@@ -292,8 +296,10 @@ public class IOUtils {
      * @throws IOException if an I/O error occurs
      * @since 2.2
      */
-    public static long copyLarge(final InputStream input, final OutputStream output, final byte[] buffer)
-            throws IOException {
+    public static long copyLarge(
+            final InputStream input,
+            final OutputStream output,
+            final byte[] buffer) throws IOException {
         long count = 0;
         int n = 0;
         while (EOF != (n = input.read(buffer))) {
@@ -317,9 +323,14 @@ public class IOUtils {
      * @throws IOException if a read error occurs
      * @since 2.2
      */
-    public static int read(final InputStream input, final byte[] buffer, final int offset, final int length) throws IOException {
+    public static int read(
+            final InputStream input,
+            final byte[] buffer,
+            final int offset,
+            final int length) throws IOException {
         if (length < 0) {
-            throw new IllegalArgumentException("Length must not be negative: " + length);
+            throw new IllegalArgumentException("Length must not be negative: "
+                    + length);
         }
         int remaining = length;
         while (remaining > 0) {
@@ -345,7 +356,8 @@ public class IOUtils {
      * @throws IOException if a read error occurs
      * @since 2.2
      */
-    public static int read(final InputStream input, final byte[] buffer) throws IOException {
+    public static int read(final InputStream input, final byte[] buffer)
+            throws IOException {
         return read(input, buffer, 0, buffer.length);
     }
 
@@ -365,10 +377,15 @@ public class IOUtils {
      * @throws EOFException if the number of bytes read was incorrect
      * @since 2.2
      */
-    public static void readFully(final InputStream input, final byte[] buffer, final int offset, final int length) throws IOException {
+    public static void readFully(
+            final InputStream input,
+            final byte[] buffer,
+            final int offset,
+            final int length) throws IOException {
         final int actual = read(input, buffer, offset, length);
         if (actual != length) {
-            throw new EOFException("Length to read: " + length + " actual: " + actual);
+            throw new EOFException("Length to read: " + length + " actual: "
+                    + actual);
         }
     }
 
@@ -386,7 +403,8 @@ public class IOUtils {
      * @throws EOFException if the number of bytes read was incorrect
      * @since 2.2
      */
-    public static void readFully(final InputStream input, final byte[] buffer) throws IOException {
+    public static void readFully(final InputStream input, final byte[] buffer)
+            throws IOException {
         readFully(input, buffer, 0, buffer.length);
     }
 }

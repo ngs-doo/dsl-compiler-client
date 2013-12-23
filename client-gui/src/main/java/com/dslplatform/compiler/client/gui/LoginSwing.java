@@ -36,15 +36,13 @@ public class LoginSwing implements Login {
         Setup.setLookAndFeel(true);
 
         output.println("Please enter your credentials in the popup dialog ...");
-        final LoginDialogResult result =
-                LoginDialog.show(logger, apiCall, defaultUsername, defaultPassword, true);
+        final LoginDialogResult result = LoginDialog.show(logger, apiCall,
+                defaultUsername, defaultPassword, true);
 
         if (result.response.ok) {
-            return new Credentials(
-                result.request.username,
-                result.request.password);
-        }
-        else {
+            return new Credentials(result.request.username,
+                    result.request.password);
+        } else {
             throw new IllegalArgumentException(result.response.message);
         }
     }

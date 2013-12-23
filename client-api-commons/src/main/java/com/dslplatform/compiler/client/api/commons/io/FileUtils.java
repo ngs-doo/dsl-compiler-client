@@ -92,13 +92,15 @@ public class FileUtils {
     public static FileInputStream openInputStream(File file) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
-                throw new IOException("File '" + file + "' exists but is a directory");
+                throw new IOException("File '" + file
+                        + "' exists but is a directory");
             }
             if (file.canRead() == false) {
                 throw new IOException("File '" + file + "' cannot be read");
             }
         } else {
-            throw new FileNotFoundException("File '" + file + "' does not exist");
+            throw new FileNotFoundException("File '" + file
+                    + "' does not exist");
         }
         return new FileInputStream(file);
     }
@@ -124,7 +126,8 @@ public class FileUtils {
      * @throws IOException if a parent directory needs creating but that fails
      * @since 1.3
      */
-    public static FileOutputStream openOutputStream(File file) throws IOException {
+    public static FileOutputStream openOutputStream(File file)
+            throws IOException {
         return openOutputStream(file, false);
     }
 
@@ -150,19 +153,23 @@ public class FileUtils {
      * @throws IOException if a parent directory needs creating but that fails
      * @since 2.1
      */
-    public static FileOutputStream openOutputStream(File file, boolean append) throws IOException {
+    public static FileOutputStream openOutputStream(File file, boolean append)
+            throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
-                throw new IOException("File '" + file + "' exists but is a directory");
+                throw new IOException("File '" + file
+                        + "' exists but is a directory");
             }
             if (file.canWrite() == false) {
-                throw new IOException("File '" + file + "' cannot be written to");
+                throw new IOException("File '" + file
+                        + "' cannot be written to");
             }
         } else {
             File parent = file.getParentFile();
             if (parent != null) {
                 if (!parent.mkdirs() && !parent.isDirectory()) {
-                    throw new IOException("Directory '" + parent + "' could not be created");
+                    throw new IOException("Directory '" + parent
+                            + "' could not be created");
                 }
             }
         }
@@ -218,7 +225,9 @@ public class FileUtils {
      * @throws IOException if an IO error occurs during copying
      * @see #copyFileToDirectory(File, File, boolean)
      */
-    public static void copyFile(File srcFile, File destFile,
+    public static void copyFile(
+            File srcFile,
+            File destFile,
             boolean preserveFileDate) throws IOException {
         if (srcFile == null) {
             throw new NullPointerException("Source must not be null");
@@ -227,22 +236,27 @@ public class FileUtils {
             throw new NullPointerException("Destination must not be null");
         }
         if (srcFile.exists() == false) {
-            throw new FileNotFoundException("Source '" + srcFile + "' does not exist");
+            throw new FileNotFoundException("Source '" + srcFile
+                    + "' does not exist");
         }
         if (srcFile.isDirectory()) {
-            throw new IOException("Source '" + srcFile + "' exists but is a directory");
+            throw new IOException("Source '" + srcFile
+                    + "' exists but is a directory");
         }
         if (srcFile.getCanonicalPath().equals(destFile.getCanonicalPath())) {
-            throw new IOException("Source '" + srcFile + "' and destination '" + destFile + "' are the same");
+            throw new IOException("Source '" + srcFile + "' and destination '"
+                    + destFile + "' are the same");
         }
         File parentFile = destFile.getParentFile();
         if (parentFile != null) {
             if (!parentFile.mkdirs() && !parentFile.isDirectory()) {
-                throw new IOException("Destination '" + parentFile + "' directory cannot be created");
+                throw new IOException("Destination '" + parentFile
+                        + "' directory cannot be created");
             }
         }
         if (destFile.exists() && destFile.canWrite() == false) {
-            throw new IOException("Destination '" + destFile + "' exists but is read-only");
+            throw new IOException("Destination '" + destFile
+                    + "' exists but is read-only");
         }
         doCopyFile(srcFile, destFile, preserveFileDate);
     }
@@ -264,7 +278,8 @@ public class FileUtils {
      *             if an I/O error occurs
      * @since 2.1
      */
-    public static long copyFile(File input, OutputStream output) throws IOException {
+    public static long copyFile(File input, OutputStream output)
+            throws IOException {
         final FileInputStream fis = new FileInputStream(input);
         try {
             return IOUtils.copyLarge(fis, output);
@@ -281,9 +296,13 @@ public class FileUtils {
      * @param preserveFileDate  whether to preserve the file date
      * @throws IOException if an error occurs
      */
-    private static void doCopyFile(File srcFile, File destFile, boolean preserveFileDate) throws IOException {
+    private static void doCopyFile(
+            File srcFile,
+            File destFile,
+            boolean preserveFileDate) throws IOException {
         if (destFile.exists() && destFile.isDirectory()) {
-            throw new IOException("Destination '" + destFile + "' exists but is a directory");
+            throw new IOException("Destination '" + destFile
+                    + "' exists but is a directory");
         }
 
         FileInputStream fis = null;
@@ -293,13 +312,15 @@ public class FileUtils {
         try {
             fis = new FileInputStream(srcFile);
             fos = new FileOutputStream(destFile);
-            input  = fis.getChannel();
+            input = fis.getChannel();
             output = fos.getChannel();
             long size = input.size();
             long pos = 0;
             long count = 0;
             while (pos < size) {
-                count = size - pos > FILE_COPY_BUFFER_SIZE ? FILE_COPY_BUFFER_SIZE : size - pos;
+                count = size - pos > FILE_COPY_BUFFER_SIZE
+                        ? FILE_COPY_BUFFER_SIZE
+                        : size - pos;
                 pos += output.transferFrom(input, pos, count);
             }
         } finally {
@@ -310,8 +331,8 @@ public class FileUtils {
         }
 
         if (srcFile.length() != destFile.length()) {
-            throw new IOException("Failed to copy full contents from '" +
-                    srcFile + "' to '" + destFile + "'");
+            throw new IOException("Failed to copy full contents from '"
+                    + srcFile + "' to '" + destFile + "'");
         }
         if (preserveFileDate) {
             destFile.setLastModified(srcFile.lastModified());
@@ -333,7 +354,9 @@ public class FileUtils {
      * @throws IOException if an IO error occurs during copying
      * @since 2.0
      */
-    public static void copyInputStreamToFile(InputStream source, File destination) throws IOException {
+    public static void copyInputStreamToFile(
+            InputStream source,
+            File destination) throws IOException {
         try {
             FileOutputStream output = openOutputStream(destination);
             try {
@@ -410,7 +433,8 @@ public class FileUtils {
      * @throws IOException in case of an I/O error
      * @since 1.1
      */
-    public static void writeByteArrayToFile(File file, byte[] data) throws IOException {
+    public static void writeByteArrayToFile(File file, byte[] data)
+            throws IOException {
         writeByteArrayToFile(file, data, false);
     }
 
@@ -424,7 +448,10 @@ public class FileUtils {
      * @throws IOException in case of an I/O error
      * @since IO 2.1
      */
-    public static void writeByteArrayToFile(File file, byte[] data, boolean append) throws IOException {
+    public static void writeByteArrayToFile(
+            File file,
+            byte[] data,
+            boolean append) throws IOException {
         OutputStream out = null;
         try {
             out = openOutputStream(file, append);
@@ -449,10 +476,7 @@ public class FileUtils {
     public static void forceMkdir(File directory) throws IOException {
         if (directory.exists()) {
             if (!directory.isDirectory()) {
-                String message =
-                    "File "
-                        + directory
-                        + " exists and is "
+                String message = "File " + directory + " exists and is "
                         + "not a directory. Unable to create directory.";
                 throw new IOException(message);
             }
@@ -460,10 +484,8 @@ public class FileUtils {
             if (!directory.mkdirs()) {
                 // Double-check that some other thread or process hasn't made
                 // the directory in the background
-                if (!directory.isDirectory())
-                {
-                    String message =
-                        "Unable to create directory " + directory;
+                if (!directory.isDirectory()) {
+                    String message = "Unable to create directory " + directory;
                     throw new IOException(message);
                 }
             }
@@ -491,24 +513,27 @@ public class FileUtils {
             throw new NullPointerException("Destination must not be null");
         }
         if (!srcFile.exists()) {
-            throw new FileNotFoundException("Source '" + srcFile + "' does not exist");
+            throw new FileNotFoundException("Source '" + srcFile
+                    + "' does not exist");
         }
         if (srcFile.isDirectory()) {
             throw new IOException("Source '" + srcFile + "' is a directory");
         }
         if (destFile.exists()) {
-            throw new IOException("Destination '" + destFile + "' already exists");
+            throw new IOException("Destination '" + destFile
+                    + "' already exists");
         }
         if (destFile.isDirectory()) {
-            throw new IOException("Destination '" + destFile + "' is a directory");
+            throw new IOException("Destination '" + destFile
+                    + "' is a directory");
         }
         boolean rename = srcFile.renameTo(destFile);
         if (!rename) {
-            copyFile( srcFile, destFile );
+            copyFile(srcFile, destFile);
             if (!srcFile.delete()) {
                 FileUtils.deleteQuietly(destFile);
-                throw new IOException("Failed to delete original file '" + srcFile +
-                        "' after copy to '" + destFile + "'");
+                throw new IOException("Failed to delete original file '"
+                        + srcFile + "' after copy to '" + destFile + "'");
             }
         }
     }

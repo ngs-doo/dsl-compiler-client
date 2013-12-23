@@ -4,11 +4,14 @@ import java.nio.charset.Charset;
 
 public class Environment implements Param {
     public static enum ResponseType {
-        TEXT, HTML;
+        TEXT,
+        HTML;
     }
 
     public static enum Newline {
-        CR, CRLF, LF;
+        CR,
+        CRLF,
+        LF;
     }
 
     public final ResponseType responseType;
@@ -32,14 +35,14 @@ public class Environment implements Param {
     // -------------------------------------------------------------------------
 
     @Override
-    public boolean allowMultiple() { return false; }
+    public boolean allowMultiple() {
+        return false;
+    }
 
     @Override
     public void addToPayload(final XMLOut xO) {
-        xO.start("environment")
-            .node("responseType", responseType.name())
-            .node("newline", newline.toString())
-            .node("encoding", encoding.toString())
-        .end();
+        xO.start("environment").node("responseType", responseType.name())
+                .node("newline", newline.toString())
+                .node("encoding", encoding.toString()).end();
     }
 }

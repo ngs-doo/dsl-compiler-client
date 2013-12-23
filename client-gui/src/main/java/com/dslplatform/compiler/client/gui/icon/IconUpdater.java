@@ -15,7 +15,8 @@ import javax.swing.UIManager;
 public class IconUpdater extends WindowAdapter {
     private final JFrame frame;
 
-    public IconUpdater(final JFrame frame) {
+    public IconUpdater(
+            final JFrame frame) {
         this.frame = frame;
         frame.addWindowListener(this);
     }
@@ -43,13 +44,13 @@ public class IconUpdater extends WindowAdapter {
         final int w = img.getWidth(null);
         final int h = img.getHeight(null);
 
-        final Color bgColor = hidden
-            ? lastColor
-            : ((Color) UIManager.get(active ? "activeCaption" : "inactiveCaption"));
+        final Color bgColor = hidden ? lastColor : ((Color) UIManager
+                .get(active ? "activeCaption" : "inactiveCaption"));
 
         lastColor = bgColor;
 
-        final BufferedImage fixedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage fixedImage = new BufferedImage(w, h,
+                BufferedImage.TYPE_INT_ARGB);
 
         final Graphics g = fixedImage.getGraphics();
         g.setColor(bgColor);

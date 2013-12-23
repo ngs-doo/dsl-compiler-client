@@ -8,12 +8,12 @@ import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.params.ProjectID;
 import com.dslplatform.compiler.client.api.processors.DiffProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
+import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
-import com.dslplatform.compiler.client.io.Logger;
 
-public class DiffHandler extends BaseHandler{
+public class DiffHandler extends BaseHandler {
     private final Logger logger;
     private final Prompt prompt;
     private final Output output;
@@ -38,19 +38,20 @@ public class DiffHandler extends BaseHandler{
         final DSL dsl = arguments.getDsl();
         final ProjectID projectID = arguments.getProjectID();
 
-        final AuthProvider authProvider = new AuthProvider(logger, prompt, login, arguments);
-        final DiffProcessor dp = actions.diff(authProvider.getAuth(), dsl, projectID);
+        final AuthProvider authProvider = new AuthProvider(logger, prompt,
+                login, arguments);
+        final DiffProcessor dp = actions.diff(authProvider.getAuth(), dsl,
+                projectID);
 
         if (dp.isAuthorized()) {
             authProvider.setToken(dp.getAuthorization());
-        }
-        else if (authProvider.isToken()) {
+        } else if (authProvider.isToken()) {
             authProvider.removeToken();
             apply(arguments);
             return;
         }
 
-        for(final String diff : dp.getDiffs()) {
+        for (final String diff : dp.getDiffs()) {
             output.println(diff);
         }
     }

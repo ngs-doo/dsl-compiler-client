@@ -56,7 +56,8 @@ public abstract class ArgumentsValidator implements Arguments {
     private final Logger logger;
     private final PathExpander pathExpander;
 
-    public ArgumentsValidator(final Logger logger) {
+    public ArgumentsValidator(
+            final Logger logger) {
         this.logger = logger;
         this.pathExpander = new PathExpander(logger);
     }
@@ -67,21 +68,23 @@ public abstract class ArgumentsValidator implements Arguments {
         final int actNum = this.actions.size();
 
         if (actNum == 0) {
-            logger.debug("No actions were specified, defaulting to: " + DEFAULT_ACTION);
+            logger.debug("No actions were specified, defaulting to: "
+                    + DEFAULT_ACTION);
             return DEFAULT_ACTION;
         }
 
         final Set<Action> actions = new LinkedHashSet<Action>();
-        validation: for(final String unparsedAction : this.actions) {
-            for(final Action action : Action.values()) {
-                if (unparsedAction.equalsIgnoreCase(action.name().replace('_', ' '))) {
+        validation: for (final String unparsedAction : this.actions) {
+            for (final Action action : Action.values()) {
+                if (unparsedAction.equalsIgnoreCase(action.name().replace('_',
+                        ' '))) {
                     actions.add(action);
                     continue validation;
                 }
             }
 
-            throw new IllegalArgumentException(
-                    String.format("Action \"%s\" does not exist!", unparsedAction));
+            throw new IllegalArgumentException(String.format(
+                    "Action \"%s\" does not exist!", unparsedAction));
         }
 
         logger.trace("Succeeded in validating all actions: " + actions);
@@ -91,23 +94,26 @@ public abstract class ArgumentsValidator implements Arguments {
             return actions.iterator().next();
         }
 
-        if (actNum == 2 && (
-                actions.contains(Action.PARSE) && actions.contains(Action.DIFF) ||
-                actions.contains(Action.PARSE) && actions.contains(Action.PARSE_AND_DIFF) ||
-                actions.contains(Action.DIFF) && actions.contains(Action.PARSE_AND_DIFF))) {
+        if (actNum == 2
+                && (actions.contains(Action.PARSE)
+                        && actions.contains(Action.DIFF)
+                        || actions.contains(Action.PARSE)
+                        && actions.contains(Action.PARSE_AND_DIFF) || actions
+                        .contains(Action.DIFF)
+                        && actions.contains(Action.PARSE_AND_DIFF))) {
             logger.debug("There were two actions, parse and diff, which were merged into a single action");
             return Action.PARSE_AND_DIFF;
         }
 
-        if (actNum == 3 &&
-                actions.contains(Action.PARSE) &&
-                actions.contains(Action.DIFF) &&
-                actions.contains(Action.PARSE_AND_DIFF)) {
+        if (actNum == 3 && actions.contains(Action.PARSE)
+                && actions.contains(Action.DIFF)
+                && actions.contains(Action.PARSE_AND_DIFF)) {
             logger.debug("There were three actions, combinations of parse and diff, which were all merged into a single action");
             return Action.PARSE_AND_DIFF;
         }
 
-        throw new IllegalArgumentException("Incompatible actions were specified: " + actions);
+        throw new IllegalArgumentException(
+                "Incompatible actions were specified: " + actions);
     }
 
     @Override
@@ -151,8 +157,8 @@ public abstract class ArgumentsValidator implements Arguments {
         try {
             return new ProjectID(UUID.fromString(projectID));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                    String.format("\"%s\" does not look like a project ID!", projectID));
+            throw new IllegalArgumentException(String.format(
+                    "\"%s\" does not look like a project ID!", projectID));
         }
     }
 
@@ -162,7 +168,8 @@ public abstract class ArgumentsValidator implements Arguments {
     public Language[] getLanguages() {
         final int langNum = this.languages.size();
         if (langNum == 0) {
-            logger.debug("No languages were specified, defaulting to: " + DEFAULT_LANGUAGE);
+            logger.debug("No languages were specified, defaulting to: "
+                    + DEFAULT_LANGUAGE);
             return new Language[] { DEFAULT_LANGUAGE };
         }
 
@@ -170,7 +177,7 @@ public abstract class ArgumentsValidator implements Arguments {
         logger.trace("About to validate provided languages: " + this.languages);
 
         int index = 0;
-        validation: for(final String unparsedLanguage : this.languages) {
+        validation: for (final String unparsedLanguage : this.languages) {
             for (final Language language : Language.values()) {
                 if (unparsedLanguage.equalsIgnoreCase(language.language)) {
                     languages[index++] = language;
@@ -178,19 +185,19 @@ public abstract class ArgumentsValidator implements Arguments {
                 }
             }
 
-            throw new IllegalArgumentException(
-                    String.format("Language \"%s\" is not supported.", unparsedLanguage));
+            throw new IllegalArgumentException(String.format(
+                    "Language \"%s\" is not supported.", unparsedLanguage));
         }
 
-        logger.trace(String.format("Successfully validated %d languages", languages.length));
+        logger.trace(String.format("Successfully validated %d languages",
+                languages.length));
         return languages;
     }
 
     @Override
     public PackageName getPackageName() {
-        return packageName == null
-                ? DEFAULT_PACKAGE_NAME
-                : new PackageName(packageName);
+        return packageName == null ? DEFAULT_PACKAGE_NAME : new PackageName(
+                packageName);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -203,7 +210,7 @@ public abstract class ArgumentsValidator implements Arguments {
 
         logger.trace("About to pre-load DSL paths: " + dslPaths);
         final DSLLoader dslLoader = new DSLLoader(logger);
-        for(final String dslPath : dslPaths) {
+        for (final String dslPath : dslPaths) {
             logger.trace("Pre-loading DSL path: " + dslPaths);
             dslLoader.addPath(dslPath);
         }
@@ -226,10 +233,10 @@ public abstract class ArgumentsValidator implements Arguments {
     public File getCachePath() {
         final String cachePath;
         if (this.cachePath == null) {
-            logger.debug("No cache path was specified, defaulting to: " + DEFAULT_CACHE_PATH);
+            logger.debug("No cache path was specified, defaulting to: "
+                    + DEFAULT_CACHE_PATH);
             cachePath = DEFAULT_CACHE_PATH;
-        }
-        else {
+        } else {
             cachePath = this.cachePath;
         }
 
@@ -239,17 +246,22 @@ public abstract class ArgumentsValidator implements Arguments {
     @Override
     public Logger.Level getLoggingLevel() {
         if (loggingLevel == null) {
-            logger.debug("No logging level was specified, defaulting to: " + DEFAULT_LOGGING_LEVEL);
+            logger.debug("No logging level was specified, defaulting to: "
+                    + DEFAULT_LOGGING_LEVEL);
             return DEFAULT_LOGGING_LEVEL;
         }
 
-        logger.trace("About to validate provided logging level: " + loggingLevel);
-        final Logger.Level level = Logger.Level.valueOf(loggingLevel.toUpperCase());
+        logger.trace("About to validate provided logging level: "
+                + loggingLevel);
+        final Logger.Level level = Logger.Level.valueOf(loggingLevel
+                .toUpperCase());
 
-        if (level == null) throw new IllegalArgumentException(
-                String.format("Logging level \"%s\" is not supported.", loggingLevel));
+        if (level == null)
+            throw new IllegalArgumentException(String.format(
+                    "Logging level \"%s\" is not supported.", loggingLevel));
 
-        logger.trace(String.format("Successfully validated logging level: " + level));
+        logger.trace(String.format("Successfully validated logging level: "
+                + level));
         return level;
     }
 
@@ -257,15 +269,14 @@ public abstract class ArgumentsValidator implements Arguments {
 
     @Override
     public File getProjectIniPath() {
-        return projectIniPath == null
-                ? null
-                : pathExpander.expandPath(projectIniPath);
+        return projectIniPath == null ? null : pathExpander
+                .expandPath(projectIniPath);
     }
 
     // =================================================================================================================
 
     protected void addActions(final String actions) {
-        for(final String action : actions.split(",")) {
+        for (final String action : actions.split(",")) {
             logger.debug("Adding action: " + action);
             this.actions.add(action);
         }
@@ -339,7 +350,8 @@ public abstract class ArgumentsValidator implements Arguments {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    protected void setProjectIniPath(final String projectIniPath) throws IOException {
+    protected void setProjectIniPath(final String projectIniPath)
+            throws IOException {
         this.projectIniPath = projectIniPath;
 
         final Properties properties = new Properties();
@@ -348,11 +360,11 @@ public abstract class ArgumentsValidator implements Arguments {
             try {
                 properties.load(is);
                 logger.debug("Successfully loaded project ini properties");
-            }
-            catch (final IOException e) {
-                throw new IOException("An error occured whilst reading the project ini configuration", e);
-            }
-            finally {
+            } catch (final IOException e) {
+                throw new IOException(
+                        "An error occured whilst reading the project ini configuration",
+                        e);
+            } finally {
                 is.close();
             }
         }
@@ -369,41 +381,52 @@ public abstract class ArgumentsValidator implements Arguments {
 
         {
             final String username = properties.getProperty("username");
-            logger.debug("Parsed username parameter, overwriting old username: " + username);
+            logger.debug("Parsed username parameter, overwriting old username: "
+                    + username);
             if (username != null) setUsername(username);
-        }{
+        }
+        {
             final String password = properties.getProperty("password");
             logger.debug("Parsed password parameter, overwriting old password: ****");
             if (password != null) setPassword(password);
-        }{
+        }
+        {
             final String projectID = properties.getProperty("project-id");
-            logger.debug("Parsed project ID parameter, overwriting old project ID: " + projectID);
+            logger.debug("Parsed project ID parameter, overwriting old project ID: "
+                    + projectID);
             if (projectID != null) setProjectID(projectID);
         }
 
         {
             final String languages = properties.getProperty("language");
-            logger.debug("Parsed language parameter, adding languages to the list: " + languages);
+            logger.debug("Parsed language parameter, adding languages to the list: "
+                    + languages);
             if (languages != null) addLanguages(languages);
-        }{
+        }
+        {
             final String packageName = properties.getProperty("package-name");
-            logger.debug("Parsed package name parameter, overwriting old package name: " + packageName);
+            logger.debug("Parsed package name parameter, overwriting old package name: "
+                    + packageName);
             if (packageName != null) setPackageName(packageName);
         }
 
         {
             final String dslPath = properties.getProperty("dsl-path");
-            logger.debug("Parsed DSL path parameter, adding DSL path to the list: " + dslPath);
+            logger.debug("Parsed DSL path parameter, adding DSL path to the list: "
+                    + dslPath);
             if (dslPath != null) addDslPath(dslPath);
-        }{
+        }
+        {
             final String outputPath = properties.getProperty("output-path");
-            logger.debug("Parsed output path parameter, overwriting old output path: " + outputPath);
+            logger.debug("Parsed output path parameter, overwriting old output path: "
+                    + outputPath);
             if (outputPath != null) setOutputPath(outputPath);
         }
 
         {
             final String cachePath = properties.getProperty("cache-path");
-            logger.debug("Parsed cache path parameter, overwriting old cache path: " + cachePath);
+            logger.debug("Parsed cache path parameter, overwriting old cache path: "
+                    + cachePath);
             if (cachePath != null) setCachePath(cachePath);
         }
     }

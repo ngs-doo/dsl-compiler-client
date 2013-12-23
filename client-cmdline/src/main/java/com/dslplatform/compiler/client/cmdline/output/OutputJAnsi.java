@@ -13,8 +13,7 @@ public class OutputJAnsi implements Output {
         try {
             Class.forName("org.fusesource.jansi.AnsiConsole");
             available = true;
-        }
-        catch (final ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             available = false;
         }
 
