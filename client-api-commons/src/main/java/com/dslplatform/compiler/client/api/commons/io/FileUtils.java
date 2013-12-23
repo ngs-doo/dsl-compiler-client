@@ -89,7 +89,8 @@ public class FileUtils {
      * @throws IOException if the file cannot be read
      * @since 1.3
      */
-    public static FileInputStream openInputStream(File file) throws IOException {
+    public static FileInputStream openInputStream(final File file)
+            throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file
@@ -126,7 +127,7 @@ public class FileUtils {
      * @throws IOException if a parent directory needs creating but that fails
      * @since 1.3
      */
-    public static FileOutputStream openOutputStream(File file)
+    public static FileOutputStream openOutputStream(final File file)
             throws IOException {
         return openOutputStream(file, false);
     }
@@ -153,8 +154,9 @@ public class FileUtils {
      * @throws IOException if a parent directory needs creating but that fails
      * @since 2.1
      */
-    public static FileOutputStream openOutputStream(File file, boolean append)
-            throws IOException {
+    public static FileOutputStream openOutputStream(
+            final File file,
+            final boolean append) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file
@@ -165,7 +167,7 @@ public class FileUtils {
                         + "' cannot be written to");
             }
         } else {
-            File parent = file.getParentFile();
+            final File parent = file.getParentFile();
             if (parent != null) {
                 if (!parent.mkdirs() && !parent.isDirectory()) {
                     throw new IOException("Directory '" + parent
@@ -197,7 +199,8 @@ public class FileUtils {
      * @throws IOException if an IO error occurs during copying
      * @see #copyFileToDirectory(File, File)
      */
-    public static void copyFile(File srcFile, File destFile) throws IOException {
+    public static void copyFile(final File srcFile, final File destFile)
+            throws IOException {
         copyFile(srcFile, destFile, true);
     }
 
@@ -226,9 +229,9 @@ public class FileUtils {
      * @see #copyFileToDirectory(File, File, boolean)
      */
     public static void copyFile(
-            File srcFile,
-            File destFile,
-            boolean preserveFileDate) throws IOException {
+            final File srcFile,
+            final File destFile,
+            final boolean preserveFileDate) throws IOException {
         if (srcFile == null) {
             throw new NullPointerException("Source must not be null");
         }
@@ -247,7 +250,7 @@ public class FileUtils {
             throw new IOException("Source '" + srcFile + "' and destination '"
                     + destFile + "' are the same");
         }
-        File parentFile = destFile.getParentFile();
+        final File parentFile = destFile.getParentFile();
         if (parentFile != null) {
             if (!parentFile.mkdirs() && !parentFile.isDirectory()) {
                 throw new IOException("Destination '" + parentFile
@@ -278,7 +281,7 @@ public class FileUtils {
      *             if an I/O error occurs
      * @since 2.1
      */
-    public static long copyFile(File input, OutputStream output)
+    public static long copyFile(final File input, final OutputStream output)
             throws IOException {
         final FileInputStream fis = new FileInputStream(input);
         try {
@@ -297,9 +300,9 @@ public class FileUtils {
      * @throws IOException if an error occurs
      */
     private static void doCopyFile(
-            File srcFile,
-            File destFile,
-            boolean preserveFileDate) throws IOException {
+            final File srcFile,
+            final File destFile,
+            final boolean preserveFileDate) throws IOException {
         if (destFile.exists() && destFile.isDirectory()) {
             throw new IOException("Destination '" + destFile
                     + "' exists but is a directory");
@@ -314,7 +317,7 @@ public class FileUtils {
             fos = new FileOutputStream(destFile);
             input = fis.getChannel();
             output = fos.getChannel();
-            long size = input.size();
+            final long size = input.size();
             long pos = 0;
             long count = 0;
             while (pos < size) {
@@ -355,10 +358,10 @@ public class FileUtils {
      * @since 2.0
      */
     public static void copyInputStreamToFile(
-            InputStream source,
-            File destination) throws IOException {
+            final InputStream source,
+            final File destination) throws IOException {
         try {
-            FileOutputStream output = openOutputStream(destination);
+            final FileOutputStream output = openOutputStream(destination);
             try {
                 IOUtils.copy(source, output);
                 output.close(); // don't swallow close Exception if copy completes normally
@@ -385,20 +388,14 @@ public class FileUtils {
      *
      * @since 1.4
      */
-    public static boolean deleteQuietly(File file) {
+    public static boolean deleteQuietly(final File file) {
         if (file == null) {
             return false;
         }
-//        try {
-//            if (file.isDirectory()) {
-//                cleanDirectory(file);
-//            }
-//        } catch (Exception ignored) {
-//        }
 
         try {
             return file.delete();
-        } catch (Exception ignored) {
+        } catch (final Exception ignored) {
             return false;
         }
     }
@@ -412,7 +409,8 @@ public class FileUtils {
      * @throws IOException in case of an I/O error
      * @since 1.1
      */
-    public static byte[] readFileToByteArray(File file) throws IOException {
+    public static byte[] readFileToByteArray(final File file)
+            throws IOException {
         InputStream in = null;
         try {
             in = openInputStream(file);
@@ -433,7 +431,7 @@ public class FileUtils {
      * @throws IOException in case of an I/O error
      * @since 1.1
      */
-    public static void writeByteArrayToFile(File file, byte[] data)
+    public static void writeByteArrayToFile(final File file, final byte[] data)
             throws IOException {
         writeByteArrayToFile(file, data, false);
     }
@@ -449,9 +447,9 @@ public class FileUtils {
      * @since IO 2.1
      */
     public static void writeByteArrayToFile(
-            File file,
-            byte[] data,
-            boolean append) throws IOException {
+            final File file,
+            final byte[] data,
+            final boolean append) throws IOException {
         OutputStream out = null;
         try {
             out = openOutputStream(file, append);
@@ -473,10 +471,10 @@ public class FileUtils {
      * @throws NullPointerException if the directory is {@code null}
      * @throws IOException if the directory cannot be created or the file already exists but is not a directory
      */
-    public static void forceMkdir(File directory) throws IOException {
+    public static void forceMkdir(final File directory) throws IOException {
         if (directory.exists()) {
             if (!directory.isDirectory()) {
-                String message = "File " + directory + " exists and is "
+                final String message = "File " + directory + " exists and is "
                         + "not a directory. Unable to create directory.";
                 throw new IOException(message);
             }
@@ -485,7 +483,8 @@ public class FileUtils {
                 // Double-check that some other thread or process hasn't made
                 // the directory in the background
                 if (!directory.isDirectory()) {
-                    String message = "Unable to create directory " + directory;
+                    final String message = "Unable to create directory "
+                            + directory;
                     throw new IOException(message);
                 }
             }
@@ -505,7 +504,8 @@ public class FileUtils {
      * @throws IOException if an IO error occurs moving the file
      * @since 1.4
      */
-    public static void moveFile(File srcFile, File destFile) throws IOException {
+    public static void moveFile(final File srcFile, final File destFile)
+            throws IOException {
         if (srcFile == null) {
             throw new NullPointerException("Source must not be null");
         }
@@ -527,7 +527,7 @@ public class FileUtils {
             throw new IOException("Destination '" + destFile
                     + "' is a directory");
         }
-        boolean rename = srcFile.renameTo(destFile);
+        final boolean rename = srcFile.renameTo(destFile);
         if (!rename) {
             copyFile(srcFile, destFile);
             if (!srcFile.delete()) {

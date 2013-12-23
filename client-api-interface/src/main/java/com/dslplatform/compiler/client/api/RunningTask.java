@@ -49,7 +49,7 @@ public class RunningTask {
         final ArrayDeque<Message> messageQueue = new ArrayDeque<Message>();
 
         long endTime = System.currentTimeMillis() + timeout;
-        int lastOrdinal = -1;
+        final int lastOrdinal = -1;
 
         while (true) {
             final byte[] body = new byte[0];
@@ -60,7 +60,9 @@ public class RunningTask {
                 endTime = System.currentTimeMillis() + timeout;
                 messageQueue.add(message);
 
-                if (processor != null) processor.process(message);
+                if (processor != null) {
+                    processor.process(message);
+                }
                 if (message.isFinal) {
                     return messageQueue;
                 }

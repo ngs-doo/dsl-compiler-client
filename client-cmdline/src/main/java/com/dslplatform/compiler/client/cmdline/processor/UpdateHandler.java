@@ -30,7 +30,7 @@ public class UpdateHandler extends BaseHandler {
             final Output output,
             final Login login,
             final Actions actions) {
-        super(logger, prompt);
+        super(logger, prompt, output);
         this.logger = logger;
         this.prompt = prompt;
         this.output = output;
@@ -39,6 +39,7 @@ public class UpdateHandler extends BaseHandler {
     }
 
     public void apply(final Arguments arguments) throws IOException {
+        arguments.readProjectIni();
         final DSL dsl = arguments.getDsl();
 
         // sanity check to force early failure
@@ -131,6 +132,7 @@ public class UpdateHandler extends BaseHandler {
         if (uqp.isSuccessful()) {
             updateFiles(arguments, uqp.getFileBodies(),
                     arguments.getOutputPath());
+            updateProjectIni(arguments.getProjectIniPath(), uqp.getProjectIni());
         } else {
             output.println("An error occured while updating:");
             output.println(uqp.getResponse());

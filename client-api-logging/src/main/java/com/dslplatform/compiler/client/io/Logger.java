@@ -11,8 +11,6 @@ public interface Logger {
         ALL;
     }
 
-    public boolean isAvailable();
-
     public void setLevel(final Level level);
 
     public void trace(final String message);

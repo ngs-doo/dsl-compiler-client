@@ -26,7 +26,9 @@ public class PromptConsole implements Prompt {
             final String line = readLine(message, null).trim();
             if (!line.isEmpty()) {
                 final char ch = line.charAt(0);
-                if (allowed.indexOf(ch) != -1) return ch;
+                if (allowed.indexOf(ch) != -1) {
+                    return ch;
+                }
             }
         }
     }

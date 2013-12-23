@@ -18,7 +18,7 @@ public class LoginResponse {
     public LoginResponse(
             final Status status,
             final String message) {
-        this.ok = status == Status.SUCCESS;
+        ok = status == Status.SUCCESS;
         this.status = status;
         this.message = message;
     }

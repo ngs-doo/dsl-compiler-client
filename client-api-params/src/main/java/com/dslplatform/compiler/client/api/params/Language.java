@@ -45,8 +45,10 @@ public enum Language implements Param {
         return true;
     }
 
+    // format: OFF
     @Override
-    public void addToPayload(final XMLOut xO) {
+    public void addToPayload(
+            final XMLOut xO) {
         xO.node("language", language);
     }
 }

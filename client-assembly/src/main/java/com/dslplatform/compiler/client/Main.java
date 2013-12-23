@@ -13,28 +13,22 @@ import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
 
+// format: OFF
+
 public class Main {
     private static Logger getLogger() {
-        for (final Logger logger : new Logger[] {
-//                    new LoggerSlf4j(),
-//                    new LoggerLog4J(),
-        new LoggerSystem(Level.ERROR) }) {
-
-            if (logger.isAvailable()) {
-                return logger;
-            }
-        }
-
-        throw new RuntimeException(
-                "Should not happen: Could not initialize logger!");
+        return new LoggerSystem(Level.ERROR);
     }
 
     // --------------------------------------------------------------------
 
-    private static Output getOutput(final Logger logger) {
+    private static Output getOutput(
+            final Logger logger) {
         for (final Output output : new Output[] {
 //                    new OutputJAnsi(),
-                new OutputConsole(), new OutputSystem() }) {
+                    new OutputConsole(),
+                    new OutputSystem()
+                }) {
 
             logger.trace("Testing output availability: " + output);
 
@@ -49,10 +43,14 @@ public class Main {
 
     // --------------------------------------------------------------------
 
-    private static Prompt getPrompt(final Logger logger, final Output output) {
+    private static Prompt getPrompt(
+            final Logger logger,
+            final Output output) {
         for (final Prompt prompt : new Prompt[] {
 //                    new PromptJLine(output),
-                new PromptConsole(output), new PromptSystem(output) }) {
+                    new PromptConsole(output),
+                    new PromptSystem(output)
+                }) {
 
             logger.trace("Testing prompt availability: " + prompt);
 
@@ -71,8 +69,10 @@ public class Main {
             final Logger logger,
             final Output output,
             final Prompt prompt) {
-        for (final Login login : new Login[] { new LoginSwing(logger, output),
-                new LoginConsole(logger, prompt) }) {
+        for (final Login login : new Login[] {
+                    new LoginSwing(logger, output),
+                    new LoginConsole(logger, prompt)
+                }) {
 
             logger.trace("Testing login availability: " + login);
 
@@ -87,7 +87,8 @@ public class Main {
 
     // --------------------------------------------------------------------
 
-    public static void main(final String[] args) {
+    public static void main(
+            final String[] args) {
         try {
             final Logger logger = getLogger();
             logger.debug("Selected logger: " + logger);
@@ -107,7 +108,7 @@ public class Main {
             System.exit(0);
         } catch (final Exception e) {
             e.printStackTrace();
-            System.exit(-1);
+            System.exit(1);
         }
     }
 }

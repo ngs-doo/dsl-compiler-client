@@ -9,6 +9,10 @@ import com.dslplatform.compiler.client.api.params.Language;
 import com.dslplatform.compiler.client.api.params.PackageName;
 import com.dslplatform.compiler.client.api.params.Param;
 import com.dslplatform.compiler.client.api.params.ProjectID;
+import com.dslplatform.compiler.client.api.params.ProjectName;
+import com.dslplatform.compiler.client.api.processors.CleanProcessor;
+import com.dslplatform.compiler.client.api.processors.CreateProcessor;
+import com.dslplatform.compiler.client.api.processors.DeleteProcessor;
 import com.dslplatform.compiler.client.api.processors.DiffProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseProcessor;
@@ -93,12 +97,27 @@ public class Actions {
         return uup;
     }
 
-//  public RunningTask Clean(
-//          final Auth auth,
-//          final ProjectID projectID) throws IOException {
-//      return ApiCall.call(Action.CLEAN, auth, projectID);
-//  }
-//
+    public CleanProcessor clean(final Auth auth, final ProjectID projectID)
+            throws IOException {
+        final CleanProcessor cp = new CleanProcessor(logger);
+        apiCall.call(Action.CLEAN, auth, projectID);
+        return cp;
+    }
+
+    public CreateProcessor create(final Auth auth, final ProjectName projectName)
+            throws IOException {
+        final CreateProcessor cp = new CreateProcessor(logger);
+        apiCall.call(Action.CREATE, auth, projectName).processMessages(cp);
+        return cp;
+    }
+
+    public DeleteProcessor delete(final Auth auth, final ProjectID projectID)
+            throws IOException {
+        final DeleteProcessor dp = new DeleteProcessor(logger);
+        apiCall.call(Action.DELETE, auth, projectID).processMessages(dp);
+        return dp;
+    }
+
 //  public RunningTask Clone(
 //          final Auth auth,
 //          final DSL dsl,

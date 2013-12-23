@@ -24,7 +24,7 @@ public class ArgumentsParser extends ArgumentsValidator {
     public void parseArguments(final String[] args) throws IOException {
         if (args.length == 0) {
             logger.trace("There were no arguments provided");
-            exitWithHelp();
+            exitWithHelp(false);
         }
 
         logger.debug(String.format("There were %d arguments provided",
@@ -39,7 +39,7 @@ public class ArgumentsParser extends ArgumentsValidator {
 
             if (is(arg, "-h", "--help")) {
                 logger.trace("Found help switch, rendering help and exiting");
-                exitWithHelp();
+                exitWithHelp(true);
             }
         }
 
@@ -74,9 +74,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed username parameter, overwriting old username: "
                             + username);
                     if (username.isEmpty()) {
-                        if (last || (username = args[++index]).isEmpty())
+                        if (last || (username = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Username cannot be empty!");
+                        }
                         logger.trace("Username argument was empty, read next argument: "
                                 + username);
                     }
@@ -90,9 +91,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                 if (password != null) {
                     logger.trace("Parsed password parameter, overwriting old password: ****");
                     if (password.isEmpty()) {
-                        if (last || (password = args[++index]).isEmpty())
+                        if (last || (password = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Password cannot be empty!");
+                        }
                         logger.trace("Password argument was empty, reading next argument: ****");
                     }
                     setPassword(password);
@@ -106,9 +108,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed project ID parameter, overwriting old project ID: "
                             + projectID);
                     if (projectID.isEmpty()) {
-                        if (last || (projectID = args[++index]).isEmpty())
+                        if (last || (projectID = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Project ID cannot be empty!");
+                        }
                         logger.trace("Project ID argument was empty, reading next argument: "
                                 + projectID);
                     }
@@ -125,9 +128,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed language parameter, adding languages to the list: "
                             + languages);
                     if (languages.isEmpty()) {
-                        if (last || (languages = args[++index]).isEmpty())
+                        if (last || (languages = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Language cannot be empty!");
+                        }
                         logger.trace("Language argument was empty, reading next argument: "
                                 + languages);
                     }
@@ -147,11 +151,31 @@ public class ArgumentsParser extends ArgumentsValidator {
                             logger.trace("Package name argument was empty, reading next argument: "
                                     + packageName);
                             if (packageName.isEmpty()) {
-                                logger.debug("Files will be compiled without a package name");
+                                logger.debug("Files will be compiled with a default package name");
                             }
                         }
                     }
                     setPackageName(packageName);
+                    continue;
+                }
+            }
+
+            {   // parse project name (nick), new arguments overwrite old ones
+                String projectName = startsWith(arg, "-k", "--project-name=");
+                if (projectName != null) {
+                    logger.trace("Parsed project name parameter, overwriting old project name: "
+                            + projectName);
+                    if (projectName.isEmpty()) {
+                        if (!last) {
+                            projectName = args[++index];
+                            logger.trace("Project name argument was empty, reading next argument: "
+                                    + projectName);
+                            if (projectName.isEmpty()) {
+                                logger.debug("Your new project name will be generated.");
+                            }
+                        }
+                    }
+                    setProjectName(projectName);
                     continue;
                 }
             }
@@ -164,9 +188,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed DSL path parameter, adding DSL path to the list: "
                             + dslPath);
                     if (dslPath.isEmpty()) {
-                        if (last || (dslPath = args[++index]).isEmpty())
+                        if (last || (dslPath = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Missing DSL path argument!");
+                        }
                         logger.trace("Dsl path was empty, reading next argument: "
                                 + dslPath);
                     }
@@ -181,9 +206,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed output path parameter, overwriting old output path: "
                             + outputPath);
                     if (outputPath.isEmpty()) {
-                        if (last || (outputPath = args[++index]).isEmpty())
+                        if (last || (outputPath = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Missing output path argument!");
+                        }
                         logger.trace("Output path was empty, reading next argument: "
                                 + outputPath);
                     }
@@ -198,9 +224,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed cache path parameter, overwriting old cache path: "
                             + cachePath);
                     if (cachePath.isEmpty()) {
-                        if (last || (cachePath = args[++index]).isEmpty())
+                        if (last || (cachePath = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Missing cache path argument!");
+                        }
                         logger.trace("Cache path was empty, reading next argument: "
                                 + cachePath);
                     }
@@ -215,9 +242,10 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed logging level parameter, overwriting old logging level: "
                             + loggingLevel);
                     if (loggingLevel.isEmpty()) {
-                        if (last || (loggingLevel = args[++index]).isEmpty())
+                        if (last || (loggingLevel = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Missing logging level argument!");
+                        }
                         logger.trace("Cache path was empty, reading next argument: "
                                 + loggingLevel);
                     }
@@ -235,13 +263,37 @@ public class ArgumentsParser extends ArgumentsValidator {
                     logger.trace("Parsed project ini path parameter, processing: "
                             + projectIniPath);
                     if (projectIniPath.isEmpty()) {
-                        if (last || (projectIniPath = args[++index]).isEmpty())
+                        if (last || (projectIniPath = args[++index]).isEmpty()) {
                             throw new IllegalArgumentException(
                                     "Missing project ini path argument!");
+                        }
                         logger.trace("Project ini path as empty, reading next argument: "
                                 + projectIniPath);
                     }
                     setProjectIniPath(projectIniPath);
+                    continue;
+                }
+            }
+
+            // =========================================================================================================
+
+            {   // parse project ini, immediately expanded with new .ini arguments overwriting old ones
+                String newProjectIniPath = startsWith(arg, "-b",
+                        "--new-project-ini-path=", "--built-project-ini-path=");
+                if (newProjectIniPath != null) {
+                    logger.trace("Parsed path parameter for new project ini, processing: "
+                            + newProjectIniPath);
+                    if (newProjectIniPath.isEmpty()) {
+                        if (last
+                                || (newProjectIniPath = args[++index])
+                                        .isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "Missing new project ini path argument!");
+                        }
+                        logger.trace("New project ini path as empty, reading next argument: "
+                                + newProjectIniPath);
+                    }
+                    setNewProjectIniPath(newProjectIniPath);
                     continue;
                 }
             }
@@ -262,7 +314,9 @@ public class ArgumentsParser extends ArgumentsValidator {
             final String... switches) {
         final String trimmed = what.trim();
         for (final String sw : switches) {
-            if (trimmed.startsWith(sw)) return what.substring(sw.length());
+            if (trimmed.startsWith(sw)) {
+                return what.substring(sw.length());
+            }
         }
         return null;
     }
@@ -274,12 +328,13 @@ public class ArgumentsParser extends ArgumentsValidator {
 
     // =================================================================================================================
 
-    private void exitWithHelp() {
+    private void exitWithHelp(final boolean showAdvanced) {
         try {
             final String helpText = new String(
                     IOUtils.toByteArray(ArgumentsParser.class
                             .getResourceAsStream("/dsl-clc-help.txt")), "UTF-8");
-            output.println(helpText);
+            output.println(showAdvanced ? helpText : helpText.replaceFirst(
+                    "(?s)# ADVANCED OPTIONS.*", ""));
         } catch (final Exception e) {
             output.println("Could not display the help file!");
         }

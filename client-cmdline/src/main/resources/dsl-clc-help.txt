@@ -11,7 +11,7 @@
 
 # OPTIONS
   -h, --help
-        Prints out this help.
+        Prints out the full help.
 
   -u<username>, --username=<username>
   -p<password>, --password=<password>
@@ -69,15 +69,23 @@
         Path where the Commandline Client will cache authentication information, to allow for
         username/password rememberance. Defaults to "~/.dsl-platform/".
 
+  -k<project name>, --project-name<project name>
+        Used with "create" action to specify the name of the project.
+        If you do not set a name, a new project name will be generated for you.
+
+  -b<new project.ini path>, --new-project-ini-path=<new project.ini path>
+        Used with create command to specify where to write the newly generated project.ini file.
+        If not specified, project.ini will written to the console.
+
   -v<logging-level>, --logging-level=<logging level>
         Logging level for debugging messages which are streamed to stderr.
         Level is "error" by default, can be: "off", "error", "warn", "info", "debug", "trace" or "all"
 
 # ADVANCED ACTIONS - USE WITH CAUTION!
 
-  clean
-        Cleans all the data from your project database, this action is irreversible
+  create
+        Creates a new project and returns a new project.ini.
 
-  clone
-        Creates a copy of your project, cloning the current database into a separate one.
-        A new project will be represented by the returned project ID.
+  delete
+        Marks the project for deletion.
+        Once the project has been marked for more than 24 hours, this action will delete it.

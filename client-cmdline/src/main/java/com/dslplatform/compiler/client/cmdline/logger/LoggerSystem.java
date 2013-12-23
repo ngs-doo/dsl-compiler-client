@@ -17,49 +17,32 @@ public class LoggerSystem implements Logger {
     }
 
     @Override
-    public boolean isAvailable() {
-        return true;
-    }
-
-    @Override
     public void setLevel(final Level level) {
-        if (isAvailable()) {
-            this.level = level;
-        }
+        this.level = level;
     }
 
     @Override
     public void trace(final String message) {
-        if (isAvailable()) {
-            log(Level.TRACE, message);
-        }
+        log(Level.TRACE, message);
     }
 
     @Override
     public void debug(final String message) {
-        if (isAvailable()) {
-            log(Level.DEBUG, message);
-        }
+        log(Level.DEBUG, message);
     }
 
     @Override
     public void info(final String message) {
-        if (isAvailable()) {
-            log(Level.INFO, message);
-        }
+        log(Level.INFO, message);
     }
 
     @Override
     public void warn(final String message) {
-        if (isAvailable()) {
-            log(Level.WARN, message);
-        }
+        log(Level.WARN, message);
     }
 
     @Override
     public void error(final String message) {
-        if (isAvailable()) {
-            log(Level.ERROR, message);
-        }
+        log(Level.ERROR, message);
     }
 }

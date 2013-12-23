@@ -59,9 +59,13 @@ public interface Param {
             return this;
         }
 
-        public XMLOut text(final String text) {
-            sB.append(text.toString().replace("&", "&amp;")
-                    .replace("<", "&lt;").replace(">", "&gt;"));
+        // format: OFF
+        public XMLOut text(
+                final String text) {
+            sB.append(text.toString()
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;"));
             return this;
         }
 
@@ -75,8 +79,9 @@ public interface Param {
 
         @Override
         public String toString() {
-            while (!depth.isEmpty())
+            while (!depth.isEmpty()) {
                 end();
+            }
             return sB.toString();
         }
     }

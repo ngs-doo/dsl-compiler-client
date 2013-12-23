@@ -34,8 +34,8 @@ abstract class BaseProcessor implements MessageProcessor {
 
     @Override
     public void process(final Message message) {
-        logger.debug("Received message: " + message.messageType + " "
-                + message.info);
+        logger.trace("Processing message: [" + message.messageType.name() + "]"
+                + " info " + message.info);
 
         switch (message.messageType) {
             case AUTH_ERROR:

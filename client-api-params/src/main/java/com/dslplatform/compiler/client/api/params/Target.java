@@ -23,9 +23,12 @@ public class Target implements Param {
         return false;
     }
 
+    // format: OFF
     @Override
     public void addToPayload(final XMLOut xO) {
-        xO.start("target").node("version", version).node("branch", branch)
-                .end();
+        xO.start("target")
+            .node("version", version)
+            .node("branch", branch)
+        .end();
     }
 }

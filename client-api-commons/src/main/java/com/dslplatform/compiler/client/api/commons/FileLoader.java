@@ -34,15 +34,20 @@ public class FileLoader {
 
     // -------------------------------------------------------------------------
 
-    private static final String DEFAULT_PATTERN = ".*";
+    private static final Pattern DEFAULT_PATTERN = Pattern.compile(".*");
 
     public FileLoader addPath(final String path) throws IOException {
         return addPath(path, DEFAULT_PATTERN);
     }
 
-    public FileLoader addPath(final String path, final String pattern)
+    public FileLoader addPath(final String path, final Pattern pattern)
             throws IOException {
-        return addPath(path, path, Pattern.compile(pattern));
+        return addPath(path, path, pattern);
+    }
+
+    public FileLoader addPath(final String rootPath, final String path)
+            throws IOException {
+        return addPath(rootPath, path, DEFAULT_PATTERN);
     }
 
     public FileLoader addPath(
@@ -85,19 +90,24 @@ public class FileLoader {
         logger.trace("Reading file: " + realPath);
         final byte[] content = FileUtils.readFileToByteArray(file);
 
-        final String rootCanonicalPath = new File(rootPath).getCanonicalPath();
-        final String relativePath = realPath.substring(rootCanonicalPath
-                .length() + 1);
+        final File rootCanonicalPath = new File(rootPath);
+
+        // TODO: fixes case when user specifies full path to file, screams for refactoring.
+        final String relativePath = rootCanonicalPath.isDirectory()
+                ? realPath.substring(rootCanonicalPath.getCanonicalPath()
+                        .length() + 1) : rootCanonicalPath.getName();
         addBytes(relativePath, content);
     }
 
     public void addBytes(final String rawrealPath, final byte[] content) {
         synchronized (fileBodies) {
             // All files with path separator /
-            final String realPath = (slash == '/') ? rawrealPath : rawrealPath
+            final String realPath = slash == '/' ? rawrealPath : rawrealPath
                     .replace(slash, '/');
 
-            if (fileBodies.containsKey(realPath)) return;
+            if (fileBodies.containsKey(realPath)) {
+                return;
+            }
 
             final Hash.Body body = new Hash.Body(content);
             SortedSet<String> files = hashBodies.get(body);

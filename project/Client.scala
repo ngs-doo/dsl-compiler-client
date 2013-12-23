@@ -9,9 +9,7 @@ trait Client extends Build with Default {
     id.toLowerCase
   , file(id.toLowerCase)
   , settings = javaSettings ++ Seq(
-      version := "0.8.0-SNAPSHOT"
-    , organization := "com.dslplatform"
-    , name := "DSL-Compiler-" + id
+      name := "DSL-Compiler-" + id
     , initialCommands := "import com.dslplatform.compiler.client._"
     )
   )
@@ -31,11 +29,11 @@ object Client extends Client {
   lazy val apiCore       = clientProject("Client-API-Core") inject(apiInterface, apiDiff, apiCache)
 
   lazy val cmdline       = clientProject("Client-CmdLine") inject(apiCore) settings(
-    libraryDependencies ++= Seq(
+  libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.5" % "provided"
     , "org.apache.logging.log4j" % "log4j-api" % "2.0-beta8" % "provided"
     , "org.fusesource.jansi" % "jansi" % "1.11" % "provided"
-    , "jline" % "jline" % "2.10" % "provided"
+    , "jline" % "jline" % "2.11" % "provided"
     )
   )
   lazy val gui           = clientProject("Client-GUI") inject(apiCore)

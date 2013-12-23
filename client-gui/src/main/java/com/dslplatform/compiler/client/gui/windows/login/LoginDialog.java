@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 
 import com.dslplatform.compiler.client.api.ApiCall;
 import com.dslplatform.compiler.client.gui.icon.Icon;
@@ -62,7 +63,7 @@ public class LoginDialog extends JFrame implements ActionListener,
 
         try {
             return new LoginDialogResult(ld.getRequest(), ld.getResponse());
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             return new LoginDialogResult(null, new LoginResponse(Status.ERROR,
                     e.getMessage()));
         }
@@ -89,7 +90,7 @@ public class LoginDialog extends JFrame implements ActionListener,
                 .getCurrentKeyboardFocusManager();
         manager.addKeyEventDispatcher(this);
 
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
         getContentPane().setLayout(null);
         setResizable(false);
@@ -100,12 +101,20 @@ public class LoginDialog extends JFrame implements ActionListener,
         final int screenWidth = gd.getDisplayMode().getWidth();
         final int screenHeight = gd.getDisplayMode().getHeight();
 
-        setBounds((screenWidth - WIDTH) >>> 1, (screenHeight - HEIGHT) >>> 1,
-                WIDTH, HEIGHT);
+        // format: OFF
+
+        setBounds(
+                screenWidth - WIDTH >>> 1,
+                screenHeight - HEIGHT >>> 1,
+                WIDTH,
+                HEIGHT);
 
         labelLoginImage = new JLabel(Icon.LOGIN.icon);
-        labelLoginImage.setBounds((WIDTH - Icon.LOGIN.width) >>> 1, 20,
-                Icon.LOGIN.width, Icon.LOGIN.height);
+        labelLoginImage.setBounds(
+                WIDTH - Icon.LOGIN.width >>> 1,
+                20,
+                Icon.LOGIN.width,
+                Icon.LOGIN.height);
         getContentPane().add(labelLoginImage);
 
         labelUsername = new JLabel("E-mail");
@@ -115,8 +124,11 @@ public class LoginDialog extends JFrame implements ActionListener,
         getContentPane().add(labelUsername);
 
         textUsername = new JTextField();
-        textUsername.setBounds(WIDTH >>> 2, 112, ((WIDTH * 3) >>> 2)
-                - (WIDTH >>> 3), 20);
+        textUsername.setBounds(
+                WIDTH >>> 2,
+                112,
+                (WIDTH * 3 >>> 2) - (WIDTH >>> 3),
+                20);
         if (defaultUsername != null) {
             textUsername.setText(defaultUsername);
         }
@@ -129,8 +141,11 @@ public class LoginDialog extends JFrame implements ActionListener,
         getContentPane().add(labelPassword);
 
         textPassword = new JPasswordField();
-        textPassword.setBounds(WIDTH >>> 2, 136, ((WIDTH * 3) >>> 2)
-                - (WIDTH >>> 3), 20);
+        textPassword.setBounds(
+                WIDTH >>> 2,
+                136,
+                (WIDTH * 3 >>> 2) - (WIDTH >>> 3),
+                20);
         if (defaultPassword != null) {
             textPassword.setText(defaultPassword);
         }
@@ -157,49 +172,54 @@ public class LoginDialog extends JFrame implements ActionListener,
         setRequest(new LoginRequest(defaultUsername, defaultPassword, remember));
         setVisible(true);
 
-        (textUsername.getText().isEmpty() ? textUsername : textPassword
-                .getPassword().length == 0 ? textPassword : buttonLogin)
-                .requestFocusInWindow();
+        (textUsername.getText().isEmpty()
+                ? textUsername
+                : textPassword.getPassword().length == 0
+                        ? textPassword
+                        : buttonLogin).requestFocusInWindow();
     }
 
     private static final long serialVersionUID = 0L;
 
     private void displayMessage(final Status status, final String message) {
-        final Color color = status == Status.PENDING
-                ? Color.blue
-                : status == Status.EMPTY ? Color.red : status == Status.INVALID
-                        ? Color.red
-                        : status == Status.ERROR
-                                ? Color.red
-                                : status == Status.SUCCESS ? Color.green
-                                        .darker() : Color.black;
+        final Color color =
+                status == Status.PENDING ? Color.blue :
+                status == Status.EMPTY   ? Color.red :
+                status == Status.INVALID ? Color.red :
+                status == Status.ERROR   ? Color.red :
+                status == Status.SUCCESS ? Color.green.darker()
+                                         : Color.black;
 
         labelProgressMessage.setForeground(color);
         labelProgressMessage.setText(message);
     }
 
-    private void EnableInteraction(boolean enable) {
+    private void EnableInteraction(
+            final boolean enable) {
         textUsername.setEnabled(enable);
         textPassword.setEnabled(enable);
         buttonLogin.setEnabled(enable);
     }
 
-    public void DoLoginProcess(LoginRequest request) {
+    public void DoLoginProcess(
+            final LoginRequest request) {
         setRequest(request);
 
         EnableInteraction(false);
         getContentPane().setCursor(
                 Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        final LoginWorker loginProcess = new LoginWorker(logger, apiCall,
-                request.username, request.password);
+        final LoginWorker loginProcess =
+                new LoginWorker(logger, apiCall, request.username,
+                        request.password);
 
         loginProcess.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
-            public void propertyChange(final PropertyChangeEvent evt) {
+            public void propertyChange(
+                    final PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals("Auth")) {
-                    final LoginResponse response = (LoginResponse) evt
-                            .getNewValue();
+                    final LoginResponse response =
+                            (LoginResponse) evt.getNewValue();
                     displayMessage(response.status, response.message);
                     setResponse(response);
                 } else if (loginProcess.isDone()) {
@@ -227,17 +247,22 @@ public class LoginDialog extends JFrame implements ActionListener,
         return request;
     }
 
-    private void setRequest(LoginRequest request) {
+    private void setRequest(
+            final LoginRequest request) {
         this.request = request;
     }
 
-    private void setResponse(LoginResponse response) {
+    private void setResponse(
+            final LoginResponse response) {
         this.response = response;
-        if (response.ok) finish();
+        if (response.ok) {
+            finish();
+        }
     }
 
     @Override
-    public void actionPerformed(final ActionEvent e) {
+    public void actionPerformed(
+            final ActionEvent e) {
         if (e.getSource() == buttonLogin) {
             final String username = textUsername.getText();
             final String password = new String(textPassword.getPassword());
@@ -258,17 +283,19 @@ public class LoginDialog extends JFrame implements ActionListener,
     }
 
     public synchronized void finish() {
-        this.setVisible(false);
+        setVisible(false);
         isProcessFinished = true;
         notify();
         dispose();
     }
 
     @Override
-    public void mouseClicked(final MouseEvent e) {}
+    public void mouseClicked(
+            final MouseEvent e) {}
 
     @Override
-    public void mousePressed(final MouseEvent e) {
+    public void mousePressed(
+            final MouseEvent e) {
         if (e.getSource() == labelUsername) {
             textUsername.selectAll();
             textUsername.requestFocus();
@@ -279,48 +306,62 @@ public class LoginDialog extends JFrame implements ActionListener,
     }
 
     @Override
-    public void mouseReleased(final MouseEvent e) {}
+    public void mouseReleased(
+            final MouseEvent e) {}
 
     @Override
-    public void mouseEntered(final MouseEvent e) {}
+    public void mouseEntered(
+            final MouseEvent e) {}
 
     @Override
-    public void mouseExited(final MouseEvent e) {}
+    public void mouseExited(
+            final MouseEvent e) {}
 
     @Override
-    public void windowOpened(final WindowEvent e) {}
+    public void windowOpened(
+            final WindowEvent e) {}
 
     @Override
-    public void windowClosing(final WindowEvent e) {
+    public void windowClosing(
+            final WindowEvent e) {
         if (!isProcessFinished) {
             logger.warn("Process not finished, closing of the dialog was initiated by the user!");
-            response = new LoginResponse(Status.CANCELED,
-                    "Login process canceled by user!");
+            response =
+                    new LoginResponse(Status.CANCELED,
+                            "Login process canceled by user!");
         }
         finish();
     }
 
     @Override
-    public void windowClosed(final WindowEvent e) {
+    public void windowClosed(
+            final WindowEvent e) {
         logger.debug("Login window closed.");
     }
 
     @Override
-    public void windowIconified(final WindowEvent e) {}
+    public void windowIconified(
+            final WindowEvent e) {}
 
     @Override
-    public void windowDeiconified(final WindowEvent e) {}
+    public void windowDeiconified(
+            final WindowEvent e) {}
 
     @Override
-    public void windowActivated(final WindowEvent e) {}
+    public void windowActivated(
+            final WindowEvent e) {}
 
     @Override
-    public void windowDeactivated(final WindowEvent e) {
-        if (checkRemember != null) checkRemember.setVisible(false);
+    public void windowDeactivated(
+            final WindowEvent e) {
+        if (checkRemember != null) {
+            checkRemember.setVisible(false);
+        }
     }
 
     @Override
-    public boolean dispatchKeyEvent(final KeyEvent e) {
+    public boolean dispatchKeyEvent(
+            final KeyEvent e) {
         switch (e.getID()) {
             case KeyEvent.KEY_PRESSED:
                 // if (e.getKeyCode() == KeyEvent.VK_ESCAPE) System.exit(0);

@@ -2,36 +2,6 @@ import sbt._
 import Keys._
 
 trait Default {
-  private object Repositories {
-    val NGSNexus     = "NGS Nexus"     at "http://ngs.hr/nexus/content/groups/public/"
-    val NGSReleases  = "NGS Releases"  at "http://ngs.hr/nexus/content/repositories/releases/"
-    val NGSSnapshots = "NGS Snapshots" at "http://ngs.hr/nexus/content/repositories/snapshots/"
-  }
-
-//  ---------------------------------------------------------------------------
-
-  private object Resolvers {
-    import Repositories._
-
-    lazy val settings = Seq(
-      resolvers := Seq(NGSNexus, NGSSnapshots)
-    , externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
-    )
-  }
-
-//  ---------------------------------------------------------------------------
-
-  private object Publishing {
-    import Repositories._
-
-    val settings = Seq(
-      publishTo := Some(
-        if (version.value endsWith "SNAPSHOT") NGSSnapshots else NGSReleases
-      )
-    , credentials += Credentials(Path.userHome / ".config" / "ngs-util_master" / "nexus.config")
-    )
-  }
-
 //  ---------------------------------------------------------------------------
 
   import com.typesafe.sbteclipse.plugin.EclipsePlugin.{ settings => eclipseSettings, _ }
@@ -40,8 +10,6 @@ trait Default {
 
   lazy val scalaSettings =
     Defaults.defaultSettings ++
-    Resolvers.settings ++
-    Publishing.settings ++
     eclipseSettings ++
     graphSettings ++
     assemblySettings ++ Seq(
@@ -54,7 +22,7 @@ trait Default {
       , "-target", "1.6"
       )
 
-    , crossScalaVersions := Seq("2.10.2")
+    , crossScalaVersions := Seq("2.10.3")
     , scalaVersion := crossScalaVersions.value.head
     , scalacOptions := Seq(
         "-unchecked"
@@ -79,13 +47,17 @@ trait Default {
 
     , unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
     , unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
+
     , libraryDependencies ++= Seq(
-        "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+        "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
       , "junit" % "junit" % "4.11" % "test"
       )
 
     , publishArtifact in (Compile, packageDoc) := false
+
     , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
+    , EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE16)
+    , EclipseKeys.eclipseOutput := Some(".target")
 
     , fork in run := true
     , parallelExecution in Test := false
@@ -94,8 +66,11 @@ trait Default {
   lazy val javaSettings = scalaSettings ++ Seq(
       autoScalaLibrary := false
     , crossPaths := false
+
     , unmanagedSourceDirectories in Compile := (javaSource in Compile).value :: Nil
     , unmanagedSourceDirectories in Test := (javaSource in Test).value :: (scalaSource in Test).value :: Nil
+
+    , EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
     )
 
   lazy val assemblyPublishSettings = assemblySettings ++ Seq(

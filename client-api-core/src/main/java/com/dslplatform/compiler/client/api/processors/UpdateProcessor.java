@@ -25,7 +25,6 @@ public class UpdateProcessor extends UpdateUnsafeProcessor {
             case CONFIRM:
                 confirmation = message.info;
                 return true;
-
             default:
                 return super.processInner(message);
         }

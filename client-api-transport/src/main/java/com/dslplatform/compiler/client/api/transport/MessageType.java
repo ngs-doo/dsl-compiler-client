@@ -6,6 +6,7 @@ public enum MessageType {
     CONFIRM,
     DIFF,
     DUMP_FILE,
+    PROJECT_INI,
     ERROR,
     AUTO_CONFIRM,
     SHOW_PENDING,

@@ -12,10 +12,12 @@ public class HashBodyMapTool {
             final Map<Hash, SortedSet<String>> oldBodies,
             final Map<Hash, SortedSet<String>> newBodies) {
 
-        if (oldBodies == null)
+        if (oldBodies == null) {
             throw new IllegalArgumentException("oldBodies cannot be null");
-        if (newBodies == null)
+        }
+        if (newBodies == null) {
             throw new IllegalArgumentException("newBodies cannot be null");
+        }
 
         final TreeMap<String, PathAction> ret = new TreeMap<String, PathAction>();
 
@@ -64,8 +66,9 @@ public class HashBodyMapTool {
 
                         // cleanup
                         oldPaths.remove(sourcePath);
-                        if (oldPaths.isEmpty())
+                        if (oldPaths.isEmpty()) {
                             oldBodies.remove(destinationHashBody);
+                        }
                         oldMap.remove(sourcePath);
                     } else {
                         // hashbody not found in oldBodies, mark file as new or

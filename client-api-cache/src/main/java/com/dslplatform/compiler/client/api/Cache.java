@@ -26,8 +26,8 @@ public class Cache {
         final String projectIDHash = String.format("%08X.cache",
                 projectID == null ? 0 : HashUtil.hashCode(projectID));
 
-        this.file = new File(this.cachePath, projectIDHash);
-        logger.debug("Cache file for this project is: " + this.file);
+        file = new File(this.cachePath, projectIDHash);
+        logger.debug("Cache file for this project is: " + file);
     }
 
     public byte[] get() {

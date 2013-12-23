@@ -17,8 +17,11 @@ public class Token implements Auth {
         return false;
     }
 
+    // format: OFF
     @Override
     public void addToPayload(final XMLOut xO) {
-        xO.start("auth").node("token", Base64.encodeBase64String(token)).end();
+        xO.start("auth")
+            .node("token", Base64.encodeBase64String(token))
+        .end();
     }
 }

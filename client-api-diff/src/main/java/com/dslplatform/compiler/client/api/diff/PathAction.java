@@ -24,12 +24,17 @@ public class PathAction implements Comparable<PathAction> {
         return source.compareToIgnoreCase(o.source);
     }
 
+    // format: OFF
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder().append(action)
-                .append(": ").append(source);
+        final StringBuilder sb = new StringBuilder()
+            .append(action)
+            .append(": ")
+            .append(source);
 
-        if (destination != null) sb.append(" -> ").append(destination);
+        if (destination != null) {
+            sb.append(" -> ").append(destination);
+        }
 
         return sb.toString();
     }

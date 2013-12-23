@@ -39,10 +39,13 @@ public class Environment implements Param {
         return false;
     }
 
+    // format: OFF
     @Override
     public void addToPayload(final XMLOut xO) {
-        xO.start("environment").node("responseType", responseType.name())
-                .node("newline", newline.toString())
-                .node("encoding", encoding.toString()).end();
+        xO.start("environment")
+            .node("responseType", responseType.name())
+            .node("newline", newline.toString())
+            .node("encoding", encoding.toString())
+        .end();
     }
 }

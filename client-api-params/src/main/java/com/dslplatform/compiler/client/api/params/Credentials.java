@@ -22,10 +22,14 @@ public class Credentials implements Auth {
         return false;
     }
 
+    // format: OFF
     @Override
     public void addToPayload(final XMLOut xO) {
-        xO.start("auth").start("credentials").node("user", user)
-                .node("password", Base64.encodeBase64String(password)).end()
-                .end();
+        xO.start("auth")
+            .start("credentials")
+                .node("user", user)
+                .node("password", Base64.encodeBase64String(password))
+            .end()
+        .end();
     }
 }

@@ -6,6 +6,8 @@ import java.util.TreeMap;
 public enum Action implements Param {
     CLEAN("clean"),
     CLONE("clone"),
+    CREATE("create"),
+    DELETE("delete"),
     DIFF("diff"),
     PARSE("parse"),
     PARSE_AND_DIFF("parse and diff"),
@@ -34,8 +36,10 @@ public enum Action implements Param {
         return false;
     }
 
+    // format: OFF
     @Override
-    public void addToPayload(final XMLOut xO) {
+    public void addToPayload(
+            final XMLOut xO) {
         xO.start("action").node("name", action);
         if (!metadata.isEmpty()) {
             xO.start("metadata");
@@ -52,8 +56,8 @@ public enum Action implements Param {
         public final String value;
 
         public KV(
-                String key,
-                String value) {
+                final String key,
+                final String value) {
             this.key = key;
             this.value = value;
         }

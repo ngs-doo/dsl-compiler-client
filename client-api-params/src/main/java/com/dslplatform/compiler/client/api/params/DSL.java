@@ -18,12 +18,16 @@ public class DSL implements Param {
         return true;
     }
 
+    // format: OFF
     @Override
-    public void addToPayload(final XMLOut xO) {
+    public void addToPayload(
+            final XMLOut xO) {
         xO.start("dsl");
         for (final Map.Entry<String, String> file : files.entrySet()) {
-            xO.start("file").node("filename", file.getKey())
-                    .node("body", file.getValue()).end();
+            xO.start("file")
+                .node("filename", file.getKey())
+                .node("body", file.getValue())
+            .end();
         }
         xO.end();
     }

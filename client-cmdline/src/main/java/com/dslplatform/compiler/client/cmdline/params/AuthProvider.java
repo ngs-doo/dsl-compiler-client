@@ -14,7 +14,7 @@ import com.dslplatform.compiler.client.io.Prompt;
 
 public class AuthProvider {
     private final Logger logger;
-    private final Prompt prompt;
+//    private final Prompt prompt;
     private final Login login;
 
     private final Arguments arguments;
@@ -30,19 +30,23 @@ public class AuthProvider {
             final Login login,
             final Arguments arguments) {
         this.logger = logger;
-        this.prompt = prompt;
+//        this.prompt = prompt;
         this.login = login;
 
         this.arguments = arguments;
-        this.auth = makeAuth();
+        auth = makeAuth();
     }
 
     private Auth makeAuth() {
         final Credentials credentials = makeCredentials();
-        if (credentials != null) return credentials;
+        if (credentials != null) {
+            return credentials;
+        }
 
         final Token token = readToken();
-        if (token != null) return token;
+        if (token != null) {
+            return token;
+        }
 
         return promptCredentials();
     }
@@ -84,12 +88,24 @@ public class AuthProvider {
         return cache;
     }
 
+    private Cache getCacheForProject(final UUID projectID) {
+        final File cachePath = arguments.getCachePath();
+        logger.debug("AuthProvider received cache path from arguments: "
+                + cachePath);
+        final Cache cache = new Cache(logger, cachePath, projectID);
+        return cache;
+    }
+
     public boolean isToken() {
         return auth instanceof Token;
     }
 
     public void setToken(final byte[] token) {
         getCache().set(token);
+    }
+
+    public void setToken(final UUID projectID, final byte[] token) {
+        getCacheForProject(projectID).set(token);
     }
 
     private Token readToken() {

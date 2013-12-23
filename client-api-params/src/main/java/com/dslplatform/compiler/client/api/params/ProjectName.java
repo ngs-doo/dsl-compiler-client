@@ -1,11 +1,11 @@
 package com.dslplatform.compiler.client.api.params;
 
-public class PackageName implements Param {
-    public final String packageName;
+public class ProjectName implements Param {
+    public final String projectName;
 
-    public PackageName(
-            final String packageName) {
-        this.packageName = packageName;
+    public ProjectName(
+            final String projectName) {
+        this.projectName = projectName;
     }
 
     // -------------------------------------------------------------------------
@@ -19,8 +19,8 @@ public class PackageName implements Param {
     @Override
     public void addToPayload(
             final XMLOut xO) {
-        if (packageName != null && !packageName.isEmpty()) {
-            xO.node("package-name", packageName);
+        if (projectName != null && !projectName.isEmpty()) {
+            xO.node("project-name", projectName);
         }
     }
 }

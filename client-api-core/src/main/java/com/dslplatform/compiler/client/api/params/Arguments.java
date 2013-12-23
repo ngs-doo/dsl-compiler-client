@@ -22,6 +22,8 @@ public interface Arguments {
 
     public PackageName getPackageName();
 
+    public ProjectName getProjectName();
+
     public DSL getDsl() throws IOException;
 
     public File getOutputPath();
@@ -31,4 +33,8 @@ public interface Arguments {
     public Level getLoggingLevel();
 
     public File getProjectIniPath();
+
+    public void readProjectIni() throws IOException;
+
+    public File getNewProjectIniPath();
 }

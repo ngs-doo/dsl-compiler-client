@@ -16,8 +16,8 @@ public class Hash implements Serializable {
 
     public Hash(
             final byte[] body) {
-        this.hash = DigestUtils.sha1(body);
-        this.hashCode = HashUtil.hashCode(hash);
+        hash = DigestUtils.sha1(body);
+        hashCode = HashUtil.hashCode(hash);
     }
 
     private Hash(
@@ -34,10 +34,12 @@ public class Hash implements Serializable {
 
     @Override
     public boolean equals(final Object o) {
-        if (!(o instanceof Hash)) return false;
+        if (!(o instanceof Hash)) {
+            return false;
+        }
 
         final Hash h = (Hash) o;
-        return (hashCode == h.hashCode) && Arrays.equals(hash, h.hash);
+        return hashCode == h.hashCode && Arrays.equals(hash, h.hash);
     }
 
 // ----------------------------------------------------------------------------

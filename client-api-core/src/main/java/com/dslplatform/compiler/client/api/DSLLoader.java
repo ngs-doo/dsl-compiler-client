@@ -33,7 +33,7 @@ public class DSLLoader {
             final Charset encoding) {
         this.logger = logger;
         this.encoding = encoding;
-        this.fileLoader = new FileLoader(logger);
+        fileLoader = new FileLoader(logger);
     }
 
     public DSLLoader(
@@ -86,7 +86,6 @@ public class DSLLoader {
                 throw new IOException("File \"" + file
                         + "\" could not be decoded via " + encoding
                         + " encoding", e);
-
             }
         }
 

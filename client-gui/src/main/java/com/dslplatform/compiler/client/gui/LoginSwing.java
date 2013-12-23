@@ -11,16 +11,16 @@ import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 
 public class LoginSwing implements Login {
-    private Logger logger;
-    private Output output;
-    private ApiCall apiCall;
+    private final Logger logger;
+    private final Output output;
+    private final ApiCall apiCall;
 
     public LoginSwing(
             final Logger logger,
             final Output output) {
         this.logger = logger;
         this.output = output;
-        this.apiCall = new ApiCall(logger);
+        apiCall = new ApiCall(logger);
     }
 
     @Override

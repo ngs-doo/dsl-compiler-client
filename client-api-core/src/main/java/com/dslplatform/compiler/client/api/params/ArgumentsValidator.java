@@ -21,9 +21,6 @@ public abstract class ArgumentsValidator implements Arguments {
     /** This is a Java client, so default to the Java language */
     private static final Language DEFAULT_LANGUAGE = Language.JAVA;
 
-    /** The default package name (namespace) is an empty string */
-    private static final PackageName DEFAULT_PACKAGE_NAME = new PackageName("");
-
     /** Advanced settings must have provided defaults, ~ expands to user.home */
     private static final String DEFAULT_CACHE_PATH = "~/.dsl-platform";
 
@@ -42,6 +39,7 @@ public abstract class ArgumentsValidator implements Arguments {
 
     private final Set<String> languages = new LinkedHashSet<String>();
     private String packageName = null;
+    private String projectName = null;
 
     private final Set<String> dslPaths = new LinkedHashSet<String>();
     private String outputPath = null;
@@ -50,6 +48,7 @@ public abstract class ArgumentsValidator implements Arguments {
     private String loggingLevel = null;
 
     private String projectIniPath = null;
+    private String newProjectIniPath = null;
 
     // =================================================================================================================
 
@@ -59,13 +58,14 @@ public abstract class ArgumentsValidator implements Arguments {
     public ArgumentsValidator(
             final Logger logger) {
         this.logger = logger;
-        this.pathExpander = new PathExpander(logger);
+        pathExpander = new PathExpander(logger);
     }
 
+    // format: OFF
     private Action consollidateActions() {
-        logger.trace("About to consollidate all actions: " + this.actions);
+        logger.trace("About to consollidate all actions: " + actions);
 
-        final int actNum = this.actions.size();
+        final int actNum = actions.size();
 
         if (actNum == 0) {
             logger.debug("No actions were specified, defaulting to: "
@@ -76,8 +76,7 @@ public abstract class ArgumentsValidator implements Arguments {
         final Set<Action> actions = new LinkedHashSet<Action>();
         validation: for (final String unparsedAction : this.actions) {
             for (final Action action : Action.values()) {
-                if (unparsedAction.equalsIgnoreCase(action.name().replace('_',
-                        ' '))) {
+                if (unparsedAction.equalsIgnoreCase(action.name().replace('_', ' '))) {
                     actions.add(action);
                     continue validation;
                 }
@@ -94,20 +93,18 @@ public abstract class ArgumentsValidator implements Arguments {
             return actions.iterator().next();
         }
 
-        if (actNum == 2
-                && (actions.contains(Action.PARSE)
-                        && actions.contains(Action.DIFF)
-                        || actions.contains(Action.PARSE)
-                        && actions.contains(Action.PARSE_AND_DIFF) || actions
-                        .contains(Action.DIFF)
-                        && actions.contains(Action.PARSE_AND_DIFF))) {
+        if (actNum == 2 && (
+                actions.contains(Action.PARSE) && actions.contains(Action.DIFF) ||
+                actions.contains(Action.PARSE) && actions.contains(Action.PARSE_AND_DIFF) ||
+                actions.contains(Action.DIFF) && actions.contains(Action.PARSE_AND_DIFF))) {
             logger.debug("There were two actions, parse and diff, which were merged into a single action");
             return Action.PARSE_AND_DIFF;
         }
 
-        if (actNum == 3 && actions.contains(Action.PARSE)
-                && actions.contains(Action.DIFF)
-                && actions.contains(Action.PARSE_AND_DIFF)) {
+        if (actNum == 3 &&
+                actions.contains(Action.PARSE) &&
+                actions.contains(Action.DIFF) &&
+                actions.contains(Action.PARSE_AND_DIFF)) {
             logger.debug("There were three actions, combinations of parse and diff, which were all merged into a single action");
             return Action.PARSE_AND_DIFF;
         }
@@ -156,7 +153,7 @@ public abstract class ArgumentsValidator implements Arguments {
 
         try {
             return new ProjectID(UUID.fromString(projectID));
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format(
                     "\"%s\" does not look like a project ID!", projectID));
         }
@@ -166,7 +163,7 @@ public abstract class ArgumentsValidator implements Arguments {
 
     @Override
     public Language[] getLanguages() {
-        final int langNum = this.languages.size();
+        final int langNum = languages.size();
         if (langNum == 0) {
             logger.debug("No languages were specified, defaulting to: "
                     + DEFAULT_LANGUAGE);
@@ -196,8 +193,12 @@ public abstract class ArgumentsValidator implements Arguments {
 
     @Override
     public PackageName getPackageName() {
-        return packageName == null ? DEFAULT_PACKAGE_NAME : new PackageName(
-                packageName);
+        return new PackageName(packageName);
+    }
+
+    @Override
+    public ProjectName getProjectName() {
+        return new ProjectName(projectName);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -256,9 +257,10 @@ public abstract class ArgumentsValidator implements Arguments {
         final Logger.Level level = Logger.Level.valueOf(loggingLevel
                 .toUpperCase());
 
-        if (level == null)
+        if (level == null) {
             throw new IllegalArgumentException(String.format(
                     "Logging level \"%s\" is not supported.", loggingLevel));
+        }
 
         logger.trace(String.format("Successfully validated logging level: "
                 + level));
@@ -271,6 +273,14 @@ public abstract class ArgumentsValidator implements Arguments {
     public File getProjectIniPath() {
         return projectIniPath == null ? null : pathExpander
                 .expandPath(projectIniPath);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public File getNewProjectIniPath() {
+        return newProjectIniPath == null ? null : pathExpander
+                .expandPath(newProjectIniPath);
     }
 
     // =================================================================================================================
@@ -323,11 +333,16 @@ public abstract class ArgumentsValidator implements Arguments {
         this.packageName = packageName;
     }
 
+    protected void setProjectName(final String projectName) {
+        logger.debug("Setting project name: " + projectName);
+        this.projectName = projectName;
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
 
     protected void addDslPath(final String dslPath) {
         logger.debug("Adding dsl path: " + dslPath);
-        this.dslPaths.add(dslPath);
+        dslPaths.add(dslPath);
     }
 
     protected void setOutputPath(final String outputPath) {
@@ -350,12 +365,23 @@ public abstract class ArgumentsValidator implements Arguments {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    protected void setProjectIniPath(final String projectIniPath)
-            throws IOException {
-        this.projectIniPath = projectIniPath;
+    protected void setNewProjectIniPath(final String newProjectIniPath) {
+        this.newProjectIniPath = newProjectIniPath;
+    }
 
-        final Properties properties = new Properties();
-        {
+    // -----------------------------------------------------------------------------------------------------------------
+
+    protected void setProjectIniPath(final String projectIniPath) {
+        this.projectIniPath = projectIniPath;
+    }
+
+    @Override
+    public void readProjectIni() throws IOException {
+
+        if (getProjectIniPath() == null) {
+            return;
+        }
+        final Properties properties = new Properties(); {
             final InputStream is = new FileInputStream(getProjectIniPath());
             try {
                 properties.load(is);
@@ -383,51 +409,70 @@ public abstract class ArgumentsValidator implements Arguments {
             final String username = properties.getProperty("username");
             logger.debug("Parsed username parameter, overwriting old username: "
                     + username);
-            if (username != null) setUsername(username);
-        }
-        {
+            if (username != null) {
+                setUsername(username);
+            }
+        }{
             final String password = properties.getProperty("password");
             logger.debug("Parsed password parameter, overwriting old password: ****");
-            if (password != null) setPassword(password);
-        }
-        {
+            if (password != null) {
+                setPassword(password);
+            }
+        }{
             final String projectID = properties.getProperty("project-id");
             logger.debug("Parsed project ID parameter, overwriting old project ID: "
                     + projectID);
-            if (projectID != null) setProjectID(projectID);
+            if (projectID != null) {
+                setProjectID(projectID);
+            }
         }
 
         {
             final String languages = properties.getProperty("language");
             logger.debug("Parsed language parameter, adding languages to the list: "
                     + languages);
-            if (languages != null) addLanguages(languages);
-        }
-        {
+            if (languages != null) {
+                addLanguages(languages);
+            }
+        }{
             final String packageName = properties.getProperty("package-name");
             logger.debug("Parsed package name parameter, overwriting old package name: "
                     + packageName);
-            if (packageName != null) setPackageName(packageName);
+            if (packageName != null) {
+                setPackageName(packageName);
+            }
+        }{
+            final String projectName = properties.getProperty("project-name");
+            logger.debug("Parsed project name parameter, overwriting old project name: "
+                    + projectName);
+            if (projectName != null) {
+                setProjectName(projectName);
+            }
         }
 
         {
             final String dslPath = properties.getProperty("dsl-path");
             logger.debug("Parsed DSL path parameter, adding DSL path to the list: "
                     + dslPath);
-            if (dslPath != null) addDslPath(dslPath);
-        }
-        {
+            if (dslPath != null) {
+                addDslPath(dslPath);
+            }
+        }{
             final String outputPath = properties.getProperty("output-path");
             logger.debug("Parsed output path parameter, overwriting old output path: "
                     + outputPath);
-            if (outputPath != null) setOutputPath(outputPath);
+            if (outputPath != null) {
+                setOutputPath(outputPath);
+            }
         }
 
         {
             final String cachePath = properties.getProperty("cache-path");
             logger.debug("Parsed cache path parameter, overwriting old cache path: "
                     + cachePath);
-            if (cachePath != null) setCachePath(cachePath);
+            if (cachePath != null) {
+                setCachePath(cachePath);
+            }
         }
     }
 }

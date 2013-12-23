@@ -26,7 +26,7 @@ public class ParseAndDiffHandler extends BaseHandler {
             final Output output,
             final Login login,
             final Actions actions) {
-        super(logger, prompt);
+        super(logger, prompt, output);
         this.logger = logger;
         this.prompt = prompt;
         this.output = output;
@@ -35,6 +35,7 @@ public class ParseAndDiffHandler extends BaseHandler {
     }
 
     public void apply(final Arguments arguments) throws IOException {
+        arguments.readProjectIni();
         final DSL dsl = arguments.getDsl();
         final ProjectID projectID = arguments.getProjectID();
 

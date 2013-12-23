@@ -92,7 +92,9 @@ public class ApiCall {
         try {
             while (true) {
                 final int read = iS.read(buffer);
-                if (read == -1) break;
+                if (read == -1) {
+                    break;
+                }
                 bAOS.write(buffer, 0, read);
             }
         } finally {
@@ -102,11 +104,11 @@ public class ApiCall {
         return new Response(ok, code, bAOS.toByteArray());
     }
 
-    private final Logger logger;
+//    private final Logger logger;
 
     public ApiCall(
             final Logger logger) {
-        this.logger = logger;
+//        this.logger = logger;
     }
 
     public RunningTask call(final Param... params) throws IOException {
@@ -128,6 +130,7 @@ public class ApiCall {
         return new RunningTask(target, response, POLL_INTERVAL, TIMEOUT);
     }
 
+    // format: OFF
     static Response await(
             final Target target,
             final UUID requestID,
@@ -135,7 +138,9 @@ public class ApiCall {
             final int afterOrdinal,
             final byte[] body) throws IOException {
 
-        return read(target, body, "/response?id=" + requestID + "&timeout="
-                + pollInterval + "&ordinal=" + afterOrdinal);
+        return read(target, body,
+                "/response?id=" + requestID +
+                "&timeout=" + pollInterval +
+                "&ordinal=" + afterOrdinal);
     }
 }

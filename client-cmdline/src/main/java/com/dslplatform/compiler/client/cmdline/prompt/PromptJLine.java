@@ -1,3 +1,4 @@
+/*
 package com.dslplatform.compiler.client.cmdline.prompt;
 
 import java.io.IOException;
@@ -55,3 +56,4 @@ public class PromptJLine implements Prompt {
         }
     }
 }
+*/

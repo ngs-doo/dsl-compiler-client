@@ -1,3 +1,4 @@
+/*
 package com.dslplatform.compiler.client.cmdline.output;
 
 import org.fusesource.jansi.AnsiConsole;
@@ -41,3 +42,4 @@ public class OutputJAnsi implements Output {
         }
     }
 }
+*/

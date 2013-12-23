@@ -12,7 +12,7 @@ public class PathExpander {
     public PathExpander(
             final Logger logger) {
         this.logger = logger;
-        this.userHome = getUserHome();
+        userHome = getUserHome();
 
         logger.debug("User home set to: " + userHome);
     }

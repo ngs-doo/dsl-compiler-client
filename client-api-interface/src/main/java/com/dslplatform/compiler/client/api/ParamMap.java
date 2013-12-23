@@ -25,7 +25,9 @@ class ParamMap implements Comparator<Class<? extends Param>> {
 
     public <T extends Param> T firstOf(final Class<T> clazz) {
         final Set<Param> paramSet = params.get(clazz);
-        if (paramSet == null) return null;
+        if (paramSet == null) {
+            return null;
+        }
         return clazz.cast(paramSet.iterator().next());
     }
 

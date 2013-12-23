@@ -17,7 +17,7 @@ import com.dslplatform.compiler.client.gui.windows.login.LoginResponse.Status;
 import com.dslplatform.compiler.client.io.Logger;
 
 public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
-    private final Logger logger;
+//    private final Logger logger;
     private final String username;
     private final String password;
     private final ApiCall apiCall;
@@ -27,7 +27,7 @@ public class LoginWorker extends SwingWorker<Boolean, LoginResponse> {
             final ApiCall apiCall,
             final String username,
             final String password) {
-        this.logger = logger;
+//        this.logger = logger;
         this.apiCall = apiCall;
         this.username = username;
         this.password = password;

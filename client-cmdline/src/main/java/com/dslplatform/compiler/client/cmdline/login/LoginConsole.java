@@ -6,13 +6,13 @@ import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Prompt;
 
 public class LoginConsole implements Login {
-    private final Logger logger;
+//    private final Logger logger;
     private final Prompt prompt;
 
     public LoginConsole(
             final Logger logger,
             final Prompt prompt) {
-        this.logger = logger;
+//        this.logger = logger;
         this.prompt = prompt;
     }
 
@@ -21,8 +21,12 @@ public class LoginConsole implements Login {
             final String username = prompt.readLine("Username"
                     + (defaultUsername == null ? ": " : " [" + defaultUsername
                             + "]: "), null);
-            if (!username.isEmpty()) return username;
-            if (defaultUsername != null) return defaultUsername;
+            if (!username.isEmpty()) {
+                return username;
+            }
+            if (defaultUsername != null) {
+                return defaultUsername;
+            }
         }
     }
 
@@ -30,8 +34,12 @@ public class LoginConsole implements Login {
         while (true) {
             final String password = prompt.readLine("Password"
                     + (defaultPassword == null ? ": " : " [****]: "), '*');
-            if (!password.isEmpty()) return password;
-            if (defaultPassword != null) return defaultPassword;
+            if (!password.isEmpty()) {
+                return password;
+            }
+            if (defaultPassword != null) {
+                return defaultPassword;
+            }
         }
     }
 

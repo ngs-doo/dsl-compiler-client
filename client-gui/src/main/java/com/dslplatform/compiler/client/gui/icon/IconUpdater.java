@@ -44,8 +44,9 @@ public class IconUpdater extends WindowAdapter {
         final int w = img.getWidth(null);
         final int h = img.getHeight(null);
 
-        final Color bgColor = hidden ? lastColor : ((Color) UIManager
-                .get(active ? "activeCaption" : "inactiveCaption"));
+        final Color bgColor = hidden ? lastColor : (Color) UIManager.get(active
+                ? "activeCaption"
+                : "inactiveCaption");
 
         lastColor = bgColor;
 

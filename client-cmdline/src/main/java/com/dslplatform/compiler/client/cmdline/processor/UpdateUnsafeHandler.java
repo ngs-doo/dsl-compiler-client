@@ -29,7 +29,7 @@ public class UpdateUnsafeHandler extends BaseHandler {
             final Output output,
             final Login login,
             final Actions actions) {
-        super(logger, prompt);
+        super(logger, prompt, output);
         this.logger = logger;
         this.prompt = prompt;
         this.output = output;
@@ -38,6 +38,7 @@ public class UpdateUnsafeHandler extends BaseHandler {
     }
 
     public void apply(final Arguments arguments) throws IOException {
+        arguments.readProjectIni();
         final DSL dsl = arguments.getDsl();
 
         // sanity check to force early failure
@@ -101,6 +102,14 @@ public class UpdateUnsafeHandler extends BaseHandler {
             output.println(message);
         }
 
-        updateFiles(arguments, uup.getFileBodies(), arguments.getOutputPath());
+        if (uup.isSuccessful()) {
+            updateFiles(arguments, uup.getFileBodies(),
+                    arguments.getOutputPath());
+            updateProjectIni(arguments.getProjectIniPath(), uup.getProjectIni());
+        } else {
+            output.println("An error occured while updating:");
+            output.println(uup.getResponse());
+        }
+
     }
 }

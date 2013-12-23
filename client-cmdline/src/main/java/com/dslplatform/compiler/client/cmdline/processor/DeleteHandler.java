@@ -4,29 +4,27 @@ import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
 import com.dslplatform.compiler.client.api.params.Arguments;
-import com.dslplatform.compiler.client.api.params.DSL;
 import com.dslplatform.compiler.client.api.params.ProjectID;
-import com.dslplatform.compiler.client.api.processors.DiffProcessor;
+import com.dslplatform.compiler.client.api.processors.DeleteProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
 import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
 
-public class DiffHandler extends BaseHandler {
+public class DeleteHandler {
     private final Logger logger;
     private final Prompt prompt;
     private final Output output;
     private final Login login;
     private final Actions actions;
 
-    public DiffHandler(
+    public DeleteHandler(
             final Logger logger,
             final Prompt prompt,
             final Output output,
             final Login login,
             final Actions actions) {
-        super(logger, prompt, output);
         this.logger = logger;
         this.prompt = prompt;
         this.output = output;
@@ -36,24 +34,20 @@ public class DiffHandler extends BaseHandler {
 
     public void apply(final Arguments arguments) throws IOException {
         arguments.readProjectIni();
-        final DSL dsl = arguments.getDsl();
         final ProjectID projectID = arguments.getProjectID();
-
         final AuthProvider authProvider = new AuthProvider(logger, prompt,
                 login, arguments);
-        final DiffProcessor dp = actions.diff(authProvider.getAuth(), dsl,
+        final DeleteProcessor cp = actions.delete(authProvider.getAuth(),
                 projectID);
 
-        if (dp.isAuthorized()) {
-            authProvider.setToken(dp.getAuthorization());
+        if (cp.isAuthorized()) {
+            authProvider.setToken(cp.getAuthorization());
         } else if (authProvider.isToken()) {
             authProvider.removeToken();
             apply(arguments);
             return;
         }
 
-        for (final String diff : dp.getDiffs()) {
-            output.println(diff);
-        }
+        output.println(cp.getResponse());
     }
 }

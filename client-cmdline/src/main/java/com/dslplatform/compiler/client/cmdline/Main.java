@@ -6,6 +6,9 @@ import com.dslplatform.compiler.client.api.Actions;
 import com.dslplatform.compiler.client.api.ApiCall;
 import com.dslplatform.compiler.client.api.params.Arguments;
 import com.dslplatform.compiler.client.cmdline.params.ArgumentsParser;
+import com.dslplatform.compiler.client.cmdline.processor.CleanHandler;
+import com.dslplatform.compiler.client.cmdline.processor.CreateHandler;
+import com.dslplatform.compiler.client.cmdline.processor.DeleteHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseAndDiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseHandler;
@@ -61,6 +64,21 @@ public class Main {
 
             case UPDATE_UNSAFE:
                 new UpdateUnsafeHandler(logger, prompt, output, login, actions)
+                        .apply(params);
+                break;
+
+            case CREATE:
+                new CreateHandler(logger, prompt, output, login, actions)
+                        .apply(params);
+                break;
+
+            case CLEAN:
+                new CleanHandler(logger, prompt, output, login, actions)
+                        .apply(params);
+                break;
+
+            case DELETE:
+                new DeleteHandler(logger, prompt, output, login, actions)
                         .apply(params);
                 break;
 

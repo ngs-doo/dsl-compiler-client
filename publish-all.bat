@@ -13,5 +13,5 @@ call "%~dp0sbt.bat" ^
   client-cmdline/clean client-cmdline/publish ^
   client-gui/clean client-gui/publish ^
   ^
-  client-assembly/clean client-assembly/publish ^
-  client-launcher/clean client-launcher/clean ^
+  client-assembly/clean client-assembly/publish client-assembly/assembly ^
+  client-launcher/clean client-launcher/publish

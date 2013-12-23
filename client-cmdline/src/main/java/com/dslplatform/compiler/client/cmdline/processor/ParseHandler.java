@@ -33,6 +33,7 @@ public class ParseHandler {
     }
 
     public void apply(final Arguments arguments) throws IOException {
+        arguments.readProjectIni();
         final DSL dsl = arguments.getDsl();
 
         final AuthProvider authProvider = new AuthProvider(logger, prompt,

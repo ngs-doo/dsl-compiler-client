@@ -4,23 +4,22 @@ import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
 import com.dslplatform.compiler.client.api.params.Arguments;
-import com.dslplatform.compiler.client.api.params.DSL;
-import com.dslplatform.compiler.client.api.params.ProjectID;
-import com.dslplatform.compiler.client.api.processors.DiffProcessor;
+import com.dslplatform.compiler.client.api.params.ProjectName;
+import com.dslplatform.compiler.client.api.processors.CreateProcessor;
 import com.dslplatform.compiler.client.cmdline.params.AuthProvider;
 import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Login;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.Prompt;
 
-public class DiffHandler extends BaseHandler {
+public class CreateHandler extends BaseHandler {
     private final Logger logger;
     private final Prompt prompt;
     private final Output output;
     private final Login login;
     private final Actions actions;
 
-    public DiffHandler(
+    public CreateHandler(
             final Logger logger,
             final Prompt prompt,
             final Output output,
@@ -35,25 +34,33 @@ public class DiffHandler extends BaseHandler {
     }
 
     public void apply(final Arguments arguments) throws IOException {
-        arguments.readProjectIni();
-        final DSL dsl = arguments.getDsl();
-        final ProjectID projectID = arguments.getProjectID();
+        final ProjectName projectName = arguments.getProjectName();
+
+        if (projectName.projectName == null) {
+            logger.info("Create request for project name: "
+                    + projectName.projectName);
+        } else {
+            logger.info("Create request (project name will be generated)");
+        }
 
         final AuthProvider authProvider = new AuthProvider(logger, prompt,
                 login, arguments);
-        final DiffProcessor dp = actions.diff(authProvider.getAuth(), dsl,
-                projectID);
 
-        if (dp.isAuthorized()) {
-            authProvider.setToken(dp.getAuthorization());
+        final CreateProcessor cp = actions.create(authProvider.getAuth(),
+                projectName);
+
+        if (cp.isAuthorized()) {
+            authProvider.setToken(cp.getProjectID(), cp.getAuthorization());
         } else if (authProvider.isToken()) {
             authProvider.removeToken();
             apply(arguments);
             return;
         }
 
-        for (final String diff : dp.getDiffs()) {
-            output.println(diff);
+        if (cp.isSuccessful()) {
+            updateProjectIni(arguments.getProjectIniPath(), cp.getProjectIni());
         }
+
+        output.println(cp.getResponse());
     }
 }
