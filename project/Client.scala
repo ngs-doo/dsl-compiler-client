@@ -38,7 +38,7 @@ object Client extends Client {
   )
   lazy val gui           = clientProject("Client-GUI") inject(apiCore)
 
-  lazy val release       = clientProject("Client-Assembly") inject(cmdline, gui) settings(
+  lazy val release       = clientProject("Client-Assembly") inject(cmdline/*, gui*/) settings(
     assemblyPublishSettings ++ Seq(
       mainClass in assembly := Some("com.dslplatform.compiler.client.Main")
     , jarName   in assembly := "dsl-clc.jar"

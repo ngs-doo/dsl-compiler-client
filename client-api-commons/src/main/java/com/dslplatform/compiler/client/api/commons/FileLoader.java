@@ -58,15 +58,13 @@ public class FileLoader {
         final File file = new File(path);
 
         if (file.isDirectory()) {
+            logger.trace("Recursively adding files in directory \"" + file
+                    + "\" via pattern: " + pattern);
             for (final String curPath : file.list()) {
-                logger.trace("Recursively adding path \"" + path
-                        + "\" via pattern: " + pattern);
                 addPath(rootPath, path + "/" + curPath, pattern);
             }
         } else if (file.isFile()) {
             final String realPath = file.getCanonicalPath();
-            logger.trace("Checking path \"" + path + "\" via pattern: "
-                    + pattern);
             if (pattern.matcher(realPath).matches()) {
                 addFile(rootPath, realPath, file);
             }
@@ -82,8 +80,9 @@ public class FileLoader {
             final String rootPath,
             final String realPath,
             final File file) throws IOException {
-        logger.trace("Checking \"" + realPath + "\" for duplicate addition");
         if (fileBodies.containsKey(realPath)) {
+            logger.debug("File \"" + realPath
+                    + "\" already added, skipping ...");
             return;
         }
 

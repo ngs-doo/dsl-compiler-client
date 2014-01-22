@@ -6,10 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.util.Properties;
 import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -23,69 +21,79 @@ import com.dslplatform.compiler.client.api.params.Target;
 import com.dslplatform.compiler.client.io.Logger;
 
 public class ApiCall {
-    private static final String API_URL;
-    private static final String VERSION;
-    private static final int POLL_INTERVAL;
-    private static final int TIMEOUT;
+    private final Logger logger;
+    private final ApiProperties apiProperties;
 
-    private static final SSLSocketFactory socketFactory;
-
-    static {
-        try {
-            final Properties apiProperties = new Properties();
-            apiProperties.load(ApiCall.class
-                    .getResourceAsStream("api.properties"));
-
-            API_URL = apiProperties.getProperty("api-url");
-            VERSION = apiProperties.getProperty("version");
-            POLL_INTERVAL = Integer.parseInt(apiProperties
-                    .getProperty("poll-interval"));
-            TIMEOUT = Integer.parseInt(apiProperties.getProperty("timeout"));
-
-            final KeyStore truststore = KeyStore.getInstance("jks");
-            truststore.load(ApiCall.class.getResourceAsStream(apiProperties
-                    .getProperty("truststore-name")), apiProperties
-                    .getProperty("truststore-password").toCharArray());
-
-            final TrustManagerFactory tMF = TrustManagerFactory
-                    .getInstance("PKIX");
-            tMF.init(truststore);
-
-            final SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, tMF.getTrustManagers(), new SecureRandom());
-
-            socketFactory = sslContext.getSocketFactory();
-        } catch (final Exception e) {
-            throw new RuntimeException("Could not initialize API connection", e);
-        }
+    public ApiCall(
+            final Logger logger,
+            final ApiProperties apiProperties) {
+        this.logger = logger;
+        this.apiProperties = apiProperties;
     }
 
-    private static Response read(
+    private SSLSocketFactory sslSocketFactory;
+
+    private static SSLSocketFactory createSSLSocketFactory(
+            final String truststoreName,
+            final char[] truststorePassword) throws Exception {
+        final KeyStore truststore = KeyStore.getInstance("jks");
+        truststore.load(ApiCall.class.getResourceAsStream(truststoreName),
+                truststorePassword);
+
+        final TrustManagerFactory tMF = TrustManagerFactory.getInstance("PKIX");
+        tMF.init(truststore);
+
+        final SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tMF.getTrustManagers(), new SecureRandom());
+        return sslContext.getSocketFactory();
+
+    }
+
+    Response read(
             final Target target,
+            final UUID requestID,
             final byte[] body,
-            final String params) throws IOException {
+            final int timeout) throws IOException {
 
-        final URL targetUrl = new URL(API_URL + target.branch + '/'
-                + target.version + params);
+        final URL targetUrl = new URL(apiProperties.getApiUrl() + target.branch
+                + '/' + requestID);
 
-        final HttpURLConnection hUC = (HttpURLConnection) targetUrl
+        logger.debug("Sending request to " + targetUrl);
+
+        final HttpURLConnection huc = (HttpURLConnection) targetUrl
                 .openConnection();
-        if (hUC instanceof HttpsURLConnection) {
-            final HttpsURLConnection hsUC = (HttpsURLConnection) hUC;
-            hsUC.setSSLSocketFactory(socketFactory);
+
+        huc.setConnectTimeout(timeout);
+        huc.setReadTimeout(timeout);
+
+        if (huc instanceof HttpsURLConnection) {
+            try {
+                final HttpsURLConnection hsUC = (HttpsURLConnection) huc;
+                if (sslSocketFactory == null) {
+                    logger.trace("Initializing SSL connection...");
+                    sslSocketFactory = createSSLSocketFactory(
+                            apiProperties.getTruststorePath(),
+                            apiProperties.getTruststorePassword());
+                }
+                hsUC.setSSLSocketFactory(sslSocketFactory);
+            } catch (final Exception e) {
+                logger.error("Could not initialize SSL socket factory:" + e);
+            }
         }
 
-        hUC.setDoOutput(true);
-        hUC.setRequestMethod("PUT");
+        if (body != null) {
+            huc.setDoOutput(true);
+            huc.setRequestMethod("POST");
 
-        final OutputStream oS = hUC.getOutputStream();
-        oS.write(body);
-        oS.close();
+            final OutputStream os = huc.getOutputStream();
+            os.write(body);
+            os.close();
+        }
 
-        final int code = hUC.getResponseCode();
+        final int code = huc.getResponseCode();
         final boolean ok = code / 100 == 2;
 
-        final InputStream iS = ok ? hUC.getInputStream() : hUC.getErrorStream();
+        final InputStream iS = ok ? huc.getInputStream() : huc.getErrorStream();
         final ByteArrayOutputStream bAOS = new ByteArrayOutputStream();
         final byte[] buffer = new byte[8192];
 
@@ -101,14 +109,10 @@ public class ApiCall {
             iS.close();
         }
 
-        return new Response(ok, code, bAOS.toByteArray());
-    }
+        final byte[] response = bAOS.toByteArray();
+        logger.trace("Recevied " + response.length + " bytes");
 
-//    private final Logger logger;
-
-    public ApiCall(
-            final Logger logger) {
-//        this.logger = logger;
+        return new Response(ok, code, response);
     }
 
     public RunningTask call(final Param... params) throws IOException {
@@ -116,31 +120,22 @@ public class ApiCall {
         paramMap.add(params);
 
         if (paramMap.firstOf(Target.class) == null) {
-            paramMap.add(new Target(VERSION));
+            paramMap.add(new Target(apiProperties.getBranch(), apiProperties
+                    .getVersion()));
         }
         if (paramMap.firstOf(Environment.class) == null) {
             paramMap.add(new Environment());
         }
 
-        final byte[] body = paramMap.toXML().getBytes(Charset.forName("UTF-8"));
+        final String content = paramMap.toXML();
+        logger.trace("Request payload: " + content);
+
+        final byte[] body = JavaSerialization.serialize(content);
+        final int timeout = apiProperties.getTimeout();
+        final int pollInterval = apiProperties.getPollInterval();
 
         final Target target = paramMap.firstOf(Target.class);
-        final Response response = read(target, body, "");
-
-        return new RunningTask(target, response, POLL_INTERVAL, TIMEOUT);
-    }
-
-    // format: OFF
-    static Response await(
-            final Target target,
-            final UUID requestID,
-            final int pollInterval,
-            final int afterOrdinal,
-            final byte[] body) throws IOException {
-
-        return read(target, body,
-                "/response?id=" + requestID +
-                "&timeout=" + pollInterval +
-                "&ordinal=" + afterOrdinal);
+        return new RunningTask(logger, this, target, body, pollInterval,
+                timeout);
     }
 }

@@ -5,15 +5,10 @@ public class Target implements Param {
     public final String branch;
 
     public Target(
-            final String version,
-            final String branch) {
-        this.version = version;
-        this.branch = branch;
-    }
-
-    public Target(
+            final String branch,
             final String version) {
-        this(version, "stable");
+        this.branch = branch;
+        this.version = version;
     }
 
     // -------------------------------------------------------------------------
@@ -27,8 +22,8 @@ public class Target implements Param {
     @Override
     public void addToPayload(final XMLOut xO) {
         xO.start("target")
-            .node("version", version)
             .node("branch", branch)
+            .node("version", version)
         .end();
     }
 }

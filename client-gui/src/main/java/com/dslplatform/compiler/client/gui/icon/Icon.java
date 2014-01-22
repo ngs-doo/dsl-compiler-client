@@ -7,10 +7,10 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 public enum Icon {
-    LOGO_16("/logo-16.png"),
-    LOGO_32("/logo-32.png"),
-    LOGO_64("/logo-64.png"),
-    LOGIN("/login.png");
+    LOGO_16("logo-16.png"),
+    LOGO_32("logo-32.png"),
+    LOGO_64("logo-64.png"),
+    LOGIN("login.png");
 
     public final Image image;
     public final ImageIcon icon;

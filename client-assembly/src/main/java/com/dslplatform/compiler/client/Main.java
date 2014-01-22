@@ -1,12 +1,19 @@
 package com.dslplatform.compiler.client;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+import com.dslplatform.compiler.client.api.ApiProperties;
+import com.dslplatform.compiler.client.api.commons.PathExpander;
 import com.dslplatform.compiler.client.cmdline.logger.LoggerSystem;
 import com.dslplatform.compiler.client.cmdline.login.LoginConsole;
 import com.dslplatform.compiler.client.cmdline.output.OutputConsole;
 import com.dslplatform.compiler.client.cmdline.output.OutputSystem;
 import com.dslplatform.compiler.client.cmdline.prompt.PromptConsole;
 import com.dslplatform.compiler.client.cmdline.prompt.PromptSystem;
-import com.dslplatform.compiler.client.gui.LoginSwing;
+//import com.dslplatform.compiler.client.gui.LoginSwing;
 import com.dslplatform.compiler.client.io.Logger;
 import com.dslplatform.compiler.client.io.Logger.Level;
 import com.dslplatform.compiler.client.io.Login;
@@ -68,9 +75,10 @@ public class Main {
     private static Login getLogin(
             final Logger logger,
             final Output output,
-            final Prompt prompt) {
+            final Prompt prompt,
+            final ApiProperties apiProperties) {
         for (final Login login : new Login[] {
-                    new LoginSwing(logger, output),
+//                    new LoginSwing(logger, output, apiProperties),
                     new LoginConsole(logger, prompt)
                 }) {
 
@@ -87,6 +95,45 @@ public class Main {
 
     // --------------------------------------------------------------------
 
+    private static ApiProperties readFromStream(
+            final Logger logger,
+            final InputStream is) throws IOException {
+        final Properties properties = new Properties();
+        properties.load(is);
+        return new ApiProperties(logger, properties);
+    }
+
+    private static ApiProperties readApiProperties(
+            final Logger logger) throws IOException {
+        final String override = System.getProperty("dsl-clc-api-properties");
+        if (override == null) {
+            logger.trace("Reading default api.properties ...");
+            return readFromStream(
+                    logger,
+                    Main.class.getResourceAsStream("api/api.properties"));
+        }
+
+        logger.info("Overriding api.properties with: " + override);
+        try {
+            return readFromStream(
+                    logger,
+                    Main.class.getResourceAsStream(override));
+        }
+        catch (final Exception e) {
+            final PathExpander pathExpander = new PathExpander(logger);
+            final FileInputStream fis = new FileInputStream(
+                    pathExpander.expandPath(override));
+            try {
+                return readFromStream(logger, fis);
+            }
+            finally {
+                fis.close();
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------
+
     public static void main(
             final String[] args) {
         try {
@@ -99,11 +146,13 @@ public class Main {
             final Prompt prompt = getPrompt(logger, output);
             logger.debug("Selected prompt: " + prompt);
 
-            final Login login = getLogin(logger, output, prompt);
+            final ApiProperties apiProperties = readApiProperties(logger);
+
+            final Login login = getLogin(logger, output, prompt, apiProperties);
             logger.debug("Selected login: " + login);
 
             new com.dslplatform.compiler.client.cmdline.Main(logger, prompt,
-                    output, login).process(args);
+                    output, login, apiProperties).process(args);
 
             System.exit(0);
         } catch (final Exception e) {

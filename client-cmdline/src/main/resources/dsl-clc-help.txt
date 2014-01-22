@@ -34,8 +34,8 @@
         WARNING: This path will be managed by the CommandLine Client,
         and should not be used for other purposes to prevent data loss!
 
-  -f<project.ini path>, --project-ini-path=<project.ini path>
-        Path to the project.ini file, allowing most (or all) of the
+  -f<dsl-project.ini path>, --project-ini-path=<dsl-project.ini path>
+        Path to the dsl-project.ini file, allowing most (or all) of the
         parameters to be read from a single source.
 
   --
@@ -73,9 +73,9 @@
         Used with "create" action to specify the name of the project.
         If you do not set a name, a new project name will be generated for you.
 
-  -b<new project.ini path>, --new-project-ini-path=<new project.ini path>
-        Used with create command to specify where to write the newly generated project.ini file.
-        If not specified, project.ini will written to the console.
+  -b<new dsl-project.ini path>, --new-project-ini-path=<new dsl-project.ini path>
+        Used with create command to specify where to write the newly generated dsl-project.ini file.
+        If not specified, dsl-project.ini will written to the console.
 
   -v<logging-level>, --logging-level=<logging level>
         Logging level for debugging messages which are streamed to stderr.
@@ -84,8 +84,7 @@
 # ADVANCED ACTIONS - USE WITH CAUTION!
 
   create
-        Creates a new project and returns a new project.ini.
+        Creates a new project and returns a new dsl-project.ini.
 
   delete
-        Marks the project for deletion.
-        Once the project has been marked for more than 24 hours, this action will delete it.
+        Deletes the project marked by the project ID. This action is irreversible!

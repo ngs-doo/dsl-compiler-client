@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.gui;
 import java.awt.GraphicsEnvironment;
 
 import com.dslplatform.compiler.client.api.ApiCall;
+import com.dslplatform.compiler.client.api.ApiProperties;
 import com.dslplatform.compiler.client.api.params.Credentials;
 import com.dslplatform.compiler.client.gui.windows.login.LoginDialog;
 import com.dslplatform.compiler.client.gui.windows.login.LoginDialogResult;
@@ -17,10 +18,11 @@ public class LoginSwing implements Login {
 
     public LoginSwing(
             final Logger logger,
-            final Output output) {
+            final Output output,
+            final ApiProperties apiProperties) {
         this.logger = logger;
         this.output = output;
-        apiCall = new ApiCall(logger);
+        apiCall = new ApiCall(logger, apiProperties);
     }
 
     @Override

@@ -49,7 +49,7 @@ trait Default {
     , unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
 
     , libraryDependencies ++= Seq(
-        "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
+        "org.scalatest" %% "scalatest" % "2.0" % "test"
       , "junit" % "junit" % "4.11" % "test"
       )
 

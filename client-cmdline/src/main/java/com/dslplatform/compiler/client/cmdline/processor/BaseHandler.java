@@ -26,7 +26,7 @@ public class BaseHandler {
     private final Output output;
 
     /*
-      Used dir_separator is / since it works in all platforms.
+      Used dir_separator is / since it works on all platforms.
       If this should change than code replacing / with platform dependent
       separator should be moved to server side.
     */
@@ -58,9 +58,12 @@ public class BaseHandler {
         final FileLoader fileLoader = new FileLoader(logger);
         for (final String path : languagePaths) {
             final String language = path.replaceFirst("/.*", "");
-            final String languagePath = op.getPath() + "/" + language;
-            logger.trace("Marking managed directory: " + languagePath);
-            fileLoader.addPath(op.getPath(), languagePath);
+            final File languagePath = new File(op.getPath(), language);
+
+            if (languagePath.isDirectory()) {
+                logger.trace("Marking managed directory: " + languagePath);
+                fileLoader.addPath(op.getPath(), languagePath.getPath());
+            }
         }
 
         final Map<Hash, SortedSet<String>> oldHash = fileLoader
@@ -68,9 +71,10 @@ public class BaseHandler {
 
         final FileLoader newFilesLoader = new FileLoader(logger);
 
-        for (final Map.Entry<String, byte[]> entry : fileBodies.entrySet())
+        for (final Map.Entry<String, byte[]> entry : fileBodies.entrySet()) {
             newFilesLoader.addBytes(cleanFilename(entry.getKey()),
                     entry.getValue());
+        }
 
         final Map<Hash, SortedSet<String>> newHash = newFilesLoader
                 .getHashBodyMap();
@@ -103,7 +107,6 @@ public class BaseHandler {
                 case CREATED:
                 case MODIFIED: {
                     final byte[] body = newFiles.get(hash);
-                    logger.debug("" + body.length);
                     FileUtils.writeByteArrayToFile(source, body);
                     break;
                 }

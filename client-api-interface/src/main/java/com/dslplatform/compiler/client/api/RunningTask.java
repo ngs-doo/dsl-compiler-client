@@ -1,39 +1,41 @@
 package com.dslplatform.compiler.client.api;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.UUID;
 
 import com.dslplatform.compiler.client.api.params.Target;
 import com.dslplatform.compiler.client.api.transport.Message;
+import com.dslplatform.compiler.client.io.Logger;
 
 public class RunningTask {
-    public final Target target;
-    public final UUID requestID;
-    public final int pollInterval;
-    public final int timeout;
+    private final Logger logger;
+    private final ApiCall apiCall;
+    private final Target target;
+    private final byte[] body;
+    private final int pollInterval;
+    private final int timeout;
+
+    private final UUID requestID;
 
     public RunningTask(
+            final Logger logger,
+            final ApiCall apiCall,
             final Target target,
-            final Response response,
+            final byte[] body,
             final int pollInterval,
             final int timeout) throws IOException {
-
+        this.logger = logger;
+        this.apiCall = apiCall;
         this.target = target;
+
+        this.body = body;
         this.pollInterval = pollInterval;
         this.timeout = timeout;
 
-        final String body = response.bodyToString();
-        try {
-            if (!response.isOK()) {
-                throw new IOException("Invalid API response: " + body);
-            }
-
-            requestID = UUID.fromString(body);
-        } catch (final IllegalArgumentException e) {
-            throw new IOException("Invalid API response: " + body);
-        }
+        requestID = UUID.randomUUID();
     }
 
     public Message[] getMessages() throws IOException {
@@ -46,32 +48,50 @@ public class RunningTask {
 
     public Iterable<Message> processMessages(final MessageProcessor processor)
             throws IOException {
-        final ArrayDeque<Message> messageQueue = new ArrayDeque<Message>();
 
-        long endTime = System.currentTimeMillis() + timeout;
-        final int lastOrdinal = -1;
+        final long endTime = System.currentTimeMillis() + timeout;
+        boolean requestSent = false;
 
         while (true) {
-            final byte[] body = new byte[0];
-            final Response response = ApiCall.await(target, requestID,
-                    pollInterval, lastOrdinal, body);
+            try {
+                return processResponse(apiCall.read(target, requestID,
+                        requestSent ? null : body, pollInterval), processor);
 
-            for (final Message message : response.getMessages()) {
-                endTime = System.currentTimeMillis() + timeout;
-                messageQueue.add(message);
-
-                if (processor != null) {
-                    processor.process(message);
+            } catch (final SocketTimeoutException e) {
+                logger.trace("Timeout has occurred, retrying ...");
+            } finally {
+                requestSent = true;
+                if (System.currentTimeMillis() > endTime) {
+                    throw new IOException(
+                            "A timeout has been reached for this request");
                 }
-                if (message.isFinal) {
-                    return messageQueue;
-                }
-            }
-
-            if (System.currentTimeMillis() > endTime) {
-                throw new IOException(
-                        "A timeout has been reached for this request");
             }
         }
+    }
+
+    private Iterable<Message> processResponse(
+            final Response response,
+            final MessageProcessor processor) throws IOException {
+        final ArrayDeque<Message> messageQueue = new ArrayDeque<Message>();
+
+        final Message[] messages = response.toMessages();
+
+        if (messages == null) {
+            throw new SocketTimeoutException();
+        }
+
+        for (final Message message : messages) {
+            messageQueue.add(message);
+
+            if (processor != null) {
+                processor.process(message);
+            }
+
+            if (message.isFinal) {
+                break;
+            }
+        }
+
+        return messageQueue;
     }
 }

@@ -1,4 +1,4 @@
-version in ThisBuild := "0.8.9"
+version in ThisBuild := "0.10.2"
 
 organization in ThisBuild := "com.dslplatform"
 
@@ -18,4 +18,7 @@ publishTo in ThisBuild := Some(
   if (version.value endsWith "-SNAPSHOT") NGSSnapshots else NGSReleases
 )
 
-credentials in ThisBuild += Credentials(Path.userHome / ".config" / "ngs-util_production" / "nexus.config")
+credentials in ThisBuild ++= {
+  val creds = Path.userHome / ".config" / "dsl-compiler-client" / "nexus.config"
+  if (creds.exists) Some(Credentials(creds)) else None
+}.toSeq

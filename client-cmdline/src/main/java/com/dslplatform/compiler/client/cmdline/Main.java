@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.dslplatform.compiler.client.api.Actions;
 import com.dslplatform.compiler.client.api.ApiCall;
+import com.dslplatform.compiler.client.api.ApiProperties;
 import com.dslplatform.compiler.client.api.params.Arguments;
 import com.dslplatform.compiler.client.cmdline.params.ArgumentsParser;
 import com.dslplatform.compiler.client.cmdline.processor.CleanHandler;
@@ -25,19 +26,23 @@ public class Main {
     private final Output output;
     private final Login login;
 
+    private final ApiProperties apiProperties;
+
     public Main(
             final Logger logger,
             final Prompt prompt,
             final Output output,
-            final Login login) {
+            final Login login,
+            final ApiProperties apiProperties) {
         this.logger = logger;
         this.prompt = prompt;
         this.output = output;
         this.login = login;
+        this.apiProperties = apiProperties;
     }
 
     public void process(final String[] args) throws IOException {
-        final ApiCall apiCall = new ApiCall(logger);
+        final ApiCall apiCall = new ApiCall(logger, apiProperties);
         final Actions actions = new Actions(logger, apiCall);
         final Arguments params = new ArgumentsParser(logger, output, args);
 
