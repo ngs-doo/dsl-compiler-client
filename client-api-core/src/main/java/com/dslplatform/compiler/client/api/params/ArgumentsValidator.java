@@ -21,6 +21,9 @@ public abstract class ArgumentsValidator implements Arguments {
     /** This is a Java client, so default to the Java language */
     private static final Language DEFAULT_LANGUAGE = Language.JAVA;
 
+    /** If the server archive path is a directory, use this filename */
+    private static final String DEFAULT_SERVER_ARCHIVE_FILENAME = "server.zip";
+
     /** Advanced settings must have provided defaults, ~ expands to user.home */
     private static final String DEFAULT_CACHE_PATH = "~/.dsl-platform";
 
@@ -32,6 +35,7 @@ public abstract class ArgumentsValidator implements Arguments {
     private final Set<String> actions = new LinkedHashSet<String>();
     private boolean skipDiff = false;
     private boolean confirmUnsafeRequired = true;
+    private boolean withActiveRecord = false;
 
     private String username = null;
     private String password = null;
@@ -49,6 +53,7 @@ public abstract class ArgumentsValidator implements Arguments {
 
     private String projectIniPath = null;
     private String newProjectIniPath = null;
+    private String serverArchivePath = null;
 
     // =================================================================================================================
 
@@ -59,6 +64,10 @@ public abstract class ArgumentsValidator implements Arguments {
             final Logger logger) {
         this.logger = logger;
         pathExpander = new PathExpander(logger);
+    }
+
+    private static String consolidateActionName(final String name) {
+        return name.toLowerCase().replaceAll("[-+_\\s]+", " ").trim();
     }
 
     // format: OFF
@@ -75,8 +84,10 @@ public abstract class ArgumentsValidator implements Arguments {
 
         final Set<Action> actions = new LinkedHashSet<Action>();
         validation: for (final String unparsedAction : this.actions) {
+            final String unparsedActionName = consolidateActionName(unparsedAction);
             for (final Action action : Action.values()) {
-                if (unparsedAction.equalsIgnoreCase(action.name().replace('_', ' '))) {
+                final String actionName = consolidateActionName(action.name());
+                if (unparsedActionName.equals(actionName)) {
                     actions.add(action);
                     continue validation;
                 }
@@ -115,11 +126,18 @@ public abstract class ArgumentsValidator implements Arguments {
 
     @Override
     public Action getAction() {
-        final Action action = consollidateActions();
-        if (!confirmUnsafeRequired && action == Action.UPDATE) {
+        Action action = consollidateActions();
+
+        if (!confirmUnsafeRequired && (action == Action.UPDATE || action == Action.UPDATE_AR)) {
             logger.debug("Since confirmation requirement has been lifted; promoting update to update unsafe");
-            return Action.UPDATE_UNSAFE;
+            action = action == Action.UPDATE ? Action.UPDATE_UNSAFE : Action.UPDATE_UNSAFE_AR;
         }
+
+        if (withActiveRecord && (action == Action.UPDATE || action == Action.UPDATE_UNSAFE)) {
+            logger.debug("Active record pattern option will be enabled");
+            action = action == Action.UPDATE ? Action.UPDATE_AR : Action.UPDATE_UNSAFE_AR;
+        }
+
         return action;
     }
 
@@ -131,6 +149,11 @@ public abstract class ArgumentsValidator implements Arguments {
     @Override
     public boolean isConfirmUnsafeRequired() {
         return confirmUnsafeRequired;
+    }
+
+    @Override
+    public boolean isWithActiveRecord() {
+        return withActiveRecord;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -283,6 +306,20 @@ public abstract class ArgumentsValidator implements Arguments {
                 .expandPath(newProjectIniPath);
     }
 
+    @Override
+    public File getServerArchivePath() {
+        if (serverArchivePath != null) {
+            final String fullPath =
+                    serverArchivePath.toLowerCase().endsWith(".zip")
+                        ? serverArchivePath
+                        : serverArchivePath + "/" + DEFAULT_SERVER_ARCHIVE_FILENAME;
+
+            return pathExpander.expandPath(fullPath);
+        }
+
+        throw new NullPointerException("Server archive path was not defined!");
+    }
+
     // =================================================================================================================
 
     protected void addActions(final String actions) {
@@ -298,8 +335,13 @@ public abstract class ArgumentsValidator implements Arguments {
     }
 
     protected void setConfirmUnsafeRequired(final boolean confirmUnsafeRequired) {
-        logger.debug("Setting confirmUnsafeRequired: " + confirmUnsafeRequired);
+        logger.debug("Setting confirm unsafe required: " + confirmUnsafeRequired);
         this.confirmUnsafeRequired = confirmUnsafeRequired;
+    }
+
+    protected void setWithActiveRecord(final boolean withActiveRecord) {
+        logger.debug("Setting with active record option: " + withActiveRecord);
+        this.withActiveRecord = withActiveRecord;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -365,15 +407,21 @@ public abstract class ArgumentsValidator implements Arguments {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    protected void setNewProjectIniPath(final String newProjectIniPath) {
-        this.newProjectIniPath = newProjectIniPath;
+    protected void setProjectIniPath(final String projectIniPath) {
+        this.projectIniPath = projectIniPath;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    protected void setProjectIniPath(final String projectIniPath) {
-        this.projectIniPath = projectIniPath;
+    protected void setNewProjectIniPath(final String newProjectIniPath) {
+        this.newProjectIniPath = newProjectIniPath;
     }
+
+    protected void setServerArchivePath(final String serverArchivePath) {
+        this.serverArchivePath = serverArchivePath;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     @Override
     public void readProjectIni() throws IOException {
@@ -403,6 +451,11 @@ public abstract class ArgumentsValidator implements Arguments {
         if (Boolean.parseBoolean(properties.getProperty("confirm-unsafe"))) {
             logger.debug("Parsed --confirm-unsafe parameter, setting confirm unsafe required to 'false'");
             setConfirmUnsafeRequired(false);
+        }
+
+        if (Boolean.parseBoolean(properties.getProperty("with-active-record"))) {
+            logger.debug("Parsed --with-active-record parameter, setting active record option to 'true'");
+            setWithActiveRecord(true);
         }
 
         {

@@ -11,6 +11,7 @@ import com.dslplatform.compiler.client.cmdline.processor.CleanHandler;
 import com.dslplatform.compiler.client.cmdline.processor.CreateHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DeleteHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DiffHandler;
+import com.dslplatform.compiler.client.cmdline.processor.DownloadServerHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseAndDiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseHandler;
 import com.dslplatform.compiler.client.cmdline.processor.UpdateHandler;
@@ -63,11 +64,13 @@ public class Main {
                 break;
 
             case UPDATE:
+            case UPDATE_AR:
                 new UpdateHandler(logger, prompt, output, login, actions)
                         .apply(params);
                 break;
 
             case UPDATE_UNSAFE:
+            case UPDATE_UNSAFE_AR:
                 new UpdateUnsafeHandler(logger, prompt, output, login, actions)
                         .apply(params);
                 break;
@@ -85,6 +88,11 @@ public class Main {
             case DELETE:
                 new DeleteHandler(logger, prompt, output, login, actions)
                         .apply(params);
+                break;
+
+            case DOWNLOAD_SERVER:
+                new DownloadServerHandler(logger, prompt, output, login,
+                        actions).apply(params);
                 break;
 
             default:

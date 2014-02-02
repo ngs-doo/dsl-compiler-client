@@ -66,6 +66,13 @@ public class ArgumentsParser extends ArgumentsValidator {
                 continue;
             }
 
+            // compile source entities will additionally use the active record pattern
+            if (is(arg, "--with-active-record")) {
+                logger.trace("Parsed --with-active-record, setting active record option to 'true'");
+                setWithActiveRecord(true);
+                continue;
+            }
+
             // ---------------------------------------------------------------------------------------------------------
 
             {   // parse username, new arguments overwrite old ones
@@ -279,7 +286,7 @@ public class ArgumentsParser extends ArgumentsValidator {
 
             {   // parse project ini, immediately expanded with new .ini arguments overwriting old ones
                 String newProjectIniPath = startsWith(arg, "-b",
-                        "--new-project-ini-path=", "--built-project-ini-path=");
+                        "--new-project-ini-path=");
                 if (newProjectIniPath != null) {
                     logger.trace("Parsed path parameter for new project ini, processing: "
                             + newProjectIniPath);
@@ -294,6 +301,27 @@ public class ArgumentsParser extends ArgumentsValidator {
                                 + newProjectIniPath);
                     }
                     setNewProjectIniPath(newProjectIniPath);
+                    continue;
+                }
+            }
+
+            {   // parse path where to place the server archive file
+                String serverArchivePath = startsWith(arg, "-s",
+                        "--server-archive-path=");
+                if (serverArchivePath != null) {
+                    logger.trace("Parsed path parameter for the server archive, processing: "
+                            + serverArchivePath);
+                    if (serverArchivePath.isEmpty()) {
+                        if (last
+                                || (serverArchivePath = args[++index])
+                                        .isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "Missing server archive path argument!");
+                        }
+                        logger.trace("Server archive path as empty, reading next argument: "
+                                + serverArchivePath);
+                    }
+                    setServerArchivePath(serverArchivePath);
                     continue;
                 }
             }

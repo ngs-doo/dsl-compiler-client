@@ -94,9 +94,11 @@ public class UpdateUnsafeHandler extends BaseHandler {
 
         final Language[] languages = arguments.getLanguages();
         final PackageName packageName = arguments.getPackageName();
+        final boolean withActiveRecord = arguments.isWithActiveRecord();
 
         final UpdateUnsafeProcessor uup = actions.updateUnsafe(
-                authProvider.getAuth(), dsl, projectID, packageName, languages);
+                authProvider.getAuth(), dsl, projectID, packageName,
+                withActiveRecord, languages);
 
         for (final String message : uup.getMessages()) {
             output.println(message);

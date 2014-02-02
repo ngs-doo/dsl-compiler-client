@@ -2,7 +2,5 @@
 .classpath
 .project
 .settings
+.target
 target
-
-RUNNING_PID
-*.log

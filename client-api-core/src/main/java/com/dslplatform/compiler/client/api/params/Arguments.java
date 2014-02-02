@@ -12,6 +12,8 @@ public interface Arguments {
 
     public boolean isConfirmUnsafeRequired();
 
+    public boolean isWithActiveRecord();
+
     public String getUsername();
 
     public String getPassword();
@@ -37,4 +39,6 @@ public interface Arguments {
     public void readProjectIni() throws IOException;
 
     public File getNewProjectIniPath();
+
+    public File getServerArchivePath();
 }

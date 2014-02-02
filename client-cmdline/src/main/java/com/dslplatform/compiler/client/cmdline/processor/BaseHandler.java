@@ -112,7 +112,20 @@ public class BaseHandler {
                 }
 
                 case MOVED:
-                    FileUtils.moveFile(source, destination);
+                    try {
+                        FileUtils.moveFile(source, destination);
+                    } catch (final IOException e) {
+                        if (source.getCanonicalPath().equalsIgnoreCase(
+                                destination.getCanonicalPath())
+                                && System.getProperty("os.name").contains(
+                                        "Windows")) {
+                            logger.debug(String
+                                    .format("Could not move \"%s\" to \"%s\" (Windows is case insensitive)",
+                                            source, destination));
+                        } else {
+                            throw e;
+                        }
+                    }
                     checkIfParentEmptyAndDelete(source, outputPath);
                     break;
 

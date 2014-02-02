@@ -14,6 +14,7 @@ import com.dslplatform.compiler.client.api.processors.CleanProcessor;
 import com.dslplatform.compiler.client.api.processors.CreateProcessor;
 import com.dslplatform.compiler.client.api.processors.DeleteProcessor;
 import com.dslplatform.compiler.client.api.processors.DiffProcessor;
+import com.dslplatform.compiler.client.api.processors.DownloadServerProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseProcessor;
 import com.dslplatform.compiler.client.api.processors.UpdateProcessor;
@@ -62,11 +63,12 @@ public class Actions {
             final DSL dsl,
             final ProjectID projectID,
             final PackageName packageName,
+            final boolean withActiveRecord,
             final Language... languages) throws IOException {
         final UpdateProcessor up = new UpdateProcessor(logger);
 
         final Param[] params = new Param[5 + languages.length];
-        params[0] = Action.UPDATE;
+        params[0] = withActiveRecord ? Action.UPDATE_AR : Action.UPDATE;
         params[1] = auth;
         params[2] = dsl;
         params[3] = projectID;
@@ -82,11 +84,14 @@ public class Actions {
             final DSL dsl,
             final ProjectID projectID,
             final PackageName packageName,
+            final boolean withActiveRecord,
             final Language... languages) throws IOException {
         final UpdateUnsafeProcessor uup = new UpdateUnsafeProcessor(logger);
 
         final Param[] params = new Param[5 + languages.length];
-        params[0] = Action.UPDATE_UNSAFE;
+        params[0] = withActiveRecord
+                ? Action.UPDATE_UNSAFE_AR
+                : Action.UPDATE_UNSAFE;
         params[1] = auth;
         params[2] = dsl;
         params[3] = projectID;
@@ -116,6 +121,15 @@ public class Actions {
         final DeleteProcessor dp = new DeleteProcessor(logger);
         apiCall.call(Action.DELETE, auth, projectID).processMessages(dp);
         return dp;
+    }
+
+    public DownloadServerProcessor downloadServer(
+            final Auth auth,
+            final ProjectID projectID) throws IOException {
+        final DownloadServerProcessor dsp = new DownloadServerProcessor(logger);
+        apiCall.call(Action.DOWNLOAD_SERVER, auth, projectID).processMessages(
+                dsp);
+        return dsp;
     }
 
 //  public RunningTask Clone(

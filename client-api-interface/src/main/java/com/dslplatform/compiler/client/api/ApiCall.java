@@ -93,23 +93,23 @@ public class ApiCall {
         final int code = huc.getResponseCode();
         final boolean ok = code / 100 == 2;
 
-        final InputStream iS = ok ? huc.getInputStream() : huc.getErrorStream();
-        final ByteArrayOutputStream bAOS = new ByteArrayOutputStream();
+        final InputStream is = ok ? huc.getInputStream() : huc.getErrorStream();
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final byte[] buffer = new byte[8192];
 
         try {
             while (true) {
-                final int read = iS.read(buffer);
+                final int read = is.read(buffer);
                 if (read == -1) {
                     break;
                 }
-                bAOS.write(buffer, 0, read);
+                baos.write(buffer, 0, read);
             }
         } finally {
-            iS.close();
+            is.close();
         }
 
-        final byte[] response = bAOS.toByteArray();
+        final byte[] response = baos.toByteArray();
         logger.trace("Recevied " + response.length + " bytes");
 
         return new Response(ok, code, response);

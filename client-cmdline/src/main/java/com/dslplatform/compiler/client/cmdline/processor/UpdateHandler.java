@@ -96,10 +96,11 @@ public class UpdateHandler extends BaseHandler {
 
         final Language[] languages = arguments.getLanguages();
         final PackageName packageName = arguments.getPackageName();
+        final boolean withActiveRecord = arguments.isWithActiveRecord();
 
         logger.trace("About to call update.");
         final UpdateProcessor up = actions.update(authProvider.getAuth(), dsl,
-                projectID, packageName, languages);
+                projectID, packageName, withActiveRecord, languages);
 
         final UpdateUnsafeProcessor uqp;
 
@@ -117,7 +118,7 @@ public class UpdateHandler extends BaseHandler {
 
             final UpdateUnsafeProcessor uup = actions.updateUnsafe(
                     authProvider.getAuth(), dsl, projectID, packageName,
-                    languages);
+                    withActiveRecord, languages);
 
             uqp = uup;
         } else {

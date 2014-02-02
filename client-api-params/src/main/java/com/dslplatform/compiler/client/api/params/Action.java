@@ -9,10 +9,14 @@ public enum Action implements Param {
     CREATE("create"),
     DELETE("delete"),
     DIFF("diff"),
+    DOWNLOAD_SERVER("download server"),
     PARSE("parse"),
     PARSE_AND_DIFF("parse and diff"),
     UPDATE("update"),
-    UPDATE_UNSAFE("update", new KV("migration", "unsafe"));
+    UPDATE_AR("update"),
+    UPDATE_UNSAFE("update", new KV("migration", "unsafe")),
+    UPDATE_UNSAFE_AR("update", new KV("migration", "unsafe"), new KV("options",
+            "active-record"));
 
     // -------------------------------------------------------------------------
 

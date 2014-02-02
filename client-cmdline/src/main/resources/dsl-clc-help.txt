@@ -61,6 +61,9 @@
   --confirm-unsafe
         Allows automatic confirmation of unsafe schema migrations
 
+  --with-active-record
+        Additionally creates functionality for the active record pattern
+
   -l<language>, --language=<language>
         Language which should be targeted by the compilation.
         If multiple languages should be targeted, separate them with a comma.
@@ -77,6 +80,11 @@
         Used with create command to specify where to write the newly generated dsl-project.ini file.
         If not specified, dsl-project.ini will written to the console.
 
+  -s<path to place archive>, --server-archive-path=<path to place archive>
+        Used with download-server command to specify where to write the downloaded server archive.
+        If the path ends with a .zip extension, it will designate the output filename, otherwise
+        a server.zip file will be created.
+
   -v<logging-level>, --logging-level=<logging level>
         Logging level for debugging messages which are streamed to stderr.
         Level is "error" by default, can be: "off", "error", "warn", "info", "debug", "trace" or "all"
@@ -88,3 +96,6 @@
 
   delete
         Deletes the project marked by the project ID. This action is irreversible!
+
+  download-server
+        Downloads a zip archive containing the server binaries.
