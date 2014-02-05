@@ -24,6 +24,9 @@ public abstract class ArgumentsValidator implements Arguments {
     /** If the server archive path is a directory, use this filename */
     private static final String DEFAULT_SERVER_ARCHIVE_FILENAME = "server.zip";
 
+    /** If the server model path is a directory, use this filename */
+    private static final String DEFAULT_SERVER_MODEL_FILENAME = "GeneratedModel.dll";
+
     /** Advanced settings must have provided defaults, ~ expands to user.home */
     private static final String DEFAULT_CACHE_PATH = "~/.dsl-platform";
 
@@ -54,6 +57,7 @@ public abstract class ArgumentsValidator implements Arguments {
     private String projectIniPath = null;
     private String newProjectIniPath = null;
     private String serverArchivePath = null;
+    private String serverModelPath = null;
 
     // =================================================================================================================
 
@@ -320,6 +324,20 @@ public abstract class ArgumentsValidator implements Arguments {
         throw new NullPointerException("Server archive path was not defined!");
     }
 
+    @Override
+    public File getServerModelPath() {
+        if (serverModelPath != null) {
+            final String fullPath =
+                    serverModelPath.toLowerCase().endsWith(".dll")
+                        ? serverModelPath
+                        : serverModelPath + "/" + DEFAULT_SERVER_MODEL_FILENAME;
+
+            return pathExpander.expandPath(fullPath);
+        }
+
+        throw new NullPointerException("Server model path was not defined!");
+    }
+
     // =================================================================================================================
 
     protected void addActions(final String actions) {
@@ -419,6 +437,10 @@ public abstract class ArgumentsValidator implements Arguments {
 
     protected void setServerArchivePath(final String serverArchivePath) {
         this.serverArchivePath = serverArchivePath;
+    }
+
+    protected void setServerModelPath(final String serverModelPath) {
+        this.serverModelPath = serverModelPath;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

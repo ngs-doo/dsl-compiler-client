@@ -1,4 +1,4 @@
-version in ThisBuild := "0.11.0"
+version in ThisBuild := "0.11.4"
 
 organization in ThisBuild := "com.dslplatform"
 

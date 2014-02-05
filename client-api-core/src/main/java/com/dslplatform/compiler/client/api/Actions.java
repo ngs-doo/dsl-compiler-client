@@ -14,6 +14,7 @@ import com.dslplatform.compiler.client.api.processors.CleanProcessor;
 import com.dslplatform.compiler.client.api.processors.CreateProcessor;
 import com.dslplatform.compiler.client.api.processors.DeleteProcessor;
 import com.dslplatform.compiler.client.api.processors.DiffProcessor;
+import com.dslplatform.compiler.client.api.processors.DownloadServerModelProcessor;
 import com.dslplatform.compiler.client.api.processors.DownloadServerProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseAndDiffProcessor;
 import com.dslplatform.compiler.client.api.processors.ParseProcessor;
@@ -130,6 +131,15 @@ public class Actions {
         apiCall.call(Action.DOWNLOAD_SERVER, auth, projectID).processMessages(
                 dsp);
         return dsp;
+    }
+
+    public DownloadServerModelProcessor downloadServerModel(
+            final Auth auth,
+            final ProjectID projectID) throws IOException {
+        final DownloadServerModelProcessor dsmp = new DownloadServerModelProcessor(logger);
+        apiCall.call(Action.DOWNLOAD_SERVER_MODEL, auth, projectID).processMessages(
+                dsmp);
+        return dsmp;
     }
 
 //  public RunningTask Clone(

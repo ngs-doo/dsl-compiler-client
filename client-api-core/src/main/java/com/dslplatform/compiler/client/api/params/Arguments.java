@@ -41,4 +41,6 @@ public interface Arguments {
     public File getNewProjectIniPath();
 
     public File getServerArchivePath();
+
+    public File getServerModelPath();
 }

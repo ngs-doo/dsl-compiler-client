@@ -274,7 +274,7 @@ public class ArgumentsParser extends ArgumentsValidator {
                             throw new IllegalArgumentException(
                                     "Missing project ini path argument!");
                         }
-                        logger.trace("Project ini path as empty, reading next argument: "
+                        logger.trace("Project ini path was empty, reading next argument: "
                                 + projectIniPath);
                     }
                     setProjectIniPath(projectIniPath);
@@ -297,7 +297,7 @@ public class ArgumentsParser extends ArgumentsValidator {
                             throw new IllegalArgumentException(
                                     "Missing new project ini path argument!");
                         }
-                        logger.trace("New project ini path as empty, reading next argument: "
+                        logger.trace("New project ini path was empty, reading next argument: "
                                 + newProjectIniPath);
                     }
                     setNewProjectIniPath(newProjectIniPath);
@@ -318,10 +318,31 @@ public class ArgumentsParser extends ArgumentsValidator {
                             throw new IllegalArgumentException(
                                     "Missing server archive path argument!");
                         }
-                        logger.trace("Server archive path as empty, reading next argument: "
+                        logger.trace("Server archive path was empty, reading next argument: "
                                 + serverArchivePath);
                     }
                     setServerArchivePath(serverArchivePath);
+                    continue;
+                }
+            }
+
+            {   // parse path where to place the server model file
+                String serverModelPath = startsWith(arg, "-m",
+                        "--server-model-path=");
+                if (serverModelPath != null) {
+                    logger.trace("Parsed path parameter for the server model, processing: "
+                            + serverModelPath);
+                    if (serverModelPath.isEmpty()) {
+                        if (last
+                                || (serverModelPath = args[++index])
+                                        .isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "Missing server model path argument!");
+                        }
+                        logger.trace("Server model path was empty, reading next argument: "
+                                + serverModelPath);
+                    }
+                    setServerModelPath(serverModelPath);
                     continue;
                 }
             }

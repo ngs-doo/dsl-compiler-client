@@ -12,6 +12,7 @@ import com.dslplatform.compiler.client.cmdline.processor.CreateHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DeleteHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.DownloadServerHandler;
+import com.dslplatform.compiler.client.cmdline.processor.DownloadServerModelHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseAndDiffHandler;
 import com.dslplatform.compiler.client.cmdline.processor.ParseHandler;
 import com.dslplatform.compiler.client.cmdline.processor.UpdateHandler;
@@ -92,6 +93,11 @@ public class Main {
 
             case DOWNLOAD_SERVER:
                 new DownloadServerHandler(logger, prompt, output, login,
+                        actions).apply(params);
+                break;
+
+            case DOWNLOAD_SERVER_MODEL:
+                new DownloadServerModelHandler(logger, prompt, output, login,
                         actions).apply(params);
                 break;
 
