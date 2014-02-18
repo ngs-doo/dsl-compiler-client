@@ -8,7 +8,7 @@ val NGSSnapshots        = "NGS Snapshots"         at "http://ngs.hr/nexus/conten
 val NGSPrivateReleases  = "NGS Private Releases"  at "http://ngs.hr/nexus/content/repositories/releases-private/"
 val NGSPrivateSnapshots = "NGS Private Snapshots" at "http://ngs.hr/nexus/content/repositories/snapshots-private/"
 
-resolvers in ThisBuild := Seq(NGSNexus, NGSSnapshots, NGSPrivateReleases, NGSPrivateSnapshots)
+resolvers in ThisBuild ++= Seq(NGSNexus, NGSSnapshots, NGSPrivateReleases, NGSPrivateSnapshots)
 
 externalResolvers in ThisBuild := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
 
