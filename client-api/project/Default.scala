@@ -13,7 +13,7 @@ trait Default extends Dependencies {
     eclipseSettings ++
     graphSettings ++
     assemblySettings ++ Seq(
-      javaHome := sys.env.get("JDK16_HOME").map(file(_))
+      javaHome := sys.env.get("JDK17_HOME").map(file(_))
     , javacOptions := Seq(
         "-deprecation"
       , "-encoding", "UTF-8"
@@ -46,11 +46,10 @@ trait Default extends Dependencies {
       )
 
     , unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
-    , unmanagedSourceDirectories in Test := Nil
+    , unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
 
     , publishArtifact in (Compile, packageDoc) := false
 
-    , EclipseKeys.executionEnvironment := Some(EclipseExecutionEnvironment.JavaSE16)
     , EclipseKeys.eclipseOutput := Some(".target")
     )
 

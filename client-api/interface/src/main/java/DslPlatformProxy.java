@@ -1,3 +1,4 @@
+/*
 import com.dslplatform.client.*;
 import com.dslplatform.compiler.client.api.config.*;
 import com.dslplatform.compiler.client.api.io.HttpRequest;
@@ -244,3 +245,4 @@ public class DslPlatformProxy {
         locator.resolve(ExecutorService.class);
     }
 }
+*/

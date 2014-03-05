@@ -4,3 +4,5 @@
 .settings
 .target
 target
+.idea/
+.idea_modules/

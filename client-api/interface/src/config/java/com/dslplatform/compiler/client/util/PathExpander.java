@@ -12,7 +12,7 @@ public class PathExpander {
     public PathExpander(final Logger logger) {
         this.logger = logger;
         userHome = getUserHome();
-        logger.trace("User home set to: " + userHome);
+        //logger.trace("User home set to: " + userHome);
     }
 
     private File canonify(final String path) {

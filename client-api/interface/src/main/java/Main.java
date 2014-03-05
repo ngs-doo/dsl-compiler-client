@@ -1,3 +1,4 @@
+/*
 import com.dslplatform.compiler.client.api.model.Client.DatabaseConnection;
 import com.dslplatform.compiler.client.api.model.Client.ProjectDetails;
 
@@ -8,6 +9,7 @@ public class Main {
         DslPlatformProxy dpp = new DslPlatformProxy("username", "password");
 
         testCreateTestProjectByName(dpp);
+        testAll(dpp);
     }
 
     public static void testAll(final DslPlatformProxy dpp) throws Exception {
@@ -38,3 +40,4 @@ public class Main {
     }
 }
 
+*/

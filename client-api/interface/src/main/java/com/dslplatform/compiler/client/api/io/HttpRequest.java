@@ -1,3 +1,4 @@
+/*
 package com.dslplatform.compiler.client.api.io;
 
 import java.io.ByteArrayOutputStream;
@@ -221,3 +222,4 @@ public class HttpRequest {
         return response;
     }
 }
+*/
