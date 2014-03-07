@@ -35,15 +35,27 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     }
 
     @Override
-    public HttpRequest registerUser(final String email) {
-        // TODO Auto-generated method stub
-        throw new NotImplementedException();
+    public HttpRequest registerUser(final String token, final String email) {
+        final Map<String, String> event = new LinkedHashMap<String, String>();
+        if (email != null) event.put("Email", email);
+
+        final HttpRequest request = HttpRequest.POST("Domain.svc/submit/Client.Register", event);
+        request.headers.put("Authorization", Arrays.asList(token));
+        request.headers.put("Content-Type", Arrays.asList("application/json"));
+        request.headers.put("Accept", Arrays.asList("application/json"));
+        return request;
     }
 
     @Override
     public HttpRequest createTestProject(final String token, final String projectName) {
-        // TODO Auto-generated method stub
-        throw new NotImplementedException();
+        final Map<String, String> event = new LinkedHashMap<String, String>();
+        if (projectName != null) event.put("ProjectName", projectName);
+
+        final HttpRequest request = HttpRequest.POST("Domain.svc/submit/Client.CreateProject", event);
+        request.headers.put("Authorization", Arrays.asList(token));
+        request.headers.put("Content-Type", Arrays.asList("application/json"));
+        request.headers.put("Accept", Arrays.asList("application/json"));
+        return request;
     }
 
     @Override

@@ -74,4 +74,45 @@ public class HttpRequestBuilderImplTest {
         assertArrayEquals(
                 "{\"OldName\":\"GreenLeopard\",\"NewName\":\"GreenLion\"}".getBytes(ENCODING),
                 renameRequest.body);
-    }}
+    }
+/*
+    @Test
+    @SuppressWarnings("serial")
+    public void testRegisterUserBuilder() throws IOException {
+        final HttpRequest registerUserRequest; {
+            final String email = "user@test.org";
+            registerUserRequest = httpRequestBuilder.registerUser(email);
+        }
+
+        assertEquals(registerUserRequest.method, HttpRequest.Method.POST);
+        assertEquals(registerUserRequest.path, "Domain.svc/submit/Client.RegisterUser");
+        assertEquals(registerUserRequest.headers, new HashMap<String, List<String>>() {{
+            put("Content-Type", Arrays.asList("application/json"));
+            put("Accept", Arrays.asList("application/json"));
+        }});
+        assertArrayEquals(
+                "{\"Email\":\"user@test.org\"}".getBytes(ENCODING),
+                registerUserRequest.body);
+    }
+*/
+    @Test
+    @SuppressWarnings("serial")
+    public void testCreateProjectBuilder() throws IOException {
+        final HttpRequest createProjectRequest; {
+            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
+            final String projectName = "NewProjectName";
+            createProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
+        }
+
+        assertEquals(createProjectRequest.method, HttpRequest.Method.POST);
+        assertEquals(createProjectRequest.path, "Domain.svc/submit/Client.CreateProject");
+        assertEquals(createProjectRequest.headers, new HashMap<String, List<String>>() {{
+            put("Content-Type", Arrays.asList("application/json"));
+            put("Accept", Arrays.asList("application/json"));
+            put("Authorization", Arrays.asList("Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING))));
+        }});
+        assertArrayEquals(
+                "{\"ProjectName\":\"NewProjectName\"}".getBytes(ENCODING),
+                createProjectRequest.body);
+    }
+}

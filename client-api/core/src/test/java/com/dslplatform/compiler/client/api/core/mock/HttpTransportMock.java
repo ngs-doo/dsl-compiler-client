@@ -7,8 +7,7 @@ import java.util.List;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import com.dslplatform.compiler.client.api.core.io.HttpTransport;
-import com.dslplatform.compiler.client.api.core.mock.processor.MockProcessor;
-import com.dslplatform.compiler.client.api.core.mock.processor.ParseProcessor;
+import com.dslplatform.compiler.client.api.core.mock.processor.*;
 
 public class HttpTransportMock implements HttpTransport {
     private final List<MockProcessor> mockProcessors;
@@ -16,6 +15,11 @@ public class HttpTransportMock implements HttpTransport {
     public HttpTransportMock() {
         mockProcessors = new ArrayList<MockProcessor>();
         mockProcessors.add(new ParseProcessor());
+        mockProcessors.add(new RenameProjectProcessor());
+        mockProcessors.add(new RegisterUserProcessor());
+        mockProcessors.add(new CreateProjectProcessor());
+
+
     }
 
     public HttpResponse sendRequest(final HttpRequest request) throws IOException {

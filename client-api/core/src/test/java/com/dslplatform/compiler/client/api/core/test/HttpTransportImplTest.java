@@ -12,6 +12,9 @@ import java.util.Map;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.dslplatform.compiler.client.api.config.*;
+import com.dslplatform.compiler.client.api.core.impl.HttpTransportImpl;
+import com.dslplatform.compiler.client.util.PathExpander;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,6 +24,7 @@ import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilder;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 import com.dslplatform.compiler.client.api.core.io.HttpTransport;
 import com.dslplatform.compiler.client.api.core.mock.HttpTransportMock;
+import org.slf4j.Logger;
 
 public class HttpTransportImplTest {
     private static HttpRequestBuilder httpRequestBuilder;
@@ -33,17 +37,18 @@ public class HttpTransportImplTest {
 
     @BeforeClass
     public static void createHttpTransport() throws IOException {
-//        final Logger logger = org.slf4j.LoggerFactory.getLogger("core-test");
-//        final PathExpander pathExpander = new PathExpander(logger);
-//        final StreamLoader streamLoader = new StreamLoader(logger, pathExpander);
-//        final PropertyLoader propertyLoader = new PropertyLoader(logger, streamLoader);
-//
-//        final ClientConfigurationFactory ccf = new PropertyClientConfigurationFactory(logger, propertyLoader, "/api.properties");
-//        final ClientConfiguration clientConfiguration = ccf.getClientConfiguration();
-//
-//        httpTransport = new HttpTransportImpl(logger, clientConfiguration, streamLoader);
 
-        httpTransport = new HttpTransportMock();
+        final Logger logger = org.slf4j.LoggerFactory.getLogger("core-test");
+        final PathExpander pathExpander = new PathExpander(logger);
+        final StreamLoader streamLoader = new StreamLoader(logger, pathExpander);
+        final PropertyLoader propertyLoader = new PropertyLoader(logger, streamLoader);
+
+        final ClientConfigurationFactory ccf = new PropertyClientConfigurationFactory(logger, propertyLoader, "/api.properties");
+        final ClientConfiguration clientConfiguration = ccf.getClientConfiguration();
+
+        httpTransport = new HttpTransportImpl(logger, clientConfiguration, streamLoader);
+
+//        httpTransport = new HttpTransportMock();
     }
 
     private static final Charset ENCODING = Charset.forName("UTF-8");
@@ -90,22 +95,22 @@ public class HttpTransportImplTest {
     }
 
     @Test
-    public void testRenameProjectBuilderInvalidName() throws IOException {
+    public void testRenameProjectRequestInvalidName() throws IOException {
         final HttpRequest renameRequest; {
             final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
-            final String oldName = "GreenLion";
-            final String newName = "!";
+            final String oldName = "nick";
+            final String newName = "";
             renameRequest = httpRequestBuilder.renameProject(token, oldName, newName);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(renameRequest);
         assertEquals(400, parseResponse.code);
         assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), parseResponse.headers.get("Content-Type"));
-        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), parseResponse.body);
+        assertArrayEquals("Project name not provided.".getBytes("UTF-8"), parseResponse.body);
     }
 
     @Test
-    public void testRenameProjectBuilderNotFound() throws IOException {
+    public void testRenameProjectRequestNotFound() throws IOException {
         final HttpRequest renameRequest; {
             final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
             final String oldName = "?";
@@ -120,15 +125,64 @@ public class HttpTransportImplTest {
     }
 
     @Test
-    public void testRenameProjectBuilder() throws IOException {
+    public void testRenameProjectRequest() throws IOException {
         final HttpRequest renameRequest; {
             final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
-            final String oldName = "GreenLion";
-            final String newName = "GreenLion2";
+            final String oldName = "nick";
+            final String newName = "GreenLion1";
             renameRequest = httpRequestBuilder.renameProject(token, oldName, newName);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(renameRequest);
         assertEquals(201, parseResponse.code);
     }
+/*
+    @Test
+    public void testRegisterUserRequestNotPermitteds() throws IOException {
+        final HttpRequest registerUserRequest; {
+            final String email = "user@test.org";
+            registerUserRequest = httpRequestBuilder.registerUser(token, email);
+        }
+
+        final HttpResponse parseResponse = httpTransport.sendRequest(registerUserRequest);
+        assertEquals(201, parseResponse.code);
+    }
+
+    @Test
+    public void testRegisterUserRequestMissing() throws IOException {
+        final HttpRequest registerUserRequest; {
+            final String email = "";
+            registerUserRequest = httpRequestBuilder.registerUser(token, email);
+        }
+
+        final HttpResponse parseResponse = httpTransport.sendRequest(registerUserRequest);
+        assertEquals(201, parseResponse.code);
+    }
+
+    @Test
+    public void testCreateProjectRequestInvalidName() throws IOException {
+        final HttpRequest renameRequest; {
+            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
+            final String projectName = "!";
+            renameRequest = httpRequestBuilder.createTestProject(token, projectName);
+        }
+
+        final HttpResponse parseResponse = httpTransport.sendRequest(renameRequest);
+        assertEquals(400, parseResponse.code);
+        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), parseResponse.headers.get("Content-Type"));
+        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), parseResponse.body);
+    }
+
+    @Test
+    public void testCreateProjectRequestNameAbsent() throws IOException {
+        final HttpRequest renameRequest; {
+            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
+            final String projectName = "";
+            renameRequest = httpRequestBuilder.createTestProject(token, projectName);
+        }
+
+        final HttpResponse parseResponse = httpTransport.sendRequest(renameRequest);
+        assertEquals(201, parseResponse.code);
+    }
+    */
 }

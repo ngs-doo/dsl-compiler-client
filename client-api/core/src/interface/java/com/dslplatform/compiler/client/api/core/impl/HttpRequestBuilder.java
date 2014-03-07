@@ -11,7 +11,7 @@ public interface HttpRequestBuilder {
     /**
      * Registers a user and sends an email confirmation to the provided address
      */
-    public HttpRequest registerUser(final String email);
+    public HttpRequest registerUser(final String token, final String email);
 
     /**
      * Verifies the syntax for the provided DSL

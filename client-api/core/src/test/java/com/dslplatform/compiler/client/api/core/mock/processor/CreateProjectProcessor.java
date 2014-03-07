@@ -1,5 +1,10 @@
 package com.dslplatform.compiler.client.api.core.mock.processor;
 
+import com.dslplatform.compiler.client.api.core.HttpRequest;
+import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
+import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.impl.JsonReader;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,15 +14,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.dslplatform.compiler.client.api.core.HttpRequest;
-import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
-import com.dslplatform.compiler.client.api.core.HttpResponse;
-import com.dslplatform.compiler.client.api.core.impl.JsonReader;
-
-public class RenameProjectProcessor implements MockProcessor {
+public class CreateProjectProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.RenameProject");
+        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.CreteProject");
     }
 
     private static final Charset ENCODING = Charset.forName("UTF-8");
@@ -31,31 +31,28 @@ public class RenameProjectProcessor implements MockProcessor {
             map = jr.readMap();
         }
 
-        final String oldName = map.get("OldName");
-        final String newName = map.get("NewName");
+        final String projectNick = map.get("ProjectNick");
 
         final int code;
         final byte[] body;
 
         final boolean nameingFailure =
-                oldName.contains("!") ||
-                newName.contains("!");
-        final boolean nameingAbstence =
-                oldName.equals("") ||
-                newName.equals("");
+                !projectNick.contains("!");
+        final boolean abstence =
+                projectNick.equals("");
 
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
-        if (nameingAbstence) {
+        if (abstence) {
             code = 400;
             body = "Project name not provided.".getBytes(ENCODING);
             headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
         } else if (nameingFailure) {
-            code = 400;
+            code = 403;
             body = "Parse error - encountered an exclamation mark!".getBytes(ENCODING);
             headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
         } else {
-            code = 201;
+            code = 200;
             body = new byte[0];
         }
 
