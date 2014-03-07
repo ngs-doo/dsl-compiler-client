@@ -1,6 +1,8 @@
 import sbt._
 import Keys._
 
+import com.typesafe.sbteclipse.plugin.EclipsePlugin.{ settings => eclipseSettings, _ }
+
 object ClientApi extends Build with Default {
   protected def clientApiProject(id: String) = Project(
     id.toLowerCase
@@ -11,53 +13,27 @@ object ClientApi extends Build with Default {
     )
   )
 
-  lazy val core = Project(
-      "core"
-    , file("core")
-    , settings = Defaults.defaultSettings ++ Seq(
-      name := "DSL-Compiler-Client-API-Core"
-      , initialCommands := "import com.dslplatform.compiler.client._"
-      , javaHome := sys.env.get("JAVA_HOME").map(file(_))
-      , javacOptions := Seq(
-          "-deprecation"
-        , "-encoding", "UTF-8"
-        , "-Xlint:unchecked"
-        , "-source", "1.6"
-        , "-target", "1.6"
-        )
-      , crossScalaVersions := Seq("2.10.4-RC2")
-      , scalaVersion := crossScalaVersions.value.head
-      , autoScalaLibrary := false
-      , scalacOptions := Seq(
-          "-unchecked"
-        , "-deprecation"
-        , "-optimise"
-        , "-encoding", "UTF-8"
-        , "-Xcheckinit"
-        , "-Yclosure-elim"
-        , "-Ydead-code"
-        , "-Yinline"
-        , "-Xmax-classfile-name", "72"
-        , "-Yrepl-sync"
-        , "-Xlint"
-        , "-Xverify"
-        , "-Ywarn-all"
-        , "-feature"
-        , "-language:postfixOps"
-        , "-language:implicitConversions"
-        , "-language:existentials"
-        , "-Yinline-warnings"
-      )
-      , libraryDependencies ++= Seq(
-        "ch.qos.logback" % "logback-classic" % "1.0.10",
-        "junit" % "junit" % "4.11" % "test"
-        )
-
-      , unmanagedSourceDirectories in Compile := (javaSource in Compile).value :: Nil
-      , unmanagedSourceDirectories in Test := (javaSource in Test).value :: Nil
+  lazy val core = clientApiProject("Core") inject(
+    jodaTime
+  , slf4j
+  , logback % "test"
+  , jUnit % "test"
+  ) settings(
+    unmanagedSourceDirectories in Compile := Seq(
+      sourceDirectory.value / "interface" / "java"
+    , sourceDirectory.value / "service" / "java"
+    , sourceDirectory.value / "model" / "java"
     )
-  ) dependsOn(interface)
+  , unmanagedResourceDirectories in Compile := Seq(
+      sourceDirectory.value / "main" / "resources"
+    )
+  , unmanagedResourceDirectories in Test := Seq(
+      sourceDirectory.value / "test" / "resources"
+    )
+  , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
+  )
 
+/*
   lazy val model = clientApiProject("Model") inject (
     dslHttp
   ) settings (
@@ -75,4 +51,6 @@ object ClientApi extends Build with Default {
     unmanagedSourceDirectories in Compile += sourceDirectory.value / "config" / "java",
     unmanagedSourceDirectories in Compile += sourceDirectory.value / "launcher" / "java"
   ) dependsOn(model)
+*/
+
 }

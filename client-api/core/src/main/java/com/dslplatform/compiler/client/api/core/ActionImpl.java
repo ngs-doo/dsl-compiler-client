@@ -1,3 +1,4 @@
+/*
 package com.dslplatform.compiler.client.api.core;
 
 import com.dslplatform.client.*;
@@ -400,4 +401,4 @@ public class ActionImpl implements Actions {
         }
     }
 }
-
+*/

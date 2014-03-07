@@ -22,7 +22,7 @@ trait Default extends Dependencies {
       , "-target", "1.6"
       )
 
-    , crossScalaVersions := Seq("2.10.4-RC2")
+    , crossScalaVersions := Seq("2.10.4-RC3")
     , scalaVersion := crossScalaVersions.value.head
     , scalacOptions := Seq(
         "-unchecked"
@@ -45,11 +45,8 @@ trait Default extends Dependencies {
       , "-Yinline-warnings"
       )
 
-    , unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
-    , unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
-
-    , publishArtifact in (Compile, packageDoc) := false
-
+    , unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
+    , unmanagedSourceDirectories in Test := Seq((scalaSource in Test).value)
     , EclipseKeys.eclipseOutput := Some(".target")
     )
 
@@ -57,14 +54,10 @@ trait Default extends Dependencies {
       autoScalaLibrary := false
     , crossPaths := false
 
-    , unmanagedSourceDirectories in Compile := (javaSource in Compile).value :: Nil
+    , unmanagedSourceDirectories in Compile := Seq((javaSource in Compile).value)
+    , unmanagedSourceDirectories in Test := Seq((javaSource in Test).value)
     , EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
     )
-
-  lazy val assemblyPublishSettings = assemblySettings ++ Seq(
-      artifact in (Compile, assembly) ~= (_.copy(`classifier` = Some("assembly")))
-    , test in assembly := {}
-    ) ++ addArtifact(artifact in (Compile, assembly), assembly)
 
 //  ---------------------------------------------------------------------------
 
