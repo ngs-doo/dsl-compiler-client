@@ -216,8 +216,8 @@ public class JsonReader {
         return sb.toString();
     }
 
-    public Map<String, String> readMap() throws IOException {
-        final Map<String, String> map = new LinkedHashMap<String, String>();
+    public Map<String, Object> readMap() throws IOException {
+        final Map<String, Object> map = new LinkedHashMap<String, Object>();
 
         assertRead('{');
         boolean needComma = false;
@@ -225,7 +225,8 @@ public class JsonReader {
             if (needComma) assertLast(',');
             final String key = readString();
             assertRead(':');
-            final String value = readString();
+
+            final Object value = next() == '{' ? readMap() : readString();
             map.put(key, value);
             needComma = true;
         }
