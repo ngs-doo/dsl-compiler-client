@@ -41,7 +41,7 @@ public class JsonWriter {
                             c >= 0x2060 && c <= 0x206f ||
                             c == 0xfeff || c >= 0xfff0) {
                         sb.append(value.subSequence(last, index))
-                          .append(String.format("\\u%04x", c));
+                          .append(String.format("\\u%04x", (int) c));
                         last = index + 1;
                     }
                     continue loop;
@@ -55,14 +55,16 @@ public class JsonWriter {
         sb.append(value.substring(last)).append('"');
     }
 
-    public void write(final Map<String, String> values) {
+    public void write(final Map<String, Object> values) {
         write('{');
         boolean needComma = false;
-        for (final Map.Entry<String, String> entry : values.entrySet()) {
+        for (final Map.Entry<String, Object> entry : values.entrySet()) {
             if (needComma) write(',');
             write(entry.getKey());
             write(':');
-            write(entry.getValue());
+            if (entry.getValue() instanceof String) write((String) entry.getValue());
+            else if (entry.getValue() instanceof Map) write((Map<String, Object>) entry.getValue());
+            else throw new IllegalArgumentException("Malformatted http body parameter.");
             needComma = true;
         }
         write('}');
