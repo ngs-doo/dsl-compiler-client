@@ -27,7 +27,7 @@ import com.dslplatform.compiler.client.api.config.KeystoreConfiguration;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
-import com.dslplatform.compiler.client.api.core.io.HttpTransport;
+import com.dslplatform.compiler.client.api.core.HttpTransport;
 
 public class HttpTransportImpl implements HttpTransport {
     private final Logger logger;
@@ -101,7 +101,7 @@ public class HttpTransportImpl implements HttpTransport {
 
     public HttpResponse sendRequest(final HttpRequest request) throws IOException {
         final int timeoutMs = (int) clientConfiguration.getTimeout().getMillis();
-        final URL targetUrl = new URL(clientConfiguration.getCompilerUri() + request.path);
+        final URL targetUrl = new URL(clientConfiguration.getCompilerUri() + request.path + request.buildQuery());
 
         if (logger.isDebugEnabled()) {
             final StringBuilder sb = new StringBuilder();
@@ -116,11 +116,12 @@ public class HttpTransportImpl implements HttpTransport {
         }
 
         if (logger.isTraceEnabled()) {
-            try {
-                logger.trace("Request body: <{}>", new String(request.body, ENCODING));
-            } catch (final Exception e) {
-                logger.trace("<could not decode request body via UTF-8>");
-            }
+            if (request.body != null)
+                try {
+                    logger.trace("Request body: <{}>", new String(request.body, ENCODING));
+                } catch (final Exception e) {
+                    logger.trace("<could not decode request body via UTF-8>");
+                }
         }
 
         final long startedAt = System.currentTimeMillis();

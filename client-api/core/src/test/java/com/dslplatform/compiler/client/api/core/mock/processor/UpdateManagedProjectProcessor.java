@@ -1,30 +1,25 @@
 package com.dslplatform.compiler.client.api.core.mock.processor;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
-
 import com.dslplatform.compiler.client.api.core.HttpRequest;
+import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 
-public interface MockProcessor {
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-    public abstract boolean isDefinedAt(final HttpRequest request);
-    public abstract HttpResponse apply(final HttpRequest request) throws IOException;
+public class UpdateManagedProjectProcessor implements MockProcessor {
+    @Override
+    public boolean isDefinedAt(final HttpRequest request) {
+        return request.method == Method.PUT && request.path.startsWith("Alpha.svc/update/");
+    }
 
-    public static final Charset ENCODING = Charset.forName("UTF-8");
+    @Override
+    public HttpResponse apply(final HttpRequest request) throws IOException {
 
-    final Set<String> supportedLanguages = new HashSet<String>() {{
-        add("Java");
-        add("Scala");
-    }};
-
-    public final static int success             = 0;
-    public final static int unknown_language    = 1;
-    public final static int name_invalid        = 2;
-    public final static int name_missing        = 3;
-/*
-    HttpResponse mockResponse(final int state) {
+        int state = success;
 
         final int code;
         final byte[] body;
@@ -57,6 +52,7 @@ public interface MockProcessor {
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
         }
 
+        headers.put("Content-Length", Arrays.asList(String.valueOf(body.length)));
         return new HttpResponse(code, headers, body);
-    }*/
+    }
 }

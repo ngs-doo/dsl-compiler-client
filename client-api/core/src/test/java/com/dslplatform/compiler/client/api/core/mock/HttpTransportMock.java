@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
-import com.dslplatform.compiler.client.api.core.io.HttpTransport;
+import com.dslplatform.compiler.client.api.core.HttpTransport;
 import com.dslplatform.compiler.client.api.core.mock.processor.*;
 
 public class HttpTransportMock implements HttpTransport {
@@ -18,7 +18,23 @@ public class HttpTransportMock implements HttpTransport {
         mockProcessors.add(new RenameProjectProcessor());
         mockProcessors.add(new RegisterUserProcessor());
         mockProcessors.add(new CreateProjectProcessor());
-
+        mockProcessors.add(new CreateExternalProjectProcessor());
+        mockProcessors.add(new DownloadGeneratedModelProcessor());
+        mockProcessors.add(new InspectManagedProjectChangesProcessor());
+        mockProcessors.add(new GetLastManagedDSLProcessor());
+        mockProcessors.add(new GetConfigProcessor());
+        mockProcessors.add(new UpdateManagedProjectProcessor());
+        mockProcessors.add(new GenerateMigrationSQLProcessor());
+        mockProcessors.add(new GenerateSourcesProcessor());
+        mockProcessors.add(new GenerateUnmanagedSourcesProcessor());
+        mockProcessors.add(new GetProjectByNameProcessor());
+        mockProcessors.add(new GetAllProjectsProcessor());
+        mockProcessors.add(new RenameProjectProcessor());
+        mockProcessors.add(new CleanProjectProcessor());
+        mockProcessors.add(new TemplateGetProcessor());
+        mockProcessors.add(new TemplateCreateProcessor());
+        mockProcessors.add(new TemplateListAllProcessor());
+        mockProcessors.add(new TemplateDeleteProcessor());
 
     }
 

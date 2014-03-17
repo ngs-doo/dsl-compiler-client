@@ -1,0 +1,59 @@
+registerUser                            (final String email);
+parseDsl                                (final String token, final Map<String, String> dsl);
+createTestProject                       (final String token, final String projectName);
+createExternalProject                   (final String token, final String projectName, final String serverName, final String applicationName, final Map<String, Object> databaseConnection);
+downloadBinaries                        (final String token, final UUID projectID);
+downloadGeneratedModel                  (final String token, final UUID projectID);
+inspectManagedProjectChanges            (final String token, final UUID projectID, final Map<String, String> dsl);
+getLastManagedDSL                       (final String token, final UUID projectID);
+getConfig                               (final String token, final UUID projectID, final String packageName, final Set<String> targets, final Set<String> options);
+updateManagedProject                    (final String token, final UUID projectID, final String packageName, final Map<String, String> dsl, final Set<String> targets, final Set<String> options);
+generateMigrationSQL                    (final String token, final String version, final Map<String, String> oldDsl, final Map<String, String> newDsl);
+generateSources                         (final String token, final UUID projectID, final String packageName, final Set<String> targets, final Set<String> options);
+generateUnmanagedSources                (final String token, final String packageName, final Set<String> targets, final Set<String> options, final Map<String, String> dsl);
+getProjectByName                        (final String token, final String projectName);
+getAllProjects                          (final String token);
+renameProject                           (final String token, final String oldName, final String newName);
+cleanProject                            (final String token);
+templateGet                             (final String token, final String templateName);
+templateCreate                          (final String token, final String templateName, final byte[] content);
+templateListAll                         (final String token, final UUID projectID);
+templateDelete                          (final String token, final String templateName);
+
+
+
+doesUnmanagedDSLExits                   (final Map<String, Object> databaseConnection)
+getAllUnmanagedDSL                      (final Map<String, Object> databaseConnection)
+getLastUnmanagedDSL                     (final Map<String, Object> databaseConnection)
+applyMigrations                         (final Map<String, Object> databaseConnection)
+
+
+inspectUnmanagedProjectChanges          (final Map<String, Object> databaseConnection,  final String version, final Map<String, String> dsl);
+createUnmanagedProject                  (final String token, final String serverName, final String applicationName, final Map<String, Object> databaseConnection);
+
+
+
+
+parseDsl                      PUT("Alpha.svc/parse", dsl)
+renameProject                 POST("Domain.svc/submit/Client.RenameProject", event)
+registerUser                  POST("Domain.svc/submit/Client.Register", event)
+createTestProject             POST("Domain.svc/submit/Client.CreateProject", event);
+createExternalProject         POST("Domain.svc/submit/Client.CreateExternalProject", event)
+createUnmanagedProject        GET("download/" + projectID.toString())
+downloadGeneratedModel        GET("generated-model/" + projectID.toString());
+inspectManagedProjectChanges  PUT("changes/" + projectID.toString(), dsl);
+getLastManagedDSL             GET("dsl/" + projectID.toString());
+getConfig                     GET("config/" + projectID.toString());
+updateManagedProject          PUT("update/" + projectID.toString(), dsl);
+generateMigrationSQL          PUT("unmanaged/postgres-migration", dsl);
+generateSources               GET("source/" + projectID.toString());
+generateUnmanagedSources      PUT("unmanaged/source", dsl);
+getProjectByName              PUT("Domain.svc/search/Client.Project", dsl);
+getAllProjects                GET("Domain.svc/search/Client.Project");
+cleanProject                  POST("Domain.svc/submit/Client.CleanProject", event);
+templateGet                   GET("template/" + templateName);
+templateCreate                POST("Domain.svc/submit/Client.UploadTemplate", event);
+templateListAll               GET("templates/" + projectID.toString());
+templateDelete                POST("Domain.svc/submit/Client.DeleteTemplate", event);
+
+

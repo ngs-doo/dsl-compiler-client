@@ -3,12 +3,11 @@ package com.dslplatform.compiler.client.api.core.mock.processor;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
-import com.dslplatform.compiler.client.api.core.impl.JsonReader;
+import com.dslplatform.compiler.client.api.json.JsonReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,40 +19,55 @@ public class RegisterUserProcessor implements MockProcessor {
         return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.RegisterUser");
     }
 
-    private static final Charset ENCODING = Charset.forName("UTF-8");
+    final int user_not_permited = 100;
+    final int email_not_specified = 101;
 
     @Override
     public HttpResponse apply(final HttpRequest request) throws IOException {
-        final Map<String, String> map;
+
+        int state = success;
+
+        final Map<String, Object> map;
         {
             final JsonReader jr =
                     new JsonReader(new InputStreamReader(new ByteArrayInputStream(request.body), ENCODING));
             map = jr.readMap();
         }
 
-        final String email = map.get("Email");
+        final String email = (String) map.get("Email");
+
+        if (!email.equals("super@user.org")) state = user_not_permited;
+        if (!email.equals("")) state = email_not_specified;
 
         final int code;
         final byte[] body;
-
-        final boolean notPermitted =
-                !email.equals("super@user.org");
-        final boolean abstence =
-                email.equals("");
-
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
-        if (abstence) {
-            code = 400;
-            body = "Project name not provided.".getBytes(ENCODING);
-            headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-        } else if (notPermitted) {
-            code = 403;
-            body = "You don't have authorization to perform requested action: Missing permission for user registration".getBytes(ENCODING);
-            headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-        } else {
-            code = 200;
-            body = new byte[0];
+        switch (state) {
+            case success:
+                code = 200;
+                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                body = new byte[0];
+                break;
+            case user_not_permited:
+                code = 403;
+                body = "You don't have authorization to perform requested action: Missing permission for user registration".getBytes(ENCODING);
+                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                break;
+            case name_missing:
+                code = 400;
+                body = "Project name not provided.".getBytes(ENCODING);
+                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                break;
+            case name_invalid:
+                code = 403;
+                body = "Parse error - will no happen yet!".getBytes(ENCODING);
+                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                break;
+            default:
+                code = 400;
+                body = "".getBytes(ENCODING);
+                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
         }
 
         headers.put("Content-Length", Arrays.asList(String.valueOf(body.length)));

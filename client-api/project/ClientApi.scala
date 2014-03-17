@@ -15,7 +15,9 @@ object ClientApi extends Build with Default {
 
   lazy val core = clientApiProject("Core") inject(
     jodaTime
+  , postgresql % "provided"
   , slf4j
+  , commonscodec
   , logback % "test"
   , jUnit % "test"
   ) settings(
