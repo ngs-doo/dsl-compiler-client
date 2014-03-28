@@ -66,7 +66,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
         if (projectName != null) event.put("ProjectName", projectName);
         if (serverName != null) event.put("ServerName", serverName);
         if (applicationName != null) event.put("ApplicationName", applicationName);
-        if (databaseConnection != null) event.put("DatabaseConnection", databaseConnection);
+        if (databaseConnection != null) event.put("Database", databaseConnection);
 
         final HttpRequest request = HttpRequest.POST("Domain.svc/submit/Client.CreateExternalProject", event);
 

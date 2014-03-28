@@ -1,26 +1,35 @@
 package com.dslplatform.compiler.client.api.core;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.List;
 
 public interface UnmanagedDSL {
-    public boolean doesUnmanagedDSLExits(final DataSource dataSource);
+    public boolean doesUnmanagedDSLExits(final DataSource dataSource) throws SQLException;
 
     /**
      * Retrieve all DSLs for an unmanaged project
      */
-    public List<Migration> getAllUnmanagedDSL(final DataSource dataSource);
+    public List<Migration> getAllUnmanagedDSL(final DataSource dataSource) throws SQLException;
 
     /**
      * Retrieve the last DSL for an unmanaged project
      */
-    public Migration getLastUnmanagedDSL(final DataSource dataSource);
+    public Migration getLastUnmanagedDSL(final DataSource dataSource) throws SQLException;
 
     /**
-     * Compare new DSL with the old one, retrieved from the unamanaged database.
+     * Compare new DSL with the old one, retrieved from the unmanaged database.
      */
-    public void inspectUnmanagedProjectChanges(final DataSource dataSource, final String version, final Map<String, String> dsl);
+
+    public void upgradeUnmanagedDatabase(final DataSource dataSource, final List<String> migration) throws SQLException;
+    /**
+     * Compare new DSL with the old one, retrieved from the unmanaged database.
+     */
+    public void inspectUnmanagedProjectChanges(
+            final DataSource dataSource,
+            final String version,
+            final Map<String, String> dsl);
 
     /**
      * Creates an unmanaged project
@@ -30,9 +39,4 @@ public interface UnmanagedDSL {
             final DataSource dataSource,
             final String serverName,
             final String applicationName);
-
-    /**
-     * Compare new DSL with the old one, retrieved from the unamanaged database.
-     */
-    public void upgradeUnmanagedDatabase(final DataSource dataSource, final String version, final List<String> migration);
 }

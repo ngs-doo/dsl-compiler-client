@@ -13,9 +13,9 @@ import static org.junit.Assert.assertEquals;
 public class GetLastManagedDSLTransportTest extends HttpTransportImplTest {
 
     @Test
-    public void testGetLastManagedDSLRequestInvalidName() throws IOException {
+    public void testGetLastManagedDSLRequest() throws IOException {
         final HttpRequest getLastManagedDSLRequest; {
-            final String token = projectToken(validUser, inValidPassword, validID);
+            final String token = projectToken(validUser, validPassword, validID);
 
             getLastManagedDSLRequest = httpRequestBuilder.getLastManagedDSL(token, UUID.fromString(validID));
         }

@@ -14,34 +14,32 @@ object ClientApi extends Build with Default {
   )
 
   lazy val core = clientApiProject("Core") inject(
-    jodaTime
-  , postgresql % "provided"
-  , slf4j
-  , commonscodec
-  , logback % "test"
-  , jUnit % "test"
-  ) settings(
-    unmanagedSourceDirectories in Compile := Seq(
-      sourceDirectory.value / "interface" / "java"
-    , sourceDirectory.value / "service" / "java"
-    , sourceDirectory.value / "model" / "java"
+      jodaTime
+    , postgresql % "provided"
+    , slf4j
+    , commonscodec
+    , slf4jSimple % "test"
+    , jUnit % "test"
+    ) settings(
+      unmanagedSourceDirectories in Compile := Seq(
+        sourceDirectory.value / "interface" / "java"
+      , sourceDirectory.value / "service" / "java"
+      , sourceDirectory.value / "model" / "java"
+      )
+    , unmanagedResourceDirectories in Compile := Seq(
+        sourceDirectory.value / "main" / "resources"
+      )
+    , unmanagedResourceDirectories in Test := Seq(
+        sourceDirectory.value / "test" / "resources"
+      )
+    , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
     )
-  , unmanagedResourceDirectories in Compile := Seq(
-      sourceDirectory.value / "main" / "resources"
-    )
-  , unmanagedResourceDirectories in Test := Seq(
-      sourceDirectory.value / "test" / "resources"
-    )
-  , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-  )
 
+  lazy val api = clientApiProject("Api") inject (
+      core
+    , slf4jSimple % "test"
+    , jUnit % "test")
 /*
-  lazy val model = clientApiProject("Model") inject (
-    dslHttp
-  ) settings (
-    unmanagedSourceDirectories in Compile += sourceDirectory.value / "generated" / "java"
-  )
-
   lazy val interface = clientApiProject("Interface") inject (
     // model
   //  slf4j

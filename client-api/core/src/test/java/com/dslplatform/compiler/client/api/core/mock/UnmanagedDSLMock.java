@@ -15,13 +15,13 @@ import java.util.Map;
 public class UnmanagedDSLMock implements UnmanagedDSL {
     @Override
     public boolean doesUnmanagedDSLExits(final DataSource dataSource) {
-        return true;
         //throw new RuntimeException("Asserting does last migration exist failed.");
+        return true;
     }
 
     @Override
     public List<Migration> getAllUnmanagedDSL(final DataSource dataSource) {
-        //     throw new RuntimeException("Getting all migration failed.");
+        //throw new RuntimeException("Getting all migration failed.");
         return new LinkedList<Migration>() {{
             add(migration_1);
             add(migration_2);
@@ -32,7 +32,7 @@ public class UnmanagedDSLMock implements UnmanagedDSL {
     @Override
     public Migration getLastUnmanagedDSL(final DataSource dataSource) {
         // throw new RuntimeException("Getting last migration failed.");
-        return migration_1;
+        return migration_3;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class UnmanagedDSLMock implements UnmanagedDSL {
     }
 
     @Override
-    public void upgradeUnmanagedDatabase(DataSource dataSource, String version, List<String> migration) {
+    public void upgradeUnmanagedDatabase(DataSource dataSource, List<String> migration) {
 
     }
 
