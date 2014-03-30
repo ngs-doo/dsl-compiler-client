@@ -1,15 +1,14 @@
 package com.dslplatform.compiler.client.api.core.mock.processor;
 
-import com.dslplatform.compiler.client.api.core.HttpRequest;
-import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
-import com.dslplatform.compiler.client.api.core.HttpResponse;
-
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.dslplatform.compiler.client.api.core.HttpRequest;
+import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
+import com.dslplatform.compiler.client.api.core.HttpResponse;
 
 public class GetAllProjectsProcessor implements MockProcessor {
     @Override

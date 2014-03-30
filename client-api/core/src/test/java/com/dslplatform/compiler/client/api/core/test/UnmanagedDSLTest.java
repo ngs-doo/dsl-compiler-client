@@ -1,17 +1,20 @@
 package com.dslplatform.compiler.client.api.core.test;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
-import com.dslplatform.compiler.client.api.core.Migration;
-import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
-import com.dslplatform.compiler.client.api.core.impl.UnmanagedDSLImpl;
-import org.postgresql.ds.PGSimpleDataSource;
-
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.junit.Test;
+import org.postgresql.ds.PGSimpleDataSource;
+
+import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
+import com.dslplatform.compiler.client.api.core.impl.UnmanagedDSLImpl;
+import com.dslplatform.compiler.client.api.model.Migration;
 
 public class UnmanagedDSLTest {
 

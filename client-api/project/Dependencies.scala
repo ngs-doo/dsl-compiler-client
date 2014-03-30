@@ -8,6 +8,6 @@ trait Dependencies {
   val jodaConvert   = "org.joda" % "joda-convert" % "1.5"
 
   val jUnit         = "junit" % "junit" % "4.11"
-  val postgresql    = "org.postgresql" % "postgresql" % "9.3-1100-jdbc41"
-  val commonscodec  = "commons-codec" % "commons-codec" % "1.8"
+  val postgresql    = "org.postgresql" % "postgresql" % "9.3-1101-jdbc4"
+  val commonscodec  = "commons-codec" % "commons-codec" % "1.9"
 }

@@ -1,9 +1,12 @@
 package com.dslplatform.compiler.client.api.core;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import com.dslplatform.compiler.client.api.model.Migration;
 
 public interface UnmanagedDSL {
     public boolean doesUnmanagedDSLExits(final DataSource dataSource) throws SQLException;

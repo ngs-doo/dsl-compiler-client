@@ -1,16 +1,16 @@
 package com.dslplatform.compiler.client.api.core.mock;
 
-import com.dslplatform.compiler.client.api.core.Migration;
-import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
-
-import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
+
+import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
+import com.dslplatform.compiler.client.api.model.Migration;
 
 public class UnmanagedDSLMock implements UnmanagedDSL {
     @Override
@@ -22,11 +22,11 @@ public class UnmanagedDSLMock implements UnmanagedDSL {
     @Override
     public List<Migration> getAllUnmanagedDSL(final DataSource dataSource) {
         //throw new RuntimeException("Getting all migration failed.");
-        return new LinkedList<Migration>() {{
-            add(migration_1);
-            add(migration_2);
-            add(migration_3);
-        }};
+
+        return Arrays.asList(
+                migration_1,
+                migration_2,
+                migration_3);
     }
 
     @Override

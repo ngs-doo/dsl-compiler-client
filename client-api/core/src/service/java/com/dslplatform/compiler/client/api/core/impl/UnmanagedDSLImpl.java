@@ -1,9 +1,5 @@
 package com.dslplatform.compiler.client.api.core.impl;
 
-import com.dslplatform.compiler.client.api.core.Migration;
-import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,6 +8,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
+
+import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
+import com.dslplatform.compiler.client.api.model.Migration;
 
 public class UnmanagedDSLImpl implements UnmanagedDSL {
     @Override

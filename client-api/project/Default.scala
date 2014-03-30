@@ -13,15 +13,18 @@ trait Default extends Dependencies {
     eclipseSettings ++
     graphSettings ++
     assemblySettings ++ Seq(
-      javaHome := sys.env.get("JDK17_HOME").map(file(_))
+      javacOptions in doc := Seq(
+        "-encoding", "UTF-8"
+      , "-source", "1.6"
+      ) ++ (sys.env.get("JDK16_HOME") match {
+        case Some(jdk16Home) => Seq("-bootclasspath", jdk16Home + "/jre/lib/rt.jar")
+        case _ => Nil
+      })
     , javacOptions := Seq(
         "-deprecation"
-      , "-encoding", "UTF-8"
-      , "-Xlint:unchecked"
-      , "-source", "1.6"
+      , "-Xlint"
       , "-target", "1.6"
-      )
-
+      ) ++ (javacOptions in doc).value
     , crossScalaVersions := Seq("2.10.4")
     , scalaVersion := crossScalaVersions.value.head
     , scalacOptions := Seq(

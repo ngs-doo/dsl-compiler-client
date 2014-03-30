@@ -9,7 +9,6 @@ import java.util.Map;
 import com.dslplatform.compiler.client.api.json.JsonWriter;
 
 public final class HttpRequest {
-
     public static enum Method { GET, POST, PUT }
 
     public final Method method;

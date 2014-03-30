@@ -112,6 +112,14 @@ public class JsonReader {
         throw new IOException("Could not parse token, expected 'false'");
     }
 
+    public boolean readBoolean() throws IOException {
+        return read() == 't' ? readTrue() : readFalse();
+    }
+
+    public String readRawNumber() throws IOException {
+        return readRawNumber(new StringBuilder()).toString();
+    }
+
     public StringBuilder readRawNumber(final StringBuilder sb) throws IOException {
         char ch = read();
         if (ch == '-') {

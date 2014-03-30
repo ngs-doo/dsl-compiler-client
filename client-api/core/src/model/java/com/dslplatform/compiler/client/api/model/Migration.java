@@ -1,4 +1,4 @@
-package com.dslplatform.compiler.client.api.core;
+package com.dslplatform.compiler.client.api.model;
 
 import java.util.Map;
 
