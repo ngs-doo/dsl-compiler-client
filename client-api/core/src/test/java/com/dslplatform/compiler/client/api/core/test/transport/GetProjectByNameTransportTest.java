@@ -7,34 +7,22 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class GetProjectByNameTransportTest extends HttpTransportImplTest {
 
     @Test
-    public void testGetProjectByNameRequestInvalidName() throws IOException {
+    public void testGetProjectByNameRequest() throws IOException {
         final HttpRequest getProjectByNameRequest; {
             final String token = userToken(validUser, validPassword);
-            final String projectName = "!";
+            final String projectName = "RedRhino";
             getProjectByNameRequest = httpRequestBuilder.getProjectByName(token, projectName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(getProjectByNameRequest);
-        assertEquals(400, response.code);
-        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
-        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), response.body);
-    }
+        logger.info(new String(response.body, "UTF-8"));
+        assertEquals(200, response.code);
 
-    @Test
-    public void testGetProjectByNameRequestNameAbsent() throws IOException {
-        final HttpRequest getProjectByNameRequest; {
-            final String token = userToken(validUser, validPassword);
-            final String projectName = "";
-            getProjectByNameRequest = httpRequestBuilder.getProjectByName(token, projectName);
-        }
-
-        final HttpResponse response = httpTransport.sendRequest(getProjectByNameRequest);
-        assertEquals(201, response.code);
+        assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
     }
 }

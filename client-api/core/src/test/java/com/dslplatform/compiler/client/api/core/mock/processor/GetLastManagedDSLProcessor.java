@@ -3,6 +3,8 @@ package com.dslplatform.compiler.client.api.core.mock.processor;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
+import com.dslplatform.compiler.client.api.json.JsonWriter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -28,8 +30,8 @@ public class GetLastManagedDSLProcessor implements MockProcessor {
         switch (state) {
             case success:
                 code = 200;
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                headers.put("Content-Type", Arrays.asList("application/json"));
+                body = "{\"AB.dsl\":\"module A { root B; root C { B *b;}}\\n\"}".getBytes("UTF-8");
                 break;
             default:
                 code = 400;

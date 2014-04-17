@@ -16,7 +16,7 @@ import java.util.Map;
 public class CreateProjectProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.CreteProject");
+        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.CreateProject");
     }
 
     @Override
@@ -38,9 +38,9 @@ public class CreateProjectProcessor implements MockProcessor {
 
         switch (state) {
             case success:
-                code = 200;
+                code = 201;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                body = "100".getBytes();
                 break;
             case unknown_language:
                 code = 400;

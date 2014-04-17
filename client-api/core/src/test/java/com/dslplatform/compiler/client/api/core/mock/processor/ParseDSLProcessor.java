@@ -13,7 +13,7 @@ import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import com.dslplatform.compiler.client.api.json.JsonReader;
 
-public class ParseProcessor implements MockProcessor {
+public class ParseDSLProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
         return request.method == Method.PUT && request.path.equals("Alpha.svc/parse");

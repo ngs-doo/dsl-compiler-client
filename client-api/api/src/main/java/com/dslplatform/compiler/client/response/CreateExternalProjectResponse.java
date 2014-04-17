@@ -1,11 +1,7 @@
 package com.dslplatform.compiler.client.response;
 
 public class CreateExternalProjectResponse extends AuthorizationResponse {
-    private final boolean createExternalProjectSuccessful;
-
-    public boolean isCreateExternalProjectSuccessful() {
-        return createExternalProjectSuccessful;
-    }
+    public final boolean createExternalProjectSuccessful;
 
     public CreateExternalProjectResponse(
             boolean authorized,
@@ -15,5 +11,4 @@ public class CreateExternalProjectResponse extends AuthorizationResponse {
         super(authorized, authorizationErrorMessage);
         this.createExternalProjectSuccessful = createExternalProjectSuccessful;
     }
-
 }

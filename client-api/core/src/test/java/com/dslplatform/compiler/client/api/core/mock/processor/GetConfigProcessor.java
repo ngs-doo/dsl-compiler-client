@@ -5,7 +5,6 @@ import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,10 +25,14 @@ public class GetConfigProcessor implements MockProcessor {
         final byte[] body;
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
+        if (!supportedLanguages.containsAll(request.query.get("languages"))) {
+            state  = unknown_language;
+        }
+
         switch (state) {
             case success:
                 code = 200;
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                headers.put("Content-Type", Arrays.asList("application/json"));
                 body = new byte[0];
                 break;
             case unknown_language:

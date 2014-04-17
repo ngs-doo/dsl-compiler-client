@@ -40,30 +40,45 @@ module compiler
 // --------------------------
 
   enum ActionName {
-    CleanProject;
-    CloneProject;
-    CreateProject;
-    DeleteProject;
+    // CleanProject;
+    // CloneProject;
+    // DeleteProject;
+    /*
+    A - All
+    T - Test
+    U - Unmanaged
+    E - External
+    */
+    RegisterUser;  //  (A) arg: Mail
 
-    InspectDatabaseChanges;
+    CreateTestProject; // (T)
+    CreateUnmanagedProject; // (U)
+    CreateExternalProject;  // (E)
 
-    DownloadServerBinaries;
-    DownloadServerGeneratedModel;
-    GetLastDSL;
+    InspectDatabaseChanges;       // (A) GetChanges
 
-    GetConfig;
+    DownloadServerBinaries;       // (UE) DownloadProject
+    DownloadServerGeneratedModel; // (UE) DownloadGeneratedModel
 
-    DiffWithLastDSL;
-    ParseDSL;
+    GetLastManagedDSL;                   // (1) (TE) Managed(id) 
+    GetLastUnManagedDSL;                 // (2) (U) Unmanaged(DBCon)
 
-    UpdateProject;
-    GenerateMigrationSQL;
-    GenerateSources;
+    GetConfig;                    // (TE)
 
-    TemplateGet;
-    TemplateCreate;
-    TemplateListAll;
-    TemplateDelete;
+    DiffWithLastDSL;              // (A)
+    ParseDSL;                     // (A)
+
+    UpdateManagedProject;
+
+    UpdateUnManagedProject;
+
+    GenerateMigrationSQL; // (U)
+    GenerateSources;      // (A)
+
+    TemplateGet;     // (T)
+    TemplateCreate;  // (T)
+    TemplateListAll; // (T)
+    TemplateDelete;  // (T)
   }
 
   enum Target {

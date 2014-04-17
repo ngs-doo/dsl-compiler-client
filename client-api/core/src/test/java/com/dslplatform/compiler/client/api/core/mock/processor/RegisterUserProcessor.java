@@ -16,7 +16,7 @@ import java.util.Map;
 public class RegisterUserProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.RegisterUser");
+        return request.method == Method.POST && request.path.equals("Domain.svc/submit/Client.Register");
     }
 
     final int user_not_permited = 100;
@@ -45,7 +45,7 @@ public class RegisterUserProcessor implements MockProcessor {
 
         switch (state) {
             case success:
-                code = 200;
+                code = 201;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
                 body = new byte[0];
                 break;

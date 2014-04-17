@@ -5,10 +5,7 @@ import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GetProjectByNameProcessor implements MockProcessor {
     @Override
@@ -24,11 +21,13 @@ public class GetProjectByNameProcessor implements MockProcessor {
 
         int state = success;
 
+        final byte[] mockProject = "{\"ID\":\"40443b90-44d8-48ee-b65b-0992cf642637\",\"UserID\":\"user@domain.omm\",\"CreatedAt\":\"2014-04-01T13:13:57.480884+02:00\",\"DatabaseServer\":\"someExternalPlace\",\"DatabasePort\":5432,\"DatabaseName\":\"DatabaseNameValue\",\"ApplicationServer\":\"test.dsl-platform.com\",\"ApplicationName\":\"ApplicationNameValue0\",\"ApplicationPoolName\":\"ApplicationPoolName0\",\"Nick\":\"BrownBison\",\"URI\":\"40443b90-44d8-48ee-b65b-0992cf642637\",\"UserURI\":\"user@domain.omm\"}".getBytes("UTF-8");
+
         switch (state) {
             case success:
                 code = 200;
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                headers.put("Content-Type", Arrays.asList("application/json"));
+                body = mockProject;
                 break;
             default:
                 code = 400;

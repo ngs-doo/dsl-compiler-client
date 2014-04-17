@@ -14,7 +14,7 @@ import java.util.Map;
 public class CleanProjectProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.POST && request.path.startsWith("Domain.svc/submit/Client.CleanProject");
+        return request.method == Method.POST && request.path.startsWith("Domain.svc/submit/Client.CleanProject"); // TODO - to REST.svc?
     }
 
     private static final Charset ENCODING = Charset.forName("UTF-8");

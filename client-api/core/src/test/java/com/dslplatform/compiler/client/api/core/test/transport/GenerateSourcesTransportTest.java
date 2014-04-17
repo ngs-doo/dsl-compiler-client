@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.api.core.test.transport;
 
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import org.apache.commons.codec.Charsets;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
     @Test
     public void testGenerateSourcesRequest() throws IOException {
         final HttpRequest generateSourcesRequest; {
-            final String token = projectToken(validUser, validPassword, validID);
+            final String token = projectToken(validUser, validPassword, validId);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");
@@ -23,13 +24,13 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
             final Set<String> options = new HashSet<String>() {{
             }};
             final String packageName = "namespace";
-            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validID), targets, packageName, options);
+            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validId), targets, packageName, options);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);
+        logger.info(new String(response.body, Charsets.UTF_8));
         assertEquals(200, response.code);
         assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
-
     }
 
     @Test
@@ -44,7 +45,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
                 add("opt2");
             }};
             final String packageName = "namespace";
-            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validID), targets, packageName, options);
+            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validId), targets, packageName, options);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);

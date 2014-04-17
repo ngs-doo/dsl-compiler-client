@@ -27,13 +27,13 @@ public class TemplateListAllProcessor implements MockProcessor {
         switch (state) {
             case success:
                 code = 200;
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                headers.put("Content-Type", Arrays.asList("application/json"));
+                body = "[\"agreggated-report (1).docx\",\"agreggated-report.docx\"]".getBytes();
                 break;
             default:
                 code = 400;
                 body = "".getBytes(ENCODING);
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                headers.put("Content-Type", Arrays.asList("text/plain"));
         }
 
         headers.put("Content-Length", Arrays.asList(String.valueOf(body.length)));

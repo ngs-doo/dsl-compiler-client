@@ -106,16 +106,14 @@ public class JsonWriter {
             final Object value = entry.getValue();
             if (value instanceof Map) {
                 write((Map<String, Object>) value);
-            }
-            else if (value instanceof byte[]) {
+            } else if (value instanceof byte[]) {
                 write((byte[])value);
             } else if (value instanceof Integer) {
-                sb.append((int)value);
+                sb.append(((Integer) value).intValue());
             } else if (value instanceof String) {
                 write(value.toString());
-            } else {
-                throw new RuntimeException("Serialization not implemented!");
             }
+
             needComma = true;
         }
         sb.append('}');

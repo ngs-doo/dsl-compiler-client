@@ -14,12 +14,13 @@ public class HttpTransportMock implements HttpTransport {
 
     public HttpTransportMock() {
         mockProcessors = new ArrayList<MockProcessor>();
-        mockProcessors.add(new ParseProcessor());
+        mockProcessors.add(new ParseDSLProcessor());
         mockProcessors.add(new RenameProjectProcessor());
         mockProcessors.add(new RegisterUserProcessor());
         mockProcessors.add(new CreateProjectProcessor());
         mockProcessors.add(new CreateExternalProjectProcessor());
         mockProcessors.add(new DownloadGeneratedModelProcessor());
+        mockProcessors.add(new DownloadBinariesProcessor());
         mockProcessors.add(new InspectManagedProjectChangesProcessor());
         mockProcessors.add(new GetLastManagedDSLProcessor());
         mockProcessors.add(new GetConfigProcessor());
@@ -35,7 +36,6 @@ public class HttpTransportMock implements HttpTransport {
         mockProcessors.add(new TemplateCreateProcessor());
         mockProcessors.add(new TemplateListAllProcessor());
         mockProcessors.add(new TemplateDeleteProcessor());
-
     }
 
     public HttpResponse sendRequest(final HttpRequest request) throws IOException {
@@ -45,6 +45,6 @@ public class HttpTransportMock implements HttpTransport {
             }
         }
 
-        throw new UnsupportedOperationException("Could not locate mock processor for path: " + request.path);
+        throw new UnsupportedOperationException("Could not locate mock processor for " + request.method.name() + " to path: " + request.path);
     }
 }

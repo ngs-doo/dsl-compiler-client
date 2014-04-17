@@ -24,12 +24,19 @@ public class InspectManagedProjectChangesProcessor implements MockProcessor {
         final int code;
         final byte[] body;
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+        final String requestbody = new String(request.body, "UTF-8");
+        if (requestbody.contains("bad.dsl")) state = bad_dsl;
 
         switch (state) {
             case success:
                 code = 200;
+                headers.put("Content-Type", Arrays.asList("application/json"));
+                body = "[{\"Type\":\"Create\",\"Definition\":\"A-C-i\",\"Description\":\"New property i will be created for C in A\"}]".getBytes("UTF-8");
+                break;
+            case bad_dsl:
+                code = 400;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                body = "[{\"Type\":\"Create\",\"Definition\":\"A-C-i\",\"Description\":\"New property i will be created for C in A\"}]".getBytes("UTF-8");
                 break;
             default:
                 code = 400;

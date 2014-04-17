@@ -1,14 +1,9 @@
 package com.dslplatform.compiler.client.response;
 
-import com.dslplatform.compiler.client.api.core.Migration;
+import com.dslplatform.compiler.client.api.model.Migration;
 
 public class GetLastUnmanagedDSLResponse extends DatabaseConnectionResponse {
-
-    private final Migration lastMigration;
-
-    public Migration getLastMigration() {
-        return lastMigration;
-    }
+    public final Migration lastMigration;
 
     public GetLastUnmanagedDSLResponse(
             final boolean databaseConnectionSuccessful,

@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.api.core.test.transport;
 
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,23 +19,46 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
         final HttpRequest generateUnmanagedSourcesRequest; {
             final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
-                add("Java");
-                add("Scala");
+                add("CSharpServer");
             }};
             final Set<String> options = new HashSet<String>() {{
                 add("with-active-record");
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", "module A { root B; root C{ B *b;}}");
+                put("only", MockData.test_migration_sql_simple_new);
             }};
             generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
+        logger.info(new String(response.body));
+        assertTrue(new String(response.body).contains("postgres"));
         assertEquals(200, response.code);
-        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
-        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), response.body);
+        assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
+    }
+
+
+    @Test
+    public void testGenerateUnmanagedSourcesRequest_WithLast() throws IOException {
+        final HttpRequest generateUnmanagedSourcesRequest; {
+            final String token = userToken(validUser, validPassword);
+            final Set<String> targets = new HashSet<String>() {{
+                add("ScalaServer");
+            }};
+            final Set<String> options = new HashSet<String>() {{
+                add("with-active-record");
+            }};
+            final String packageName = "namespace";
+            final Map<String, String> dsl = MockData.migrate_with;
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+        }
+
+        final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
+        logger.info(new String(response.body));
+        assertTrue(new String(response.body).contains("postgres"));
+        assertEquals(200, response.code);
+        assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
     }
 
     @Test
@@ -50,56 +74,11 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("opt2");
             }};
             final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", "module A { root B; root C{ B *b;}}");
-            }};
+            final Map<String, String> dsl = MockData.dsl_test_migration_single_new;
             generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
         assertEquals(200, response.code);
-    }
-
-    @Test
-    public void testGenerateUnmanagedSourcesRequestBadLanguages() throws IOException {
-        final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
-            final Set<String> targets = new HashSet<String>() {{
-                add("fantom");
-            }};
-            final Set<String> options = new HashSet<String>() {{}};
-            final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", "module A { root B; root C{ B *b;}}");
-            }};
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
-        }
-
-        final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
-        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
-        assertArrayEquals("Unknown language specified".getBytes("UTF-8"), response.body);
-        assertEquals(400, response.code);
-    }
-
-    @Test
-    public void testGenerateUnmanagedSourcesRequestBadDSL() throws IOException {
-        final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
-            final Set<String> targets = new HashSet<String>() {{
-                add("Java");
-                add("Scala");
-            }};
-            final Set<String> options = new HashSet<String>() {{}};
-            final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", "module A { root B; root C{ B b;}}");
-            }};
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
-        }
-
-        final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
-        assertEquals(400, response.code);
-        final String responseStr = new String(response.body, ENCODING);
-        assertTrue(responseStr.contains("Aggregate root must be referenced with *"));
     }
 }

@@ -4,18 +4,17 @@ import java.util.Map;
 
 public class GenerateSourcesResponse extends AuthorizationResponse {
 
-    public Map<String, String> getSources() {
-        return sources;
-    }
+    public final Map<String, Map<String, String>> sources;
+
+    public final boolean generatedSuccess;
 
     public GenerateSourcesResponse(
             boolean authorized,
             String authorizationErrorMessage,
-            Map<String, String> sources) {
-
+            boolean generateSuccess,
+            Map<String, Map<String, String>> sources) {
         super(authorized, authorizationErrorMessage);
         this.sources = sources;
+        this.generatedSuccess = generateSuccess;
     }
-
-    private final Map<String, String> sources;
 }

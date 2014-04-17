@@ -1,7 +1,8 @@
 package com.dslplatform.compiler.client.response;
 
+import com.dslplatform.compiler.client.api.model.Project;
+
 import java.util.List;
-import java.util.UUID;
 
 public class GetAllProjectsResponse extends AuthorizationResponse {
 

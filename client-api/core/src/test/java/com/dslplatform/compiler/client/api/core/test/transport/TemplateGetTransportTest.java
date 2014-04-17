@@ -8,23 +8,23 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TemplateGetTransportTest extends HttpTransportImplTest {
 
     @Test
-    public void testTemplateGetRequestInvalidName() throws IOException {
+    public void testTemplateGetRequest() throws IOException {
         final HttpRequest templateGetRequest; {
-            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
-            final String projectName = "!";
-            templateGetRequest = httpRequestBuilder.templateGet(token, projectName);
+            final String token = projectToken(validUser, validPassword, validId);
+            templateGetRequest = httpRequestBuilder.templateGet(token, validId, "agreggated-report.docx");
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateGetRequest);
-        assertEquals(400, response.code);
-        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
-        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), response.body);
+        logger.info("response {}", new String(response.body));
+        assertEquals(200, response.code);
+        assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
+        assertTrue(response.body.length > 0);
     }
 
     @Test
@@ -32,7 +32,7 @@ public class TemplateGetTransportTest extends HttpTransportImplTest {
         final HttpRequest templateGetRequest; {
             final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
             final String projectName = "";
-            templateGetRequest = httpRequestBuilder.templateGet(token, projectName);
+            templateGetRequest = httpRequestBuilder.templateGet(token, validId, projectName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateGetRequest);

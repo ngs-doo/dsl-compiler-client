@@ -26,25 +26,16 @@ public class GetAllProjectsTransportTest extends HttpTransportImplTest {
         }
 
         final HttpResponse response = httpTransport.sendRequest(getAllProjectsRequest);
+        final String responseStr = new String(response.body, ENCODING);
+
+        logger.info("response: {}", responseStr);
         assertEquals(200, response.code);
         assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
-        final String responseStr = new String(response.body, ENCODING);
 
         assertTrue(responseStr.contains("CreatedAt"));
         assertTrue(responseStr.contains("UserURI"));
 
         final List<Project> projects = ProjectJsonDeserialization.fromJsonArray(new JsonReader(new StringReader(responseStr)));
         assertTrue(projects.size() > 0);
-    }
-
-    @Test
-    public void testGetAllProjectsRequestInvalidUser() throws IOException {
-        final HttpRequest getAllProjectsRequest; {
-            final String token = userToken(validUser, inValidPassword);
-            getAllProjectsRequest = httpRequestBuilder.getAllProjects(token);
-        }
-
-        final HttpResponse response = httpTransport.sendRequest(getAllProjectsRequest);
-        assertEquals(403, response.code);
     }
 }
