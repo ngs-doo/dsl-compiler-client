@@ -60,7 +60,7 @@ module compiler
     DownloadServerBinaries;       // (UE) DownloadProject
     DownloadServerGeneratedModel; // (UE) DownloadGeneratedModel
 
-    GetLastManagedDSL;                   // (1) (TE) Managed(id) 
+    GetLastManagedDSL;                   // (1) (TE) Managed(id)
     GetLastUnManagedDSL;                 // (2) (U) Unmanaged(DBCon)
 
     GetConfig;                    // (TE)

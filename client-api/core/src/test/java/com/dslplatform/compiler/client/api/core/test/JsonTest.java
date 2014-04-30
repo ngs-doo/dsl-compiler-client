@@ -83,4 +83,3 @@ public class JsonTest {
         assertArrayEquals(expected, projectList.toArray());
     }
 }
-

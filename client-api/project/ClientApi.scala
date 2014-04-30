@@ -13,11 +13,25 @@ object ClientApi extends Build with Default {
     )
   )
 
+  lazy val util = clientApiProject("Util") inject(
+    slf4j
+  )
+
+  lazy val params = clientApiProject("Params")
+
+  lazy val cmdLineParser = clientApiProject("CmdLineParser") inject(
+    slf4j
+  , commonsIo
+  , util
+  , params
+  )
+
   lazy val core = clientApiProject("Core") inject(
       jodaTime
     , postgresql % "provided"
     , slf4j
-    , commonscodec
+    , commonsCodec
+    , util
     , slf4jSimple % "test"
     , jUnit % "test"
     ) settings(
