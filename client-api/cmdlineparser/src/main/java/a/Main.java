@@ -42,8 +42,7 @@ public class Main {
         final Arguments a = new CachingArgumentsProxy(
                 new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(q)));
-
-        System.out.println(a.getOutputPath());
+        
         System.out.println(a.getUsername());
         System.out.println(a.getProjectID());
         System.out.println(a.isWithActiveRecord());

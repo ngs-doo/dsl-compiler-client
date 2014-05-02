@@ -151,9 +151,7 @@ public class ParserPassingTests {
             final String shortVersion = switches.get(0);
             final String longVersion = switches.get(1);
 
-            final String projectIdParamVal = UUID.fromString("1-2-3-4-5").toString();
-
-            inputPatterns.addAll(commonTestCases(projectIdParamVal, shortVersion, longVersion, paramSwitch));
+            inputPatterns.addAll(commonTestCases(parameterValue, shortVersion, longVersion, paramSwitch));
 
         }
         else if(paramSwitch.equals(ParamSwitches.PROJECT_ID_SWITCHES)){
