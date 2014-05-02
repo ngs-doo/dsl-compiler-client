@@ -25,7 +25,7 @@ public class Main {
                 "-i|kekec|-ibekec|-i|tukac|-ipero|--project-id=pero|--project-id|pero2|--project-id=x|--project-id=|y|-iqwe|--project-id=1-2-3-4-5|"
                 + "-uu|"
                 + "--with-active-record|--with-active-record=yes|"
-                + "-f~.config\\adept\\adept.ini|"
+                + "-f~/code/element-doo/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/example.properties|"
                 + "-tjava client,java,scala-server|"
                 + "--project-name|KiklopZdenski|"
                 + "--package-name=com.`dsl platform`.test|--target=!java,c# server"
@@ -36,7 +36,6 @@ public class Main {
 
         final Logger logger = LoggerFactory.getLogger("keekc");
 
-
         final PropertyLoader propertyLoader = new PropertyLoader(logger,
                 new StreamLoader(logger, new PathExpander(logger)));
 
@@ -44,6 +43,7 @@ public class Main {
                 new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(q)));
 
+        System.out.println(a.getOutputPath());
         System.out.println(a.getUsername());
         System.out.println(a.getProjectID());
         System.out.println(a.isWithActiveRecord());

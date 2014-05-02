@@ -23,7 +23,12 @@ object ClientApi extends Build with Default {
     slf4j
   , commonsIo
   , util
+  , slf4jSimple % "test"
+  , jUnit % "test"
   , params
+  ) settings (
+      unmanagedResourceDirectories in Test := Seq(sourceDirectory.value / "test" / "resources")
+    , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
   )
 
   lazy val core = clientApiProject("Core") inject(

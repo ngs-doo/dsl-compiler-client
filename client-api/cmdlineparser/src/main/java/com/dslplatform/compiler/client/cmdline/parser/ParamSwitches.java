@@ -1,29 +1,65 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_ACTIVE_RECORD_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_HELPER_METHODS_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JACKSON_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JAVA_BEANS_KEY;
 
 public enum ParamSwitches {
     END_OF_PARAMS("--"),
     HELP("-h", "--help"),
 
+    /* Multiple properties' values */
     PROJECT_PROPERTIES_PATH_SWITCHES("-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
 
-    USERNAME_SWITCHES("-u", "--" + USERNAME_KEY),
-    PROJECT_ID_SWITCHES("-i", "--" + PROJECT_ID_KEY),
-    PROJECT_NAME_SWITCHES("-k", "--" + PROJECT_NAME_KEY),
-    PACKAGE_NAME_SWITCHES("-n", "--" + PACKAGE_NAME_KEY),
-    TARGET_SWITCHES("-t", "--" + TARGET_KEY),
+    /* Single property value */
+    USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),
+    PROJECT_ID_SWITCHES(PROJECT_ID_KEY, "-i", "--" + PROJECT_ID_KEY),
+    PROJECT_NAME_SWITCHES(PROJECT_NAME_KEY, "-k", "--" + PROJECT_NAME_KEY),
+    PACKAGE_NAME_SWITCHES(PACKAGE_NAME_KEY, "-n", "--" + PACKAGE_NAME_KEY),
+    TARGET_SWITCHES(TARGET_KEY, "-t", "--" + TARGET_KEY),
+    OUTPUT_PATH_SWITCHES(OUTPUT_PATH_KEY, "-o", "--" + OUTPUT_PATH_KEY),
+    CACHE_PATH_SWITCHES(CACHE_PATH_KEY),
+    LOGGING_LEVEL_SWITCHES(LOGGING_LEVEL_KEY, "-l", "--" + LOGGING_LEVEL_KEY), // TODO: see if '-l' or smtn else
 
-    WITH_ACTIVE_RECORD_SWITCHES ("--" + WITH_ACTIVE_RECORD_KEY),
-    WITH_JAVA_BEANS_SWITCHES    ("--" + WITH_JAVA_BEANS_KEY),
-    WITH_JACKSON_SWITCHES       ("--" + WITH_JACKSON_KEY),
-    WITH_HELPER_METHODS_SWITCHES("--" + WITH_HELPER_METHODS_KEY);
+    /* Flags */
+    WITH_ACTIVE_RECORD_SWITCHES (WITH_ACTIVE_RECORD_KEY),
+    WITH_JAVA_BEANS_SWITCHES    (WITH_JAVA_BEANS_KEY),
+    WITH_JACKSON_SWITCHES       (WITH_JACKSON_KEY),
+    WITH_HELPER_METHODS_SWITCHES(WITH_HELPER_METHODS_KEY),
 
+    SKIP_DIFF_SWITCHES(SKIP_DIFF_KEY),
+    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY);
+
+
+    private final ParamKey paramKey;
     private final String[] switches;
 
-    private ParamSwitches(
+    private ParamSwitches(final ParamKey paramKey,
             final String... switches) {
+        this.paramKey = paramKey;
         this.switches = switches;
+    }
+
+    private ParamSwitches(final String... switches) {
+        this.paramKey = null;
+        this.switches = switches;
+    }
+
+    private ParamSwitches(final ParamKey paramKey) {
+        this.paramKey = paramKey;
+        this.switches = new String[]{"--" + paramKey};
     }
 
     public class SwitchArgument {
@@ -94,4 +130,14 @@ public enum ParamSwitches {
         sb.setLength(sb.length() -1);
         return sb.toString();
     }
+
+    public String[] getSwitches() {
+        return switches;
+    }
+
+    public ParamKey getParamKey() {
+        return paramKey;
+    }
+
+
 }

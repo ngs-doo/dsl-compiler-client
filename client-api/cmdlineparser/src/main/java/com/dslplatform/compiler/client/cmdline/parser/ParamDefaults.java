@@ -9,7 +9,10 @@ public enum ParamDefaults {
     WITH_ACTIVE_RECORD_DEFAULT(true),
     WITH_JAVA_BEANS_DEFAULT(false),
     WITH_JACKSON_DEFAULT(true),
-    WITH_HELPER_METHODS_DEFAULT(true);
+    WITH_HELPER_METHODS_DEFAULT(true),
+
+    SKIP_DIFF_DEFAULT(false),
+    ALLOW_UNSAFE_DEFAULT(true);
 
     public final String defaultValue;
 
