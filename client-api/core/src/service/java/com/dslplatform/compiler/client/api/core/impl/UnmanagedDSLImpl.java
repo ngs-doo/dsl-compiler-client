@@ -62,7 +62,7 @@ public class UnmanagedDSLImpl implements UnmanagedDSL {
             final T result = query.execute(connection);
             connection.commit();
             return result;
-        } catch (final Throwable t) {
+        } catch (final SQLException t) {
             connection.rollback();
             throw t;
         } finally {

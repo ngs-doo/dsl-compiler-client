@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -31,10 +30,6 @@ public class UnmanagedDSLTest {
     public void testGetLastDSL() throws SQLException {
         UnmanagedDSL u = new UnmanagedDSLImpl();
         Migration migration = u.getLastUnmanagedDSL(datasource);
-        for (Map.Entry<String, String> migraiton_dsl : migration.dsls.entrySet()) {
-            System.out.println(migraiton_dsl.getKey());
-            System.out.println(migraiton_dsl.getValue());
-        }
         assertTrue(migration.dsls.get("One.dsl") != null);
         assertTrue(migration.dsls.get("Two.dsl") != null);
     }

@@ -9,47 +9,54 @@ import java.security.cert.CertificateFactory;
 import javax.crypto.Cipher;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 
 public class Tokenizer {
     private final static String algo = "RSA";
     private final static InputStream keyStream = Tokenizer.class.getResourceAsStream("/ngs-rsa.crt.der");
 
     private final static Cipher cipher = setCipher();
-    private static Cipher  setCipher() {
+
+    private static Cipher setCipher() {
         final Cipher cipher;
         try {
-                final CertificateFactory cf = CertificateFactory.getInstance("X509");
+            final CertificateFactory cf = CertificateFactory.getInstance("X509");
 
-                final Certificate cert = cf.generateCertificate(keyStream);
-                final PublicKey pkey = cert.getPublicKey();
+            final Certificate cert = cf.generateCertificate(keyStream);
+            final PublicKey pkey = cert.getPublicKey();
 
-                cipher = Cipher.getInstance(algo);
-                cipher.init(Cipher.ENCRYPT_MODE, pkey);
-            } catch (Exception e) {
-                throw new Error(e);
-            }
+            cipher = Cipher.getInstance(algo);
+            cipher.init(Cipher.ENCRYPT_MODE, pkey);
+        } catch (Exception e) {
+            throw new Error(e);
+        }
         return cipher;
     }
 
-    public static String makeToken(
-            final String username,
-            final String password) {
-        return makeToken(username, password, null);
-    }
-
-    public static String makeToken(
+    private static String makeToken(
             final String username,
             final String password,
             final String projectid) {
         final String noproject = username + ":" + password + ":" + System.currentTimeMillis() / 1000;
         final String toToken = (projectid != null) ? noproject + ":" + projectid : noproject;
         final byte[] message = toToken.getBytes(Charset.forName("UTF-8"));
-
         try {
-            return Base64.encodeBase64String(cipher.doFinal(message));
-        }
-        catch (final Exception e) {
+            return StringUtils.newStringUtf8(Base64.encodeBase64(cipher.doFinal(message), false, false));
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String tokenHeader(
+            final String username,
+            final String password,
+            final String projectid) {
+        return "Token " + Tokenizer.makeToken(username, password, projectid);
+    }
+
+    public static String userTokenHeader(
+            final String username,
+            final String password) {
+        return tokenHeader(username, password, null);
     }
 }

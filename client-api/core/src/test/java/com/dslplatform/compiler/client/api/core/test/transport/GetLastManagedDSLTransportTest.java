@@ -7,22 +7,23 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.*;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class GetLastManagedDSLTransportTest extends HttpTransportImplTest {
 
     @Test
     public void testGetLastManagedDSLRequest() throws IOException {
         final HttpRequest getLastManagedDSLRequest; {
-            final String token = projectToken(validUser, validPassword, validID);
+            final String token = projectToken(validUser, validPassword, validId);
 
-            getLastManagedDSLRequest = httpRequestBuilder.getLastManagedDSL(token, UUID.fromString(validID));
+            getLastManagedDSLRequest = httpRequestBuilder.getLastManagedDSL(token, UUID.fromString(validId));
         }
 
         final HttpResponse response = httpTransport.sendRequest(getLastManagedDSLRequest);
-        assertEquals(400, response.code);
-        assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
-        assertArrayEquals("Project ? not found.".getBytes("UTF-8"), response.body);
+        final String responseBodyStr = new String(response.body, "UTF-8");
+        logger.info("Response: {}", responseBodyStr);
+        assertEquals(200, response.code);
+        assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
+        assertTrue(new String(response.body, "UTF-8").contains("module"));
     }
 }

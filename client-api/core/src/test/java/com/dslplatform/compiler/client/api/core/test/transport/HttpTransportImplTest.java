@@ -5,14 +5,16 @@ import com.dslplatform.compiler.client.api.core.HttpRequestBuilder;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 import com.dslplatform.compiler.client.api.core.impl.HttpTransportImpl;
 import com.dslplatform.compiler.client.api.core.HttpTransport;
-import com.dslplatform.compiler.client.api.core.test.MockUser;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
 import com.dslplatform.compiler.client.util.PathExpander;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class HttpTransportImplTest extends MockUser {
+public class HttpTransportImplTest extends MockData {
+    static Logger logger = LoggerFactory.getLogger(HttpTransportImplTest.class);
     static HttpRequestBuilder httpRequestBuilder;
     static HttpTransport httpTransport;
 

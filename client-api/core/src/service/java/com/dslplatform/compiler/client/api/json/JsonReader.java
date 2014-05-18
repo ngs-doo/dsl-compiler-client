@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.api.json;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ public class JsonReader {
     public JsonReader(final Reader reader) {
         this.reader = reader;
     }
+
 
     private boolean _endOfStream;
     private char _last;
@@ -240,5 +242,39 @@ public class JsonReader {
         }
 
         return map;
+    }
+
+    public Map<String, String> readStringMap() throws IOException {
+        final Map<String, String> map = new LinkedHashMap<String, String>();
+
+        assertRead('{');
+        boolean needComma = false;
+        while (next() != '}') {
+            if (needComma) assertLast(',');
+            final String key = readString();
+            assertRead(':');
+
+            final String value = readString();
+            map.put(key, value);
+            needComma = true;
+        }
+
+        return map;
+    }
+
+    public ArrayList<String> readStringArray() throws IOException {
+        final ArrayList<String> stringArray = new ArrayList<String>();
+
+        assertRead('[');
+        boolean needComma = false;
+        while (next() != ']') {
+            if (needComma) assertLast(',');
+            final String value = readString();
+
+            stringArray.add(value);
+            needComma = true;
+        }
+
+        return stringArray;
     }
 }

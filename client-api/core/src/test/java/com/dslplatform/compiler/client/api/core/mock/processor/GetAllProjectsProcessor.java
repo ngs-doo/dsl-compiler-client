@@ -9,6 +9,7 @@ import java.util.Map;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
 
 public class GetAllProjectsProcessor implements MockProcessor {
     @Override
@@ -28,7 +29,7 @@ public class GetAllProjectsProcessor implements MockProcessor {
             case success:
                 code = 200;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                body = MockData.getProjectsResponse;
                 break;
             case unknown_language:
                 code = 400;

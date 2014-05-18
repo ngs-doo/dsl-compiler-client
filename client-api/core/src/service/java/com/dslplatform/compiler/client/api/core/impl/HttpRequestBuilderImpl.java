@@ -7,7 +7,7 @@ import com.dslplatform.compiler.client.api.core.HttpRequest;
 
 public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     @Override
-    public HttpRequest parseDsl(final String token, final Map<String, String> dsl) {
+    public HttpRequest parseDSL(final String token, final Map<String, String> dsl) {
         final HttpRequest request = HttpRequest.PUT("Alpha.svc/parse", dsl);
 
         request.headers.put("Authorization", Arrays.asList(token));
@@ -117,7 +117,6 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
         request.headers.put("Content-Type", Arrays.asList("application/json"));
         request.headers.put("Accept", Arrays.asList("application/json"));
         return request;
-
     }
 
     @Override
@@ -148,7 +147,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final Set<String> options,
             final Map<String, String> dsl
     ) {
-        final HttpRequest request = HttpRequest.PUT("Alpha.svc/update/" + projectID.toString(), dsl);
+        final HttpRequest request = HttpRequest.POST("Alpha.svc/update/" + projectID.toString(), dsl);
 
         if (targets != null && !targets.isEmpty()) request.query.put("targets", new ArrayList<String>(targets));
         if (options != null && !options.isEmpty()) request.query.put("options", new ArrayList<String>(options));
@@ -171,8 +170,8 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             throw new IllegalArgumentException("New and old dsl must be provided.");
 
         final Map<String, Object> dsl = new LinkedHashMap<String, Object>();
-        dsl.put("NewDsl", newDsl);
-        dsl.put("OldDsl", oldDsl);
+        dsl.put("New", newDsl);
+        dsl.put("Old", oldDsl);
 
         final HttpRequest request = HttpRequest.PUT("Alpha.svc/unmanaged/postgres-migration", dsl);
 
@@ -227,7 +226,8 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
         final HttpRequest request = HttpRequest.PUT("Domain.svc/search/Client.Project", dsl);
 
-        request.headers.put("specification", Arrays.asList("FindByUserAndName"));
+        request.query.put("specification", Arrays.asList("FindByName"));
+
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
         request.headers.put("Accept", Arrays.asList("application/json"));
@@ -257,8 +257,8 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     }
 
     @Override
-    public HttpRequest templateGet(final String token, final String templateName) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/template/" + templateName);
+    public HttpRequest templateGet(final String token, final String projectId, final String templateName) {
+        final HttpRequest request = HttpRequest.GET("Alpha.svc/template/" + projectId + "/" + templateName);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));

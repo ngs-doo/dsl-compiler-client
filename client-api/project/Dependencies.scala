@@ -8,6 +8,12 @@ trait Dependencies {
   val jodaConvert   = "org.joda" % "joda-convert" % "1.5"
 
   val jUnit         = "junit" % "junit" % "4.11"
-  val postgresql    = "org.postgresql" % "postgresql" % "9.3-1101-jdbc4"
-  val commonscodec  = "commons-codec" % "commons-codec" % "1.9"
+  val hamcrast      = "org.hamcrest" % "hamcrest-all" % "1.3"
+
+  val postgresql    = "org.postgresql" % "postgresql" % "9.3-1101-jdbc41"
+
+  val commonsCodec  = "commons-codec" % "commons-codec" % "1.9"
+  val commonsIo     = "commons-io" % "commons-io" % "2.4"
+
+  val config        = "com.typesafe" % "config" % "1.2.1"
 }

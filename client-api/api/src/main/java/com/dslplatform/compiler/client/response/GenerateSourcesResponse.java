@@ -1,21 +1,20 @@
 package com.dslplatform.compiler.client.response;
 
-import java.util.Map;
+import java.util.List;
 
 public class GenerateSourcesResponse extends AuthorizationResponse {
 
-    public Map<String, String> getSources() {
-        return sources;
-    }
+    public final List<Source> sources;
+
+    public final boolean generatedSuccess;
 
     public GenerateSourcesResponse(
             boolean authorized,
             String authorizationErrorMessage,
-            Map<String, String> sources) {
-
+            boolean generateSuccess,
+            List<Source> sources) {
         super(authorized, authorizationErrorMessage);
         this.sources = sources;
+        this.generatedSuccess = generateSuccess;
     }
-
-    private final Map<String, String> sources;
 }

@@ -20,8 +20,8 @@ public final class HttpRequest {
     private HttpRequest(final Method method, final String path, final byte[] body) {
         this.method = method;
         this.path = path;
-        this.headers = new LinkedHashMap<>();
-        this.query = new LinkedHashMap<>();
+        this.headers = new LinkedHashMap<String, List<String>>();
+        this.query = new LinkedHashMap<String, List<String>>();
         this.body = body;
     }
 

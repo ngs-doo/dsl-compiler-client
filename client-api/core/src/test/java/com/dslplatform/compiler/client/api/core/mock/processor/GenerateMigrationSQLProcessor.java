@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.api.core.mock.processor;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -30,7 +31,12 @@ public class GenerateMigrationSQLProcessor implements MockProcessor {
             case success:
                 code = 200;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = new byte[0];
+                final String requestbody = new String(request.body, "UTF-8");
+                if (requestbody.contains("\"Old\":{\"1.dsl\":") && requestbody.contains("\"New\":{\"2.dsl\""))
+                    body = MockData.test_migration_sql_response_1to2;
+                else if (requestbody.contains("\"Old\":{}") && requestbody.contains("\"New\":{\"1.dsl\""))
+                    body = MockData.test_migration_sql_response_to1;
+                else body = "".getBytes();
                 break;
             default:
                 code = 400;

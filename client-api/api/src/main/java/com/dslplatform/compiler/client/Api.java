@@ -12,25 +12,25 @@ public interface Api {
     /**
      * Registers a user and sends an email confirmation to the provided address
      */
-    public void registerUser(
+    public RegisterUserResponse registerUser(
             final String email);
 
     /**
      * Verifies the syntax for the provided DSL
      */
-    public ParseDSLResponse parseDsl(
+    public ParseDSLResponse parseDSL(
             final String token, final Map<String, String> dsl);
 
     /**
      * Creates a test project with a given name
      */
-    public void createTestProject(
+    public CreateTestProjectResponse createTestProject(
             final String token, final String projectName);
 
     /**
      * Creates an external project, given a project name and database connection parameters
      */
-    public void createExternalProject(
+    public CreateExternalProjectResponse createExternalProject(
             final String token,
             final String projectName,
             final String serverName,
@@ -40,20 +40,20 @@ public interface Api {
     /**
      * Downloads the server bundle for a non-test project.
      */
-    public void downloadBinaries(
+    public DownloadBinariesResponse downloadBinaries(
             final String token, final UUID projectID);
 
     /**
      * Downloads just the generated model part of the server-bundle
      * (use-case after an update action)
      */
-    public void downloadGeneratedModel(
+    public DownloadGeneratedModelResponse downloadGeneratedModel(
             final String token, final UUID projectID);
 
     /**
      * Compare new DSL with the last one compiled via DSL Platform
      */
-    public void inspectManagedProjectChanges(
+    public InspectManagedProjectChangesResponse inspectManagedProjectChanges(
             final String token,
             final UUID projectID,
             final Map<String, String> dsl);
@@ -61,13 +61,13 @@ public interface Api {
     /**
      * Retrieve the last DSL for a managed project (test, external)
      */
-    public void getLastManagedDSL(
+    public GetLastManagedDSLResponse getLastManagedDSL(
             final String token, final UUID projectID);
 
     /**
      * Retrieves the configuration file necessary to bootstrap the client libraries.
      */
-    public void getConfig(
+    public GetConfigResponse getConfig(
             final String token,
             final UUID projectID,
             final Set<String> targets,
@@ -78,7 +78,7 @@ public interface Api {
      * Updates a managed project with the new model, performing database migrations
      * In case of a test project, a new Revenj will be deployed as well.
      */
-    public void updateManagedProject(
+    public UpdateManagedProjectResponse updateManagedProject(
             final String token,
             final UUID projectID,
             final Set<String> targets,
@@ -90,16 +90,25 @@ public interface Api {
     /**
      * Creates the migration SQL for deploying a model change on an unmanaged cluster.
      */
-    public void generateMigrationSQL(
+    public GenerateMigrationSQLResponse generateMigrationSQL(
+            String token,
+            String version,
+            Map<String, String> oldDsl,
+            Map<String, String> newDsl);
+
+    /**
+     * Creates the migration SQL for deploying a model change on an unmanaged cluster.
+     * Enquires the dataSource for oldDsl
+     */
+    public GenerateMigrationSQLResponse generateMigrationSQL(
             final String token,
-            final String version,
-            final Map<String, String> oldDsl,
-            final Map<String, String> newDsl);
+            final DataSource dataSource,
+            final Map<String, String> dsl);
 
     /**
      * Retrieves the client source files for the last DSL applied to a managed project
      */
-    public void generateSources(
+    public GenerateSourcesResponse generateSources(
             final String token,
             final UUID projectID,
             final Set<String> targets,
@@ -109,7 +118,7 @@ public interface Api {
     /**
      * Retrieves the client source files for an unmanaged project
      */
-    public void generateUnmanagedSources(
+    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
             final String token,
             final String packageName,
             final Set<String> targets,
@@ -119,37 +128,37 @@ public interface Api {
     /**
      * Retrieves information about a project, given a project name
      */
-    public void getProjectByName(
+    public GetProjectByNameResponse getProjectByName(
             final String token, final String projectName);
 
     /**
      * Retrieves information about all projects for the current user
      */
-    public void getAllProjects(
+    public GetAllProjectsResponse getAllProjects(
             final String token);
 
     /**
      * Renames a project
      */
-    public void renameProject(
+    public RenameProjectResponse renameProject(
             final String token, final String oldName, final String newName);
 
     /**
      * Erases the entire database for a project, replacing it with an empty instance
      */
-    public void cleanProject(
+    public CleanProjectResponse cleanProject(
             final String token);
 
     /**
      * Retrieve a template from the test project document repository
      */
-    public void templateGet(
-            final String token, final String templateName);
+    public TemplateGetResponse templateGet(
+            final String token, final String projectID, final String templateName);
 
     /**
      * Creates a new template in the test project document repository
      */
-    public void templateCreate(
+    public TemplateCreateResponse templateCreate(
             final String token,
             final String templateName,
             final byte[] content);
@@ -157,16 +166,16 @@ public interface Api {
     /**
      * Lists all the templates in a test project's document repository
      */
-    public void templateListAll(
+    public TemplateListAllResponse templateListAll(
             final String token, final UUID projectID);
 
     /**
      * Removes a template from the test project document repository
      */
-    public void templateDelete(
+    public TemplateDeleteResponse templateDelete(
             final String token, final String templateName);
 
-    public boolean doesUnmanagedDSLExits(final DataSource dataSource);
+    public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(final DataSource dataSource);
 
     /**
      * Retrieve all DSLs for an unmanaged project
@@ -183,7 +192,7 @@ public interface Api {
     /**
      * Compare new DSL with the old one, retrieved from the unamanaged database.
      */
-    public void inspectUnmanagedProjectChanges(
+    public InspectUnmanagedProjectChangesResponse inspectUnmanagedProjectChanges(
             final DataSource dataSource,
             final String version,
             final Map<String, String> dsl);
@@ -191,17 +200,32 @@ public interface Api {
     /**
      * Creates an unmanaged project
      */
-    public void createUnmanagedProject(
+    public CreateUnmanagedProjectResponse createUnmanagedProject(
             final String token,
             final DataSource dataSource,
             final String serverName,
             final String applicationName);
 
+    public CreateUnmanagedServerResponse createUnmanagedServer(
+            final String token,
+            final DataSource dataSource,
+            final String packageName,
+            final Set<String> targets,
+            final Set<String> options,
+            final Map<String, String> dsl);
     /**
      * Compare new DSL with the old one, retrieved from the unamanaged database.
      */
-    public void upgradeUnmanagedDatabase(
+    public UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabase(
             final DataSource dataSource,
-            final String version,
             final List<String> migration);
+
+
+    public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
+            final String token,
+            final DataSource dataSource,
+            final String packageName,
+            final Set<String> targets,
+            final Set<String> options,
+            final Map<String, String> dsl);
 }

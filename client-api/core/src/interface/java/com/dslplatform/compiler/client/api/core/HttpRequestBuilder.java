@@ -13,7 +13,7 @@ public interface HttpRequestBuilder {
     /**
      * Verifies the syntax for the provided DSL
      */
-    public HttpRequest parseDsl(final String token, final Map<String, String> dsl);
+    public HttpRequest parseDSL(final String token, final Map<String, String> dsl);
 
     /**
      * Creates a test project with a given name
@@ -129,7 +129,7 @@ public interface HttpRequestBuilder {
     /**
      * Retrieve a template from the test project document repository
      */
-    public HttpRequest templateGet(final String token, final String templateName);
+    public HttpRequest templateGet(final String token, final String projectId, final String templateName);
 
     /**
      * Creates a new template in the test project document repository

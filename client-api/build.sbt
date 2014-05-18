@@ -22,3 +22,5 @@ credentials in ThisBuild ++= {
   val creds = Path.userHome / ".config" / "dsl-compiler-client" / "nexus.config"
   if (creds.exists) Some(Credentials(creds)) else None
 }.toSeq
+
+packagedArtifacts                 := Map.empty

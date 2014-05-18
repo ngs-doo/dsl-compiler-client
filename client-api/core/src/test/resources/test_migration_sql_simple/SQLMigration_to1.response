@@ -1,0 +1,428 @@
+/*MIGRATION_DESCRIPTION
+--CREATE: myModule-A
+New object A will be created in schema myModule
+--CREATE: myModule-A-ID
+New property ID will be created for A in myModule
+MIGRATION_DESCRIPTION*/
+
+DO $$ BEGIN
+	IF EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = '-NGS-' AND c.relname = 'database_setting') THEN	
+		IF EXISTS(SELECT * FROM "-NGS-".Database_Setting WHERE Key ILIKE 'mode' AND NOT Value ILIKE 'unsafe') THEN
+			RAISE EXCEPTION 'Database upgrade is forbidden. Change database mode to allow upgrade';
+		END IF;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$
+DECLARE script VARCHAR;
+BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_namespace WHERE nspname = '-NGS-') THEN
+		CREATE SCHEMA "-NGS-";
+		COMMENT ON SCHEMA "-NGS-" IS 'NGS generated';
+	END IF;
+	IF NOT EXISTS(SELECT * FROM pg_namespace WHERE nspname = 'public') THEN
+		CREATE SCHEMA public;
+		COMMENT ON SCHEMA public IS 'NGS generated';
+	END IF;
+	SELECT array_to_string(array_agg('DROP VIEW IF EXISTS ' || quote_ident(n.nspname) || '.' || quote_ident(cl.relname) || ' CASCADE;'), '')
+	INTO script
+	FROM pg_class cl
+	INNER JOIN pg_namespace n ON cl.relnamespace = n.oid
+	INNER JOIN pg_description d ON d.objoid = cl.oid
+	WHERE cl.relkind = 'v' AND d.description LIKE 'NGS volatile%';
+	IF length(script) > 0 THEN
+		EXECUTE script;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS "-NGS-".Database_Migration
+(
+	Ordinal SERIAL PRIMARY KEY,
+	Dsls TEXT,
+	Implementations BYTEA,
+	Version VARCHAR,
+	Applied_At TIMESTAMPTZ DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE OR REPLACE FUNCTION "-NGS-".Load_Last_Migration()
+RETURNS "-NGS-".Database_Migration AS
+$$
+SELECT m FROM "-NGS-".Database_Migration m
+ORDER BY Ordinal DESC 
+LIMIT 1
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Persist_Concepts(dsls TEXT, implementations BYTEA, version VARCHAR)
+  RETURNS void AS
+$$
+BEGIN
+	INSERT INTO "-NGS-".Database_Migration(Dsls, Implementations, Version) VALUES(dsls, implementations, version);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Generate_Uri2(text, text) RETURNS text AS 
+$$
+BEGIN
+	RETURN replace(replace($1, '\','\\'), '/', '\/')||'/'||replace(replace($2, '\','\\'), '/', '\/');
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Generate_Uri3(text, text, text) RETURNS text AS 
+$$
+BEGIN
+	RETURN replace(replace($1, '\','\\'), '/', '\/')||'/'||replace(replace($2, '\','\\'), '/', '\/')||'/'||replace(replace($3, '\','\\'), '/', '\/');
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Generate_Uri4(text, text, text, text) RETURNS text AS 
+$$
+BEGIN
+	RETURN replace(replace($1, '\','\\'), '/', '\/')||'/'||replace(replace($2, '\','\\'), '/', '\/')||'/'||replace(replace($3, '\','\\'), '/', '\/')||'/'||replace(replace($4, '\','\\'), '/', '\/');
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Generate_Uri5(text, text, text, text, text) RETURNS text AS 
+$$
+BEGIN
+	RETURN replace(replace($1, '\','\\'), '/', '\/')||'/'||replace(replace($2, '\','\\'), '/', '\/')||'/'||replace(replace($3, '\','\\'), '/', '\/')||'/'||replace(replace($4, '\','\\'), '/', '\/')||'/'||replace(replace($5, '\','\\'), '/', '\/');
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Generate_Uri(text[]) RETURNS text AS 
+$$
+BEGIN
+	RETURN (SELECT array_to_string(array_agg(replace(replace(u, '\','\\'), '/', '\/')), '/') FROM unnest($1) u);
+END;
+$$ LANGUAGE PLPGSQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Safe_Notify(target varchar, name varchar, operation varchar, uris varchar[]) RETURNS VOID AS
+$$
+DECLARE message VARCHAR;
+DECLARE array_size INT;
+BEGIN
+	array_size = array_upper(uris, 1);
+	message = name || ':' || operation || ':' || uris::TEXT;
+	IF (array_size > 0 and length(message) < 8000) THEN 
+		PERFORM pg_notify(target, message);
+	ELSEIF (array_size > 1) THEN
+		PERFORM "-NGS-".Safe_Notify(target, name, operation, (SELECT array_agg(uris[i]) FROM generate_series(1, (array_size+1)/2) i));
+		PERFORM "-NGS-".Safe_Notify(target, name, operation, (SELECT array_agg(uris[i]) FROM generate_series(array_size/2+1, array_size) i));
+	ELSEIF (array_size = 1) THEN
+		RAISE EXCEPTION 'uri can''t be longer than 8000 characters';
+	END IF;	
+END
+$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Split_Uri(s text) RETURNS TEXT[] AS
+$$
+DECLARE i int;
+DECLARE pos int;
+DECLARE len int;
+DECLARE res TEXT[];
+DECLARE cur TEXT;
+DECLARE c CHAR(1);
+BEGIN
+	pos = 0;
+	i = 1;
+	cur = '';
+	len = length(s);
+	LOOP
+		pos = pos + 1;
+		EXIT WHEN pos > len;
+		c = substr(s, pos, 1);
+		IF c = '/' THEN
+			res[i] = cur;
+			i = i + 1;
+			cur = '';
+		ELSE
+			IF c = '\' THEN
+				pos = pos + 1;
+				c = substr(s, pos, 1);
+			END IF;		
+			cur = cur || c;
+		END IF;
+	END LOOP;
+	res[i] = cur;
+	return res;
+END
+$$ LANGUAGE plpgsql SECURITY DEFINER IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "-NGS-".Load_Type_Info(
+	OUT type_schema character varying, 
+	OUT type_name character varying, 
+	OUT column_name character varying, 
+	OUT column_schema character varying,
+	OUT column_type character varying, 
+	OUT column_index smallint, 
+	OUT is_not_null boolean,
+	OUT is_ngs_generated boolean)
+  RETURNS SETOF record AS
+$BODY$
+SELECT 
+	ns.nspname::varchar, 
+	cl.relname::varchar, 
+	atr.attname::varchar, 
+	ns_ref.nspname::varchar,
+	typ.typname::varchar, 
+	(SELECT COUNT(*) + 1
+	FROM pg_attribute atr_ord
+	WHERE 
+		atr.attrelid = atr_ord.attrelid
+		AND atr_ord.attisdropped = false
+		AND atr_ord.attnum > 0
+		AND atr_ord.attnum < atr.attnum)::smallint, 
+	atr.attnotnull,
+	coalesce(d.description LIKE 'NGS generated%', false)
+FROM 
+	pg_attribute atr
+	INNER JOIN pg_class cl ON atr.attrelid = cl.oid
+	INNER JOIN pg_namespace ns ON cl.relnamespace = ns.oid
+	INNER JOIN pg_type typ ON atr.atttypid = typ.oid
+	INNER JOIN pg_namespace ns_ref ON typ.typnamespace = ns_ref.oid
+	LEFT JOIN pg_description d ON d.objoid = cl.oid
+								AND d.objsubid = atr.attnum
+WHERE
+	(cl.relkind = 'r' OR cl.relkind = 'v' OR cl.relkind = 'c')
+	AND ns.nspname NOT LIKE 'pg_%'
+	AND ns.nspname != 'information_schema'
+	AND atr.attnum > 0
+	AND atr.attisdropped = FALSE
+ORDER BY 1, 2, 6
+$BODY$
+  LANGUAGE SQL STABLE;
+
+CREATE TABLE IF NOT EXISTS "-NGS-".Antlr_Grammar_Cache
+(
+	hash_key TEXT PRIMARY KEY,
+	grammar TEXT NOT NULL,
+	dependencies TEXT[],
+	assembly BYTEA NOT NULL,
+	time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+;
+
+CREATE TABLE IF NOT EXISTS "-NGS-".Database_Setting
+(
+	Key VARCHAR PRIMARY KEY,
+	Value TEXT NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION "-NGS-".Create_Type_Cast(function VARCHAR, schema VARCHAR, from_name VARCHAR, to_name VARCHAR)
+RETURNS void
+AS
+$$
+DECLARE header VARCHAR;
+DECLARE source VARCHAR;
+DECLARE footer VARCHAR;
+DECLARE col_name VARCHAR;
+DECLARE type VARCHAR = '"' || schema || '"."' || to_name || '"';
+BEGIN
+	header = 'CREATE OR REPLACE FUNCTION ' || function || '
+RETURNS ' || type || '
+AS
+$BODY$
+SELECT ROW(';
+	footer = ')::' || type || '
+$BODY$ IMMUTABLE LANGUAGE sql;';
+	source = '';
+	FOR col_name IN 
+		SELECT 
+			CASE WHEN 
+				EXISTS (SELECT * FROM "-NGS-".Load_Type_Info() f 
+					WHERE f.type_schema = schema AND f.type_name = from_name AND f.column_name = t.column_name)
+				OR EXISTS(SELECT * FROM pg_proc p JOIN pg_type t_in ON p.proargtypes[0] = t_in.oid 
+					JOIN pg_namespace n_in ON t_in.typnamespace = n_in.oid JOIN pg_namespace n ON p.pronamespace = n.oid
+					WHERE array_upper(p.proargtypes, 1) = 0 AND n.nspname = 'public' AND t_in.typname = from_name AND p.proname = t.column_name) THEN t.column_name
+				ELSE null
+			END
+		FROM "-NGS-".Load_Type_Info() t
+		WHERE 
+			t.type_schema = schema 
+			AND t.type_name = to_name
+		ORDER BY t.column_index 
+	LOOP
+		IF col_name IS NULL THEN
+			source = source || 'null, ';
+		ELSE
+			source = source || '$1."' || col_name || '", ';
+		END IF;
+	END LOOP;
+	IF (LENGTH(source) > 0) THEN 
+		source = SUBSTRING(source, 1, LENGTH(source) - 2);
+	END IF;
+	EXECUTE (header || source || footer);
+END
+$$ LANGUAGE plpgsql;;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_namespace WHERE nspname = 'myModule') THEN
+		CREATE SCHEMA "myModule";
+		COMMENT ON SCHEMA "myModule" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'myModule' AND t.typname = '-ngs_A_type-') THEN	
+		CREATE TYPE "myModule"."-ngs_A_type-" AS ();
+		COMMENT ON TYPE "myModule"."-ngs_A_type-" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'myModule' AND c.relname = 'A') THEN	
+		CREATE TABLE "myModule"."A" ();
+		COMMENT ON TABLE "myModule"."A" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'myModule' AND c.relname = 'A_sequence') THEN
+		CREATE SEQUENCE "myModule"."A_sequence";
+		COMMENT ON SEQUENCE "myModule"."A_sequence" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_A_type-' AND column_name = 'URI') THEN
+		ALTER TYPE "myModule"."-ngs_A_type-" ADD ATTRIBUTE "URI" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_A_type-"."URI" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_A_type-' AND column_name = 'ID') THEN
+		ALTER TYPE "myModule"."-ngs_A_type-" ADD ATTRIBUTE "ID" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_A_type-"."ID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'A' AND column_name = 'ID') THEN
+		ALTER TABLE "myModule"."A" ADD COLUMN "ID" INT;
+		COMMENT ON COLUMN "myModule"."A"."ID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW "myModule"."A_entity" AS
+SELECT CAST(_entity."ID" as TEXT) AS "URI" , _entity."ID"
+FROM
+	"myModule"."A" _entity
+	;
+COMMENT ON VIEW "myModule"."A_entity" IS 'NGS volatile';
+
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-") RETURNS "myModule"."A_entity" AS $$ SELECT $1::text::"myModule"."A_entity" $$ IMMUTABLE LANGUAGE sql;
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."A_entity") RETURNS "myModule"."-ngs_A_type-" AS $$ SELECT $1::text::"myModule"."-ngs_A_type-" $$ IMMUTABLE LANGUAGE sql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_cast c JOIN pg_type s ON c.castsource = s.oid JOIN pg_type t ON c.casttarget = t.oid JOIN pg_namespace n ON n.oid = s.typnamespace AND n.oid = t.typnamespace
+					WHERE n.nspname = 'myModule' AND s.typname = 'A_entity' AND t.typname = '-ngs_A_type-') THEN
+		CREATE CAST ("myModule"."-ngs_A_type-" AS "myModule"."A_entity") WITH FUNCTION "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-") AS IMPLICIT;
+		CREATE CAST ("myModule"."A_entity" AS "myModule"."-ngs_A_type-") WITH FUNCTION "myModule"."cast_A_to_type"("myModule"."A_entity") AS IMPLICIT;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "myModule"."persist_A"(
+IN _inserted "myModule"."A_entity"[], IN _updated_original "myModule"."A_entity"[], IN _updated_new "myModule"."A_entity"[], IN _deleted "myModule"."A_entity"[]) 
+	RETURNS VOID AS
+$$
+DECLARE cnt int;
+DECLARE uri VARCHAR;
+DECLARE tmp record;
+DECLARE _update_count int = array_upper(_updated_new, 1);
+DECLARE _delete_count int = array_upper(_deleted, 1);
+
+BEGIN
+
+	SET CONSTRAINTS ALL DEFERRED;
+
+	
+
+	INSERT INTO "myModule"."A" ("ID")
+	SELECT _i."ID" 
+	FROM unnest(_inserted) _i;
+
+	
+
+		
+	UPDATE "myModule"."A" as tbl SET 
+		"ID" = _updated_new[_i]."ID"
+	FROM generate_series(1, _update_count) _i
+	WHERE
+		tbl."ID" = _updated_original[_i]."ID";
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _update_count THEN 
+		RAISE EXCEPTION 'Updated % row(s). Expected to update % row(s).', cnt, _update_count;
+	END IF;
+
+	
+
+	DELETE FROM "myModule"."A"
+	WHERE ("ID") IN (SELECT _d."ID" FROM unnest(_deleted) _d);
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _delete_count THEN 
+		RAISE EXCEPTION 'Deleted % row(s). Expected to delete % row(s).', cnt, _delete_count;
+	END IF;
+
+	
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Insert', (SELECT array_agg("URI") FROM unnest(_inserted)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Update', (SELECT array_agg("URI") FROM unnest(_updated_original)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Change', (SELECT array_agg(_updated_new[_i]."URI") FROM generate_series(1, _update_count) _i WHERE _updated_original[_i]."URI" != _updated_new[_i]."URI"));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Delete', (SELECT array_agg("URI") FROM unnest(_deleted)));
+
+	SET CONSTRAINTS ALL IMMEDIATE;
+
+END
+$$
+LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE VIEW "myModule"."A_unprocessed_events" AS
+SELECT _aggregate."ID"
+FROM
+	"myModule"."A_entity" _aggregate
+;
+COMMENT ON VIEW "myModule"."A_unprocessed_events" IS 'NGS volatile';
+
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_A_to_type"("myModule"."-ngs_A_type-")', 'myModule', '-ngs_A_type-', 'A_entity');
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_A_to_type"("myModule"."A_entity")', 'myModule', 'A_entity', '-ngs_A_type-');
+UPDATE "myModule"."A" SET "ID" = 0 WHERE "ID" IS NULL;
+
+DO $$ 
+DECLARE _pk VARCHAR;
+BEGIN
+	IF EXISTS(SELECT * FROM pg_index i JOIN pg_class c ON i.indrelid = c.oid JOIN pg_namespace n ON c.relnamespace = n.oid WHERE i.indisprimary AND n.nspname = 'myModule' AND c.relname = 'A') THEN
+		SELECT array_to_string(array_agg(sq.attname), ', ') INTO _pk
+		FROM
+		(
+			SELECT atr.attname
+			FROM pg_index i
+			JOIN pg_class c ON i.indrelid = c.oid 
+			JOIN pg_attribute atr ON atr.attrelid = c.oid 
+			WHERE 
+				c.oid = '"myModule"."A"'::regclass
+				AND atr.attnum = any(i.indkey)
+				AND indisprimary
+			ORDER BY (SELECT i FROM generate_subscripts(i.indkey,1) g(i) WHERE i.indkey[i] = atr.attnum LIMIT 1)
+		) sq;
+		IF ('ID' != _pk) THEN
+			RAISE EXCEPTION 'Different primary key defined for table myModule.A. Expected primary key: ID. Found: %', _pk;
+		END IF;
+	ELSE
+		ALTER TABLE "myModule"."A" ADD CONSTRAINT "pk_A" PRIMARY KEY("ID");
+		COMMENT ON CONSTRAINT "pk_A" ON "myModule"."A" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+ALTER TABLE "myModule"."A" ALTER "ID" SET NOT NULL;
+
+DO $$ 
+BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'myModule' AND c.relname = 'A_ID_seq' AND c.relkind = 'S') THEN
+		CREATE SEQUENCE "myModule"."A_ID_seq";
+		ALTER TABLE "myModule"."A"	ALTER COLUMN "ID" SET DEFAULT NEXTVAL('"myModule"."A_ID_seq"');
+		PERFORM SETVAL('"myModule"."A_ID_seq"', COALESCE(MAX("ID"), 0) + 1000) FROM "myModule"."A";
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+SELECT "-NGS-".Persist_Concepts('"dsl.dsl"=>"module myModule { root A;}
+"', '\x','1.0.1.24037')

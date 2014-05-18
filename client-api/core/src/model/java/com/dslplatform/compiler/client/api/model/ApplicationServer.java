@@ -13,4 +13,23 @@ public class ApplicationServer {
         this.name = name;
         this.pool = pool;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ApplicationServer that = (ApplicationServer) o;
+
+        if (host != null ? !host.equals(that.host) : that.host != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (pool != null ? !pool.equals(that.pool) : that.pool != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
+    }
 }

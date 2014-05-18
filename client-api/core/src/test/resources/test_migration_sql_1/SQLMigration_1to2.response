@@ -1,0 +1,568 @@
+/*MIGRATION_DESCRIPTION
+--CREATE: myModule-A-i
+New property i will be created for A in myModule
+--CREATE: myModule-A-s
+New property s will be created for A in myModule
+--CREATE: myModule-A-f
+New property f will be created for A in myModule
+--CREATE: myModule-B
+New object B will be created in schema myModule
+--CREATE: myModule-B-ID
+New property ID will be created for B in myModule
+--CREATE: myModule-B-aID
+New property aID will be created for B in myModule
+--CREATE: myModule-B-i
+New property i will be created for B in myModule
+--CREATE: myModule-B-s
+New property s will be created for B in myModule
+--CREATE: myModule-B-f
+New property f will be created for B in myModule
+MIGRATION_DESCRIPTION*/
+
+DO $$ BEGIN
+	IF EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = '-NGS-' AND c.relname = 'database_setting') THEN	
+		IF EXISTS(SELECT * FROM "-NGS-".Database_Setting WHERE Key ILIKE 'mode' AND NOT Value ILIKE 'unsafe') THEN
+			RAISE EXCEPTION 'Database upgrade is forbidden. Change database mode to allow upgrade';
+		END IF;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-") RETURNS "myModule"."A_entity" AS $$ SELECT $1::text::"myModule"."A_entity" $$ IMMUTABLE LANGUAGE sql;
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."A_entity") RETURNS "myModule"."-ngs_A_type-" AS $$ SELECT $1::text::"myModule"."-ngs_A_type-" $$ IMMUTABLE LANGUAGE sql;
+DROP VIEW IF EXISTS "myModule"."A_unprocessed_events";
+
+DROP FUNCTION IF EXISTS "myModule"."persist_A"("myModule"."A_entity"[], "myModule"."A_entity"[], "myModule"."A_entity"[], "myModule"."A_entity"[]);;
+
+DROP CAST IF EXISTS ("myModule"."-ngs_A_type-" AS "myModule"."A_entity");
+DROP CAST IF EXISTS ("myModule"."A_entity" AS "myModule"."-ngs_A_type-");
+DROP FUNCTION IF EXISTS "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-");
+DROP FUNCTION IF EXISTS "myModule"."cast_A_to_type"("myModule"."A_entity");
+DROP VIEW IF EXISTS "myModule"."A_entity";
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'myModule' AND t.typname = '-ngs_B_type-') THEN	
+		CREATE TYPE "myModule"."-ngs_B_type-" AS ();
+		COMMENT ON TYPE "myModule"."-ngs_B_type-" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'myModule' AND c.relname = 'B') THEN	
+		CREATE TABLE "myModule"."B" ();
+		COMMENT ON TABLE "myModule"."B" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'myModule' AND c.relname = 'B_sequence') THEN
+		CREATE SEQUENCE "myModule"."B_sequence";
+		COMMENT ON SEQUENCE "myModule"."B_sequence" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE n.nspname = 'myModule' AND t.typname = '-ngs_snowBA_type-') THEN	
+		CREATE TYPE "myModule"."-ngs_snowBA_type-" AS ();
+		COMMENT ON TYPE "myModule"."-ngs_snowBA_type-" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_A_type-' AND column_name = 'i') THEN
+		ALTER TYPE "myModule"."-ngs_A_type-" ADD ATTRIBUTE "i" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_A_type-"."i" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'A' AND column_name = 'i') THEN
+		ALTER TABLE "myModule"."A" ADD COLUMN "i" INT;
+		COMMENT ON COLUMN "myModule"."A"."i" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_A_type-' AND column_name = 's') THEN
+		ALTER TYPE "myModule"."-ngs_A_type-" ADD ATTRIBUTE "s" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_A_type-"."s" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'A' AND column_name = 's') THEN
+		ALTER TABLE "myModule"."A" ADD COLUMN "s" VARCHAR;
+		COMMENT ON COLUMN "myModule"."A"."s" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_A_type-' AND column_name = 'f') THEN
+		ALTER TYPE "myModule"."-ngs_A_type-" ADD ATTRIBUTE "f" REAL;
+		COMMENT ON COLUMN "myModule"."-ngs_A_type-"."f" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'A' AND column_name = 'f') THEN
+		ALTER TABLE "myModule"."A" ADD COLUMN "f" REAL;
+		COMMENT ON COLUMN "myModule"."A"."f" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'URI') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "URI" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."URI" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'ID') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "ID" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."ID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'B' AND column_name = 'ID') THEN
+		ALTER TABLE "myModule"."B" ADD COLUMN "ID" INT;
+		COMMENT ON COLUMN "myModule"."B"."ID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'aURI') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "aURI" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."aURI" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'aID') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "aID" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."aID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'B' AND column_name = 'aID') THEN
+		ALTER TABLE "myModule"."B" ADD COLUMN "aID" INT;
+		COMMENT ON COLUMN "myModule"."B"."aID" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'i') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "i" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."i" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'B' AND column_name = 'i') THEN
+		ALTER TABLE "myModule"."B" ADD COLUMN "i" INT;
+		COMMENT ON COLUMN "myModule"."B"."i" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 's') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "s" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."s" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'B' AND column_name = 's') THEN
+		ALTER TABLE "myModule"."B" ADD COLUMN "s" VARCHAR;
+		COMMENT ON COLUMN "myModule"."B"."s" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_B_type-' AND column_name = 'f') THEN
+		ALTER TYPE "myModule"."-ngs_B_type-" ADD ATTRIBUTE "f" REAL;
+		COMMENT ON COLUMN "myModule"."-ngs_B_type-"."f" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = 'B' AND column_name = 'f') THEN
+		ALTER TABLE "myModule"."B" ADD COLUMN "f" REAL;
+		COMMENT ON COLUMN "myModule"."B"."f" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'URI') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "URI" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."URI" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'ai') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "ai" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."ai" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'as') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "as" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."as" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'af') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "af" REAL;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."af" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'i') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "i" INT;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."i" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 's') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "s" VARCHAR;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."s" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM "-NGS-".Load_Type_Info() WHERE type_schema = 'myModule' AND type_name = '-ngs_snowBA_type-' AND column_name = 'f') THEN
+		ALTER TYPE "myModule"."-ngs_snowBA_type-" ADD ATTRIBUTE "f" REAL;
+		COMMENT ON COLUMN "myModule"."-ngs_snowBA_type-"."f" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW "myModule"."A_entity" AS
+SELECT CAST(_entity."ID" as TEXT) AS "URI" , _entity."ID", _entity."i", _entity."s", _entity."f"
+FROM
+	"myModule"."A" _entity
+	;
+COMMENT ON VIEW "myModule"."A_entity" IS 'NGS volatile';
+
+CREATE OR REPLACE VIEW "myModule"."B_entity" AS
+SELECT CAST(_entity."ID" as TEXT) AS "URI" , _entity."ID", CAST(_entity."aID" as TEXT) AS "aURI", _entity."aID", _entity."i", _entity."s", _entity."f"
+FROM
+	"myModule"."B" _entity
+	;
+COMMENT ON VIEW "myModule"."B_entity" IS 'NGS volatile';
+
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-") RETURNS "myModule"."A_entity" AS $$ SELECT $1::text::"myModule"."A_entity" $$ IMMUTABLE LANGUAGE sql;
+CREATE OR REPLACE FUNCTION "myModule"."cast_A_to_type"("myModule"."A_entity") RETURNS "myModule"."-ngs_A_type-" AS $$ SELECT $1::text::"myModule"."-ngs_A_type-" $$ IMMUTABLE LANGUAGE sql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_cast c JOIN pg_type s ON c.castsource = s.oid JOIN pg_type t ON c.casttarget = t.oid JOIN pg_namespace n ON n.oid = s.typnamespace AND n.oid = t.typnamespace
+					WHERE n.nspname = 'myModule' AND s.typname = 'A_entity' AND t.typname = '-ngs_A_type-') THEN
+		CREATE CAST ("myModule"."-ngs_A_type-" AS "myModule"."A_entity") WITH FUNCTION "myModule"."cast_A_to_type"("myModule"."-ngs_A_type-") AS IMPLICIT;
+		CREATE CAST ("myModule"."A_entity" AS "myModule"."-ngs_A_type-") WITH FUNCTION "myModule"."cast_A_to_type"("myModule"."A_entity") AS IMPLICIT;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "myModule"."persist_A"(
+IN _inserted "myModule"."A_entity"[], IN _updated_original "myModule"."A_entity"[], IN _updated_new "myModule"."A_entity"[], IN _deleted "myModule"."A_entity"[]) 
+	RETURNS VOID AS
+$$
+DECLARE cnt int;
+DECLARE uri VARCHAR;
+DECLARE tmp record;
+DECLARE _update_count int = array_upper(_updated_new, 1);
+DECLARE _delete_count int = array_upper(_deleted, 1);
+
+BEGIN
+
+	SET CONSTRAINTS ALL DEFERRED;
+
+	
+
+	INSERT INTO "myModule"."A" ("ID", "i", "s", "f")
+	SELECT _i."ID", _i."i", _i."s", _i."f" 
+	FROM unnest(_inserted) _i;
+
+	
+
+		
+	UPDATE "myModule"."A" as tbl SET 
+		"ID" = _updated_new[_i]."ID", "i" = _updated_new[_i]."i", "s" = _updated_new[_i]."s", "f" = _updated_new[_i]."f"
+	FROM generate_series(1, _update_count) _i
+	WHERE
+		tbl."ID" = _updated_original[_i]."ID";
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _update_count THEN 
+		RAISE EXCEPTION 'Updated % row(s). Expected to update % row(s).', cnt, _update_count;
+	END IF;
+
+	
+
+	DELETE FROM "myModule"."A"
+	WHERE ("ID") IN (SELECT _d."ID" FROM unnest(_deleted) _d);
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _delete_count THEN 
+		RAISE EXCEPTION 'Deleted % row(s). Expected to delete % row(s).', cnt, _delete_count;
+	END IF;
+
+	
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Insert', (SELECT array_agg("URI") FROM unnest(_inserted)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Update', (SELECT array_agg("URI") FROM unnest(_updated_original)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Change', (SELECT array_agg(_updated_new[_i]."URI") FROM generate_series(1, _update_count) _i WHERE _updated_original[_i]."URI" != _updated_new[_i]."URI"));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.A', 'Delete', (SELECT array_agg("URI") FROM unnest(_deleted)));
+
+	SET CONSTRAINTS ALL IMMEDIATE;
+
+END
+$$
+LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE VIEW "myModule"."A_unprocessed_events" AS
+SELECT _aggregate."ID"
+FROM
+	"myModule"."A_entity" _aggregate
+;
+COMMENT ON VIEW "myModule"."A_unprocessed_events" IS 'NGS volatile';
+
+CREATE OR REPLACE FUNCTION "myModule"."cast_B_to_type"("myModule"."-ngs_B_type-") RETURNS "myModule"."B_entity" AS $$ SELECT $1::text::"myModule"."B_entity" $$ IMMUTABLE LANGUAGE sql;
+CREATE OR REPLACE FUNCTION "myModule"."cast_B_to_type"("myModule"."B_entity") RETURNS "myModule"."-ngs_B_type-" AS $$ SELECT $1::text::"myModule"."-ngs_B_type-" $$ IMMUTABLE LANGUAGE sql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_cast c JOIN pg_type s ON c.castsource = s.oid JOIN pg_type t ON c.casttarget = t.oid JOIN pg_namespace n ON n.oid = s.typnamespace AND n.oid = t.typnamespace
+					WHERE n.nspname = 'myModule' AND s.typname = 'B_entity' AND t.typname = '-ngs_B_type-') THEN
+		CREATE CAST ("myModule"."-ngs_B_type-" AS "myModule"."B_entity") WITH FUNCTION "myModule"."cast_B_to_type"("myModule"."-ngs_B_type-") AS IMPLICIT;
+		CREATE CAST ("myModule"."B_entity" AS "myModule"."-ngs_B_type-") WITH FUNCTION "myModule"."cast_B_to_type"("myModule"."B_entity") AS IMPLICIT;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "myModule"."persist_B"(
+IN _inserted "myModule"."B_entity"[], IN _updated_original "myModule"."B_entity"[], IN _updated_new "myModule"."B_entity"[], IN _deleted "myModule"."B_entity"[]) 
+	RETURNS VOID AS
+$$
+DECLARE cnt int;
+DECLARE uri VARCHAR;
+DECLARE tmp record;
+DECLARE _update_count int = array_upper(_updated_new, 1);
+DECLARE _delete_count int = array_upper(_deleted, 1);
+
+BEGIN
+
+	SET CONSTRAINTS ALL DEFERRED;
+
+	
+
+	INSERT INTO "myModule"."B" ("ID", "aID", "i", "s", "f")
+	SELECT _i."ID", _i."aID", _i."i", _i."s", _i."f" 
+	FROM unnest(_inserted) _i;
+
+	
+
+		
+	UPDATE "myModule"."B" as tbl SET 
+		"ID" = _updated_new[_i]."ID", "aID" = _updated_new[_i]."aID", "i" = _updated_new[_i]."i", "s" = _updated_new[_i]."s", "f" = _updated_new[_i]."f"
+	FROM generate_series(1, _update_count) _i
+	WHERE
+		tbl."ID" = _updated_original[_i]."ID";
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _update_count THEN 
+		RAISE EXCEPTION 'Updated % row(s). Expected to update % row(s).', cnt, _update_count;
+	END IF;
+
+	
+
+	DELETE FROM "myModule"."B"
+	WHERE ("ID") IN (SELECT _d."ID" FROM unnest(_deleted) _d);
+
+	GET DIAGNOSTICS cnt = ROW_COUNT;
+	IF cnt != _delete_count THEN 
+		RAISE EXCEPTION 'Deleted % row(s). Expected to delete % row(s).', cnt, _delete_count;
+	END IF;
+
+	
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.B', 'Insert', (SELECT array_agg("URI") FROM unnest(_inserted)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.B', 'Update', (SELECT array_agg("URI") FROM unnest(_updated_original)));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.B', 'Change', (SELECT array_agg(_updated_new[_i]."URI") FROM generate_series(1, _update_count) _i WHERE _updated_original[_i]."URI" != _updated_new[_i]."URI"));
+	PERFORM "-NGS-".Safe_Notify('aggregate_roots', 'myModule.B', 'Delete', (SELECT array_agg("URI") FROM unnest(_deleted)));
+
+	SET CONSTRAINTS ALL IMMEDIATE;
+
+END
+$$
+LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE VIEW "myModule"."B_unprocessed_events" AS
+SELECT _aggregate."ID"
+FROM
+	"myModule"."B_entity" _aggregate
+;
+COMMENT ON VIEW "myModule"."B_unprocessed_events" IS 'NGS volatile';
+
+CREATE OR REPLACE FUNCTION "a"("myModule"."B_entity") RETURNS "myModule"."A_entity" AS $$ 
+SELECT r FROM "myModule"."A_entity" r WHERE r."ID" = $1."aID"
+$$ LANGUAGE SQL;
+
+CREATE OR REPLACE VIEW "myModule"."snowBA_snowflake" AS
+SELECT CAST(_entity."ID" as TEXT) as "URI" , ("_entity_a")."i" AS "ai", ("_entity_a")."s" AS "as", ("_entity_a")."f" AS "af", ("_entity")."i" AS "i", ("_entity")."s" AS "s", ("_entity")."f" AS "f"
+FROM
+	"myModule"."B_entity" _entity
+	
+	
+	INNER JOIN "myModule"."A_entity" "_entity_a" ON "_entity_a"."ID" = "_entity"."aID";
+COMMENT ON VIEW "myModule"."snowBA_snowflake" IS 'NGS volatile';
+
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_A_to_type"("myModule"."-ngs_A_type-")', 'myModule', '-ngs_A_type-', 'A_entity');
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_A_to_type"("myModule"."A_entity")', 'myModule', 'A_entity', '-ngs_A_type-');
+
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_B_to_type"("myModule"."-ngs_B_type-")', 'myModule', '-ngs_B_type-', 'B_entity');
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_B_to_type"("myModule"."B_entity")', 'myModule', 'B_entity', '-ngs_B_type-');
+
+CREATE OR REPLACE FUNCTION "myModule"."compare_B_snowflake_and_entity"
+("myModule"."snowBA_snowflake", "myModule"."B_entity")
+RETURNS bool AS
+$$
+SELECT $1."URI" = $2."URI"
+$$ IMMUTABLE LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION "myModule"."compare_B_entity_and_snowflake"
+("myModule"."B_entity", "myModule"."snowBA_snowflake")
+RETURNS bool AS
+$$
+SELECT $1."URI" = $2."URI"
+$$ IMMUTABLE LANGUAGE sql;
+
+DO $$
+BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_operator o JOIN pg_type l ON o.oprleft = l.oid JOIN pg_type r ON o.oprright = r.oid JOIN pg_namespace n ON n.oid = l.typnamespace AND n.oid = r.typnamespace
+					WHERE o.oprname = '=' AND n.nspname = 'myModule' AND l.typname = 'snowBA_snowflake' AND r.typname = 'B_entity') THEN
+		CREATE OPERATOR =
+		(
+			leftarg = "myModule"."snowBA_snowflake", 
+			rightarg = "myModule"."B_entity", 
+			procedure = "myModule"."compare_B_snowflake_and_entity",
+			commutator = =
+		);
+
+		CREATE OPERATOR =
+		(
+			leftarg = "myModule"."B_entity", 
+			rightarg = "myModule"."snowBA_snowflake", 
+			procedure = "myModule"."compare_B_entity_and_snowflake",
+			commutator = =
+		);
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION "myModule"."cast_snowBA_to_type"("myModule"."snowBA_snowflake") RETURNS "myModule"."-ngs_snowBA_type-" AS $$ SELECT $1::text::"myModule"."-ngs_snowBA_type-" $$ IMMUTABLE LANGUAGE sql;
+CREATE OR REPLACE FUNCTION "myModule"."cast_snowBA_to_type"("myModule"."-ngs_snowBA_type-") RETURNS "myModule"."snowBA_snowflake" AS $$ SELECT $1::text::"myModule"."snowBA_snowflake" $$ IMMUTABLE LANGUAGE sql;
+
+DO $$
+BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_cast c JOIN pg_type s ON c.castsource = s.oid JOIN pg_type t ON c.casttarget = t.oid JOIN pg_namespace n ON n.oid = s.typnamespace AND n.oid = t.typnamespace
+					WHERE n.nspname = 'myModule' AND s.typname = 'snowBA_snowflake' AND t.typname = '-ngs_snowBA_type-') THEN
+		CREATE CAST ("myModule"."-ngs_snowBA_type-" AS "myModule"."snowBA_snowflake") WITH FUNCTION "myModule"."cast_snowBA_to_type"("myModule"."-ngs_snowBA_type-") AS IMPLICIT;
+		CREATE CAST ("myModule"."snowBA_snowflake" AS "myModule"."-ngs_snowBA_type-") WITH FUNCTION "myModule"."cast_snowBA_to_type"("myModule"."snowBA_snowflake") AS IMPLICIT;
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_snowBA_to_type"("myModule"."snowBA_snowflake")', 'myModule', 'snowBA_snowflake', '-ngs_snowBA_type-');
+SELECT "-NGS-".Create_Type_Cast('"myModule"."cast_snowBA_to_type"("myModule"."-ngs_snowBA_type-")', 'myModule', '-ngs_snowBA_type-', 'snowBA_snowflake');
+UPDATE "myModule"."A" SET "i" = 0 WHERE "i" IS NULL;
+UPDATE "myModule"."A" SET "s" = '' WHERE "s" IS NULL;
+UPDATE "myModule"."A" SET "f" = 0 WHERE "f" IS NULL;
+UPDATE "myModule"."B" SET "ID" = 0 WHERE "ID" IS NULL;
+UPDATE "myModule"."B" SET "aID" = 0 WHERE "aID" IS NULL;
+UPDATE "myModule"."B" SET "i" = 0 WHERE "i" IS NULL;
+UPDATE "myModule"."B" SET "s" = '' WHERE "s" IS NULL;
+UPDATE "myModule"."B" SET "f" = 0 WHERE "f" IS NULL;
+
+DO $$ 
+DECLARE _pk VARCHAR;
+BEGIN
+	IF EXISTS(SELECT * FROM pg_index i JOIN pg_class c ON i.indrelid = c.oid JOIN pg_namespace n ON c.relnamespace = n.oid WHERE i.indisprimary AND n.nspname = 'myModule' AND c.relname = 'B') THEN
+		SELECT array_to_string(array_agg(sq.attname), ', ') INTO _pk
+		FROM
+		(
+			SELECT atr.attname
+			FROM pg_index i
+			JOIN pg_class c ON i.indrelid = c.oid 
+			JOIN pg_attribute atr ON atr.attrelid = c.oid 
+			WHERE 
+				c.oid = '"myModule"."B"'::regclass
+				AND atr.attnum = any(i.indkey)
+				AND indisprimary
+			ORDER BY (SELECT i FROM generate_subscripts(i.indkey,1) g(i) WHERE i.indkey[i] = atr.attnum LIMIT 1)
+		) sq;
+		IF ('ID' != _pk) THEN
+			RAISE EXCEPTION 'Different primary key defined for table myModule.B. Expected primary key: ID. Found: %', _pk;
+		END IF;
+	ELSE
+		ALTER TABLE "myModule"."B" ADD CONSTRAINT "pk_B" PRIMARY KEY("ID");
+		COMMENT ON CONSTRAINT "pk_B" ON "myModule"."B" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+ALTER TABLE "myModule"."A" ALTER "i" SET NOT NULL;
+ALTER TABLE "myModule"."A" ALTER "s" SET NOT NULL;
+ALTER TABLE "myModule"."A" ALTER "f" SET NOT NULL;
+ALTER TABLE "myModule"."B" ALTER "ID" SET NOT NULL;
+
+DO $$ 
+BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_class c JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'myModule' AND c.relname = 'B_ID_seq' AND c.relkind = 'S') THEN
+		CREATE SEQUENCE "myModule"."B_ID_seq";
+		ALTER TABLE "myModule"."B"	ALTER COLUMN "ID" SET DEFAULT NEXTVAL('"myModule"."B_ID_seq"');
+		PERFORM SETVAL('"myModule"."B_ID_seq"', COALESCE(MAX("ID"), 0) + 1000) FROM "myModule"."B";
+	END IF;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_index i JOIN pg_class c ON i.indexrelid = c.oid JOIN pg_namespace n ON c.relnamespace = n.oid WHERE n.nspname = 'myModule' AND c.relname = 'uq_ngs_uri_B') THEN
+		CREATE UNIQUE INDEX "uq_ngs_uri_B" ON "myModule"."B" (CAST("ID" as TEXT));
+		COMMENT ON INDEX "myModule"."uq_ngs_uri_B" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+ALTER TABLE "myModule"."B" ALTER "aID" SET NOT NULL;
+
+DO $$ BEGIN
+	IF NOT EXISTS(SELECT * FROM pg_constraint c JOIN pg_class r ON c.conrelid = r.oid JOIN pg_namespace n ON n.oid = r.relnamespace WHERE c.conname = 'fk_a' AND n.nspname = 'myModule' AND r.relname = 'B') THEN	
+		ALTER TABLE "myModule"."B" 
+			ADD CONSTRAINT "fk_a"
+				FOREIGN KEY ("aID") REFERENCES "myModule"."A" ("ID")
+				ON UPDATE CASCADE ;
+		COMMENT ON CONSTRAINT "fk_a" ON "myModule"."B" IS 'NGS generated';
+	END IF;
+END $$ LANGUAGE plpgsql;
+ALTER TABLE "myModule"."B" ALTER "i" SET NOT NULL;
+ALTER TABLE "myModule"."B" ALTER "s" SET NOT NULL;
+ALTER TABLE "myModule"."B" ALTER "f" SET NOT NULL;
+
+SELECT "-NGS-".Persist_Concepts('"1.dsl"=>"module myModule {
+    root A {
+        int i;
+        string s;
+        float f;
+    }
+
+    root B {
+        A *a;
+        int i;
+        string s;
+        float f;
+    }
+
+    snowflake snowBA B {
+        a.i  ai;
+        a.s  as;
+        a.f  af;
+        i;
+        s;
+        f;
+    }
+}
+"', '\x','1.0.1.24037')

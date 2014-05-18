@@ -8,6 +8,8 @@ import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.dslplatform.compiler.client.api.core.mock.MockData;
+import org.apache.commons.codec.Charsets;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -16,14 +18,13 @@ import com.dslplatform.compiler.client.api.core.HttpRequestBuilder;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 
 public class HttpRequestBuilderImplTest {
-    private static final Charset ENCODING = Charset.forName("UTF-8");
+    private static final Charset ENCODING = Charsets.UTF_8;
 
     private static HttpRequestBuilder httpRequestBuilder;
-    private final String testUser = "ocd@dsl-platform.com";
-    private final String testPassword = "ocdcdo";
-    private final String projectID = "0d713347-d2d1-4e0a-b8db-97c4da41804f";
-    final String testUserToken = "Basic " + DatatypeConverter.printBase64Binary((testUser + ":" + testPassword).getBytes(ENCODING));
-    final String testProjectToken = "Basic " + DatatypeConverter.printBase64Binary((testUser + ":" + testPassword + ":" + projectID).getBytes(ENCODING));
+
+    private static String testUserToken = MockData.userToken();
+    private static String testProjectToken = MockData.projectToken();
+    private static String projectID = MockData.validId;
 
     @BeforeClass
     public static void createHttpRequestBuilder() {
@@ -32,13 +33,14 @@ public class HttpRequestBuilderImplTest {
 
     @Test
     @SuppressWarnings("serial")
-    public void testParseDslBuilder() throws IOException {
-        final HttpRequest parseRequest; {
+    public void testParseDSLBuilder() throws IOException {
+        final HttpRequest parseRequest;
+        {
             final Map<String, String> dsl = new HashMap<String, String>();
             dsl.put("model.dsl", "module Foo {\n" +
-                                   "\taggregate Bar { String baz; }\n" +
-                                 "}");
-            parseRequest = httpRequestBuilder.parseDsl(testUserToken, dsl);
+                    "\taggregate Bar { String baz; }\n" +
+                    "}");
+            parseRequest = httpRequestBuilder.parseDSL(MockData.userToken(), dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, parseRequest.method);
@@ -57,8 +59,10 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testRenameProjectBuilder() throws IOException {
-        final HttpRequest renameRequest; {
-            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
+        final HttpRequest renameRequest;
+        {
+            final String token =
+                    "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
             final String oldName = "GreenLeopard";
             final String newName = "GreenLion";
             renameRequest = httpRequestBuilder.renameProject(token, oldName, newName);
@@ -69,7 +73,8 @@ public class HttpRequestBuilderImplTest {
         assertEquals(renameRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList("Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING))));
+            put("Authorization", Arrays.asList(
+                    "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING))));
         }});
         assertArrayEquals(
                 "{\"OldName\":\"GreenLeopard\",\"NewName\":\"GreenLion\"}".getBytes(ENCODING),
@@ -79,7 +84,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testRegisterUserBuilder() throws IOException {
-        final HttpRequest registerUserRequest; {
+        final HttpRequest registerUserRequest;
+        {
             final String email = "user@test.org";
             registerUserRequest = httpRequestBuilder.registerUser(email);
         }
@@ -98,8 +104,10 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testCreateProjectBuilder() throws IOException {
-        final HttpRequest createProjectRequest; {
-            final String token = "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
+        final HttpRequest createProjectRequest;
+        {
+            final String token =
+                    "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING));
             final String projectName = "NewProjectName";
             createProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
         }
@@ -109,7 +117,8 @@ public class HttpRequestBuilderImplTest {
         assertEquals(createProjectRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList("Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING))));
+            put("Authorization", Arrays.asList(
+                    "Basic " + DatatypeConverter.printBase64Binary("ocd@dsl-platform.com:xxx".getBytes(ENCODING))));
         }});
         assertArrayEquals(
                 "{\"ProjectName\":\"NewProjectName\"}".getBytes(ENCODING),
@@ -119,7 +128,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testCreateExternalProjectBuilder() throws IOException {
-        final HttpRequest createExternalProjectRequest; {
+        final HttpRequest createExternalProjectRequest;
+        {
             final String projectName = "NewProjectName";
             final String serverName = "someServerName";
             final String applicationName = "someApplicationName";
@@ -129,7 +139,8 @@ public class HttpRequestBuilderImplTest {
             databaseConnection.put("Database", "someDatabase");
             databaseConnection.put("Username", "someUsername");
             databaseConnection.put("Password", "somePassword");
-            createExternalProjectRequest = httpRequestBuilder.createExternalProject(testUserToken, projectName, serverName, applicationName, databaseConnection);
+            createExternalProjectRequest = httpRequestBuilder
+                    .createExternalProject(testUserToken, projectName, serverName, applicationName, databaseConnection);
         }
 
         assertEquals(HttpRequest.Method.POST, createExternalProjectRequest.method);
@@ -141,15 +152,17 @@ public class HttpRequestBuilderImplTest {
         }});
 
         assertArrayEquals(
-            "{\"ProjectName\":\"NewProjectName\",\"ServerName\":\"someServerName\",\"ApplicationName\":\"someApplicationName\",\"DatabaseConnection\":{\"Server\":\"someServer\",\"Port\":4,\"Database\":\"someDatabase\",\"Username\":\"someUsername\",\"Password\":\"somePassword\"}}"
-                    .getBytes(ENCODING),
-            createExternalProjectRequest.body);
+                "{\"ProjectName\":\"NewProjectName\",\"ServerName\":\"someServerName\",\"ApplicationName\":\"someApplicationName\",\"DatabaseConnection\":{\"Server\":\"someServer\",\"Port\":4,\"Database\":\"someDatabase\",\"Username\":\"someUsername\",\"Password\":\"somePassword\"}}"
+                        .getBytes(ENCODING),
+                createExternalProjectRequest.body
+        );
     }
 
     @Test
     @SuppressWarnings("serial")
     public void testDownloadBinariesBuilder() throws IOException {
-        final HttpRequest downloadBinariesRequest; {
+        final HttpRequest downloadBinariesRequest;
+        {
             downloadBinariesRequest = httpRequestBuilder.downloadBinaries(testProjectToken, UUID.fromString(projectID));
         }
 
@@ -165,8 +178,10 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testDownloadGeneratedSourceBuilder() throws IOException {
-        final HttpRequest downloadGeneratedSourceRequest; {
-            downloadGeneratedSourceRequest = httpRequestBuilder.downloadGeneratedModel(testProjectToken, UUID.fromString(projectID));
+        final HttpRequest downloadGeneratedSourceRequest;
+        {
+            downloadGeneratedSourceRequest =
+                    httpRequestBuilder.downloadGeneratedModel(testProjectToken, UUID.fromString(projectID));
         }
 
         assertEquals(HttpRequest.Method.GET, downloadGeneratedSourceRequest.method);
@@ -181,12 +196,14 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testInspectManagedProjectChanges() {
-        final HttpRequest inspectManagedProjectRequest; {
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
+        final HttpRequest inspectManagedProjectRequest;
+        {
+            final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
                 put("only", "module A { root B; root C{ B b;}}");
             }};
 
-            inspectManagedProjectRequest = httpRequestBuilder.inspectManagedProjectChanges(testProjectToken, UUID.fromString(projectID), dsl);
+            inspectManagedProjectRequest =
+                    httpRequestBuilder.inspectManagedProjectChanges(testProjectToken, UUID.fromString(projectID), dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, inspectManagedProjectRequest.method);
@@ -204,8 +221,10 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGetLastManagedDSL() {
-        final HttpRequest getLastManagedDSLRequest; {
-            getLastManagedDSLRequest = httpRequestBuilder.getLastManagedDSL(testProjectToken, UUID.fromString(projectID));
+        final HttpRequest getLastManagedDSLRequest;
+        {
+            getLastManagedDSLRequest =
+                    httpRequestBuilder.getLastManagedDSL(testProjectToken, UUID.fromString(projectID));
         }
 
         assertEquals(HttpRequest.Method.GET, getLastManagedDSLRequest.method);
@@ -229,7 +248,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGetConfig() {
-        final HttpRequest getConfigRequest; {
+        final HttpRequest getConfigRequest;
+        {
             final Set<String> targets = new HashSet<String>() {{
                 add("java");
                 add("scala");
@@ -239,7 +259,8 @@ public class HttpRequestBuilderImplTest {
                 add("opt2");
             }};
             final String packageName = "namespace";
-            getConfigRequest = httpRequestBuilder.getConfig(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
+            getConfigRequest = httpRequestBuilder
+                    .getConfig(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
         }
 
         assertEquals(HttpRequest.Method.GET, getConfigRequest.method);
@@ -260,7 +281,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testUpdateManagedProject() {
-        final HttpRequest updateManagedRequest; {
+        final HttpRequest updateManagedRequest;
+        {
             final Set<String> targets = new HashSet<String>() {{
                 add("java");
                 add("scala");
@@ -271,10 +293,12 @@ public class HttpRequestBuilderImplTest {
             }};
             final String packageName = "namespace";
             final String migration = "migration";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
+            final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
                 put("only", "module A { root B; root C{ B b;}}");
             }};
-            updateManagedRequest = httpRequestBuilder.updateManagedProject(testProjectToken, UUID.fromString(projectID), targets, packageName, migration, options, dsl);
+            updateManagedRequest = httpRequestBuilder
+                    .updateManagedProject(testProjectToken, UUID.fromString(projectID), targets, packageName, migration,
+                            options, dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, updateManagedRequest.method);
@@ -299,16 +323,17 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGenerateMigrationSQL() {
-        final HttpRequest generateMigrationSQLRequest; {
-
-            final Map<String, String> olddsl = new LinkedHashMap<String, String>(){{
+        final HttpRequest generateMigrationSQLRequest;
+        {
+            final Map<String, String> olddsl = new LinkedHashMap<String, String>() {{
                 put("only", "module A { root B; root C{ B b;}}");
             }};
-            final Map<String, String> newdsl = new LinkedHashMap<String, String>(){{
+            final Map<String, String> newdsl = new LinkedHashMap<String, String>() {{
                 put("only", "module A { root B; root C{ B b;}; root AddedRoot;}");
             }};
             final String version = "someversion";
-            generateMigrationSQLRequest = httpRequestBuilder.generateMigrationSQL(testUserToken, version, olddsl, newdsl);
+            generateMigrationSQLRequest =
+                    httpRequestBuilder.generateMigrationSQL(testUserToken, version, olddsl, newdsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, generateMigrationSQLRequest.method);
@@ -323,14 +348,16 @@ public class HttpRequestBuilderImplTest {
         }});
 
         assertArrayEquals(
-                "{\"NewDsl\":{\"only\":\"module A { root B; root C{ B b;}; root AddedRoot;}\"},\"OldDsl\":{\"only\":\"module A { root B; root C{ B b;}}\"}}".getBytes(ENCODING),
+                "{\"NewDsl\":{\"only\":\"module A { root B; root C{ B b;}; root AddedRoot;}\"},\"OldDsl\":{\"only\":\"module A { root B; root C{ B b;}}\"}}"
+                        .getBytes(ENCODING),
                 generateMigrationSQLRequest.body);
     }
 
     @Test
     @SuppressWarnings("serial")
     public void testGenerateSources() {
-        final HttpRequest updateManagedRequest; {
+        final HttpRequest updateManagedRequest;
+        {
             final Set<String> targets = new HashSet<String>() {{
                 add("java");
                 add("scala");
@@ -340,7 +367,8 @@ public class HttpRequestBuilderImplTest {
                 add("opt2");
             }};
             final String packageName = "namespace";
-            updateManagedRequest = httpRequestBuilder.generateSources(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
+            updateManagedRequest = httpRequestBuilder
+                    .generateSources(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
         }
 
         assertEquals(HttpRequest.Method.GET, updateManagedRequest.method);
@@ -360,7 +388,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGenerateUnmanagedSources() {
-        final HttpRequest generateUnmanagedRequest; {
+        final HttpRequest generateUnmanagedRequest;
+        {
             final Set<String> targets = new HashSet<String>() {{
                 add("java");
                 add("scala");
@@ -370,16 +399,17 @@ public class HttpRequestBuilderImplTest {
                 add("opt2");
             }};
             final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
+            final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
                 put("only", "module A { root B; root C{ B b;}}");
             }};
-            generateUnmanagedRequest = httpRequestBuilder.generateUnmanagedSources(testUserToken, packageName, targets, options, dsl);
+            generateUnmanagedRequest =
+                    httpRequestBuilder.generateUnmanagedSources(testUserToken, packageName, targets, options, dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, generateUnmanagedRequest.method);
         assertEquals("Alpha.svc/unmanaged/source", generateUnmanagedRequest.path);
 
-        assertEquals(generateUnmanagedRequest.headers,  new HashMap<String, List<String>>() {{
+        assertEquals(generateUnmanagedRequest.headers, new HashMap<String, List<String>>() {{
             put("Authorization", Arrays.asList(testUserToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -398,8 +428,9 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGetProjectByName() {
-        final HttpRequest getProjectByNameRequest; {
-            final String projectName =  "projectName";
+        final HttpRequest getProjectByNameRequest;
+        {
+            final String projectName = "projectName";
             getProjectByNameRequest = httpRequestBuilder.getProjectByName(testUserToken, projectName);
         }
 
@@ -420,7 +451,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testGetAllProjects() {
-        final HttpRequest getAllProjectsRequest; {
+        final HttpRequest getAllProjectsRequest;
+        {
             getAllProjectsRequest = httpRequestBuilder.getAllProjects(testUserToken);
         }
 
@@ -436,7 +468,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testCleanProject() {
-        final HttpRequest getAllProjectsRequest; {
+        final HttpRequest getAllProjectsRequest;
+        {
             getAllProjectsRequest = httpRequestBuilder.cleanProject(testProjectToken);
         }
 
@@ -452,9 +485,11 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testTemplateGet() {
-        final HttpRequest getAllProjectsRequest; {
+        final HttpRequest getAllProjectsRequest;
+        {
             final String templateName = "templateName";
-            getAllProjectsRequest = httpRequestBuilder.templateGet(testProjectToken, templateName);
+            String projectId = "projectId";
+            getAllProjectsRequest = httpRequestBuilder.templateGet(testProjectToken, projectId, templateName);
         }
 
         assertEquals(HttpRequest.Method.GET, getAllProjectsRequest.method);
@@ -469,9 +504,10 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testTemplateCreate() throws IOException {
-        final HttpRequest templateCreateRequest; {
+        final HttpRequest templateCreateRequest;
+        {
             final String templateName = "templateName";
-            final byte [] templateContent = "templateContent".getBytes("UTF-8");
+            final byte[] templateContent = "templateContent".getBytes("UTF-8");
             templateCreateRequest = httpRequestBuilder.templateCreate(testProjectToken, templateName, templateContent);
         }
 
@@ -491,7 +527,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testTemplateListAll() {
-        final HttpRequest templateListAllRequest; {
+        final HttpRequest templateListAllRequest;
+        {
             templateListAllRequest = httpRequestBuilder.templateListAll(testProjectToken, UUID.fromString(projectID));
         }
 
@@ -507,7 +544,8 @@ public class HttpRequestBuilderImplTest {
     @Test
     @SuppressWarnings("serial")
     public void testTemplateDelete() {
-        final HttpRequest templateDeleteRequest; {
+        final HttpRequest templateDeleteRequest;
+        {
             final String templateToDelete = "templateToDeleteName";
             templateDeleteRequest = httpRequestBuilder.templateDelete(testProjectToken, templateToDelete);
         }

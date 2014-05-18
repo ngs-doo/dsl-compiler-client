@@ -17,7 +17,7 @@ trait Default extends Dependencies {
         "-encoding", "UTF-8"
       , "-source", "1.6"
       ) ++ (sys.env.get("JDK16_HOME") match {
-        case Some(jdk16Home) => Seq("-bootclasspath", jdk16Home + "/jre/lib/rt.jar")
+        case Some(jdk16Home) => Seq("-bootclasspath", Seq("rt.jar", "jsse.jar", "jce.jar").map(jdk16Home + "/jre/lib/" + _).mkString(":"))
         case _ => Nil
       })
     , javacOptions := Seq(

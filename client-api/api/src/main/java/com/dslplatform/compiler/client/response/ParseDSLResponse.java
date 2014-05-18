@@ -1,17 +1,9 @@
 package com.dslplatform.compiler.client.response;
 
 public class ParseDSLResponse extends AuthorizationResponse {
-    private final boolean parsed;
+    public final boolean parsed;
 
-    public boolean getParsed() {
-        return parsed;
-    }
-
-    private final String parseMessage;
-
-    public String getParseMessage() {
-        return parseMessage;
-    }
+    public final String parseMessage;
 
     public ParseDSLResponse(
             final boolean authorized,

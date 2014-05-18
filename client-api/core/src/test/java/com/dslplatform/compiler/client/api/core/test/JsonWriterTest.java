@@ -33,7 +33,7 @@ public class JsonWriterTest {
     @Test
     public void serializeByteArrayTest() throws IOException {
         final Map<String, Object> rootMap = new LinkedHashMap<String, Object>();
-        rootMap.put("byteArray", "ByteArrayAttributeValue".getBytes("UTF-8"));
+        rootMap.put("byteArray", "ByteArrayAttributeValue");
 
         JsonWriter jw = new JsonWriter();
         jw.write(rootMap);
