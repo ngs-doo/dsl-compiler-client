@@ -46,7 +46,7 @@ object CompilerPlugin extends sbt.Plugin {
     lazy val parseDSL = taskKey[Boolean]("Parse Dsl Sources!")
 
     lazy val upgradeScalaServer = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Scala server.")
-    lazy val upgradeMonoServer = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Mono server.")
+    lazy val upgradeCSharpServer = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Mono server.")
 
     lazy val monoTempFolder = settingKey[File]("In flux! Place where to temporarily store csharp files. ")
     lazy val monoDependencyFolder = settingKey[File]("In flux! Where dependencies for compilation of cs files are located.")
@@ -75,7 +75,7 @@ object CompilerPlugin extends sbt.Plugin {
     password        := projectConfiguration.value.get("password").getOrElse(""),
     dslProjectId    := projectConfiguration.value.get("project-id").getOrElse(""),
     packageName     := projectConfiguration.value.get("package-name").getOrElse("model"),
-    token           := com.dslplatform.compiler.client.api.config.Tokenizer.tokenHeader(username.value, password.value, dslProjectId.value),
+    token           := com.dslplatform.compiler.client.api.config.Tokenizer.tokenHeader(username.value, password.value),
 
     monoTempFolder            := file("mono_src_tmp"),
     monoDependencyFolder      := file("revenj_lib"),
@@ -86,7 +86,7 @@ object CompilerPlugin extends sbt.Plugin {
     generateSourcesUnmanaged  <<= generateSourcesDef(),
     updateDatabase            <<= upgradeManagedDatabaseAndReturnSourceDef,
     upgradeScalaServer        <<= unmanagedUpgradeDef("ScalaServer"),
-    upgradeMonoServer         <<= unmanagedUpgradeDef("CSharpServer")
+    upgradeCSharpServer         <<= unmanagedUpgradeDef("CSharpServer")
   )
 
   private def dslFilesDef(): Def.Initialize[Task[Map[String, String]]] = Def.task {
@@ -194,17 +194,7 @@ object CompilerPlugin extends sbt.Plugin {
     log.info(s"Writing complete. Wrote $writeCount files")
     0
   }
-/*
-  private def writeSources(sourceGenerator: List[Source], outputPathMapping: OutputPathMappingType, log: sbt.Logger) {
-    log.info("About to preform file write.")
-    val writeCount = sources.map(outputPathMapping).map {
-      case (path: File, content: Array[Byte]) =>
-        IO.write(path, content)
-        log.info(s"Wrote ${path.getAbsolutePath}")
-    }.size
-    log.info(s"Writing complete. Wrote $writeCount files")
-  }
-*/
+
   object OutputPathMapping {
     type OutputPathMappingType = PartialFunction[Source, (File, Array[Byte])]
 
@@ -240,7 +230,7 @@ object CompilerPlugin extends sbt.Plugin {
     val monoLib: File = monoDependencyFolder.value
     val revenj = monoLib.listFiles.map(_.getName).filter(_.endsWith("dll"))
 
-    val deps = (systemDeps ++ revenj).map(" -r:" + _)
+    val deps = (systemDeps ++ revenj).map(d => s"-r:$d")
 
     val mono_app: File = monoServerLocation.value
     val assembly_name = s"${mono_app}/bin/generatedModel.dll"
@@ -254,6 +244,10 @@ object CompilerPlugin extends sbt.Plugin {
     IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
     log.info(Seq("sh", "runScript.sh").!!)
     log.info(s"chgrp mono $assembly_name " !!)
-    log.info(s"find $monoLib -type f -exec install -g mono -m 750 '{}' $mono_app/bin/ \\;" !!)
+    monoLib.listFiles.foreach{
+      file =>
+        val cmd = s"install -g mono -m 750 ${file.getAbsolutePath} $mono_app/bin/"
+        cmd.split(" ").toSeq.!!
+    }
   }
 }

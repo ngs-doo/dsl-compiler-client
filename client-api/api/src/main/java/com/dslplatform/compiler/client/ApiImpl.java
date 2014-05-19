@@ -432,8 +432,6 @@ public class ApiImpl implements Api {
                 generateUnmanagedSourcesResponse.sources);
     }
 
-
-
     @Override public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
             final String token,
             final DataSource dataSource,

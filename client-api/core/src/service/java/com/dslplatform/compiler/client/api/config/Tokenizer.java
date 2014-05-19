@@ -54,7 +54,7 @@ public class Tokenizer {
         return "Token " + Tokenizer.makeToken(username, password, projectid);
     }
 
-    public static String userTokenHeader(
+    public static String tokenHeader(
             final String username,
             final String password) {
         return tokenHeader(username, password, null);
