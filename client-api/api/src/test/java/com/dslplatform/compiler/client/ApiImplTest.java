@@ -166,7 +166,7 @@ public class ApiImplTest extends MockData {
         }};
         final String packageName = "name.space";
         final String migration = "migration";
-        final Map<String, String> dsl = MockData.dsl_AB;
+        final Map<String, String> dsl = MockData.managed_dsl_AB;
 
         final UpdateManagedProjectResponse ump =
                 api.updateManagedProject(token, UUID.fromString(validId), targets, packageName, migration,
@@ -233,7 +233,7 @@ public class ApiImplTest extends MockData {
         }};
         final String packageName = "namespace";
         final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
-            put("only", MockData.ABdsl);
+            put("only", MockData.managedABdsl);
         }};
 
         final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =

@@ -16,7 +16,7 @@ public class UpdateManagedProjectTransportTest extends HttpTransportImplTest {
     @Test
     public void testUpdateManagedProjectRequest() throws IOException {
         final HttpRequest updateManagedProjectRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
+            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");
@@ -25,9 +25,9 @@ public class UpdateManagedProjectTransportTest extends HttpTransportImplTest {
                 add("opt1");
                 add("opt2");
             }};
-            final String packageName = "name.space";
-            final String migration = "unsafe";
-            final Map<String, String> dsl = MockData.dsl_AB;
+            final String packageName = "namespace";
+            final String migration = "safe";
+            final Map<String, String> dsl = MockData.managed_dsl_AB;
 
             updateManagedProjectRequest = httpRequestBuilder.updateManagedProject(token, UUID.fromString(validId), targets, packageName, migration, options, dsl);
         }

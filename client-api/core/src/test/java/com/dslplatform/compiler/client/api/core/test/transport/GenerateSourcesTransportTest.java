@@ -16,7 +16,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
     @Test
     public void testGenerateSourcesRequest() throws IOException {
         final HttpRequest generateSourcesRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
+            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");
@@ -29,6 +29,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);
         logger.info(new String(response.body, Charsets.UTF_8));
+
         assertEquals(200, response.code);
         assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
     }

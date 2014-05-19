@@ -27,18 +27,17 @@ public class GenerateSourcesProcessor implements MockProcessor {
 
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
-        final List<String> languages = request.query.get("targets");
+        final List<String> targets = request.query.get("targets");
 
-        if (languages == null) state = unknown_language;
-        else if (!supportedLanguages.containsAll(languages)) {
+        if (targets == null) state = unknown_language;
+        else if (!supportedLanguages.containsAll(targets)) {
             state = unknown_language;
         }
-
 
         switch (state) {
             case success:
                 code = 200;
-                body = MockData.ABresponseBytes;
+                body = MockData.getBodyFor("test_managed_AB/ClientSource", targets, 1);
                 break;
             case unknown_language:
                 code = 400;

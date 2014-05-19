@@ -3,8 +3,6 @@ package com.dslplatform.compiler.client.api.core.mock.processor;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
-import com.dslplatform.compiler.client.api.core.mock.MockData;
-import com.dslplatform.compiler.client.api.json.JsonWriter;
 
 import java.io.IOException;
 import java.util.Arrays;

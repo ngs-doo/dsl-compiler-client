@@ -24,13 +24,21 @@ public class UpdateManagedProjectProcessor implements MockProcessor {
 
         final int code;
         final byte[] body;
+
+        final List<String> targets = request.query.get("targets");
+
+        if (targets == null) state = unknown_language;
+        else if (!supportedLanguages.containsAll(targets)) {
+            state = unknown_language;
+        }
+
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
         switch (state) {
             case success:
                 code = 201;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = MockData.ABresponseBytes;
+                body = MockData.getBodyFor("test_managed_AB/ClientSource", targets);
                 break;
             case unknown_language:
                 code = 400;

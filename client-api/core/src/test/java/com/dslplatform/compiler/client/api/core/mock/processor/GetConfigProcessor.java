@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.api.core.mock.processor;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpRequest.Method;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.mock.MockData;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,10 +26,10 @@ public class GetConfigProcessor implements MockProcessor {
         final byte[] body;
         final Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
 
-        final List<String> languages = request.query.get("targets");
+        final List<String> targets = request.query.get("targets");
 
-        if (languages == null) state = unknown_language;
-        else if (!supportedLanguages.containsAll(languages)) {
+        if (targets == null) state = unknown_language;
+        else if (!supportedLanguages.containsAll(targets)) {
             state = unknown_language;
         }
 
@@ -36,7 +37,7 @@ public class GetConfigProcessor implements MockProcessor {
             case success:
                 code = 200;
                 headers.put("Content-Type", Arrays.asList("application/json"));
-                body = new byte[0];
+                body = getBodyFor(targets);
                 break;
             case unknown_language:
                 code = 400;
@@ -60,5 +61,9 @@ public class GetConfigProcessor implements MockProcessor {
         }
 
         return new HttpResponse(code, headers, body);
+    }
+
+    private byte[] getBodyFor(List<String> targets) {
+        return MockData.getBodyFor("/test_migration_sql_simple/Config", targets);
     }
 }
