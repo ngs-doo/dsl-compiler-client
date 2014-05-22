@@ -1,11 +1,13 @@
 package com.dslplatform.compiler.client.api.core.test.transport;
 
+import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,8 +16,7 @@ public class CreateProjectTransportTest extends HttpTransportImplTest {
     @Test
     public void testCreateProjectRequest() throws IOException {
         final HttpRequest createTestProjectRequest; {
-            final String token = userToken(validUser, validPassword);
-            final String projectName = "SomeProjectName2";
+            final String projectName = "SomeProjectName" + new Random().nextInt();
             createTestProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
         }
 
@@ -28,7 +29,6 @@ public class CreateProjectTransportTest extends HttpTransportImplTest {
     @Test
     public void testCreateProjectRequestNameAbsent() throws IOException {
         final HttpRequest createTestProjectRequest; {
-            final String token = userToken(validUser, validPassword);
             final String projectName = "";
             createTestProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
         }

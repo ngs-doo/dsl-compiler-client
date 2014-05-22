@@ -15,8 +15,7 @@ public class TemplateListAllTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateListAllRequest() throws IOException {
         final HttpRequest templateListAllRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
-            templateListAllRequest = httpRequestBuilder.templateListAll(token, UUID.fromString(validId));
+            templateListAllRequest = httpRequestBuilder.templateListAll(token, validId);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateListAllRequest);

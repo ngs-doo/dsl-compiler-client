@@ -8,6 +8,7 @@ import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.mock.MockData;
 import org.apache.commons.codec.Charsets;
 import org.junit.BeforeClass;
@@ -22,8 +23,7 @@ public class HttpRequestBuilderImplTest {
 
     private static HttpRequestBuilder httpRequestBuilder;
 
-    private static String testUserToken = MockData.userToken();
-    private static String testProjectToken = MockData.projectToken();
+    private static String testToken = Tokenizer.tokenHeader(MockData.validId, MockData.validPassword);
     private static String projectID = MockData.validId;
 
     @BeforeClass
@@ -40,7 +40,7 @@ public class HttpRequestBuilderImplTest {
             dsl.put("model.dsl", "module Foo {\n" +
                     "\taggregate Bar { String baz; }\n" +
                     "}");
-            parseRequest = httpRequestBuilder.parseDSL(MockData.userToken(), dsl);
+            parseRequest = httpRequestBuilder.parseDSL(testToken, dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, parseRequest.method);
@@ -48,7 +48,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(parseRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
 
         assertArrayEquals(
@@ -140,7 +140,7 @@ public class HttpRequestBuilderImplTest {
             databaseConnection.put("Username", "someUsername");
             databaseConnection.put("Password", "somePassword");
             createExternalProjectRequest = httpRequestBuilder
-                    .createExternalProject(testUserToken, projectName, serverName, applicationName, databaseConnection);
+                    .createExternalProject(testToken, projectName, serverName, applicationName, databaseConnection);
         }
 
         assertEquals(HttpRequest.Method.POST, createExternalProjectRequest.method);
@@ -148,7 +148,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(createExternalProjectRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
 
         assertArrayEquals(
@@ -163,7 +163,7 @@ public class HttpRequestBuilderImplTest {
     public void testDownloadBinariesBuilder() throws IOException {
         final HttpRequest downloadBinariesRequest;
         {
-            downloadBinariesRequest = httpRequestBuilder.downloadBinaries(testProjectToken, UUID.fromString(projectID));
+            downloadBinariesRequest = httpRequestBuilder.downloadBinaries(testToken, UUID.fromString(projectID));
         }
 
         assertEquals(HttpRequest.Method.GET, downloadBinariesRequest.method);
@@ -171,7 +171,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(downloadBinariesRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
     }
 
@@ -181,7 +181,7 @@ public class HttpRequestBuilderImplTest {
         final HttpRequest downloadGeneratedSourceRequest;
         {
             downloadGeneratedSourceRequest =
-                    httpRequestBuilder.downloadGeneratedModel(testProjectToken, UUID.fromString(projectID));
+                    httpRequestBuilder.downloadGeneratedModel(testToken, UUID.fromString(projectID));
         }
 
         assertEquals(HttpRequest.Method.GET, downloadGeneratedSourceRequest.method);
@@ -189,7 +189,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(downloadGeneratedSourceRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
     }
 
@@ -203,7 +203,7 @@ public class HttpRequestBuilderImplTest {
             }};
 
             inspectManagedProjectRequest =
-                    httpRequestBuilder.inspectManagedProjectChanges(testProjectToken, UUID.fromString(projectID), dsl);
+                    httpRequestBuilder.inspectManagedProjectChanges(testToken, UUID.fromString(projectID), dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, inspectManagedProjectRequest.method);
@@ -211,7 +211,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(inspectManagedProjectRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
         assertArrayEquals(
                 "{\"only\":\"module A { root B; root C{ B b;}}\"}".getBytes(ENCODING),
@@ -224,7 +224,7 @@ public class HttpRequestBuilderImplTest {
         final HttpRequest getLastManagedDSLRequest;
         {
             getLastManagedDSLRequest =
-                    httpRequestBuilder.getLastManagedDSL(testProjectToken, UUID.fromString(projectID));
+                    httpRequestBuilder.getLastManagedDSL(testToken, UUID.fromString(projectID));
         }
 
         assertEquals(HttpRequest.Method.GET, getLastManagedDSLRequest.method);
@@ -232,7 +232,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(getLastManagedDSLRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
     }
     /*
@@ -260,7 +260,7 @@ public class HttpRequestBuilderImplTest {
             }};
             final String packageName = "namespace";
             getConfigRequest = httpRequestBuilder
-                    .getConfig(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
+                    .getConfig(testToken, UUID.fromString(projectID), targets, packageName, options);
         }
 
         assertEquals(HttpRequest.Method.GET, getConfigRequest.method);
@@ -268,7 +268,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(getConfigRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
         }});
         assertEquals(getConfigRequest.query, new HashMap<String, List<String>>() {{
             put("targets", Arrays.asList("java", "scala"));
@@ -297,7 +297,7 @@ public class HttpRequestBuilderImplTest {
                 put("only", "module A { root B; root C{ B b;}}");
             }};
             updateManagedRequest = httpRequestBuilder
-                    .updateManagedProject(testProjectToken, UUID.fromString(projectID), targets, packageName, migration,
+                    .updateManagedProject(testToken, UUID.fromString(projectID), targets, packageName, migration,
                             options, dsl);
         }
 
@@ -305,7 +305,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals("Alpha.svc/update/" + projectID, updateManagedRequest.path);
         assertEquals(updateManagedRequest.headers, new HashMap<String, List<String>>() {{
 
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -333,7 +333,7 @@ public class HttpRequestBuilderImplTest {
             }};
             final String version = "someversion";
             generateMigrationSQLRequest =
-                    httpRequestBuilder.generateMigrationSQL(testUserToken, version, olddsl, newdsl);
+                    httpRequestBuilder.generateMigrationSQL(testToken, version, olddsl, newdsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, generateMigrationSQLRequest.method);
@@ -341,7 +341,7 @@ public class HttpRequestBuilderImplTest {
         assertEquals(generateMigrationSQLRequest.headers, new HashMap<String, List<String>>() {{
             put("version", Arrays.asList("someversion"));
 
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
 
@@ -368,13 +368,13 @@ public class HttpRequestBuilderImplTest {
             }};
             final String packageName = "namespace";
             updateManagedRequest = httpRequestBuilder
-                    .generateSources(testProjectToken, UUID.fromString(projectID), targets, packageName, options);
+                    .generateSources(testToken, UUID.fromString(projectID), targets, packageName, options);
         }
 
         assertEquals(HttpRequest.Method.GET, updateManagedRequest.method);
         assertEquals("Alpha.svc/source/" + projectID, updateManagedRequest.path);
         assertEquals(updateManagedRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -403,14 +403,14 @@ public class HttpRequestBuilderImplTest {
                 put("only", "module A { root B; root C{ B b;}}");
             }};
             generateUnmanagedRequest =
-                    httpRequestBuilder.generateUnmanagedSources(testUserToken, packageName, targets, options, dsl);
+                    httpRequestBuilder.generateUnmanagedSources(testToken, packageName, targets, options, dsl);
         }
 
         assertEquals(HttpRequest.Method.PUT, generateUnmanagedRequest.method);
         assertEquals("Alpha.svc/unmanaged/source", generateUnmanagedRequest.path);
 
         assertEquals(generateUnmanagedRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -431,14 +431,14 @@ public class HttpRequestBuilderImplTest {
         final HttpRequest getProjectByNameRequest;
         {
             final String projectName = "projectName";
-            getProjectByNameRequest = httpRequestBuilder.getProjectByName(testUserToken, projectName);
+            getProjectByNameRequest = httpRequestBuilder.getProjectByName(testToken, projectName);
         }
 
         assertEquals(HttpRequest.Method.PUT, getProjectByNameRequest.method);
         assertEquals("Domain.svc/search/Client.Project", getProjectByNameRequest.path);
         assertEquals(getProjectByNameRequest.headers, new HashMap<String, List<String>>() {{
             put("specification", Arrays.asList("FindByUserAndName"));
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -453,13 +453,13 @@ public class HttpRequestBuilderImplTest {
     public void testGetAllProjects() {
         final HttpRequest getAllProjectsRequest;
         {
-            getAllProjectsRequest = httpRequestBuilder.getAllProjects(testUserToken);
+            getAllProjectsRequest = httpRequestBuilder.getAllProjects(testToken);
         }
 
         assertEquals(HttpRequest.Method.GET, getAllProjectsRequest.method);
         assertEquals("Domain.svc/search/Client.Project", getAllProjectsRequest.path);
         assertEquals(getAllProjectsRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testUserToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -470,13 +470,13 @@ public class HttpRequestBuilderImplTest {
     public void testCleanProject() {
         final HttpRequest getAllProjectsRequest;
         {
-            getAllProjectsRequest = httpRequestBuilder.cleanProject(testProjectToken);
+            getAllProjectsRequest = httpRequestBuilder.cleanProject(testToken);
         }
 
         assertEquals(HttpRequest.Method.POST, getAllProjectsRequest.method);
         assertEquals("Domain.svc/submit/Client.CleanProject", getAllProjectsRequest.path);
         assertEquals(getAllProjectsRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -489,13 +489,13 @@ public class HttpRequestBuilderImplTest {
         {
             final String templateName = "templateName";
             String projectId = "projectId";
-            getAllProjectsRequest = httpRequestBuilder.templateGet(testProjectToken, projectId, templateName);
+            getAllProjectsRequest = httpRequestBuilder.templateGet(testToken, projectId, templateName);
         }
 
         assertEquals(HttpRequest.Method.GET, getAllProjectsRequest.method);
         assertEquals("Alpha.svc/template/templateName", getAllProjectsRequest.path);
         assertEquals(getAllProjectsRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -508,13 +508,13 @@ public class HttpRequestBuilderImplTest {
         {
             final String templateName = "templateName";
             final byte[] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(testProjectToken, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(testToken, projectID, templateName, templateContent);
         }
 
         assertEquals(HttpRequest.Method.POST, templateCreateRequest.method);
         assertEquals("Domain.svc/submit/Client.UploadTemplate", templateCreateRequest.path);
         assertEquals(templateCreateRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -529,13 +529,13 @@ public class HttpRequestBuilderImplTest {
     public void testTemplateListAll() {
         final HttpRequest templateListAllRequest;
         {
-            templateListAllRequest = httpRequestBuilder.templateListAll(testProjectToken, UUID.fromString(projectID));
+            templateListAllRequest = httpRequestBuilder.templateListAll(testToken, projectID);
         }
 
         assertEquals(HttpRequest.Method.GET, templateListAllRequest.method);
         assertEquals("Alpha.svc/templates/" + projectID, templateListAllRequest.path);
         assertEquals(templateListAllRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});
@@ -547,13 +547,13 @@ public class HttpRequestBuilderImplTest {
         final HttpRequest templateDeleteRequest;
         {
             final String templateToDelete = "templateToDeleteName";
-            templateDeleteRequest = httpRequestBuilder.templateDelete(testProjectToken, templateToDelete);
+            templateDeleteRequest = httpRequestBuilder.templateDelete(testToken, projectID, templateToDelete);
         }
 
         assertEquals(HttpRequest.Method.POST, templateDeleteRequest.method);
         assertEquals("Domain.svc/submit/Client.DeleteTemplate", templateDeleteRequest.path);
         assertEquals(templateDeleteRequest.headers, new HashMap<String, List<String>>() {{
-            put("Authorization", Arrays.asList(testProjectToken));
+            put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
         }});

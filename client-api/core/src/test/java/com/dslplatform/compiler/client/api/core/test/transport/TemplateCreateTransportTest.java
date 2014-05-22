@@ -15,10 +15,9 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateCreateRequest() throws IOException {
         final HttpRequest templateCreateRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
             final String templateName = "templateName";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);
@@ -30,14 +29,14 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateCreateRequestInvalidName() throws IOException {
         final HttpRequest templateCreateRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
             final String templateName = "~_? templateName ";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);
         assertEquals(400, response.code);
+        logger.info(new String(response.body, "UTF-8"));
         assertEquals(Arrays.asList("text/plain; charset=\"utf-8\""), response.headers.get("Content-Type"));
         assertArrayEquals("Invalid template name.".getBytes("UTF-8"), response.body);
     }
@@ -45,10 +44,9 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateCreateRequestNameAbsent() throws IOException {
         final HttpRequest templateCreateRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
             final String templateName = "";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);

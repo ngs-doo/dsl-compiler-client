@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client;
 import com.dslplatform.compiler.client.response.*;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,10 +63,18 @@ public interface Api {
      * Retrieve the last DSL for a managed project (test, external)
      */
     public GetLastManagedDSLResponse getLastManagedDSL(
-            final String token, final UUID projectID);
+            final String token,
+            final UUID projectID);
 
     /**
      * Retrieves the configuration file necessary to bootstrap the client libraries.
+     *
+     * @param token
+     * @param projectID
+     * @param targets
+     * @param packageName
+     * @param options
+     * @return
      */
     public GetConfigResponse getConfig(
             final String token,
@@ -157,40 +166,68 @@ public interface Api {
 
     /**
      * Creates a new template in the test project document repository
+     *
+     * @param token
+     * @param projectID
+     * @param templateName
+     * @param content
+     * @return
      */
     public TemplateCreateResponse templateCreate(
             final String token,
+            final String projectID,
             final String templateName,
             final byte[] content);
 
     /**
      * Lists all the templates in a test project's document repository
+     *
+     * @param token
+     * @param projectID
+     * @return
      */
     public TemplateListAllResponse templateListAll(
-            final String token, final UUID projectID);
+            final String token,
+            final String projectID);
 
     /**
      * Removes a template from the test project document repository
+     *
+     * @param token
+     * @param projectID
+     * @param templateName
+     * @return
      */
     public TemplateDeleteResponse templateDelete(
-            final String token, final String templateName);
+            final String token, final String projectID, final String templateName);
 
     public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(final DataSource dataSource);
 
     /**
      * Retrieve all DSLs for an unmanaged project
+     *
+     * @param dataSource
+     * @return
      */
     public GetAllUnmanagedDSLResponse  getAllUnmanagedDSL(
             final DataSource dataSource);
 
     /**
      * Retrieve the last DSL for an unmanaged project
+     *
+     * @param dataSource
+     * @return
      */
     public GetLastUnmanagedDSLResponse getLastUnmanagedDSL(
             final DataSource dataSource);
 
     /**
-     * Compare new DSL with the old one, retrieved from the unamanaged database.
+     * Compare new DSL with the old one, retrieved from the unmanaged database.
+     *
+     * @param dataSource
+     * @param version
+     * @param dsl
+     * @return
      */
     public InspectUnmanagedProjectChangesResponse inspectUnmanagedProjectChanges(
             final DataSource dataSource,
@@ -199,6 +236,11 @@ public interface Api {
 
     /**
      * Creates an unmanaged project
+     * @param token
+     * @param dataSource
+     * @param serverName
+     * @param applicationName
+     * @return
      */
     public CreateUnmanagedProjectResponse createUnmanagedProject(
             final String token,
@@ -206,6 +248,16 @@ public interface Api {
             final String serverName,
             final String applicationName);
 
+    /**
+     * Creates unmanaged server with given params
+     * @param token
+     * @param dataSource
+     * @param packageName
+     * @param targets
+     * @param options
+     * @param dsl
+     * @return
+     */
     public CreateUnmanagedServerResponse createUnmanagedServer(
             final String token,
             final DataSource dataSource,
@@ -215,12 +267,82 @@ public interface Api {
             final Map<String, String> dsl);
     /**
      * Compare new DSL with the old one, retrieved from the unamanaged database.
+     * @param dataSource
+     * @param migration
+     * @return
      */
     public UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabase(
             final DataSource dataSource,
             final List<String> migration);
 
+    /**
+     * Upgrades the server and outputs path to a given location, target adn the sources will be stored to a temporary location and removed afterwards, to keep this files specify their location.
+     * @param dataSource
+     * @param migration
+     * @param sources
+     * @return
+     */
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            final DataSource dataSource,
+            final String migration,
+            final List<Source> sources,
+            final File dependencies,
+            final File appPath
+            );
 
+    /**
+     * Upgrades the server and outputs path to a given location, target will be stored to a temporary location and removed afterwards, to keep this file specify its location.
+     * @param dataSource
+     * @param migration
+     * @param sources
+     * @param serverPath
+     * @param targetOutput
+     * @return
+     */
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            final DataSource dataSource,
+            final String migration,
+            final List<Source> sources,
+            File dependencies,
+            final File serverPath,
+            final File targetOutput
+    );
+
+    /**
+     * Upgrades the server and outputs source and target to a given location.
+     * @param dataSource
+     * @param migration
+     * @param sources
+     * @param serverPath
+     * @param sourceOutput
+     * @param targetOutput
+     * @return
+     */
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            final DataSource dataSource,
+            final String migration,
+            final List<Source> sources,
+            File dependencies,
+            final File serverPath,
+            final File targetOutput,
+            final File sourceOutput
+            );
+
+    /* todo - private? */public java.io.File compileCSharpServer(
+            final List<Source> sources,
+            File dependencies,
+            final java.io.File target,
+            final java.io.File sourcePath);
+
+    /**
+     * @param token
+     * @param dataSource
+     * @param packageName
+     * @param targets
+     * @param options
+     * @param dsl
+     * @return
+     */
     public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
             final String token,
             final DataSource dataSource,

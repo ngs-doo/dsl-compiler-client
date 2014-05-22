@@ -15,7 +15,6 @@ public class DownloadGeneratedModelTransportTest extends HttpTransportImplTest {
     public void testDownloadGeneratedModelTransport() throws IOException {
         final HttpRequest generateSourcesRequest;
         {
-            final String token = projectToken(validUser, validPassword, validId);
             generateSourcesRequest =
                     httpRequestBuilder.downloadGeneratedModel(token, java.util.UUID.fromString(validId));
         }

@@ -21,7 +21,6 @@ public class GetAllProjectsTransportTest extends HttpTransportImplTest {
     @Test
     public void testGetAllProjectsRequest() throws IOException {
         final HttpRequest getAllProjectsRequest; {
-            final String token = userToken(validUser, validPassword);
             getAllProjectsRequest = httpRequestBuilder.getAllProjects(token);
         }
 

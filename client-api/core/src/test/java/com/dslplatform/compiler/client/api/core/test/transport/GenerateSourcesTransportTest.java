@@ -16,7 +16,6 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
     @Test
     public void testGenerateSourcesRequest() throws IOException {
         final HttpRequest generateSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");
@@ -37,7 +36,6 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
     @Test
     public void testGenerateSourcesRequestUnknownLanguage() throws IOException {
         final HttpRequest generateSourcesRequest; {
-            final String token = projectToken(validUser, validPassword, inValidID);
             final Set<String> targets = new HashSet<String>() {{
                 add("fantom");
             }};
@@ -52,6 +50,5 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);
 
         assertEquals(400, response.code);
-        assertArrayEquals("Unknown language specified".getBytes(ENCODING), response.body);
     }
 }

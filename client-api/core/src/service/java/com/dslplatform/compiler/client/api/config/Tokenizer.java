@@ -22,11 +22,11 @@ public class Tokenizer {
         try {
             final CertificateFactory cf = CertificateFactory.getInstance("X509");
 
-            final Certificate cert = cf.generateCertificate(keyStream);
-            final PublicKey pkey = cert.getPublicKey();
+            final Certificate certificate = cf.generateCertificate(keyStream);
+            final PublicKey publicKey = certificate.getPublicKey();
 
             cipher = Cipher.getInstance(algo);
-            cipher.init(Cipher.ENCRYPT_MODE, pkey);
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         } catch (Exception e) {
             throw new Error(e);
         }
@@ -35,10 +35,8 @@ public class Tokenizer {
 
     private static String makeToken(
             final String username,
-            final String password,
-            final String projectid) {
-        final String noproject = username + ":" + password + ":" + System.currentTimeMillis() / 1000;
-        final String toToken = (projectid != null) ? noproject + ":" + projectid : noproject;
+            final String password) {
+        final String toToken = username + ":" + password + ":" + System.currentTimeMillis() / 1000;
         final byte[] message = toToken.getBytes(Charset.forName("UTF-8"));
         try {
             return StringUtils.newStringUtf8(Base64.encodeBase64(cipher.doFinal(message), false, false));
@@ -49,14 +47,7 @@ public class Tokenizer {
 
     public static String tokenHeader(
             final String username,
-            final String password,
-            final String projectid) {
-        return "Token " + Tokenizer.makeToken(username, password, projectid);
-    }
-
-    public static String tokenHeader(
-            final String username,
             final String password) {
-        return tokenHeader(username, password, null);
+        return "Token " + Tokenizer.makeToken(username, password);
     }
 }

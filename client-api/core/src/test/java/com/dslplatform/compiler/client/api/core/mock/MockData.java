@@ -1,6 +1,5 @@
 package com.dslplatform.compiler.client.api.core.mock;
 
-import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.json.JsonWriter;
 import com.dslplatform.compiler.client.api.model.Migration;
 
@@ -20,9 +19,9 @@ public class MockData {
     public static final String inValidUser = "cdo@dsl-platform.com";
     public static final String inValidPassword = "cdoodc";
 
-    //public static final String validId = "6bff118e-0ad9-4aee-813d-b292df9b9291";
-
-    public static final String validId = "d7b8ee4d-2226-49b5-a5aa-74af1d29e644";
+    public static final String validUnmannagedId = "6bff118e-0ad9-4aee-813d-b292df9b9291";
+    public static final String validId = "40443b90-44d8-48ee-b65b-0992cf642637";
+    //public static final String validId = "d7b8ee4d-2226-49b5-a5aa-74af1d29e644";
     public static final String inValidID = "c3cc0007-5dc2-4fd0-b14b-0dcbfce1e4bf";
 
     public static final String version_real = "1.0.1.24037";
@@ -94,19 +93,6 @@ public class MockData {
             "[{\"ID\":\"40443b90-44d8-48ee-b65b-0992cf642637\",\"UserID\":\"user@domain.omm\",\"CreatedAt\":\"2014-04-01T13:13:57.480884+02:00\",\"DatabaseServer\":\"someExternalPlace\",\"DatabasePort\":5432,\"DatabaseName\":\"DatabaseNameValue\",\"ApplicationServer\":\"test.dsl-platform.com\",\"ApplicationName\":\"ApplicationNameValue0\",\"ApplicationPoolName\":\"ApplicationPoolName0\",\"Nick\":\"BrownBison\",\"URI\":\"40443b90-44d8-48ee-b65b-0992cf642637\",\"UserURI\":\"user@domain.omm\"},{\"ID\":\"6bff118e-0ad9-4aee-813d-b292df9b9291\",\"UserID\":\"user@domain.omm\",\"CreatedAt\":\"2014-03-12T16:48:58.740447+01:00\",\"DatabaseServer\":\"10.5.13.1\",\"DatabasePort\":5432,\"DatabaseName\":\"dccTest\",\"ApplicationServer\":\"\",\"ApplicationName\":\"\",\"ApplicationPoolName\":\"ExternalApplicationPoolName\",\"Nick\":\"dccRobiTest\",\"CustomDatabaseAdmin\":\"dccTest\",\"CustomDatabasePassword\":\"testingTest3\",\"IsExternal\":true,\"URI\":\"6bff118e-0ad9-4aee-813d-b292df9b9291\",\"UserURI\":\"user@domain.omm\"},{\"ID\":\"87ef8769-56bf-4e9b-a90a-ecf3b24d5fc7\",\"UserID\":\"user@domain.omm\",\"CreatedAt\":\"2014-04-01T13:13:42.757042+02:00\",\"DatabaseServer\":\"10.5.6.1\",\"DatabasePort\":5432,\"DatabaseName\":\"beta_b0326548084b05a80a79ba\",\"ApplicationServer\":\"test.dsl-platform.com\",\"ApplicationName\":\"ApplicationNameValue1\",\"ApplicationPoolName\":\"ApplicationPoolNameValue1\",\"Nick\":\"RedPigeon\",\"URI\":\"87ef8769-56bf-4e9b-a90a-ecf3b24d5fc7\",\"UserURI\":\"user@domain.omm\"}]"
                     .getBytes();
 
-    public static final String projectToken(
-            final String user,
-            final String pass,
-            final String projectid) {
-        return Tokenizer.tokenHeader(user, pass, projectid);
-    }
-
-    public static final String userToken(
-            final String user,
-            final String pass) {
-        return Tokenizer.tokenHeader(user, pass);
-    }
-
     public static String resourceToString(final String resourceName) {
         StringBuffer sb = new StringBuffer();
 
@@ -166,14 +152,6 @@ public class MockData {
         return MockData.resourceToBytes(source);
     }
 
-    public static String userToken() {
-        return userToken(validUser, validPassword);
-    }
-
-    public static String projectToken() {
-        return projectToken(validUser, validPassword, validId);
-    }
-
     public static void writeToResource(String resourcename, byte[] responseBody) {
         final File file = new File("core/src/test/resources/" + resourcename);
         try {
@@ -189,6 +167,5 @@ public class MockData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

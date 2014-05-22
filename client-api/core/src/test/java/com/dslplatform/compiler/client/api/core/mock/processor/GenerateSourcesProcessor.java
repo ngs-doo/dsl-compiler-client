@@ -37,6 +37,7 @@ public class GenerateSourcesProcessor implements MockProcessor {
         switch (state) {
             case success:
                 code = 200;
+                headers.put("Content-Type", Arrays.asList("application/json"));
                 body = MockData.getBodyFor("test_managed_AB/ClientSource", targets, 1);
                 break;
             case unknown_language:

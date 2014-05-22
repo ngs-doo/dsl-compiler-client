@@ -267,10 +267,11 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     }
 
     @Override
-    public HttpRequest templateCreate(final String token, final String templateName, final byte[] content) {
+    public HttpRequest templateCreate(final String token, final String projectId, final String templateName, final byte[] content) {
         final Map<String, Object> event = new LinkedHashMap<String, Object>();
         event.put("Name", templateName);
         event.put("Content", content);
+        event.put("projectID", projectId);
 
         final HttpRequest request = HttpRequest.POST("Domain.svc/submit/Client.UploadTemplate", event);
 
@@ -281,8 +282,8 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     }
 
     @Override
-    public HttpRequest templateListAll(final String token, final UUID projectID) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/templates/" + projectID.toString());
+    public HttpRequest templateListAll(final String token, final String projectId) {
+        final HttpRequest request = HttpRequest.GET("Alpha.svc/templates/" + projectId);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -291,9 +292,10 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     }
 
     @Override
-    public HttpRequest templateDelete(final String token, final String templateName) {
+    public HttpRequest templateDelete(final String token, final String projectId, final String templateName) {
         final Map<String, Object> event = new LinkedHashMap<String, Object>();
         event.put("Name", templateName);
+        event.put("projectID", projectId);
 
         final HttpRequest request = HttpRequest.POST("Domain.svc/submit/Client.DeleteTemplate", event);
 

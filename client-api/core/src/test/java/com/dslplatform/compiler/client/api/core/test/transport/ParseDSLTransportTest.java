@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client.api.core.test.transport;
 
+import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import org.apache.commons.codec.Charsets;
@@ -21,8 +22,6 @@ public class ParseDSLTransportTest extends HttpTransportImplTest {
 
         final HttpRequest parseRequest;
         {
-            final String token = userToken(validUser, validPassword);
-
             final Map<String, String> dsl = new HashMap<String, String>();
             dsl.put("model.dsl", "module Foo {\n" +
                     "\taggregate Bar { String baz; }\n" +
@@ -42,8 +41,6 @@ public class ParseDSLTransportTest extends HttpTransportImplTest {
 
         final HttpRequest parseRequest;
         {
-            final String token = userToken(validUser, validPassword);
-
             final Map<String, String> dsl = new HashMap<String, String>();
             dsl.put("bad.dsl", "module Foo!");
 

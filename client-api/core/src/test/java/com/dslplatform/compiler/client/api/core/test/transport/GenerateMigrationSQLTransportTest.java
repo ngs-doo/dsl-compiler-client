@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client.api.core.test.transport;
 
+import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import com.dslplatform.compiler.client.api.core.mock.MockData;
@@ -18,7 +19,6 @@ public class GenerateMigrationSQLTransportTest extends HttpTransportImplTest {
     public void testGenerateMigrationSQLRequestValid_to1() throws IOException {
         final HttpRequest generateMigrationSQLRequest;
         {
-            final String token = userToken(validUser, validPassword);
             final String version = MockData.version_real;
             final Map<String, String> olddsl =
                     new HashMap<String, String>() {{}};
@@ -31,7 +31,7 @@ public class GenerateMigrationSQLTransportTest extends HttpTransportImplTest {
         final String responseBodyStr = new String(response.body, "UTF-8");
         logger.info("Response: {}", responseBodyStr);
         assertEquals(200, response.code);
-        assertTrue(responseBodyStr.contains("New object B will be created in schema myModule"));
+        assertTrue(responseBodyStr.contains("New object A will be created in schema myModule"));
         assertTrue(responseBodyStr.contains("INSERT INTO \"myModule\".\"A\" (\"ID\")"));
         assertEquals(Arrays.asList("application/octet-stream"), response.headers.get("Content-Type"));
     }
@@ -40,7 +40,6 @@ public class GenerateMigrationSQLTransportTest extends HttpTransportImplTest {
     public void testGenerateMigrationSQLRequestValid_1to2() throws IOException {
         final HttpRequest generateMigrationSQLRequest;
         {
-            final String token = userToken(validUser, validPassword);
             final String version = MockData.version_real;
             final Map<String, String> olddsl =
                     new HashMap<String, String>() {{put("1.dsl", MockData.test_migration_sql_simple_1);}};
@@ -62,7 +61,7 @@ public class GenerateMigrationSQLTransportTest extends HttpTransportImplTest {
     public void testGenerateMigrationSQLRequestBadDSL() throws IOException {
         final HttpRequest generateMigrationSQLRequest;
         {
-            final String token = userToken(validUser, validPassword);
+            final String token = Tokenizer.tokenHeader(validUser, validPassword);
             final String version = MockData.version_real;
             final Map<String, String> olddsl =
                     new HashMap<String, String>() {{put("dsl.dsl", MockData.test_migration_sql_simple_1);}};
@@ -79,7 +78,7 @@ public class GenerateMigrationSQLTransportTest extends HttpTransportImplTest {
     public void testGenerateMigrationSQLRequestInvalidPassword() throws IOException {
         final HttpRequest generateMigrationSQLRequest;
         {
-            final String token = userToken(validUser, inValidPassword);
+            final String token = Tokenizer.tokenHeader(validUser, inValidPassword);
             final String version = MockData.version_real;
             final Map<String, String> olddsl =
                     new HashMap<String, String>() {{put("dsl.dsl", MockData.test_migration_sql_simple_1);}};

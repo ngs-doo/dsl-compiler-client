@@ -8,7 +8,7 @@ object ClientApi extends Build with Default {
     id.toLowerCase
     , file(id.toLowerCase)
     , settings = javaSettings ++ Seq(
-      name := "DSL-Compiler-Client-" + id
+        name := "DSL-Compiler-Client-" + id
       , initialCommands := "import com.dslplatform.compiler.client._"
     )
   )
@@ -26,15 +26,15 @@ object ClientApi extends Build with Default {
   , params
   )
 
-  lazy val core = clientApiProject("Core") inject(
+  lazy val core = clientApiProject("Core"). inject(
       jodaTime
     , postgresql % "provided"
     , slf4j
     , commonsCodec
     , util
-    , slf4jSimple % "test"
+    , slf4jSimple
     , jUnit % "test"
-    ) settings(
+    ) settings (
       unmanagedSourceDirectories in Compile := Seq(
           sourceDirectory.value / "model" / "java"
         , sourceDirectory.value / "interface" / "java"
@@ -49,8 +49,10 @@ object ClientApi extends Build with Default {
 
   lazy val api = clientApiProject("Api") inject(
       slf4jSimple
+    , postgresql % "test"
+    , commonsIo
     , jUnit % "test"
-    , hamcrast % "test") dependsOn (core % "test->test;compile->compile", util)
+    , hamcrest % "test") dependsOn (core % "test->test;compile->compile", util)
 
   lazy val dslCompilerSBT = Project(
       "sbt"

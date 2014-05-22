@@ -1,11 +1,17 @@
 package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.api.core.*;
+import com.dslplatform.compiler.client.api.core.HttpRequestBuilder;
+import com.dslplatform.compiler.client.api.core.HttpResponse;
+import com.dslplatform.compiler.client.api.core.HttpTransport;
+import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
 import com.dslplatform.compiler.client.api.model.Migration;
 import com.dslplatform.compiler.client.processor.*;
 import com.dslplatform.compiler.client.response.*;
+import org.apache.commons.codec.Charsets;
+import org.apache.commons.io.FileUtils;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -141,7 +147,8 @@ public class ApiImpl implements Api {
             Set<String> options) {
         final HttpResponse httpResponse;
         try {
-            httpResponse = httpTransport.sendRequest(httpRequestBuilder.getConfig(token, projectID, targets, packageName, options));
+            httpResponse = httpTransport
+                    .sendRequest(httpRequestBuilder.getConfig(token, projectID, targets, packageName, options));
         } catch (IOException e) {
             return new GetConfigResponse(false, e.getMessage(), null);
         }
@@ -196,7 +203,6 @@ public class ApiImpl implements Api {
             lastdsl = new HashMap<String, String>();
         } else {
             final GetLastUnmanagedDSLResponse getLastUnmanagedDSLResponse = getLastUnmanagedDSL(dataSource);
-
             if (!getLastUnmanagedDSLResponse.databaseConnectionSuccessful) {
                 final String authMsg =
                         "Unable to get last dsl: " +
@@ -321,12 +327,15 @@ public class ApiImpl implements Api {
 
     @Override public TemplateCreateResponse templateCreate(
             String token,
+            String projectID,
             String templateName,
-            byte[] content) {
+            byte[] content
+    ) {
         final HttpResponse httpResponse;
         try {
             httpResponse =
-                    httpTransport.sendRequest(httpRequestBuilder.templateCreate(token, templateName, content));
+                    httpTransport
+                            .sendRequest(httpRequestBuilder.templateCreate(token, projectID, templateName, content));
         } catch (IOException e) {
             return new TemplateCreateResponse(false, e.getMessage(), false);
         }
@@ -335,7 +344,8 @@ public class ApiImpl implements Api {
     }
 
     @Override public TemplateListAllResponse templateListAll(
-            String token, UUID projectID) {
+            String token,
+            String projectID) {
         final HttpResponse httpResponse;
         try {
             httpResponse =
@@ -348,10 +358,12 @@ public class ApiImpl implements Api {
     }
 
     @Override public TemplateDeleteResponse templateDelete(
-            String token, String templateName) {
+            String token,
+            String projectID,
+            String templateName) {
         final HttpResponse httpResponse;
         try {
-            httpResponse = httpTransport.sendRequest(httpRequestBuilder.templateDelete(token, templateName));
+            httpResponse = httpTransport.sendRequest(httpRequestBuilder.templateDelete(token, projectID, templateName));
         } catch (IOException e) {
             return new TemplateDeleteResponse(false, e.getMessage(), false);
         }
@@ -363,7 +375,7 @@ public class ApiImpl implements Api {
         try {
             return new DoesUnmanagedDSLExitsResponse(true, null, unmanagedDSL.doesUnmanagedDSLExits(dataSource));
         } catch (SQLException e) {
-            return new DoesUnmanagedDSLExitsResponse(true, null, false);
+            return new DoesUnmanagedDSLExitsResponse(true, e.getMessage(), false);
         }
     }
 
@@ -412,7 +424,8 @@ public class ApiImpl implements Api {
             return UpgradeUnmanagedDatabaseResponse.error(e);
         }
     }
-    private  static final String version_real = "1.0.1.24037";
+
+    private static final String version_real = "1.0.1.24037"; // todo - hardcodeie -> argument
 
     @Override public CreateUnmanagedServerResponse createUnmanagedServer(
             final String token,
@@ -424,12 +437,124 @@ public class ApiImpl implements Api {
         final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
                 generateUnmanagedSources(token, packageName, targets, options, dsl);
 
-        final GenerateMigrationSQLResponse generateMigrationSQLResponse = generateMigrationSQL(token, version_real, new HashMap<String, String>(), dsl);
+        final GenerateMigrationSQLResponse generateMigrationSQLResponse =
+                generateMigrationSQL(token, version_real, new HashMap<String, String>(), dsl);
         if (!generateMigrationSQLResponse.authorized)
             return new CreateUnmanagedServerResponse(false, generateMigrationSQLResponse.authorizationErrorMessage);
 
         return new CreateUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
                 generateUnmanagedSourcesResponse.sources);
+    }
+
+    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            DataSource dataSource,
+            String migration,
+            List<Source> sources,
+            File dependencies,
+            File serverPath) {
+        if (dependencies == null || dependencies.isFile())
+            new IllegalArgumentException("Must provide a folder in which source build dependencies reside.");
+        if (serverPath == null || serverPath.isFile())
+            new IllegalArgumentException("Must provide a folder to deploy server to");
+        final String tmpName = "tmp-" + java.util.UUID.randomUUID().toString();
+        final File tempFile = new File(tmpName);
+        final UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDatabaseResponse =
+                upgradeUnmanagedServerAndDataBase(dataSource, migration, sources, dependencies, serverPath, tempFile);
+        tempFile.delete();
+
+        return upgradeUnmanagedServerAndDatabaseResponse;
+    }
+
+    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            DataSource dataSource,
+            String migration,
+            List<Source> sources,
+            File dependencies,
+            File serverPath,
+            File targetOutput) {
+        if (serverPath == null || serverPath.isFile())
+            new IllegalArgumentException("Must provide a folder to deploy server to");
+        if (targetOutput == null || targetOutput.isDirectory())
+            new IllegalArgumentException("Must provide a File as a target to write to.");
+        final String tmpName = "tmp-" + java.util.UUID.randomUUID().toString();
+        final File tempFile = new File(tmpName);
+        final UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDatabaseResponse =
+                upgradeUnmanagedServerAndDataBase(dataSource, migration, sources, dependencies, serverPath, targetOutput, tempFile);
+        try {
+            FileUtils.deleteDirectory(tempFile);
+        } catch (IOException e) {
+            // todo - log this, and everything else
+        }
+        return upgradeUnmanagedServerAndDatabaseResponse;
+    }
+
+    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+            DataSource dataSource,
+            String migration,
+            List<Source> sources,
+            File dependencies,
+            File serverPath,
+            File sourceOutput,
+            File targetOutput) {
+        // Upgrade database
+        try {
+            unmanagedDSL.upgradeUnmanagedDatabase(dataSource, Arrays.asList(migration));
+        } catch (SQLException e) {
+            return new UpgradeUnmanagedServerAndDatabaseResponse(false, e.getMessage());
+        }
+
+        // write files to disk
+        for (Source source : sources) {
+            if (source.language.toLowerCase() == "csharpserver") try { // todo - hardcodes -> enum!
+                FileUtils.writeByteArrayToFile(new File(sourceOutput, source.path), source.content);
+            } catch (IOException e) {
+                new RuntimeException(e.getMessage());
+            }
+        }
+
+        // Make the mcs command
+        StringBuilder sb = new StringBuilder("mcs  -v");
+
+        final String targetOutputPath = targetOutput.getPath();
+        sb.append("-out:" + targetOutputPath);
+        sb.append("-target:library");
+        sb.append("-lib:" + dependencies.getPath());
+        for (File dependency : dependencies.listFiles())
+            if (dependency.getName().endsWith(".dll"))
+                sb.append(dependency.getName());
+        sb.append("-recurse:" + sourceOutput + "/*.cs");
+
+        try {
+            FileUtils.write(new File("runScript"), sb.toString(), Charsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            new RuntimeException("unable to write script to file " + e.getMessage());
+        }
+        // Write a command to disk, because it doesn' know how to find its files otherway or something.
+
+        ProcessBuilder runscript = new ProcessBuilder("sh", "runScript.sh");
+        ProcessBuilder installTarget = new ProcessBuilder("install", "-g", "mono", targetOutputPath, new File(serverPath, "bin/generatedModel.dll").getAbsolutePath());
+
+        try {
+            runscript.start();
+            installTarget.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // TODO - log or fail
+        }
+
+        for (File dependency : dependencies.listFiles()) {
+            ProcessBuilder installDependencyProcess = new ProcessBuilder("install", "-g", "mono", "-m", "750", dependency.getPath(), new File(serverPath, "bin/").getAbsolutePath());
+            try {
+                installDependencyProcess.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+                // TODO - log or fail
+            }
+        }
+
+        // todo - HERE !
+        return new UpgradeUnmanagedServerAndDatabaseResponse(true, null, true, true);
     }
 
     @Override public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
@@ -460,9 +585,9 @@ public class ApiImpl implements Api {
             if (!getLastUnmanagedDSLResponse.databaseConnectionSuccessful) {
                 final String authMsg =
                         "Unable to get last dsl: " +
-                        (getLastUnmanagedDSLResponse.databaseConnectionErrorMessage != null
-                                ? getLastUnmanagedDSLResponse.databaseConnectionErrorMessage
-                                : "<last dsl msg null>");
+                                (getLastUnmanagedDSLResponse.databaseConnectionErrorMessage != null
+                                        ? getLastUnmanagedDSLResponse.databaseConnectionErrorMessage
+                                        : "<last dsl msg null>");
 
                 return new UpgradeUnmanagedServerResponse(false, authMsg);
             }
@@ -477,4 +602,13 @@ public class ApiImpl implements Api {
         return new UpgradeUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
                 generateUnmanagedSourcesResponse.sources);
     }
+
+    @Override public File compileCSharpServer(
+            List<Source> sources,
+            File dependencies,
+            File target,
+            File sourcePath) {
+        return null;
+    }
+
 }

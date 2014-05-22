@@ -14,7 +14,6 @@ public class GetConfigTransportTest extends HttpTransportImplTest {
     @Test
     public void testGetConfigRequestValid() throws IOException {
         final HttpRequest getConfigRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");

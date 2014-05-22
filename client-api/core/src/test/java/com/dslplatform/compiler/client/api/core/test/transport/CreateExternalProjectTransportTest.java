@@ -19,7 +19,7 @@ public class CreateExternalProjectTransportTest extends HttpTransportImplTest {
     public void testCreateExernalProjectRequest() throws IOException {
         final HttpRequest createTestProjectRequest;
         {
-            final String token = userToken(validUser, validPassword);
+            final String token = Tokenizer.tokenHeader(validUser, validPassword);
             final String projectName = "NewProjectName";
             final String serverName = "someServerName";
             final String applicationName = "someApplicationName";
@@ -52,7 +52,7 @@ public class CreateExternalProjectTransportTest extends HttpTransportImplTest {
         final HttpRequest createTestProjectRequest;
         {
             final String token =
-                    userToken(validUser, inValidPassword);
+                    Tokenizer.tokenHeader(validUser, inValidPassword);
             final String projectName = "";
             final String serverName = "someServerName";
             final String applicationName = "someApplicationName";

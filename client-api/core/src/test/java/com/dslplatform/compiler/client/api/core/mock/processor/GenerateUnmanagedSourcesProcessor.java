@@ -34,7 +34,7 @@ public class GenerateUnmanagedSourcesProcessor implements MockProcessor {
         switch (state) {
             case success:
                 code = 200;
-                headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
+                headers.put("Content-Type", Arrays.asList("application/json"));
                 final String requestBody = new String(request.body, "UTF-8");
                 if (requestBody.contains("2.dsl"))
                     body = getBodyFor(targets, 2);

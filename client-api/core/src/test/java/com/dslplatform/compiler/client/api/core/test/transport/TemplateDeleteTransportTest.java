@@ -7,17 +7,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class TemplateDeleteTransportTest extends HttpTransportImplTest {
 
     @Test
     public void testTemplateDeleteRequest() throws IOException {
-        final HttpRequest templateDeleteRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
+        final HttpRequest templateDeleteRequest; {;
             final String templateName = "templateName";
-            templateDeleteRequest = httpRequestBuilder.templateDelete(token, templateName);
+            templateDeleteRequest = httpRequestBuilder.templateDelete(token, validId, templateName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateDeleteRequest);
@@ -28,9 +26,8 @@ public class TemplateDeleteTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateDeleteRequestNameAbsent() throws IOException {
         final HttpRequest templateDeleteRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
             final String templateName = "";
-            templateDeleteRequest = httpRequestBuilder.templateDelete(token, templateName);
+            templateDeleteRequest = httpRequestBuilder.templateDelete(token, validId, templateName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateDeleteRequest);

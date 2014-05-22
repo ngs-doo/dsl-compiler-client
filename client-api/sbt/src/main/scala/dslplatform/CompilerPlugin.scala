@@ -141,14 +141,19 @@ object CompilerPlugin extends sbt.Plugin {
 
   private def unmanagedUpgradeDef(serverLanguage: String): Def.Initialize[Task[Unit]] = Def.taskDyn {
     streams.value.log.debug(s"Calling server upgrade for $serverLanguage")
-    val youForceMeToWriteStupid = writeSourcesDef(unmanagedUpgradeAndReturnSourceDef(serverLanguage), csOutputMapping).value
+    writeSourcesDef(unmanagedUpgradeAndReturnSourceDef(serverLanguage), csOutputMapping).value
     Def.task {
       monoCompileAndDeployDef.value
     }
   }
 
   private def generateMigrationSQLDef(dslFiles: Map[String, String]): Def.Initialize[Task[String]] = Def.task {
+
     val migration = api.value.generateMigrationSQL(token.value, dataSource.value, dslFiles)
+    if (!migration.migrationRequestSuccessful)
+      sys.error(s"Migration source request failed: ${migration.authorizationErrorMessage}" )
+    // TODO : may be an outdated DB, ask for a blind migration.
+
     streams.value.log.debug(s"Migration to apply: ${migration.migration}")
     // TODO : ask for confirmation.
     migration.migration

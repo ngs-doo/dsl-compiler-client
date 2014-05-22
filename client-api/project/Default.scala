@@ -9,7 +9,6 @@ trait Default extends Dependencies {
   import sbtassembly.Plugin._, AssemblyKeys._
 
   lazy val scalaSettings =
-    Defaults.defaultSettings ++
     eclipseSettings ++
     graphSettings ++
     assemblySettings ++ Seq(
@@ -25,7 +24,7 @@ trait Default extends Dependencies {
       , "-Xlint"
       , "-target", "1.6"
       ) ++ (javacOptions in doc).value
-    , crossScalaVersions := Seq("2.10.4")
+    , crossScalaVersions := Seq("2.11.1")
     , scalaVersion := crossScalaVersions.value.head
     , scalacOptions := Seq(
         "-unchecked"
@@ -47,7 +46,6 @@ trait Default extends Dependencies {
       , "-language:existentials"
       , "-Yinline-warnings"
       )
-
     , unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
     , unmanagedSourceDirectories in Test := Seq((scalaSource in Test).value)
     , EclipseKeys.eclipseOutput := Some(".target")

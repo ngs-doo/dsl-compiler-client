@@ -14,8 +14,6 @@ public class GetLastManagedDSLTransportTest extends HttpTransportImplTest {
     @Test
     public void testGetLastManagedDSLRequest() throws IOException {
         final HttpRequest getLastManagedDSLRequest; {
-            final String token = projectToken(validUser, validPassword, validId);
-
             getLastManagedDSLRequest = httpRequestBuilder.getLastManagedDSL(token, UUID.fromString(validId));
         }
 

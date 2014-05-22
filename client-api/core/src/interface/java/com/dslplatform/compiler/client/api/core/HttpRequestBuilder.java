@@ -134,15 +134,15 @@ public interface HttpRequestBuilder {
     /**
      * Creates a new template in the test project document repository
      */
-    public HttpRequest templateCreate(final String token, final String templateName, final byte[] content);
+    public HttpRequest templateCreate(final String token, final String projectId, final String templateName, final byte[] content);
 
     /**
      * Lists all the templates in a test project's document repository
      */
-    public HttpRequest templateListAll(final String token, final UUID projectID);
+    public HttpRequest templateListAll(final String token, final String projectId);
 
     /**
      * Removes a template from the test project document repository
      */
-    public HttpRequest templateDelete(final String token, final String templateName);
+    public HttpRequest templateDelete(final String token, final String projectId, final String templateName);
 }

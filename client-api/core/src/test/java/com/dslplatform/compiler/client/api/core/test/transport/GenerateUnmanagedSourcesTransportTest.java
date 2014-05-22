@@ -16,7 +16,6 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
     @Test
     public void testGenerateUnmanagedSourcesRequest_CSharpServer() throws IOException {
         final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("CSharpServer");
             }};
@@ -25,13 +24,13 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", MockData.test_migration_sql_simple_2);
+                put("2.dsl", MockData.test_migration_sql_simple_2);
             }};
             generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
-        logger.info(new String(response.body));
+        logger.info("response" + new String(response.body));
         assertTrue(new String(response.body).contains("postgres"));
         assertEquals(200, response.code);
         assertEquals(Arrays.asList("application/json"), response.headers.get("Content-Type"));
@@ -40,7 +39,6 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
     @Test
     public void testGenerateUnmanagedSourcesRequest_CS_J() throws IOException {
         final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("CSharpServer");
                 add("Java");
@@ -49,9 +47,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("with-active-record");
             }};
             final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", MockData.test_migration_sql_simple_2);
-            }};
+            final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
             generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
         }
 
@@ -65,7 +61,6 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
     @Test
     public void testGenerateUnmanagedSourcesRequest_CS_S() throws IOException {
         final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("CSharpServer");
                 add("Scala");
@@ -74,9 +69,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("with-active-record");
             }};
             final String packageName = "namespace";
-            final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
-                put("only", MockData.test_migration_sql_simple_2);
-            }};
+            final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
             generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
         }
 
@@ -90,7 +83,6 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
     @Test
     public void testGenerateUnmanagedSourcesRequest_WithLast() throws IOException {
         final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("ScalaServer");
             }};
@@ -112,7 +104,6 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
     @Test
     public void testGenerateUnmanagedSourcesRequestBadOptions() throws IOException {
         final HttpRequest generateUnmanagedSourcesRequest; {
-            final String token = userToken(validUser, validPassword);
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
                 add("Scala");
