@@ -7,7 +7,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PAT
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPS_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
@@ -20,8 +20,8 @@ public enum ParamSwitches {
     END_OF_PARAMS("--"),
     HELP("-h", "--help"),
 
-    /* Multiple properties' values */
-    PROJECT_PROPERTIES_PATH_SWITCHES("-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
+    /* Read props from file */
+    PROJECT_PROPS_PATH_SWITCHES("-f", "--" + PROJECT_PROPS_PATH_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),

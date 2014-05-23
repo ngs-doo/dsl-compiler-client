@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
 public enum ParamKey {
-    PROJECT_PROPERTIES_PATH_KEY("project-properties-path"),
+    PROJECT_PROPS_PATH_KEY("project-properties-path"),
 
     USERNAME_KEY("username"),
     PROJECT_ID_KEY("project-id"),

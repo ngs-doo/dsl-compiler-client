@@ -1,12 +1,12 @@
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,8 @@ public class ParserPassingTests {
     }
 
     @Test
-    public void parseOutputPathTest() throws IOException {
+    public void parseOutputPathTest() throws Exception{
+        try{
         final String inputPattern = this.inputPattern;
         final String expectedPattern = this.expectedPattern;
 
@@ -55,28 +56,53 @@ public class ParserPassingTests {
         logger.info("Input pattern: " + inputPattern);
         logger.info("Expected pattern: " + expectedPattern);
 
-        final Queue<String> q = new ArrayDeque<String>();
+        final Queue<String> inputPatternQueue = new ArrayDeque<String>();
         for (final String a : inputPattern.split("\\|"))
-            q.add(a);
+            inputPatternQueue.add(a);
 
         final PropertyLoader propertyLoader =
                 new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
 
         final Arguments arguments =
                 new CachingArgumentsProxy(new ArgumentsValidator(logger,
-                        new ArgumentsReader(logger, propertyLoader).readArguments(q)));
+                        new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
         final String actualPattern = getOutputString(arguments);
         logger.info("Actual pattern: " + actualPattern);
         logger.info("Asserting for string pair: ("+expectedPattern + ", "+actualPattern +")");
-        assertEquals(expectedPattern, actualPattern);
+
+        /* For Target c# must be matched as csharp, and ${language}_client is always ${language} */
+
+        final Pattern targetPattern = Pattern.compile("^(c#|csharp|java|scala|php)([-_ ](client|server|portable))?$", Pattern.CASE_INSENSITIVE);
+
+        if(targetPattern.matcher(expectedPattern).matches()){
+            final String expected = expectedPattern
+                   .replaceAll("^(c#|csharp|java|scala|php)[-_ ](client|server|portable)$", "$1_$2")
+                   .replaceAll("_client$", "")
+                   .replace("c#", "csharp");
+
+            assertEquals(expected, actualPattern);
+        }
+        else{
+            assertEquals(expectedPattern, actualPattern);
+        }
+     }
+        catch(final Exception e){
+            logger.info("Exception: " + e.getMessage());
+            throw (e);
+        }
+
     }
 
     @Parameterized.Parameters(name = "Testing for switch:  {2}  on single pattern: {0}")
-    public static Iterable<Object[]> smtnsmtnTestProvider() {
+    public static Iterable<Object[]> theTestProvider() {
         final List<Object[]> inputPatterns = new ArrayList<Object[]>();
 
         for(final ParamSwitches paramSwitch : ParamSwitches.values()){
+            /* Skip the PROJECT_PROPS_PATH_SWITCHES, it's tested elsewhere */
+            if(paramSwitch.equals(ParamSwitches.PROJECT_PROPS_PATH_SWITCHES))
+                continue;
+
             inputPatterns.addAll(inputPatternsForParamSwitch(paramSwitch));
         }
 
@@ -91,24 +117,7 @@ public class ParserPassingTests {
         final String parameterValue = "some_parameter.val";
         final String parameterValueWithEscapedSpaces = "some\\ parameter\\ val";
 
-        if(paramSwitch.equals(ParamSwitches.PROJECT_PROPERTIES_PATH_SWITCHES)){
-
-            // TODO: This is just a copy-paste, needs to be tested with multiple params
-
-            final String shortVersion = switches.get(0);
-            final String longVersion = switches.get(1);
-
-            inputPatterns.add(new Object[] { parameterValue, shortVersion+"|"+parameterValue, longVersion, paramSwitch });
-            inputPatterns.add(new Object[] { parameterValue, shortVersion+parameterValue, longVersion, paramSwitch });
-
-            inputPatterns.add(new Object[] { parameterValue, longVersion+"="+parameterValue, longVersion, paramSwitch });
-            inputPatterns.add(new Object[] { parameterValue, longVersion+"|"+parameterValue, longVersion, paramSwitch });
-
-            //inputPatterns.add(new Object[] { "/home/username/"+parameterValue, longVersion +"="+"~"+parameterValue, longVersion, paramSwitch});
-            inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "=" + parameterValueWithEscapedSpaces, longVersion, paramSwitch });
-
-        }
-        else if(paramSwitch.equals(ParamSwitches.HELP) || paramSwitch.equals(ParamSwitches.END_OF_PARAMS)){
+        if(paramSwitch.equals(ParamSwitches.HELP) || paramSwitch.equals(ParamSwitches.END_OF_PARAMS)){
             /* Not really switches, so we compare nothing */
             final String shortVersion = switches.get(0);
 
@@ -128,6 +137,25 @@ public class ParserPassingTests {
             for (final Target target : Target.values()){
                 final String targetParamVal = target.targetName;
                 inputPatterns.addAll(commonTestCases(targetParamVal, shortVersion, longVersion, paramSwitch));
+            }
+
+            final String[] targetStringPatterns = new String[]{
+                    "c#", "csharp","java","php","scala"
+                    ,"c# client","csharp client","java client","php client","scala client"
+                    ,"c#_client","csharp_client","java_client","php_client","scala_client"
+                    ,"c#-client","csharp-client","java-client","php-client","scala-client"
+
+                    ,"c# portable","csharp portable"
+                    ,"c#_portable","csharp_portable"
+                    ,"c#-portable","csharp-portable"
+
+                    ,"c# server","csharp server","scala server"
+                    ,"c#_server","csharp_server","scala_server"
+                    ,"c#-server","csharp-server","scala-server"
+                    };
+
+            for(final String pattern : targetStringPatterns){
+                inputPatterns.addAll(commonTestCases(pattern, shortVersion, longVersion, paramSwitch));
             }
 
         }
@@ -179,8 +207,9 @@ public class ParserPassingTests {
 
             final String longVersion = switches.get(0);
 
-            inputPatterns.addAll(commonTestCases(parameterValue, longVersion, longVersion, paramSwitch));
+            //inputPatterns.addAll(commonTestCases(parameterValue, longVersion, longVersion, paramSwitch));
             inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "=" + parameterValueWithEscapedSpaces, longVersion, paramSwitch});
+            inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "|" + parameterValueWithEscapedSpaces, longVersion, paramSwitch});
         }
         else{
             /* It's a flag */
