@@ -30,63 +30,54 @@ public class ParserPassingTests {
 
     final Logger logger = LoggerFactory.getLogger("testni kekec");
 
-    private final String inputPattern;
-    private final String expectedPattern;
+    private final String inputValue;
+    private final String expectedParsedValue;
     private final String switchTestName;
     private final ParamSwitches theActualTestParamSwitch;
 
-    public ParserPassingTests(final String expectedPattern
-            , final String inputPattern
+    public ParserPassingTests(final String expectedParsedValue
+            , final String inputValue
             , final String switchTestName
             , final ParamSwitches theActualTestParamSwitch) {
-        this.expectedPattern = expectedPattern;
-        this.inputPattern = inputPattern;
+        this.expectedParsedValue = expectedParsedValue;
+        this.inputValue = inputValue;
         this.switchTestName = switchTestName;
         this.theActualTestParamSwitch = theActualTestParamSwitch;
     }
 
     @Test
-    public void parseOutputPathTest() throws Exception{
+    public void testASwitch() throws Exception{
         try{
-        final String inputPattern = this.inputPattern;
-        final String expectedPattern = this.expectedPattern;
+            /* The switch we are testing, the expected parsed value,
+            * input value, and the switch we are testing on
+            * are given to us by theTestProvider() */
 
-        logger.info("========");
-        logger.info("The switch we are testing: " + theActualTestParamSwitch);
-        logger.info("Input pattern: " + inputPattern);
-        logger.info("Expected pattern: " + expectedPattern);
+            final String inputValue = this.inputValue;
+            final String expectedParsedValue = this.expectedParsedValue;
 
-        final Queue<String> inputPatternQueue = new ArrayDeque<String>();
-        for (final String a : inputPattern.split("\\|"))
-            inputPatternQueue.add(a);
+            logger.info("========");
+            logger.info("The switch we are testing: " + theActualTestParamSwitch);
+            logger.info("Input pattern: " + inputValue);
+            logger.info("Expected pattern: " + expectedParsedValue);
 
-        final PropertyLoader propertyLoader =
-                new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
+            /* Tokenize the input pattern */
+            final Queue<String> inputPatternQueue = new ArrayDeque<String>();
+            for (final String a : inputValue.split("\\|"))
+                inputPatternQueue.add(a);
 
-        final Arguments arguments =
-                new CachingArgumentsProxy(new ArgumentsValidator(logger,
-                        new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
+            /* Parse the arguments from the token queue */
+            final PropertyLoader propertyLoader =
+                    new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
+            final Arguments arguments =
+                    new CachingArgumentsProxy(new ArgumentsValidator(logger,
+                            new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
-        final String actualPattern = getOutputString(arguments);
-        logger.info("Actual pattern: " + actualPattern);
-        logger.info("Asserting for string pair: ("+expectedPattern + ", "+actualPattern +")");
+            final String actualPattern = getExpectedOutputString(arguments);
+            logger.info("Actual pattern: " + actualPattern);
+            logger.info("Asserting for string pair: ("+expectedParsedValue + ", "+actualPattern +")");
 
-        /* For Target c# must be matched as csharp, and ${language}_client is always ${language} */
-
-        final Pattern targetPattern = Pattern.compile("^(c#|csharp|java|scala|php)([-_ ](client|server|portable))?$", Pattern.CASE_INSENSITIVE);
-
-        if(targetPattern.matcher(expectedPattern).matches()){
-            final String expected = expectedPattern
-                   .replaceAll("^(c#|csharp|java|scala|php)[-_ ](client|server|portable)$", "$1_$2")
-                   .replaceAll("_client$", "")
-                   .replace("c#", "csharp");
-
-            assertEquals(expected, actualPattern);
+            assertEquals(expectedParsedValue, actualPattern);
         }
-        else{
-            assertEquals(expectedPattern, actualPattern);
-        }
-     }
         catch(final Exception e){
             logger.info("Exception: " + e.getMessage());
             throw (e);
@@ -220,7 +211,10 @@ public class ParserPassingTests {
         return inputPatterns;
     }
 
-    private String getOutputString(final Arguments args){
+    /**
+     * Returns the expected output value of the argument
+     */
+    private String getExpectedOutputString(final Arguments args){
         switch(theActualTestParamSwitch){
             case END_OF_PARAMS:
             case HELP:
@@ -257,31 +251,45 @@ public class ParserPassingTests {
             default:
                 return null;
         }
-
     }
 
     /**
-     * Here at last we define test cases.
+     * Definition for test cases
      *
-     * @param expectedParameterValue - The expected value for the tests' assertion
-     * @param shortVersion - the short name of the switch
-     * @param longVersion - the long name of the switch
+     * @param inputParameterValue - The input value for the tests' assertion
+     * @param shortSwitchVersion - the short name of the switch
+     * @param longSwitchVersion - the long name of the switch
      * @param paramSwitch - the {@code ParamSwitches} value, used in getting the actual value of the test.
-     * @return
+     *
+     * @return A list of test cases that will be fed by the test provider function to the test
      */
-    private static List<Object[]> commonTestCases(final String expectedParameterValue, final String shortVersion, final String longVersion, final ParamSwitches paramSwitch){
+    private static List<Object[]> commonTestCases(final String inputParameterValue, final String shortSwitchVersion, final String longSwitchVersion, final ParamSwitches paramSwitch){
         final List<Object[]> testCases = new ArrayList<Object[]>();
+
+        final String expectedParameterValue;
+
+        /* The expected value for target switches is different from the input value*/
+        if(paramSwitch.equals(ParamSwitches.TARGET_SWITCHES)){
+            final Pattern p = Pattern.compile("^$");
+
+            expectedParameterValue
+                = inputParameterValue
+                    .replaceAll("^c#", "csharp")
+                    .replaceAll("^(csharp|java|scala|php)[-_ ]", "$1_")
+                    .replaceAll("^(csharp|java|scala|php)_client", "$1");
+        }
+        else{
+            /* For all other cases, the expected parameter value is equal to the input value */
+            expectedParameterValue = inputParameterValue;
+        }
 
         /* The second element of the Object[] array is the input value for the tests. */
 
-        testCases.add(new Object[] { expectedParameterValue, shortVersion+"|"+expectedParameterValue, longVersion, paramSwitch });
-        testCases.add(new Object[] { expectedParameterValue, shortVersion+expectedParameterValue, longVersion, paramSwitch });
+        testCases.add(new Object[] { expectedParameterValue, shortSwitchVersion+"|"+inputParameterValue, longSwitchVersion, paramSwitch });
+        testCases.add(new Object[] { expectedParameterValue, shortSwitchVersion+inputParameterValue, longSwitchVersion, paramSwitch });
 
-        testCases.add(new Object[] { expectedParameterValue, longVersion+"="+expectedParameterValue, longVersion, paramSwitch });
-        testCases.add(new Object[] { expectedParameterValue, longVersion+"|"+expectedParameterValue, longVersion, paramSwitch });
-
-      //inputPatterns.add(new Object[] { "/home/username/"+parameterValue, shortVersion +"="+"~"+parameterValue, shortVersion, paramSwitch});
-        //inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "=" + parameterValueWithEscapedSpaces, longVersion, paramSwitch});
+        testCases.add(new Object[] { expectedParameterValue, longSwitchVersion+"="+inputParameterValue, longSwitchVersion, paramSwitch });
+        testCases.add(new Object[] { expectedParameterValue, longSwitchVersion+"|"+inputParameterValue, longSwitchVersion, paramSwitch });
 
         return testCases;
     }
