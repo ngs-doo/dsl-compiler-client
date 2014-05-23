@@ -1,3 +1,4 @@
+package com.dslplatform.compiler.client.cmdline.parser;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -16,21 +17,17 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.cmdline.parser.Arguments;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsReader;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
-import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
 import com.dslplatform.compiler.client.params.Target;
 import com.dslplatform.compiler.client.util.PathExpander;
 
 @RunWith(Parameterized.class)
-public class ProjectPropsPathPassingTests {
+public class ProjectPropsSwitchTests {
 
-    final Logger logger = LoggerFactory.getLogger(ProjectPropsPathPassingTests.class);
+    final Logger logger = LoggerFactory.getLogger(ProjectPropsSwitchTests.class);
 
     private final String inputPattern;
 
-    public ProjectPropsPathPassingTests(final String inputPattern) {
+    public ProjectPropsSwitchTests(final String inputPattern) {
         this.inputPattern = inputPattern;
     }
 
@@ -38,11 +35,9 @@ public class ProjectPropsPathPassingTests {
     public static Iterable<Object[]> theTestProvider() {
         final List<Object[]> inputPatterns = new ArrayList<Object[]>();
 
-
-            inputPatterns.add(new Object[]{"-f|src/test/resources/example.props"});
-            inputPatterns.add(new Object[]{"--project-properties-path=src/test/resources/example.props"});
-            inputPatterns.add(new Object[]{"--project-properties-path|src/test/resources/example.props"});
-
+        inputPatterns.add(new Object[] { "-f|src/test/resources/example.props" });
+        inputPatterns.add(new Object[] { "--project-properties-path=src/test/resources/example.props" });
+        inputPatterns.add(new Object[] { "--project-properties-path|src/test/resources/example.props" });
 
         return inputPatterns;
     }
@@ -84,8 +79,6 @@ public class ProjectPropsPathPassingTests {
                         , Target.PHP_CLIENT
                         , Target.SCALA_CLIENT
                         , Target.SCALA_SERVER));
-
-
     }
 
 }

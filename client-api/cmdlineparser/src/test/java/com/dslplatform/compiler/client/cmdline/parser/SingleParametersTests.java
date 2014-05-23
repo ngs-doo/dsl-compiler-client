@@ -1,12 +1,14 @@
+package com.dslplatform.compiler.client.cmdline.parser;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,26 +18,20 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.cmdline.parser.Arguments;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsReader;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
-import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
-import com.dslplatform.compiler.client.cmdline.parser.ParamSwitches;
 import com.dslplatform.compiler.client.params.LoggingLevel;
-import com.dslplatform.compiler.client.params.Target;
 import com.dslplatform.compiler.client.util.PathExpander;
 
 @RunWith(Parameterized.class)
-public class ParserPassingTests {
+public class SingleParametersTests {
 
-    final Logger logger = LoggerFactory.getLogger("testni kekec");
+    final Logger logger = LoggerFactory.getLogger(SingleParametersTests.class);
 
     private final String inputValue;
     private final String expectedParsedValue;
     private final String switchTestName;
     private final ParamSwitches theActualTestParamSwitch;
 
-    public ParserPassingTests(final String expectedParsedValue
+    public SingleParametersTests(final String expectedParsedValue
             , final String inputValue
             , final String switchTestName
             , final ParamSwitches theActualTestParamSwitch) {
@@ -89,11 +85,19 @@ public class ParserPassingTests {
     public static Iterable<Object[]> theTestProvider() {
         final List<Object[]> inputPatterns = new ArrayList<Object[]>();
 
-        for(final ParamSwitches paramSwitch : ParamSwitches.values()){
-            /* Skip the PROJECT_PROPS_PATH_SWITCHES, it's tested elsewhere */
-            if(paramSwitch.equals(ParamSwitches.PROJECT_PROPS_PATH_SWITCHES))
-                continue;
+        final Set<ParamSwitches> singleParameterSwitches = EnumSet.of(
+                ParamSwitches.END_OF_PARAMS
+                , ParamSwitches.HELP
+                , ParamSwitches.USERNAME_SWITCHES
+                , ParamSwitches.OUTPUT_PATH_SWITCHES
+                , ParamSwitches.CACHE_PATH_SWITCHES
+                , ParamSwitches.LOGGING_LEVEL_SWITCHES
+                , ParamSwitches.PROJECT_NAME_SWITCHES
+                , ParamSwitches.PACKAGE_NAME_SWITCHES
+                , ParamSwitches.PROJECT_ID_SWITCHES
+                );
 
+        for(final ParamSwitches paramSwitch : singleParameterSwitches){
             inputPatterns.addAll(inputPatternsForParamSwitch(paramSwitch));
         }
 
@@ -119,37 +123,6 @@ public class ParserPassingTests {
                 inputPatterns.add(new Object[] { Boolean.toString(true), longVersion, shortVersion, paramSwitch});
             }
         }
-        else if (paramSwitch.equals(ParamSwitches.TARGET_SWITCHES)){
-            /* We test for each value of the enum */
-
-            final String shortVersion = switches.get(0);
-            final String longVersion = switches.get(1);
-
-            for (final Target target : Target.values()){
-                final String targetParamVal = target.targetName;
-                inputPatterns.addAll(commonTestCases(targetParamVal, shortVersion, longVersion, paramSwitch));
-            }
-
-            final String[] targetStringPatterns = new String[]{
-                    "c#", "csharp","java","php","scala"
-                    ,"c# client","csharp client","java client","php client","scala client"
-                    ,"c#_client","csharp_client","java_client","php_client","scala_client"
-                    ,"c#-client","csharp-client","java-client","php-client","scala-client"
-
-                    ,"c# portable","csharp portable"
-                    ,"c#_portable","csharp_portable"
-                    ,"c#-portable","csharp-portable"
-
-                    ,"c# server","csharp server","scala server"
-                    ,"c#_server","csharp_server","scala_server"
-                    ,"c#-server","csharp-server","scala-server"
-                    };
-
-            for(final String pattern : targetStringPatterns){
-                inputPatterns.addAll(commonTestCases(pattern, shortVersion, longVersion, paramSwitch));
-            }
-
-        }
         else if (paramSwitch.equals(ParamSwitches.LOGGING_LEVEL_SWITCHES)){
             /* We test for each value of the enum */
 
@@ -160,12 +133,9 @@ public class ParserPassingTests {
                 final String loggingParameterValue = loggingLevel.level;
 
                 inputPatterns.addAll(commonTestCases(loggingParameterValue, shortVersion, longVersion, paramSwitch));
-
             }
-
         }
         else if(paramSwitch.equals(ParamSwitches.PROJECT_NAME_SWITCHES)){
-            // TODO: wrong
 
             final String shortVersion = switches.get(0);
             final String longVersion = switches.get(1);
@@ -184,8 +154,6 @@ public class ParserPassingTests {
         }
         else if(switches.size() > 1)
         {
-            /* It's a single property value*/
-
             final String shortVersion = switches.get(0);
             final String longVersion = switches.get(1);
 
@@ -201,11 +169,6 @@ public class ParserPassingTests {
             //inputPatterns.addAll(commonTestCases(parameterValue, longVersion, longVersion, paramSwitch));
             inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "=" + parameterValueWithEscapedSpaces, longVersion, paramSwitch});
             inputPatterns.add(new Object[] { parameterValueWithEscapedSpaces, longVersion + "|" + parameterValueWithEscapedSpaces, longVersion, paramSwitch});
-        }
-        else{
-            /* It's a flag */
-            final String shortVersion = switches.get(0);
-            inputPatterns.add(new Object[] { Boolean.toString(true), shortVersion, shortVersion, paramSwitch});
         }
 
         return inputPatterns;
@@ -233,21 +196,6 @@ public class ParserPassingTests {
                 return args.getProjectName().projectName;
             case PACKAGE_NAME_SWITCHES:
                 return args.getPackageName().packageName;
-            case TARGET_SWITCHES:
-                return args.getTargets().getTargetSet().toArray(new Target[0])[0].targetName;
-            case WITH_ACTIVE_RECORD_SWITCHES:
-                return Boolean.toString(args.isWithActiveRecord());
-            case WITH_HELPER_METHODS_SWITCHES:
-                return Boolean.toString(args.isWithActiveRecord());
-            case WITH_JACKSON_SWITCHES:
-                return Boolean.toString(args.isWithJackson());
-            case WITH_JAVA_BEANS_SWITCHES:
-                return Boolean.toString(args.isWithJavaBeans());
-            case SKIP_DIFF_SWITCHES:
-                return Boolean.toString(args.isSkipDiff());
-            case ALLOW_UNSAFE_SWITCHES:
-                return Boolean.toString(args.isAllowUnsafe());
-
             default:
                 return null;
         }
@@ -266,22 +214,7 @@ public class ParserPassingTests {
     private static List<Object[]> commonTestCases(final String inputParameterValue, final String shortSwitchVersion, final String longSwitchVersion, final ParamSwitches paramSwitch){
         final List<Object[]> testCases = new ArrayList<Object[]>();
 
-        final String expectedParameterValue;
-
-        /* The expected value for target switches is different from the input value*/
-        if(paramSwitch.equals(ParamSwitches.TARGET_SWITCHES)){
-            final Pattern p = Pattern.compile("^$");
-
-            expectedParameterValue
-                = inputParameterValue
-                    .replaceAll("^c#", "csharp")
-                    .replaceAll("^(csharp|java|scala|php)[-_ ]", "$1_")
-                    .replaceAll("^(csharp|java|scala|php)_client", "$1");
-        }
-        else{
-            /* For all other cases, the expected parameter value is equal to the input value */
-            expectedParameterValue = inputParameterValue;
-        }
+        final String expectedParameterValue = inputParameterValue;
 
         /* The second element of the Object[] array is the input value for the tests. */
 
