@@ -244,15 +244,31 @@ object CompilerPlugin extends sbt.Plugin {
       (mono_app / "bin" ).mkdir()
     }
 
+    // Make a mono compile command.
     val cmd = Seq("mcs", "-v", s"-out:$assembly_name", "-target:library", s"-lib:$monoLib") ++ deps :+ s"-recurse:${monoTempFolder.value}/*.cs"
 
     IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
     log.info(Seq("sh", "runScript.sh").!!)
-    log.info(s"chgrp mono $assembly_name " !!)
+
+    // Make a start script.
+    val startScript =
+    s"""#!/bin/sh
+        |cd "$$(dirname "$$0")"/bin
+        |exec mono Revenj.Http.exe "$$@" > ../logs/mono.log 2>&1
+        |""".stripMargin
+
+    val startScriptFile = file(s"$mono_app" + "/start.sh")
+    log.info(s"Wrote start script to ${startScriptFile.getAbsoluteFile}")
+    IO.write(startScriptFile, startScript, Charsets.UTF_8)
+    Seq("chmod", "700", startScriptFile.getAbsolutePath).!!
+
+    // Copy revenj dependencies.
     monoLib.listFiles.foreach{
       file =>
-        val cmd = s"install -g mono -m 750 ${file.getAbsolutePath} $mono_app/bin/"
+        val cmd = s"cp ${file.getAbsolutePath} $mono_app/bin/"
         cmd.split(" ").toSeq.!!
+
     }
+    log.info(s"Successfully deployed mono at ${mono_app.getAbsoluteFile}")
   }
 }
