@@ -22,7 +22,7 @@ public class GetConfigTransportTest extends HttpTransportImplTest {
                 add("with-active-record");
             }};
             final String packageName = "namespace";
-            getConfigRequest = httpRequestBuilder.getConfig(token, UUID.fromString(validId), targets, packageName, options);
+            getConfigRequest = httpRequestBuilder.getConfig(auth, UUID.fromString(validId), targets, packageName, options);
         }
 
         final HttpResponse response = httpTransport.sendRequest(getConfigRequest);

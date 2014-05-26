@@ -19,7 +19,7 @@ public class InspectManagedProjectChangesTransportTest extends HttpTransportImpl
     public void testInspectManagedProjectChangesRequest() throws IOException {
         final HttpRequest inspectManagedProjectChangesRequest; {
             final Map<String, String> dsl = MockData.managed_dsl_changed_AB;
-            inspectManagedProjectChangesRequest = httpRequestBuilder.inspectManagedProjectChanges(token, UUID.fromString(validId), dsl);
+            inspectManagedProjectChangesRequest = httpRequestBuilder.inspectManagedProjectChanges(auth, UUID.fromString(validId), dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(inspectManagedProjectChangesRequest);
@@ -36,7 +36,7 @@ public class InspectManagedProjectChangesTransportTest extends HttpTransportImpl
             final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
                 put("bad.dsl", "module A { root B; root C{ B b;!}}");
             }};
-            inspectManagedProjectChangesRequest = httpRequestBuilder.inspectManagedProjectChanges(token, UUID.fromString(validId), dsl);
+            inspectManagedProjectChangesRequest = httpRequestBuilder.inspectManagedProjectChanges(auth, UUID.fromString(validId), dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(inspectManagedProjectChangesRequest);

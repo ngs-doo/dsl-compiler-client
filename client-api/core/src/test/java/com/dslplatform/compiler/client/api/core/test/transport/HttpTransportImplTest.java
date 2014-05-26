@@ -5,7 +5,6 @@ import com.dslplatform.compiler.client.api.core.HttpRequestBuilder;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 import com.dslplatform.compiler.client.api.core.impl.HttpTransportImpl;
 import com.dslplatform.compiler.client.api.core.HttpTransport;
-import com.dslplatform.compiler.client.api.core.mock.HttpTransportMock;
 import com.dslplatform.compiler.client.api.core.mock.MockData;
 import com.dslplatform.compiler.client.util.PathExpander;
 import org.junit.BeforeClass;
@@ -19,7 +18,8 @@ public class HttpTransportImplTest extends MockData {
     static HttpRequestBuilder httpRequestBuilder;
     static HttpTransport httpTransport;
 
-    final String token = Tokenizer.tokenHeader(validUser, validPassword);
+    //final String auth = Tokenizer.tokenHeader(validUser, validPassword);
+    final String auth= Tokenizer.basicHeader(validUser, validPassword);
     @BeforeClass
     public static void createHttpRequestBuilder() {
         httpRequestBuilder = new HttpRequestBuilderImpl();

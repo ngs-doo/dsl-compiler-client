@@ -1,6 +1,5 @@
 package com.dslplatform.compiler.client.api.core.test.transport;
 
-import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import org.junit.Test;
@@ -17,7 +16,7 @@ public class CreateProjectTransportTest extends HttpTransportImplTest {
     public void testCreateProjectRequest() throws IOException {
         final HttpRequest createTestProjectRequest; {
             final String projectName = "SomeProjectName" + new Random().nextInt();
-            createTestProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
+            createTestProjectRequest = httpRequestBuilder.createTestProject(auth, projectName);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(createTestProjectRequest);
@@ -30,7 +29,7 @@ public class CreateProjectTransportTest extends HttpTransportImplTest {
     public void testCreateProjectRequestNameAbsent() throws IOException {
         final HttpRequest createTestProjectRequest; {
             final String projectName = "";
-            createTestProjectRequest = httpRequestBuilder.createTestProject(token, projectName);
+            createTestProjectRequest = httpRequestBuilder.createTestProject(auth, projectName);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(createTestProjectRequest);

@@ -7,14 +7,12 @@ import org.apache.commons.codec.Charsets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import org.apache.commons.codec.Charsets;
 import java.util.*;
 
 public class FromJson {
     public static Map<String, String> map(final byte[] responseBody) {
         final JsonReader jsonReader =
-                new JsonReader(new InputStreamReader(new ByteArrayInputStream(responseBody), Charset.forName("UTF-8")));
+                new JsonReader(new InputStreamReader(new ByteArrayInputStream(responseBody), Charsets.UTF_8));
         try {
             return jsonReader.readStringMap();
         } catch (IOException e) {
@@ -25,7 +23,7 @@ public class FromJson {
 
     public static ArrayList<String> array(final byte[] responseBody) {
         final JsonReader jsonReader =
-                new JsonReader(new InputStreamReader(new ByteArrayInputStream(responseBody), Charset.forName("UTF-8")));
+                new JsonReader(new InputStreamReader(new ByteArrayInputStream(responseBody), Charsets.UTF_8));
         try {
             return jsonReader.readStringArray();
         } catch (IOException e) {

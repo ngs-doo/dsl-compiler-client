@@ -8,6 +8,7 @@ import java.security.cert.CertificateFactory;
 
 import javax.crypto.Cipher;
 
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 
@@ -37,7 +38,7 @@ public class Tokenizer {
             final String username,
             final String password) {
         final String toToken = username + ":" + password + ":" + System.currentTimeMillis() / 1000;
-        final byte[] message = toToken.getBytes(Charset.forName("UTF-8"));
+        final byte[] message = toToken.getBytes(Charsets.UTF_8);
         try {
             return StringUtils.newStringUtf8(Base64.encodeBase64(cipher.doFinal(message), false, false));
         } catch (final Exception e) {
@@ -49,5 +50,12 @@ public class Tokenizer {
             final String username,
             final String password) {
         return "Token " + Tokenizer.makeToken(username, password);
+    }
+
+    public static String basicHeader(
+            final String username,
+            final String password) {
+        final byte[] bytes = (username + ":" + password).getBytes(Charsets.UTF_8);
+        return "Authorization " + Base64.encodeBase64String(bytes);
     }
 }

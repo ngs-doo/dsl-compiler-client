@@ -16,7 +16,7 @@ public class TemplateGetTransportTest extends HttpTransportImplTest {
     @Test
     public void testTemplateGetRequest() throws IOException {
         final HttpRequest templateGetRequest; {
-            templateGetRequest = httpRequestBuilder.templateGet(token, validId, "agreggated-report.docx");
+            templateGetRequest = httpRequestBuilder.templateGet(auth, validId, "agreggated-report.docx");
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateGetRequest);

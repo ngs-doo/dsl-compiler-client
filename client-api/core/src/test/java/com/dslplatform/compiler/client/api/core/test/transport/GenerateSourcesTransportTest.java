@@ -23,7 +23,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
             final Set<String> options = new HashSet<String>() {{
             }};
             final String packageName = "namespace";
-            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validId), targets, packageName, options);
+            generateSourcesRequest = httpRequestBuilder.generateSources(auth, UUID.fromString(validId), targets, packageName, options);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);
@@ -44,7 +44,7 @@ public class GenerateSourcesTransportTest extends HttpTransportImplTest {
                 add("opt2");
             }};
             final String packageName = "namespace";
-            generateSourcesRequest = httpRequestBuilder.generateSources(token, UUID.fromString(validId), targets, packageName, options);
+            generateSourcesRequest = httpRequestBuilder.generateSources(auth, UUID.fromString(validId), targets, packageName, options);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);

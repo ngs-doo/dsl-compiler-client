@@ -16,7 +16,7 @@ public class DownloadGeneratedModelTransportTest extends HttpTransportImplTest {
         final HttpRequest generateSourcesRequest;
         {
             generateSourcesRequest =
-                    httpRequestBuilder.downloadGeneratedModel(token, java.util.UUID.fromString(validId));
+                    httpRequestBuilder.downloadGeneratedModel(auth, java.util.UUID.fromString(validId));
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateSourcesRequest);

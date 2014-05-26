@@ -26,11 +26,14 @@ public class ApiImplTest extends MockData {
     private Api api;
 
     private DataSource dataSource;
-
+    
+    final String auth = Tokenizer.basicHeader(validUser, validPassword);
+    
     @Before
     public void setUp() {
         final DataSource dataSource = null;
-        api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), new UnmanagedDSLImpl());
+        //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), new UnmanagedDSLImpl());
+        api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
     }
 
     @Test
@@ -48,7 +51,7 @@ public class ApiImplTest extends MockData {
                 "}");
 
         final ParseDSLResponse parseDSLResponse =
-                api.parseDSL(Tokenizer.tokenHeader(validUser, validPassword), dsl);
+                api.parseDSL(auth, dsl);
         assertTrue(parseDSLResponse.parsed);
     }
 
@@ -59,7 +62,7 @@ public class ApiImplTest extends MockData {
                 "\taggregate Bar { String baz; 3}\n" +
                 "}");
 
-        final ParseDSLResponse parseDSLResponse = api.parseDSL(Tokenizer.tokenHeader(validUser, validPassword), dsl);
+        final ParseDSLResponse parseDSLResponse = api.parseDSL(auth, dsl);
 
         assertTrue(parseDSLResponse.parseMessage.contains("line 2:"));
         assertFalse(parseDSLResponse.parsed);
@@ -68,16 +71,14 @@ public class ApiImplTest extends MockData {
     @Test
     public void createTestProjectTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final String projectName = "projectName";
 
-        api.createTestProject(token, projectName);
+        api.createTestProject(auth, projectName);
     }
 
     @Test
     public void createExternalProjectTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final String projectName = "NewProjectName";
         final String serverName = "someServerName";
         final String applicationName = "someApplicationName";
@@ -88,31 +89,28 @@ public class ApiImplTest extends MockData {
         databaseConnection.put("Username", "someUsername");
         databaseConnection.put("Password", "somePassword");
 
-        api.createExternalProject(token, projectName, serverName, applicationName, databaseConnection);
+        api.createExternalProject(auth, projectName, serverName, applicationName, databaseConnection);
     }
 
     @Test
     public void downloadBinariesTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.downloadBinaries(token, UUID.fromString(validId));
+        api.downloadBinaries(auth, UUID.fromString(validId));
     }
 
     @Test
     public void downloadGeneratedModelTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.downloadGeneratedModel(token, UUID.fromString(validId));
+        api.downloadGeneratedModel(auth, UUID.fromString(validId));
     }
 
     @Test
     public void inspectManagedProjectChangesTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
             put("only", "module A { root B; root C{ B b;}}");
         }};
 
-        final InspectManagedProjectChangesResponse response = api.inspectManagedProjectChanges(token, UUID.fromString(validId), dsl);
+        final InspectManagedProjectChangesResponse response = api.inspectManagedProjectChanges(auth, UUID.fromString(validId), dsl);
         assertTrue(response.authorized);
         assertNull(response.authorizationErrorMessage);
         assertNotNull(response.changes);
@@ -120,9 +118,7 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void getLastManagedDSLTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
-
-        final GetLastManagedDSLResponse response = api.getLastManagedDSL(token, UUID.fromString(validId));
+        final GetLastManagedDSLResponse response = api.getLastManagedDSL(auth, UUID.fromString(validId));
 
         assertTrue(response.authorized);
         assertNull(response.authorizationErrorMessage);
@@ -130,7 +126,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void getConfigTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Set<String> targets = new HashSet<String>() {{
             add("java");
             add("scala");
@@ -141,7 +136,7 @@ public class ApiImplTest extends MockData {
         }};
         final String packageName = "namespace";
 
-        final GetConfigResponse response = api.getConfig(token, UUID.fromString(validId), targets, packageName, options);
+        final GetConfigResponse response = api.getConfig(auth, UUID.fromString(validId), targets, packageName, options);
         assertTrue(response.authorized);
         assertNull(response.authorizationErrorMessage);
         // TODO - deserialize config assertNotNull(response.changes);
@@ -149,7 +144,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void updateManagedProjectTest() throws IOException {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Set<String> targets = new HashSet<String>() {{
             add("Java");
             add("Scala");
@@ -163,7 +157,7 @@ public class ApiImplTest extends MockData {
         final Map<String, String> dsl = MockData.managed_dsl_AB;
 
         final UpdateManagedProjectResponse ump =
-                api.updateManagedProject(token, UUID.fromString(validId), targets, packageName, migration,
+                api.updateManagedProject(auth, UUID.fromString(validId), targets, packageName, migration,
                         options, dsl);
 
         assertNull(ump.authorizationErrorMessage);
@@ -177,12 +171,11 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void generateMigrationSQLTest() throws IOException {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Map<String, String> olddsl = MockData.dsl_test_migration_single_1;
         final Map<String, String> newdsl = MockData.dsl_test_migration_single_2;
         final String version = MockData.version_real;
 
-        final GenerateMigrationSQLResponse generateMigrationSQLResponse = api.generateMigrationSQL(token, version, olddsl, newdsl);
+        final GenerateMigrationSQLResponse generateMigrationSQLResponse = api.generateMigrationSQL(auth, version, olddsl, newdsl);
         assertTrue(generateMigrationSQLResponse.authorized);
         assertNull(generateMigrationSQLResponse.authorizationErrorMessage);
         assertTrue(generateMigrationSQLResponse.migration.contains("New object B will be created in schema myModule"));
@@ -190,7 +183,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void generateSourcesTest() throws IOException {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Set<String> targets = new HashSet<String>() {{
             add("Java");
             add("Scala");
@@ -202,7 +194,7 @@ public class ApiImplTest extends MockData {
         final String packageName = "name.space";
 
         final GenerateSourcesResponse gsr =
-                api.generateSources(token, UUID.fromString(validId), targets, packageName, options);
+                api.generateSources(auth, UUID.fromString(validId), targets, packageName, options);
 
         Source [] sources = gsr.sources.toArray(new Source[gsr.sources.size()]);
 
@@ -211,11 +203,10 @@ public class ApiImplTest extends MockData {
         assertThat(sources, hasItemInArray(containsSource("java", "/name/space/A/C.java")));
     }
 
-
     @Test
     public void generateUnmanagedSourcesTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
+
         final Set<String> targets = new HashSet<String>() {{
             add("ScalaServer");
         }};
@@ -229,7 +220,7 @@ public class ApiImplTest extends MockData {
         }};
 
         final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
-                api.generateUnmanagedSources(token, packageName, targets, options, dsl);
+                api.generateUnmanagedSources(auth, packageName, targets, options, dsl);
 
         Source [] sources = generateUnmanagedSourcesResponse.sources.toArray(new Source[generateUnmanagedSourcesResponse.sources.size()]);
         assertTrue(generateUnmanagedSourcesResponse.authorized);
@@ -239,9 +230,8 @@ public class ApiImplTest extends MockData {
     @Test
     public void getProjectByNameTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        final GetProjectByNameResponse response = api.getProjectByName(token, "name");
+        final GetProjectByNameResponse response = api.getProjectByName(auth, "name");
         assertNull(response.authorizationErrorMessage);
         assertTrue(response.authorized);
         assertNotNull(response.project);
@@ -250,50 +240,43 @@ public class ApiImplTest extends MockData {
     @Test
     public void getAllProjectsTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.getAllProjects(token);
+        api.getAllProjects(auth);
     }
 
     @Test
     public void renameProjectTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final String oldName = "GreenLeopard";
         final String newName = "GreenLion";
 
-        api.renameProject(token, oldName, newName);
+        api.renameProject(auth, oldName, newName);
     }
 
     @Test
     public void cleanProjectTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.cleanProject(token);
+        api.cleanProject(auth);
     }
 
     @Test
     public void templateGetTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.templateGet(token, validId, "templateName");
+        api.templateGet(auth, validId, "templateName");
     }
 
     @Test
     public void templateCreateTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        api.templateCreate(token, validId, "templateName", new byte[0]);
+        api.templateCreate(auth, validId, "templateName", new byte[0]);
     }
 
     @Test
     public void templateListAllTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
-
-        final TemplateListAllResponse response = api.templateListAll(token,validId);
+        final TemplateListAllResponse response = api.templateListAll(auth, validId);
         assertTrue(response.authorized);
         assertNull(response.authorizationErrorMessage);
     }
@@ -301,9 +284,8 @@ public class ApiImplTest extends MockData {
     @Test
     public void templateDeleteTest() {
         final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
 
-        final TemplateDeleteResponse response = api.templateDelete(token, validId, "templateName");
+        final TemplateDeleteResponse response = api.templateDelete(auth, validId, "templateName");
         assertTrue(response.authorized);
         assertNull(response.authorizationErrorMessage);
     }
@@ -344,21 +326,16 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void createUnmanagedProjectTest() {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
-
-        api.createUnmanagedProject(token, null, "", "");
+        api.createUnmanagedProject(auth, null, "", "");
     }
 
     @Test
     public void upgradeUnmanagedDatabaseTest() {
-        final Api api = new ApiImpl(null, null, UnmanagedDSLMock.mock_single_integrated);
-
         api.upgradeUnmanagedDatabase(null, null);
     }
 
     @Test
     public void upgradeUnmanagedServerTest_mockedSingleMigration() throws IOException {
-        final String token = Tokenizer.tokenHeader(validUser, validPassword);
         final Set<String> targets = new HashSet<String>() {{
             add("ScalaServer");
         }};
@@ -369,7 +346,7 @@ public class ApiImplTest extends MockData {
         final String packageName = "namespace";
         final Map<String, String> newDsl = MockData.dsl_test_migration_single_2;
 
-        final UpgradeUnmanagedServerResponse upgradeUnmanagedServerResponse = api.upgradeUnmanagedServer(token, dataSource, packageName, targets, options, newDsl);
+        final UpgradeUnmanagedServerResponse upgradeUnmanagedServerResponse = api.upgradeUnmanagedServer(auth, dataSource, packageName, targets, options, newDsl);
         assertTrue(upgradeUnmanagedServerResponse.authorized);
         assertNull(upgradeUnmanagedServerResponse.authorizationErrorMessage);
         assertTrue(upgradeUnmanagedServerResponse.migration.contains("New object B will be created in schema myModule"));

@@ -26,7 +26,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
                 put("2.dsl", MockData.test_migration_sql_simple_2);
             }};
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(auth, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
@@ -48,7 +48,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(auth, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
@@ -70,7 +70,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(auth, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
@@ -91,7 +91,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.migrate_with;
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(auth, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);
@@ -114,7 +114,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
-            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl);
+            generateUnmanagedSourcesRequest = httpRequestBuilder.generateUnmanagedSources(auth, packageName, targets, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(generateUnmanagedSourcesRequest);

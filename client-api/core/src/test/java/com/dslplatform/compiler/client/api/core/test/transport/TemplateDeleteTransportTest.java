@@ -15,7 +15,7 @@ public class TemplateDeleteTransportTest extends HttpTransportImplTest {
     public void testTemplateDeleteRequest() throws IOException {
         final HttpRequest templateDeleteRequest; {;
             final String templateName = "templateName";
-            templateDeleteRequest = httpRequestBuilder.templateDelete(token, validId, templateName);
+            templateDeleteRequest = httpRequestBuilder.templateDelete(auth, validId, templateName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateDeleteRequest);
@@ -27,7 +27,7 @@ public class TemplateDeleteTransportTest extends HttpTransportImplTest {
     public void testTemplateDeleteRequestNameAbsent() throws IOException {
         final HttpRequest templateDeleteRequest; {
             final String templateName = "";
-            templateDeleteRequest = httpRequestBuilder.templateDelete(token, validId, templateName);
+            templateDeleteRequest = httpRequestBuilder.templateDelete(auth, validId, templateName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateDeleteRequest);

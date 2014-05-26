@@ -17,7 +17,7 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
         final HttpRequest templateCreateRequest; {
             final String templateName = "templateName";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(auth, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);
@@ -31,7 +31,7 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
         final HttpRequest templateCreateRequest; {
             final String templateName = "~_? templateName ";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(auth, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);
@@ -46,7 +46,7 @@ public class TemplateCreateTransportTest extends HttpTransportImplTest {
         final HttpRequest templateCreateRequest; {
             final String templateName = "";
             final byte [] templateContent = "templateContent".getBytes("UTF-8");
-            templateCreateRequest = httpRequestBuilder.templateCreate(token, validId, templateName, templateContent);
+            templateCreateRequest = httpRequestBuilder.templateCreate(auth, validId, templateName, templateContent);
         }
 
         final HttpResponse response = httpTransport.sendRequest(templateCreateRequest);

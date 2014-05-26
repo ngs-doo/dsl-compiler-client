@@ -1,14 +1,11 @@
 package com.dslplatform.compiler.client.api.core.test.transport;
 
-import com.dslplatform.compiler.client.api.config.Tokenizer;
 import com.dslplatform.compiler.client.api.core.HttpRequest;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import org.apache.commons.codec.Charsets;
 import org.junit.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +24,7 @@ public class ParseDSLTransportTest extends HttpTransportImplTest {
                     "\taggregate Bar { String baz; }\n" +
                     "}");
 
-            parseRequest = httpRequestBuilder.parseDSL(token, dsl);
+            parseRequest = httpRequestBuilder.parseDSL(auth, dsl);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(parseRequest);
@@ -44,7 +41,7 @@ public class ParseDSLTransportTest extends HttpTransportImplTest {
             final Map<String, String> dsl = new HashMap<String, String>();
             dsl.put("bad.dsl", "module Foo!");
 
-            parseRequest = httpRequestBuilder.parseDSL(token, dsl);
+            parseRequest = httpRequestBuilder.parseDSL(auth, dsl);
         }
 
         final HttpResponse parseResponse = httpTransport.sendRequest(parseRequest);

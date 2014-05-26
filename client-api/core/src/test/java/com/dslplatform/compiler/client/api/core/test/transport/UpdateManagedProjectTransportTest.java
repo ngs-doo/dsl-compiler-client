@@ -28,7 +28,7 @@ public class UpdateManagedProjectTransportTest extends HttpTransportImplTest {
             final String migration = "safe";
             final Map<String, String> dsl = MockData.managed_dsl_changed_AB;
 
-            updateManagedProjectRequest = httpRequestBuilder.updateManagedProject(token, UUID.fromString(validId), targets, packageName, migration, options, dsl);
+            updateManagedProjectRequest = httpRequestBuilder.updateManagedProject(auth, UUID.fromString(validId), targets, packageName, migration, options, dsl);
         }
 
         final HttpResponse response = httpTransport.sendRequest(updateManagedProjectRequest);

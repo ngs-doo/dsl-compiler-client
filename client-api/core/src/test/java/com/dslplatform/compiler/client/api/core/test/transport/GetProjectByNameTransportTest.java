@@ -15,7 +15,7 @@ public class GetProjectByNameTransportTest extends HttpTransportImplTest {
     public void testGetProjectByNameRequest() throws IOException {
         final HttpRequest getProjectByNameRequest; {
             final String projectName = "RedRhino";
-            getProjectByNameRequest = httpRequestBuilder.getProjectByName(token, projectName);
+            getProjectByNameRequest = httpRequestBuilder.getProjectByName(auth, projectName);
         }
 
         final HttpResponse response = httpTransport.sendRequest(getProjectByNameRequest);
