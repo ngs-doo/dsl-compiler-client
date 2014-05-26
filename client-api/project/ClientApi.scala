@@ -32,7 +32,7 @@ object ClientApi extends Build with Default {
     , slf4j
     , commonsCodec
     , util
-    , slf4jSimple
+    , logback % "test"
     , jUnit % "test"
     ) settings (
       unmanagedSourceDirectories in Compile := Seq(
@@ -48,9 +48,9 @@ object ClientApi extends Build with Default {
     )/* not yet dependsOn (params) */
 
   lazy val api = clientApiProject("Api") inject(
-      slf4jSimple
+      commonsIo
+    , logback % "test"
     , postgresql % "test"
-    , commonsIo
     , jUnit % "test"
     , hamcrest % "test") dependsOn (core % "test->test;compile->compile", util)
 

@@ -9,6 +9,8 @@ import com.dslplatform.compiler.client.processor.*;
 import com.dslplatform.compiler.client.response.*;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -16,10 +18,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
+
 public class ApiImpl implements Api {
     private final HttpRequestBuilder httpRequestBuilder;
     private final HttpTransport httpTransport;
     private final UnmanagedDSL unmanagedDSL;
+
+    private static Logger logger = LoggerFactory.getLogger(ApiImpl.class);
 
     public ApiImpl(
             HttpRequestBuilder httpRequestBuilder,
@@ -172,6 +177,7 @@ public class ApiImpl implements Api {
             return new UpdateManagedProjectResponse(false, e.getMessage(), false, null);
         }
 
+        logger.trace("Upgrade managed response {}", new String(httpResponse.body), Charsets.UTF_8);
         return new UpdateManagedProjectProcessor().process(httpResponse);
     }
 
@@ -258,6 +264,8 @@ public class ApiImpl implements Api {
             e.printStackTrace();
             return new GenerateUnmanagedSourcesResponse(false, e.getMessage());
         }
+
+        logger.trace("Response for unmanaged request: {}", new String(generateSourcesResponse.body, Charsets.UTF_8));
 
         return new GenerateUnmanagedSourcesProcessor().process(generateSourcesResponse);
     }

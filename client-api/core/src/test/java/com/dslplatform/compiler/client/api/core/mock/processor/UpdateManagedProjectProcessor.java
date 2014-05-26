@@ -38,7 +38,9 @@ public class UpdateManagedProjectProcessor implements MockProcessor {
             case success:
                 code = 201;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = MockData.getBodyFor("test_managed_AB/ClientSource", targets);
+                final String requestBody = new String(request.body, "UTF-8");
+                int iteration = (requestBody.contains("2.dsl")) ? 2 : 1;
+                body = MockData.getBodyFor("/test_managed_AB/ClientSource", targets, iteration);
                 break;
             case unknown_language:
                 code = 400;

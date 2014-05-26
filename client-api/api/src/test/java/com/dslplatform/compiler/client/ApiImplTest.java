@@ -12,7 +12,6 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
-import org.postgresql.ds.PGSimpleDataSource;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -26,14 +25,15 @@ public class ApiImplTest extends MockData {
     private Api api;
 
     private DataSource dataSource;
-    
+
     final String auth = Tokenizer.basicHeader(validUser, validPassword);
-    
+
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         final DataSource dataSource = null;
+        //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
+        api = new ApiImpl(new HttpRequestBuilderImpl(), HttpTransportProvider.httpTransport(), UnmanagedDSLMock.mock_single_integrated);
         //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), new UnmanagedDSLImpl());
-        api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
     }
 
     @Test
@@ -50,8 +50,7 @@ public class ApiImplTest extends MockData {
                 "\taggregate Bar { String baz; }\n" +
                 "}");
 
-        final ParseDSLResponse parseDSLResponse =
-                api.parseDSL(auth, dsl);
+        final ParseDSLResponse parseDSLResponse = api.parseDSL(auth, dsl);
         assertTrue(parseDSLResponse.parsed);
     }
 
@@ -70,7 +69,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void createTestProjectTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
         final String projectName = "projectName";
 
         api.createTestProject(auth, projectName);
@@ -78,7 +76,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void createExternalProjectTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
         final String projectName = "NewProjectName";
         final String serverName = "someServerName";
         final String applicationName = "someApplicationName";
@@ -94,13 +91,11 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void downloadBinariesTest() {
-
         api.downloadBinaries(auth, UUID.fromString(validId));
     }
 
     @Test
     public void downloadGeneratedModelTest() {
-
         api.downloadGeneratedModel(auth, UUID.fromString(validId));
     }
 
@@ -152,8 +147,8 @@ public class ApiImplTest extends MockData {
             add("opt1");
             add("opt2");
         }};
-        final String packageName = "name.space";
-        final String migration = "migration";
+        final String packageName = "namespace";
+        final String migration = "unsafe";
         final Map<String, String> dsl = MockData.managed_dsl_AB;
 
         final UpdateManagedProjectResponse ump =
@@ -164,9 +159,9 @@ public class ApiImplTest extends MockData {
 
         Source [] sources = ump.sources.toArray(new Source[ump.sources.size()]);
 
-        assertThat(sources, hasItemInArray(containsSource("java", "/name/space/A/B.java")));
-        assertThat(sources, hasItemInArray(containsSource("java","/name/space/A/C.java")));
-        assertThat(sources, hasItemInArray(containsSource("scala", "/name/space/A/B.scala")));
+        assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/B.java")));
+        assertThat(sources, hasItemInArray(containsSource("java","/namespace/A/C.java")));
+        assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/A/B.scala")));
     }
 
     @Test
@@ -191,22 +186,20 @@ public class ApiImplTest extends MockData {
             add("with-active-record");
         }};
 
-        final String packageName = "name.space";
+        final String packageName = "namespace";
 
         final GenerateSourcesResponse gsr =
                 api.generateSources(auth, UUID.fromString(validId), targets, packageName, options);
 
         Source [] sources = gsr.sources.toArray(new Source[gsr.sources.size()]);
 
-        assertThat(sources, hasItemInArray(containsSource("scala", "/name/space/A/B.scala")));
-        assertThat(sources, hasItemInArray(containsSource("java", "/name/space/A/B.java")));
-        assertThat(sources, hasItemInArray(containsSource("java", "/name/space/A/C.java")));
+        assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/A/B.scala")));
+        assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/B.java")));
+        assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/C.java")));
     }
 
     @Test
     public void generateUnmanagedSourcesTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         final Set<String> targets = new HashSet<String>() {{
             add("ScalaServer");
         }};
@@ -216,21 +209,20 @@ public class ApiImplTest extends MockData {
         }};
         final String packageName = "namespace";
         final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
-            put("only", MockData.managedABdsl);
+            put("2.dsl", MockData.test_migration_sql_simple_2);
         }};
 
         final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
                 api.generateUnmanagedSources(auth, packageName, targets, options, dsl);
 
         Source [] sources = generateUnmanagedSourcesResponse.sources.toArray(new Source[generateUnmanagedSourcesResponse.sources.size()]);
+
         assertTrue(generateUnmanagedSourcesResponse.authorized);
         assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/myModule/IBRepository.scala")));
     }
 
     @Test
     public void getProjectByNameTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         final GetProjectByNameResponse response = api.getProjectByName(auth, "name");
         assertNull(response.authorizationErrorMessage);
         assertTrue(response.authorized);
@@ -239,14 +231,11 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void getAllProjectsTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         api.getAllProjects(auth);
     }
 
     @Test
     public void renameProjectTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
         final String oldName = "GreenLeopard";
         final String newName = "GreenLion";
 
@@ -255,22 +244,16 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void cleanProjectTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         api.cleanProject(auth);
     }
 
     @Test
     public void templateGetTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         api.templateGet(auth, validId, "templateName");
     }
 
     @Test
     public void templateCreateTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
-
         api.templateCreate(auth, validId, "templateName", new byte[0]);
     }
 
@@ -283,7 +266,6 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void templateDeleteTest() {
-        final Api api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), null);
 
         final TemplateDeleteResponse response = api.templateDelete(auth, validId, "templateName");
         assertTrue(response.authorized);
@@ -294,14 +276,14 @@ public class ApiImplTest extends MockData {
         final DoesUnmanagedDSLExitsResponse response = api.doesUnmanagedDSLExits(dataSource);
         assertTrue(response.databaseConnectionSuccessful);
         assertNull(response.databaseConnectionErrorMessage);
-        assertFalse(response.databaseExists);
+        assertTrue(response.databaseExists);
     }
 
     @Test
     public void getLastDSLTest_single() {
         final Api api = new ApiImpl(null, null, UnmanagedDSLMock.mock_single_integrated);
 
-        final GetLastUnmanagedDSLResponse getLastUnmanagedDSLResponse = api.getLastUnmanagedDSL(null);
+        final GetLastUnmanagedDSLResponse getLastUnmanagedDSLResponse = api.getLastUnmanagedDSL(dataSource);
 
         assertTrue(getLastUnmanagedDSLResponse.databaseConnectionSuccessful);
         assertTrue(getLastUnmanagedDSLResponse.lastMigration.dsls.containsKey("1.dsl"));
@@ -311,7 +293,7 @@ public class ApiImplTest extends MockData {
     public void getAllDSLTest() {
         final Api api = new ApiImpl(null, null, UnmanagedDSLMock.mock_complex);
 
-        final GetAllUnmanagedDSLResponse getAllUnmanagedDSLResponse = api.getAllUnmanagedDSL(null);
+        final GetAllUnmanagedDSLResponse getAllUnmanagedDSLResponse = api.getAllUnmanagedDSL(dataSource);
 
         assertTrue(getAllUnmanagedDSLResponse.databaseConnectionSuccessful);
         assertTrue(getAllUnmanagedDSLResponse.allMigrations.get(2).dsls.containsKey("One.dsl"));
@@ -331,7 +313,7 @@ public class ApiImplTest extends MockData {
 
     @Test
     public void upgradeUnmanagedDatabaseTest() {
-        api.upgradeUnmanagedDatabase(null, null);
+        api.upgradeUnmanagedDatabase(dataSource, null);
     }
 
     @Test
@@ -358,6 +340,7 @@ public class ApiImplTest extends MockData {
     public static class ContainsSource extends TypeSafeMatcher<Source> {
         final String language;
         final String path;
+
         public ContainsSource(String language, String path) {
             this.language = language;
             this.path = path;
@@ -365,13 +348,13 @@ public class ApiImplTest extends MockData {
 
         @Override
         protected boolean matchesSafely(Source item) {
-            return item.language == language && item.path == path;
+            return item.language.equals(language) && item.path.equals(path);
         }
 
 
         @Override
         public void describeTo(Description description) {
-            description.appendText("Not mention of ").appendText(language);
+            description.appendText(language);
         }
     }
 

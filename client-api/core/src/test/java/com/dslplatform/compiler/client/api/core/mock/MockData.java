@@ -2,6 +2,8 @@ package com.dslplatform.compiler.client.api.core.mock;
 
 import com.dslplatform.compiler.client.api.json.JsonWriter;
 import com.dslplatform.compiler.client.api.model.Migration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 public class MockData {
 
+    public static Logger logger = LoggerFactory.getLogger(MockData.class);
     //public static final String validUser = "ocd@dsl-platform.com";
     public static final String validUser = "rinmalavi@gmail.com";
     //public static final String validPassword = "ocdcdo";
@@ -81,7 +84,7 @@ public class MockData {
     public static final String managedABdsl = resourceToString("/test_managed_AB/AB_1.dsl");
     public static final String managedABChangeddsl = resourceToString("/test_managed_AB/AB_2.dsl");
     public static final Map<String, String> managed_dsl_AB =
-            new HashMap<String, String>() {{put("AB.dsl", managedABdsl);}};
+            new HashMap<String, String>() {{put("AB_1.dsl", managedABdsl);}};
     public static final Map<String, String> managed_dsl_changed_AB = new HashMap<String, String>() {{
         put("AB.dsl",
                 managedABChangeddsl);
@@ -132,8 +135,8 @@ public class MockData {
     private static void appendTargets(StringBuilder sb, List<String> targets) {
         if (targets.contains("CSharpServer")) sb.append("_CS");
         if (targets.contains("ScalaServer")) sb.append("_ScalaServer");
-        if (targets.contains("Scala")) sb.append("_S");
         if (targets.contains("Java")) sb.append("_J");
+        if (targets.contains("Scala")) sb.append("_S");
     }
 
     public static byte[] getBodyFor(String resourcepath, List<String> targets) {
