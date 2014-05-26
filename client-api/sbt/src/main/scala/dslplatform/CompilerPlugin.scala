@@ -115,7 +115,7 @@ object CompilerPlugin extends sbt.Plugin {
   }
 
   private def generateSourcesDef(): Def.Initialize[Task[Unit]] = Def.task {
-    //writeSources(generateSources.value, outputPathMapping.value, streams.value.log)
+    writeSourcesDef(generateSources, outputPathMapping).value
   }
 
   private def upgradeManagedDatabaseAndReturnSourceDef(): Def.Initialize[Task[List[Source]]] = Def.task {
