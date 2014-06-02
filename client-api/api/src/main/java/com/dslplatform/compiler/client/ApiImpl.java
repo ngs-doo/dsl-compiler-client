@@ -380,6 +380,7 @@ public class ApiImpl implements Api {
     }
 
     @Override public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(DataSource dataSource) {
+        if (dataSource == null) return new DoesUnmanagedDSLExitsResponse(true, null, false );
         try {
             return new DoesUnmanagedDSLExitsResponse(true, null, unmanagedDSL.doesUnmanagedDSLExits(dataSource));
         } catch (SQLException e) {

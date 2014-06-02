@@ -40,18 +40,29 @@ object CompilerPlugin extends sbt.Plugin {
 
     lazy val databaseConnection = settingKey[Map[String, String]]("In flux, Properties for connection to database.")
 
-    lazy val generateSources = taskKey[List[Source]]("Generate sources from given dsl!")
-    lazy val generateSourcesUnmanaged = taskKey[Unit]("Generate sources from given dsl!")
-    lazy val updateDatabase = taskKey[List[Source]]("Upgrade database with given dsl!")
+    lazy val generateSources = taskKey[List[Source]]("Generate sources from a given dsl!")
+    lazy val generateSourcesUnmanaged = taskKey[Unit]("Generate sources from a given dsl!")
+    lazy val upgradeDatabase = taskKey[List[Source]]("Upgrade database with a given dsl!")
+    lazy val upgradeDatabaseUnmanaged = taskKey[Unit]("Upgrade database with a given dsl!")
     lazy val parseDSL = taskKey[Boolean]("Parse Dsl Sources!")
 
+    lazy val generateUnmanagedCSSources = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Mono server.")
+    lazy val compileCSharpServer = taskKey[Int]("In flux! Task that compiles C# source into generatedModel.dll needed to run Mono server.")
     lazy val upgradeScalaServer = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Scala server.")
     lazy val upgradeCSharpServer = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Mono server.")
 
-    lazy val monoTempFolder = settingKey[File]("In flux! Place where to temporarily store csharp files. ")
+    lazy val monoTempFolder = settingKey[File]("In flux! Place where to temporarily store C# files. ")
     lazy val monoDependencyFolder = settingKey[File]("In flux! Where dependencies for compilation of cs files are located.")
 
     lazy val monoServerLocation = settingKey[File]("In flux! Location where mono application resides, upgradeMonoServer task will copy all files here to /bin folder")
+    lazy val assemblyName = settingKey[File]("")
+
+    // °º¤ø,¸¸,ø¤º°`°º¤ø, Build Workout ,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸
+    lazy val upgradeUnmanagedDatabase = taskKey[Unit]("Upgrades the database or writes migration SQL to a file depending on other settings")
+    lazy val migrationOutputFile = settingKey[Option[File]]("If defined will write migration to it")
+    lazy val performDatabaseMigration = settingKey[Boolean]("Should the database be upgraded automatically.")
+    lazy val performSourceCompile = settingKey[Boolean]("Should generatedModel.dll be compiled.")
+    lazy val performServerDeploy = settingKey[Boolean]("Should the server be deployed automatically.")
   }
 
   import collection.JavaConversions._
@@ -66,27 +77,38 @@ object CompilerPlugin extends sbt.Plugin {
     outputDirectory := None,
     outputPathMapping <<= OutputPathMapping.plainMapping,
     migration := "unsafe",
+    migrationOutputFile := Some(file("migration.sql")),
     sourceOptions := Set("with-active-record"),
     targetSources := Set("Scala"),
     dslDirectory := baseDirectory.value / "dsl" ** "*.dsl",
     dslFiles <<= dslFilesDef,
 
-    username        := projectConfiguration.value.get("username").getOrElse(""),
-    password        := projectConfiguration.value.get("password").getOrElse(""),
-    dslProjectId    := projectConfiguration.value.get("project-id").getOrElse(""),
-    packageName     := projectConfiguration.value.get("package-name").getOrElse("model"),
-    token           := com.dslplatform.compiler.client.api.config.Tokenizer.tokenHeader(username.value, password.value),
+    username                  := projectConfiguration.value.get("username").getOrElse(""),
+    password                  := projectConfiguration.value.get("password").getOrElse(""),
+    dslProjectId              := projectConfiguration.value.get("project-id").getOrElse(""),
+    packageName               := projectConfiguration.value.get("package-name").getOrElse("model"),
+    token                     := com.dslplatform.compiler.client.api.config.Tokenizer.basicHeader(username.value, password.value),
 
     monoTempFolder            := file("mono_src_tmp"),
     monoDependencyFolder      := file("revenj_lib"),
     monoServerLocation        := file("mono"),
+    assemblyName              := monoServerLocation.value / "bin" / "generatedModel.dll",
 
     parseDSL                  <<= parseDSLDef(),
     generateSources           <<= generateAndReturnSourcesDef(),
     generateSourcesUnmanaged  <<= generateSourcesDef(),
-    updateDatabase            <<= upgradeManagedDatabaseAndReturnSourceDef,
-    upgradeScalaServer        <<= unmanagedUpgradeDef("ScalaServer"),
-    upgradeCSharpServer         <<= unmanagedUpgradeDef("CSharpServer")
+    upgradeDatabase           <<= upgradeManagedDatabaseAndReturnSourceDef,
+    upgradeDatabaseUnmanaged  <<= upgradeManagedDatabaseDef,
+
+    generateUnmanagedCSSources <<= generateUnmanagedSourcesDef("CSharpServer"),
+    upgradeUnmanagedDatabase  <<= unmanagedDatabaseUpgradeDef,
+    upgradeScalaServer        <<= unmanagedServerUpgradeDef("ScalaServer").andFinally(upgradeUnmanagedDatabase),
+    compileCSharpServer       <<= monoCompileDef,
+    upgradeCSharpServer       <<= unmanagedServerUpgradeDef("CSharpServer").andFinally(upgradeUnmanagedDatabase),
+
+    migrationOutputFile       := Some(file("migration.sql")),
+    performDatabaseMigration  := false,
+    performServerDeploy       := false
   )
 
   private def dslFilesDef(): Def.Initialize[Task[Map[String, String]]] = Def.task {
@@ -108,14 +130,25 @@ object CompilerPlugin extends sbt.Plugin {
     if (!response.authorized) log.error(response.authorizationErrorMessage)
     if (response.generatedSuccess) log.info("Source generation successful.")
     else {
-      log.error("Source generation Unsuccessful!")
+      log.error("Source generation unsuccessful!")
       log.error(Option(response.authorizationErrorMessage).getOrElse("Missing error message."))
     }
     response.sources.toList
   }
 
-  private def generateSourcesDef(): Def.Initialize[Task[Unit]] = Def.task {
-    writeSourcesDef(generateSources, outputPathMapping).value
+  private def generateSourcesDef(): Def.Initialize[Task[Unit]] = Def.taskDyn {
+    val sources = generateSources.value
+    val outputPathMapping = OutputPathMapping.plainMapping.value
+    Def.task {
+      writeSourcesDef(sources.toList, outputPathMapping, streams.value.log)
+    }
+  }
+
+  private def upgradeManagedDatabaseDef(): Def.Initialize[Task[Unit]] = Def.taskDyn{
+    val source = upgradeManagedDatabaseAndReturnSourceDef().value
+    Def.task {
+      writeSourcesDef(source, OutputPathMapping.plainMapping.value, streams.value.log)
+    }
   }
 
   private def upgradeManagedDatabaseAndReturnSourceDef(): Def.Initialize[Task[List[Source]]] = Def.task {
@@ -125,34 +158,51 @@ object CompilerPlugin extends sbt.Plugin {
     response.sources.toList
   }
 
-  private def unmanagedUpgradeAndReturnSourceDef(serverLanguage: String): Def.Initialize[Task[List[Source]]] = Def.taskDyn {
+  private def generateUnmanagedSourcesDef(serverLanguage: String): Def.Initialize[Task[Unit]] = Def.task {
     val log = streams.value.log
-    val targets: java.util.Set[String] = targetSources.value + serverLanguage
     val dsl = dslFilesDef.value
+    val targets: java.util.Set[String] = targetSources.value + serverLanguage
+    val generateUnmanagedSources = api.value.generateUnmanagedSources(token.value, packageName.value, targets, sourceOptions.value, dsl)
+    if (generateUnmanagedSources.authorized) log.info("Request for migration sources successful.") else sys.error("Update failed: unauthorized. " + generateUnmanagedSources.authorizationErrorMessage)
+    log.info(s"Generated ${generateUnmanagedSources.sources.size()} sources!")
+    val mapping = csOutputMapping.value // todo - case around ScalaServer
+    writeSourcesDef(generateUnmanagedSources.sources.toList, mapping, log)
+  }
+
+  private def unmanagedServerUpgradeDef(serverLanguage: String): Def.Initialize[Task[Unit]] = Def.taskDyn {
+    val log = streams.value.log
+    log.debug(s"Calling server upgrade for $serverLanguage")
+    generateUnmanagedSourcesDef(serverLanguage).value
     Def.task {
-      val migration = generateMigrationSQLDef(dsl).value
-      val sources = api.value.generateUnmanagedSources(token.value, packageName.value, targets, sourceOptions.value, dsl)
-      if (sources.authorized) log.info("Request for migration sources successful.") else sys.error("Update failed: unauthorized. " + sources.authorizationErrorMessage)
-      val upgradeResult = api.value.upgradeUnmanagedDatabase(dataSource.value, List(migration))
-      if (upgradeResult.successfulUpgrade) log.info("Database upgrade successful.") else sys.error("Migration failed!" + upgradeResult.databaseConnectionErrorMessage)
-      sources.sources.toList
+      serverLanguage match {
+        case "CSharpServer" =>
+          if (monoCompileDef.value == 0) {
+            log.info("Compilation successful")
+            if (performServerDeploy.value)
+              monoDeploy(monoDependencyFolder.value, monoServerLocation.value, monoTempFolder.value, streams.value.log)
+          }
+        case _ => ()
+      }
     }
   }
 
-  private def unmanagedUpgradeDef(serverLanguage: String): Def.Initialize[Task[Unit]] = Def.taskDyn {
-    streams.value.log.debug(s"Calling server upgrade for $serverLanguage")
-    writeSourcesDef(unmanagedUpgradeAndReturnSourceDef(serverLanguage), csOutputMapping).value
+  private def unmanagedDatabaseUpgradeDef: Def.Initialize[Task[Unit]] = Def.taskDyn {
+    val log = streams.value.log
+    val migration = generateMigrationSQLDef().value
     Def.task {
-      monoCompileAndDeployDef.value
+      if (performDatabaseMigration.value) {
+        val upgradeResult = api.value.upgradeUnmanagedDatabase(dataSource.value.getOrElse(null), List(migration))
+        if (upgradeResult.successfulUpgrade) log.info("Database upgrade successful.") else sys.error("Migration failed!" + upgradeResult.databaseConnectionErrorMessage)
+      }
+      migrationOutputFile.value.map{ migrationOutPath => IO.write(migrationOutPath, migration)} // todo - charset
     }
   }
 
-  private def generateMigrationSQLDef(dslFiles: Map[String, String]): Def.Initialize[Task[String]] = Def.task {
-
-    val migration = api.value.generateMigrationSQL(token.value, dataSource.value, dslFiles)
+  private def generateMigrationSQLDef(): Def.Initialize[Task[String]] = Def.task {
+    val migration = api.value.generateMigrationSQL(token.value, dataSource.value.getOrElse(null), dslFiles.value)
     if (!migration.migrationRequestSuccessful)
-      sys.error(s"Migration source request failed: ${migration.authorizationErrorMessage}" )
-    // TODO : may be an outdated DB, ask for a blind migration.
+      sys.error(s"Migration SQL request failed: ${migration.authorizationErrorMessage}" )
+    // TODO : may be an outdated DB, migrate with old dsl then with new.
 
     streams.value.log.debug(s"Migration to apply: ${migration.migration}")
     // TODO : ask for confirmation.
@@ -161,14 +211,16 @@ object CompilerPlugin extends sbt.Plugin {
 
   private def dataSource = Def.setting {
     val dbc = databaseConnection.value
-    new org.postgresql.ds.PGSimpleDataSource() {
-      setServerName(dbc("ServerName"))
-      setPortNumber(dbc("Port").toInt)
-      setDatabaseName(dbc("DatabaseName"))
-      setUser(dbc("User"))
-      setPassword(dbc("Password"))
-      setSsl(false)
-    }
+    scala.util.Try(
+      Some(new org.postgresql.ds.PGSimpleDataSource() {
+        setServerName(dbc("ServerName"))
+        setPortNumber(dbc("Port").toInt)
+        setDatabaseName(dbc("DatabaseName"))
+        setUser(dbc("User"))
+        setPassword(dbc("Password"))
+        setSsl(false)
+      })
+    ).getOrElse(None)
   }
 
   private def projectConfigurationDef(): Def.Initialize[Map[String, String]] = Def.setting {
@@ -186,12 +238,11 @@ object CompilerPlugin extends sbt.Plugin {
   }
 
   private def writeSourcesDef(
-      sourceGenerator: Def.Initialize[Task[List[Source]]],
-      outputPathMapping: Def.Initialize[OutputPathMappingType]): Def.Initialize[Task[Int]] = Def.task {
-    val log = streams.value.log
+      source: List[Source],
+      outputPathMapping: OutputPathMappingType,
+     log: sbt.Logger): Int = {
     log.info("About to preform file write.")
-    val sources = sourceGenerator.value
-    val writeCount = sources.map(outputPathMapping.value).map {
+    val writeCount = source.map(outputPathMapping).map {
       case (path: File, content: Array[Byte]) =>
         IO.write(path, content)
         log.info(s"Wrote ${path.getAbsolutePath}")
@@ -200,59 +251,52 @@ object CompilerPlugin extends sbt.Plugin {
     0
   }
 
-  object OutputPathMapping {
-    type OutputPathMappingType = PartialFunction[Source, (File, Array[Byte])]
-
-    def interface_service_mapping(iDir: String, sDir: String): Def.Initialize[OutputPathMappingType] = Def.setting {
-      case Src(language, path, content) =>
-        (file(if (path.contains("postgres")) sDir else iDir) / language.toString / path, content)
-    }
-
-    def plainMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
-      case Src(language, path, content) if outputDirectory.value.nonEmpty =>
-        (outputDirectory.value.get / language / path, content)
-    }
-
-    val csOutputMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
-      val csParc:  OutputPathMappingType = {
-        case Src(language, path, content) if (language.toLowerCase == "csharpserver") =>
-          (monoTempFolder.value / path, content)
-      }
-      csParc orElse outputPathMapping.value
-    }
-  }
-
-  object Src {
-    def unapply(s: com.dslplatform.compiler.client.response.Source) = Some(s.language, s.path, s.content)
-  }
-
-  private def monoCompileAndDeployDef(): Def.Initialize[Task[Unit]] = Def.task {
+  private def monoCompileDef: Def.Initialize[Task[Int]] = Def.task {
+    val monoLib = monoDependencyFolder.value
     val log = streams.value.log
+
     log.info("About to Compile CS files and deploy them to server location.")
-
     import scala.sys.process._
-    val systemDeps = Seq("System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing")
-    val monoLib: File = monoDependencyFolder.value
-    val revenj = monoLib.listFiles.map(_.getName).filter(_.endsWith("dll"))
+    if (!monoLib.canRead) {
+      log.error(s"Revenj library is not present at ${monoLib.getAbsolutePath}")
+      1
+    }
+    else {
+      val mono_app = monoServerLocation.value
+      val monoTmp = monoTempFolder.value
+      val systemDeps = Seq("System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing")
+      val revenj = monoLib.listFiles.map(_.getName).filter(_.endsWith("dll"))
+      val deps = (systemDeps ++ revenj).map(d => s"-r:$d")
+      val assemblyNameVal = assemblyName.value
 
-    val deps = (systemDeps ++ revenj).map(d => s"-r:$d")
+      if (!(mono_app / "bin").exists()) {
+        (mono_app / "bin").mkdirs()
+        (mono_app / "bin").mkdir()
+      }
+      val cmd = Seq("mcs", "-v", s"-out:$assemblyNameVal", "-target:library", s"-lib:$monoLib") ++ deps :+ s"-recurse:${monoTmp}/*.cs"
 
-    val mono_app: File = monoServerLocation.value
-    val assembly_name = s"${mono_app}/bin/generatedModel.dll"
+      // Make a mono compile command.
+
+      IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
+      log.info(Seq("cat", "runScript.sh").!!)
+      log.info(Seq("sh", "runScript.sh").!!)
+
+      log.info(s"Successfully compiled mono at ${mono_app.getAbsoluteFile}")
+      0
+    }
+  }
+
+  private def monoDeploy(monoLib: File, mono_app: File, monoTempFolder: File, log: sbt.Logger): Int = {
+    log.info("About to Compile CS files and deploy them to server location.")
+    import scala.sys.process._
     if (!(mono_app / "bin").exists()) {
       (mono_app / "bin" ).mkdirs()
       (mono_app / "bin" ).mkdir()
     }
 
-    // Make a mono compile command.
-    val cmd = Seq("mcs", "-v", s"-out:$assembly_name", "-target:library", s"-lib:$monoLib") ++ deps :+ s"-recurse:${monoTempFolder.value}/*.cs"
-
-    IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
-    log.info(Seq("sh", "runScript.sh").!!)
-
     // Make a start script.
     val startScript =
-    s"""#!/bin/sh
+      s"""#!/bin/sh
         |cd "$$(dirname "$$0")"/bin
         |exec mono Revenj.Http.exe "$$@" > ../logs/mono.log 2>&1
         |""".stripMargin
@@ -267,8 +311,38 @@ object CompilerPlugin extends sbt.Plugin {
       file =>
         val cmd = s"cp ${file.getAbsolutePath} $mono_app/bin/"
         cmd.split(" ").toSeq.!!
-
     }
     log.info(s"Successfully deployed mono at ${mono_app.getAbsoluteFile}")
+    0
+  }
+
+  object OutputPathMapping {
+    type OutputPathMappingType = PartialFunction[Source, (File, Array[Byte])]
+
+    def interface_service_mapping(iDir: String, sDir: String): Def.Initialize[OutputPathMappingType] = Def.setting {
+      case Src(language, path, content) =>
+        (file(if (path.contains("postgres")) sDir else iDir) / language.toString / path, content)
+    }
+
+    def plainMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
+      Function.unlift {
+        case Src(language, path, content) =>
+          outputDirectory.value.map{ b => (b / language / path, content)}
+        case _ => None
+      }
+    }
+
+    val csOutputMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
+      val csParc:  OutputPathMappingType = {
+        case Src(language, path, content) if (language.toLowerCase == "csharpserver") =>
+          (monoTempFolder.value / path, content)
+
+      }
+      csParc orElse outputPathMapping.value
+    }
+  }
+
+  object Src {
+    def unapply(s: com.dslplatform.compiler.client.response.Source): Option[(String, String, Array[Byte])] =  Some(s.language, s.path, s.content)
   }
 }

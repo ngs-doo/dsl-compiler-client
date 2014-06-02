@@ -56,6 +56,6 @@ public class Tokenizer {
             final String username,
             final String password) {
         final byte[] bytes = (username + ":" + password).getBytes(Charsets.UTF_8);
-        return "Authorization " + Base64.encodeBase64String(bytes);
+        return "Authorization " + new String(Base64.encodeBase64(bytes, false, false), Charsets.UTF_8);
     }
 }

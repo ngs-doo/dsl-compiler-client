@@ -61,7 +61,10 @@ object ClientApi extends Build with Default {
       name := "DSL-Compiler-Client-SBT"
     , libraryDependencies ++= Seq(postgresql, config, jUnit % "test") // TODO - make mock scope
     , ScriptedPlugin.scriptedLaunchOpts := { ScriptedPlugin.scriptedLaunchOpts.value ++
-        Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value)
+        Seq("-Xmx1024M"
+          , "-XX:MaxPermSize=256M"
+          , "-Dplugin.version=" + version.value
+        )
       }
     , unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
     , unmanagedSourceDirectories in Test := (unmanagedSourceDirectories in Test in core).value :+ (scalaSource in Test).value

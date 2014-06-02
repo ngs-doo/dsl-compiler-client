@@ -88,9 +88,14 @@ public class UnmanagedDSLImpl implements UnmanagedDSL {
 
     private static Migration readMigration(final ResultSet resultSet)
             throws SQLException {
+        String version = null;
+        try {
+            version = resultSet.getString("version");
+        } catch (SQLException e) {
+        }
         return new Migration(
                 resultSet.getInt("ordinal"),
-                resultSet.getString("version"),
+                version,
                 parseHStore(resultSet.getString("dsls")));
     }
 
@@ -136,7 +141,7 @@ public class UnmanagedDSLImpl implements UnmanagedDSL {
                         throws SQLException {
                     final ResultSet migrationQuery = statement
                             .executeQuery(
-                                    "SELECT ordinal, version, dsls FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1;");
+                                    "SELECT * FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1;");
                     try {
                         migrationQuery.next();
                         return readMigration(migrationQuery);
@@ -153,7 +158,7 @@ public class UnmanagedDSLImpl implements UnmanagedDSL {
                         throws SQLException {
                     final ResultSet migrationsQuery = statement
                             .executeQuery(
-                                    "SELECT ordinal, version, dsls FROM \"-NGS-\".database_migration ORDER BY ordinal;");
+                                    "SELECT * FROM \"-NGS-\".database_migration ORDER BY ordinal;");
                     try {
                         final ArrayList<Migration> migrations =
                                 new ArrayList<Migration>();

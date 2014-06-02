@@ -2,11 +2,13 @@ import dslplatform.CompilerPlugin.DslKeys._
 
 dslplatform.CompilerPlugin.dslSettings
 
-username := "rinmalavi@gmail.com"
+val testCredentials = com.typesafe.config.ConfigFactory.parseFile(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
 
-password := "qwe321"
+username := testCredentials.getString("dsl.username")
 
-dslProjectId := "6bff118e-0ad9-4aee-813d-b292df9b9291"
+password := testCredentials.getString("dsl.password")
+
+dslProjectId := testCredentials.getString("dsl.projectId")
 
 outputDirectory := Some(file("out"))
 
