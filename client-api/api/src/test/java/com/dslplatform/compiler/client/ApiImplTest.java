@@ -335,6 +335,26 @@ public class ApiImplTest extends MockData {
         assertTrue(upgradeUnmanagedServerResponse.migration.contains("ALTER TABLE \"myModule\".\"B\" ALTER \"ID\" SET NOT NULL"));
     }
 
+
+    @Test
+    public void getDiffTest() {
+        final Map<String, String> olddsl = new HashMap<String, String>();
+        final Map<String, String> newdsl = new HashMap<String, String>();
+        olddsl.put("model.dsl", "module Foo {\n" +
+                "\taggregate Bar { String baz; }\n" +
+                "}");
+        newdsl.put(
+                "model.dsl", "module Foo {\n" +
+                "\taggregate Bar { String baz; }\n" +
+                "\taggregate Foo { String bre; }\n" +
+                "}");
+        newdsl.put("model2.dsl", "");
+        String diff = api.getDiff(olddsl, newdsl);
+        logger.info(diff);
+        assertTrue(diff.contains("+\taggregate Foo { String bre; }"));
+        assertTrue(diff.contains("Created model2.dsl"));
+    }
+
     //----------- Matchers
 
     public static class ContainsSource extends TypeSafeMatcher<Source> {

@@ -328,11 +328,10 @@ public interface Api {
             final File sourceOutput
             );
 
-    /* todo - private? */public java.io.File compileCSharpServer(
-            final List<Source> sources,
+    /* todo - private? */public File compileCSharpServer(
+            File sourcePath,
             File dependencies,
-            final java.io.File target,
-            final java.io.File sourcePath);
+            File target);
 
     /**
      * @param token
@@ -350,4 +349,8 @@ public interface Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl);
+
+    public String getDiff(
+            final Map<String, String> olddsl,
+            final Map<String, String> newdsl);
 }

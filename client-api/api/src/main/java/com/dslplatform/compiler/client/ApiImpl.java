@@ -521,46 +521,9 @@ public class ApiImpl implements Api {
             }
         }
 
-        // Make the mcs command
-        StringBuilder sb = new StringBuilder("mcs  -v");
+        compileCSharpServer(sourceOutput, dependencies, targetOutput);
 
-        final String targetOutputPath = targetOutput.getPath();
-        sb.append("-out:" + targetOutputPath);
-        sb.append("-target:library");
-        sb.append("-lib:" + dependencies.getPath());
-        for (File dependency : dependencies.listFiles())
-            if (dependency.getName().endsWith(".dll"))
-                sb.append(dependency.getName());
-        sb.append("-recurse:" + sourceOutput + "/*.cs");
-
-        try {
-            FileUtils.write(new File("runScript"), sb.toString(), Charsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-            new RuntimeException("unable to write script to file " + e.getMessage());
-        }
-        // Write a command to disk, because it doesn' know how to find its files otherway or something.
-
-        ProcessBuilder runscript = new ProcessBuilder("sh", "runScript.sh");
-        ProcessBuilder installTarget = new ProcessBuilder("install", "-g", "mono", targetOutputPath, new File(serverPath, "bin/generatedModel.dll").getAbsolutePath());
-
-        try {
-            runscript.start();
-            installTarget.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-            // TODO - log or fail
-        }
-
-        for (File dependency : dependencies.listFiles()) {
-            ProcessBuilder installDependencyProcess = new ProcessBuilder("install", "-g", "mono", "-m", "750", dependency.getPath(), new File(serverPath, "bin/").getAbsolutePath());
-            try {
-                installDependencyProcess.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-                // TODO - log or fail
-            }
-        }
+        // TODO - link Revenj.Http.config to given path?
 
         // todo - HERE !
         return new UpgradeUnmanagedServerAndDatabaseResponse(true, null, true, true);
@@ -613,11 +576,41 @@ public class ApiImpl implements Api {
     }
 
     @Override public File compileCSharpServer(
-            List<Source> sources,
+            File sourcePath,
             File dependencies,
-            File target,
-            File sourcePath) {
-        return null;
+            File target) {
+        StringBuilder sb = new StringBuilder("mcs -v");
+
+        final String targetOutputPath = target.getPath();
+        sb.append(" -out:").append(targetOutputPath)
+                .append(" -target:library")
+                .append(" -lib:").append(dependencies.getPath());
+        for (File dependency : dependencies.listFiles())
+            if (dependency.getName().endsWith(".dll"))
+                sb.append(" -r:").append(dependency.getName());
+        sb.append(" -recurse:").append(sourcePath.getAbsolutePath()).append("/*.cs");
+
+        try {
+            FileUtils.write(new File("runScript"), sb.toString(), Charsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            new RuntimeException("unable to write script to file " + e.getMessage());
+        }
+
+        ProcessBuilder runscript = new ProcessBuilder("sh", "runScript");
+        try {
+            runscript.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // TODO - log or fail
+        }
+        return target;
     }
 
+    public String getDiff(
+            final Map<String, String> olddsl,
+            final Map<String, String> newdsl) {
+
+        return DiffProcessor.jGitDiff(olddsl, newdsl);
+    }
 }

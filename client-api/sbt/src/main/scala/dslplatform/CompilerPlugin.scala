@@ -40,6 +40,8 @@ object CompilerPlugin extends sbt.Plugin {
 
     lazy val databaseConnection = settingKey[Map[String, String]]("In flux, Properties for connection to database.")
 
+    lazy val getDiffString = taskKey[String]("Generate diff.")
+    lazy val getDiff = taskKey[Unit]("Prints diff to console.")
     lazy val generateSources = taskKey[List[Source]]("Generate sources from a given dsl!")
     lazy val generateSourcesUnmanaged = taskKey[Unit]("Generate sources from a given dsl!")
     lazy val upgradeDatabase = taskKey[List[Source]]("Upgrade database with a given dsl!")
@@ -94,6 +96,8 @@ object CompilerPlugin extends sbt.Plugin {
     monoServerLocation        := file("mono"),
     assemblyName              := monoServerLocation.value / "bin" / "generatedModel.dll",
 
+    getDiffString             <<= getDiffStringDef(),
+    getDiff                   <<= getDiffDef(),
     parseDSL                  <<= parseDSLDef(),
     generateSources           <<= generateAndReturnSourcesDef(),
     generateSourcesUnmanaged  <<= generateSourcesDef(),
@@ -117,8 +121,27 @@ object CompilerPlugin extends sbt.Plugin {
     }.toMap
   }
 
+  private def getLastDsl: Def.Initialize[Task[Map[String, String]]] = Def.task {
+    if (testProject.value) {
+      val pid = java.util.UUID.fromString(dslProjectId.value)
+      api.value.getLastManagedDSL(token.value, pid).dsls.toMap
+    } else {
+      dataSource.value.map{ds => api.value.getLastUnmanagedDSL(ds).lastMigration.dsls.toMap}.getOrElse(Map.empty[String, String])
+    }
+  }
+
+  private def getDiffStringDef(): Def.Initialize[Task[String]] = Def.task {
+    api.value.getDiff(getLastDsl.value, dslFiles.value)
+  }
+
+  private def getDiffDef(): Def.Initialize[Task[Unit]] = Def.task {
+    val diff = getDiffStringDef().value
+    streams.value.log.info("diff:/n" + diff)
+  }
+
   private def parseDSLDef(): Def.Initialize[Task[Boolean]] = Def.task {
     val log = streams.value.log
+
     val response = api.value.parseDSL(token.value, dslFiles.value)
     log.info("Parse: " + response.parseMessage)
     response.parsed
@@ -191,10 +214,11 @@ object CompilerPlugin extends sbt.Plugin {
     val migration = generateMigrationSQLDef().value
     Def.task {
       if (performDatabaseMigration.value) {
+        // TODO : ask for confirmation.
         val upgradeResult = api.value.upgradeUnmanagedDatabase(dataSource.value.getOrElse(null), List(migration))
-        if (upgradeResult.successfulUpgrade) log.info("Database upgrade successful.") else sys.error("Migration failed!" + upgradeResult.databaseConnectionErrorMessage)
+        if (upgradeResult.successfulUpgrade) log.info("Database upgrade successful.") else sys.error("Migration failed! " + upgradeResult.databaseConnectionErrorMessage)
       }
-      migrationOutputFile.value.map{ migrationOutPath => IO.write(migrationOutPath, migration)} // todo - charset
+      migrationOutputFile.value.map{ migrationOutPath => IO.write(migrationOutPath, migration, Charsets.UTF_8)}
     }
   }
 
@@ -205,7 +229,6 @@ object CompilerPlugin extends sbt.Plugin {
     // TODO : may be an outdated DB, migrate with old dsl then with new.
 
     streams.value.log.debug(s"Migration to apply: ${migration.migration}")
-    // TODO : ask for confirmation.
     migration.migration
   }
 
@@ -278,7 +301,6 @@ object CompilerPlugin extends sbt.Plugin {
       // Make a mono compile command.
 
       IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
-      log.info(Seq("cat", "runScript.sh").!!)
       log.info(Seq("sh", "runScript.sh").!!)
 
       log.info(s"Successfully compiled mono at ${mono_app.getAbsoluteFile}")

@@ -49,7 +49,8 @@ object ClientApi extends Build with Default {
 
   lazy val api = clientApiProject("Api") inject(
       commonsIo
-    , logback % "test"
+    , jGit
+    , logback
     , postgresql % "test"
     , jUnit % "test"
     , hamcrest % "test") dependsOn (core % "test->test;compile->compile", util)

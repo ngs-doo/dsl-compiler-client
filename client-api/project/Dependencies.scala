@@ -16,4 +16,6 @@ trait Dependencies {
   val commonsIo     = "commons-io" % "commons-io" % "2.4"
 
   val config        = "com.typesafe" % "config" % "1.2.1"
+
+  val jGit          =  "org.eclipse.jgit" % "org.eclipse.jgit" % "3.4.0.201405281120-rc2"
 }
