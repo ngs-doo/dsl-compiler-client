@@ -35,17 +35,16 @@ object CompilerPlugin extends sbt.Plugin {
 
     lazy val token = taskKey[String]("Token used to authenticate your remote request.")
     lazy val dslDirectory = settingKey[PathFinder]("Location of .dsl Sources, dsl!")
-    lazy val dslSources = taskKey[PathFinder]("Filter for .dsl Sources, by default this are all .dsl files in the classpath!")
     lazy val dslFiles = taskKey[Map[String, String]]("Map of dsls and their names.")
 
     lazy val databaseConnection = settingKey[Map[String, String]]("In flux, Properties for connection to database.")
 
     lazy val getDiffString = taskKey[String]("Generate diff.")
     lazy val getDiff = taskKey[Unit]("Prints diff to console.")
-    lazy val generateSources = taskKey[List[Source]]("Generate sources from a given dsl!")
-    lazy val generateSourcesUnmanaged = taskKey[Unit]("Generate sources from a given dsl!")
-    lazy val upgradeDatabase = taskKey[List[Source]]("Upgrade database with a given dsl!")
-    lazy val upgradeDatabaseUnmanaged = taskKey[Unit]("Upgrade database with a given dsl!")
+    lazy val generateSourcesList = taskKey[List[Source]]("Generate sources from a given dsl!")
+    lazy val generateSources = taskKey[Unit]("Generate sources from a given dsl!")
+    lazy val upgradeDatabaseList = taskKey[List[Source]]("Upgrade database with a given dsl!")
+    lazy val upgradeDatabase = taskKey[Unit]("Upgrade database with a given dsl!")
     lazy val parseDSL = taskKey[Boolean]("Parse Dsl Sources!")
 
     lazy val generateUnmanagedCSSources = taskKey[Unit]("In flux! Task that enables applying upgrade to unmanaged Mono server.")
@@ -57,7 +56,7 @@ object CompilerPlugin extends sbt.Plugin {
     lazy val monoDependencyFolder = settingKey[File]("In flux! Where dependencies for compilation of cs files are located.")
 
     lazy val monoServerLocation = settingKey[File]("In flux! Location where mono application resides, upgradeMonoServer task will copy all files here to /bin folder")
-    lazy val assemblyName = settingKey[File]("")
+    lazy val generatedModel = settingKey[File]("")
 
     // °º¤ø,¸¸,ø¤º°`°º¤ø, Build Workout ,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸
     lazy val upgradeUnmanagedDatabase = taskKey[Unit]("Upgrades the database or writes migration SQL to a file depending on other settings")
@@ -74,7 +73,7 @@ object CompilerPlugin extends sbt.Plugin {
     projectIniPath := None,
     projectConfiguration <<= projectConfigurationDef(),
     dslCharset := Charsets.UTF_8,
-    databaseConnection := Map(),
+    databaseConnection := projectConfiguration.value,
     testProject := false,
     outputDirectory := None,
     outputPathMapping <<= OutputPathMapping.plainMapping,
@@ -88,21 +87,21 @@ object CompilerPlugin extends sbt.Plugin {
     username                  := projectConfiguration.value.get("username").getOrElse(""),
     password                  := projectConfiguration.value.get("password").getOrElse(""),
     dslProjectId              := projectConfiguration.value.get("project-id").getOrElse(""),
-    packageName               := projectConfiguration.value.get("package-name").getOrElse("model"),
+    packageName               := projectConfiguration.value.get("dsl.package-name").getOrElse("model"),
     token                     := com.dslplatform.compiler.client.api.config.Tokenizer.basicHeader(username.value, password.value),
 
     monoTempFolder            := file("mono_src_tmp"),
     monoDependencyFolder      := file("revenj_lib"),
     monoServerLocation        := file("mono"),
-    assemblyName              := monoServerLocation.value / "bin" / "generatedModel.dll",
+    generatedModel            := monoServerLocation.value / "bin" / "generatedModel.dll",
 
     getDiffString             <<= getDiffStringDef(),
     getDiff                   <<= getDiffDef(),
     parseDSL                  <<= parseDSLDef(),
-    generateSources           <<= generateAndReturnSourcesDef(),
-    generateSourcesUnmanaged  <<= generateSourcesDef(),
-    upgradeDatabase           <<= upgradeManagedDatabaseAndReturnSourceDef,
-    upgradeDatabaseUnmanaged  <<= upgradeManagedDatabaseDef,
+    generateSourcesList       <<= generateAndReturnSourcesDef(),
+    generateSources           <<= generateSourcesDef(),
+    upgradeDatabaseList       <<= upgradeManagedDatabaseAndReturnSourceDef,
+    upgradeDatabase           <<= upgradeManagedDatabaseDef,
 
     generateUnmanagedCSSources <<= generateUnmanagedSourcesDef("CSharpServer"),
     upgradeUnmanagedDatabase  <<= unmanagedDatabaseUpgradeDef,
@@ -160,7 +159,7 @@ object CompilerPlugin extends sbt.Plugin {
   }
 
   private def generateSourcesDef(): Def.Initialize[Task[Unit]] = Def.taskDyn {
-    val sources = generateSources.value
+    val sources = generateSourcesList.value
     val outputPathMapping = OutputPathMapping.plainMapping.value
     Def.task {
       writeSourcesDef(sources.toList, outputPathMapping, streams.value.log)
@@ -249,14 +248,19 @@ object CompilerPlugin extends sbt.Plugin {
   private def projectConfigurationDef(): Def.Initialize[Map[String, String]] = Def.setting {
     projectIniPath.value.fold(Map.empty[String, String]) {
       projectIniPath =>
-        val properties = new java.util.Properties()
-        properties.load(new java.io.FileInputStream(projectIniPath))
+        val properties = com.typesafe.config.ConfigFactory.parseFile(projectIniPath)
+        def getConfig(key: String) = if (properties.hasPath(key)) properties.getString(key) else null
         Map(
-          "project-id" -> properties.getProperty("project-id", ""),
-          "username" -> properties.getProperty("username", ""),
-          "api-url" -> properties.getProperty("api-url", ""),
-          "package-name" -> properties.getProperty("package-name", "")
-        ).filter((kv) => kv._2 != "")
+          "project-id"    -> getConfig("dsl.projectId"),
+          "username"      -> getConfig("dsl.username"),
+          "password"      -> getConfig("dsl.password"),
+          "package-name"  -> getConfig("dsl.package-name"),
+          "ServerName"    -> getConfig("db.ServerName"),
+          "Port"          -> getConfig("db.Port"),
+          "DatabaseName"  -> getConfig("db.DatabaseName"),
+          "User"          -> getConfig("db.User"),
+          "Password"      -> getConfig("db.Password")
+        ).collect{case (k: String, v: String) if v != null => println(k,v);k -> v}
     }
   }
 
@@ -290,7 +294,7 @@ object CompilerPlugin extends sbt.Plugin {
       val systemDeps = Seq("System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing")
       val revenj = monoLib.listFiles.map(_.getName).filter(_.endsWith("dll"))
       val deps = (systemDeps ++ revenj).map(d => s"-r:$d")
-      val assemblyNameVal = assemblyName.value
+      val assemblyNameVal = generatedModel.value
 
       if (!(mono_app / "bin").exists()) {
         (mono_app / "bin").mkdirs()

@@ -100,10 +100,8 @@ public class DiffProcessor {
             sb.append(e.getMessage());
         }
 
-        String some = new String(baos.toByteArray(), Charsets.UTF_8);
-        sb.append(some);
+        sb.append(new String(baos.toByteArray(), Charsets.UTF_8));
     }
-
 
     public static void diffMatchPatch(final StringBuilder sb, final byte[] ba1, final byte[] ba2) {
         String text1 = new String(ba1);

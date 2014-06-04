@@ -335,7 +335,6 @@ public class ApiImplTest extends MockData {
         assertTrue(upgradeUnmanagedServerResponse.migration.contains("ALTER TABLE \"myModule\".\"B\" ALTER \"ID\" SET NOT NULL"));
     }
 
-
     @Test
     public void getDiffTest() {
         final Map<String, String> olddsl = new HashMap<String, String>();
