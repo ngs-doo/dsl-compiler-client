@@ -21,6 +21,6 @@ monoDependencyFolder    := file(System.getProperty("user.home")) / "code" / "dsl
 performServerDeploy := true
 
 TaskKey[Unit]("checkOut") := {
-  val output = assemblyName.value
+  val output = generatedModel.value
   assert(output.exists())
 }

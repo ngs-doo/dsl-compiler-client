@@ -17,7 +17,7 @@ object CompilerPlugin extends sbt.Plugin {
 
   object DslKeys {
     lazy val testProject = settingKey[Boolean]("Is the project test, this will automatically upgrade the database every time you change dsl.")
-    lazy val projectIniPath = settingKey[Option[File]]("Location of project definition.")
+    lazy val projectPropsPath = settingKey[Option[File]]("Location of project definition.")
 
     lazy val dslCharset = settingKey[java.nio.charset.Charset]("Charset for dsl files")
     lazy val projectConfiguration = settingKey[Map[String, String]]("Project specific properties.")
@@ -70,7 +70,7 @@ object CompilerPlugin extends sbt.Plugin {
 
   lazy val dslSettings = Seq(
     api := new ApiImpl(new HttpRequestBuilderImpl(), HttpTransportProvider.httpTransport(), new UnmanagedDSLImpl()),
-    projectIniPath := None,
+    projectPropsPath := None,
     projectConfiguration <<= projectConfigurationDef(),
     dslCharset := Charsets.UTF_8,
     databaseConnection := projectConfiguration.value,
@@ -246,10 +246,10 @@ object CompilerPlugin extends sbt.Plugin {
   }
 
   private def projectConfigurationDef(): Def.Initialize[Map[String, String]] = Def.setting {
-    projectIniPath.value.fold(Map.empty[String, String]) {
-      projectIniPath =>
-        val properties = com.typesafe.config.ConfigFactory.parseFile(projectIniPath)
-        def getConfig(key: String) = if (properties.hasPath(key)) properties.getString(key) else null
+    projectPropsPath.value.fold(Map.empty[String, String]) {
+      projectPropsPath =>
+        val properties = com.typesafe.config.ConfigFactory.parseFile(projectPropsPath)
+        def getConfig(key: String) = if (properties.hasPath(key)) Some(properties.getString(key)) else None
         Map(
           "project-id"    -> getConfig("dsl.projectId"),
           "username"      -> getConfig("dsl.username"),
@@ -260,7 +260,7 @@ object CompilerPlugin extends sbt.Plugin {
           "DatabaseName"  -> getConfig("db.DatabaseName"),
           "User"          -> getConfig("db.User"),
           "Password"      -> getConfig("db.Password")
-        ).collect{case (k: String, v: String) if v != null => println(k,v);k -> v}
+        ).collect{case (k: String, Some(v: String)) => k -> v}
     }
   }
 

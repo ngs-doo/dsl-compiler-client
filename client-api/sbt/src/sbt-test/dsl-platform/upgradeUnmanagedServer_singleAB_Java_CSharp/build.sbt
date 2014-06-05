@@ -2,7 +2,7 @@ import dslplatform.CompilerPlugin.DslKeys._
 
 dslplatform.CompilerPlugin.dslSettings
 
-projectIniPath := Some(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
+projectPropsPath := Some(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
 
 outputDirectory := Some(file("out"))
 

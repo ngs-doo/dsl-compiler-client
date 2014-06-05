@@ -38,9 +38,7 @@ public class GenerateSourcesProcessor implements MockProcessor {
             case success:
                 code = 200;
                 headers.put("Content-Type", Arrays.asList("application/json"));
-                final String requestBody = new String(request.body, "UTF-8");
-                int iteration = (requestBody.contains("2.dsl")) ? 2 : 1;
-                body = MockData.getBodyFor("/test_managed_AB/ClientSource", targets, iteration);
+                body = MockData.getBodyFor("/test_managed_AB/ClientSource", targets, 2);
                 break;
             case unknown_language:
                 code = 400;

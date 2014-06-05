@@ -2,28 +2,15 @@ import dslplatform.CompilerPlugin.DslKeys._
 
 dslplatform.CompilerPlugin.dslSettings
 
-val testCredentials = com.typesafe.config.ConfigFactory.parseFile(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
+projectPropsPath := Some(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
 
-
-username := testCredentials.getString("dsl.username")
-
-password := testCredentials.getString("dsl.password")
-
-dslProjectId := testCredentials.getString("dsl.projectId")
-
-password := "qwe321"
-
-dslProjectId := "6bff118e-0ad9-4aee-813d-b292df9b9291"
-
-outputPathMapping := OutputPathMapping.interface_service_mapping("i", "s")
+outputPathMapping := OutputPathMapping.interface_service_mapping("i", "s").value
 
 targetSources := Set()
 
 packageName := "namespace"
 
 api := new com.dslplatform.compiler.client.ApiImpl(new com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl(), new com.dslplatform.compiler.client.api.core.mock.HttpTransportMock(), com.dslplatform.compiler.client.api.core.mock.UnmanagedDSLMock.mock_single_integrated)
-
-databaseConnection := Map("ServerName" -> "localhost", "Port" -> "5432", "DatabaseName" -> "dccTest", "User" -> "dccTest", "Password" -> "dccTest")
 
 TaskKey[Unit]("checkOut") := {
   val interfacesOutput = file("i").listFiles()

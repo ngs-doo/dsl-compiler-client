@@ -1,26 +1,23 @@
-version in ThisBuild := "0.20.0-700-SNAPSHOT"
+version in ThisBuild              := "0.20.0-SNAPSHOT"
 
-organization in ThisBuild := "com.dslplatform"
+organization in ThisBuild         := "com.dslplatform"
 
-val NGSNexus            = "NGS Nexus"             at "http://ngs.hr/nexus/content/groups/public/"
-val NGSReleases         = "NGS Releases"          at "http://ngs.hr/nexus/content/repositories/releases/"
-val NGSSnapshots        = "NGS Snapshots"         at "http://ngs.hr/nexus/content/repositories/snapshots/"
-val NGSPrivateReleases  = "NGS Private Releases"  at "http://ngs.hr/nexus/content/repositories/releases-private/"
-val NGSPrivateSnapshots = "NGS Private Snapshots" at "http://ngs.hr/nexus/content/repositories/snapshots-private/"
+publishTo in ThisBuild            := Some(if (version.value endsWith "SNAPSHOT") Opts.resolver.sonatypeSnapshots else Opts.resolver.sonatypeStaging)
 
-resolvers in ThisBuild ++= Seq(NGSNexus, NGSSnapshots, NGSPrivateReleases, NGSPrivateSnapshots)
+licenses in ThisBuild             += ("BSD-style", url("http://opensource.org/licenses/BSD-3-Clause"))
 
-externalResolvers in ThisBuild := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
+startYear in ThisBuild            := Some(2013)
 
-publishTo in ThisBuild := Some(
-  if (version.value endsWith "-PRIVATE-SNAPSHOT") NGSPrivateSnapshots else
-  if (version.value endsWith "-PRIVATE") NGSPrivateReleases else
-  if (version.value endsWith "-SNAPSHOT") NGSSnapshots else NGSReleases
-)
+scmInfo in ThisBuild              := Some(ScmInfo(url("https://github.com/ngs-doo/dsl-compiler-client.git"), "scm:git:https://github.com/ngs-doo/dsl-compiler-client.git"))
 
-credentials in ThisBuild ++= {
-  val creds = Path.userHome / ".config" / "dsl-compiler-client" / "nexus.config"
-  if (creds.exists) Some(Credentials(creds)) else None
-}.toSeq
+pomExtra in ThisBuild             ~= (_ ++ {Developers.toXml})
+
+publishMavenStyle in ThisBuild    := true
+
+pomIncludeRepository in ThisBuild := { _ => false }
+
+homepage in ThisBuild             := Some(url("https://dsl-platform.com/"))
+
+credentials in ThisBuild          += Credentials(Path.userHome / ".config" / "sonatype" / "element.credentials")
 
 packagedArtifacts                 := Map.empty

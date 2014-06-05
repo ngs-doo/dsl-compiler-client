@@ -2,13 +2,7 @@ import dslplatform.CompilerPlugin.DslKeys._
 
 dslplatform.CompilerPlugin.dslSettings
 
-val testCredentials = com.typesafe.config.ConfigFactory.parseFile(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
-
-username := testCredentials.getString("dsl.username")
-
-password := testCredentials.getString("dsl.password")
-
-dslProjectId := testCredentials.getString("dsl.projectId")
+projectPropsPath := Some(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
 
 outputDirectory := Some(file("out"))
 
@@ -17,6 +11,6 @@ api := new com.dslplatform.compiler.client.ApiImpl(new com.dslplatform.compiler.
 packageName := "namespace"
 
 TaskKey[Unit]("checkOut") := {
-  val checkFile = outputDirectory.value.get / "scala" / "name" / "space" / "A" / "B.scala"
+  val checkFile = outputDirectory.value.get / "scala" / "namespace" / "A" / "B.scala"
   assert(checkFile.exists())
 }

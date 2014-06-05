@@ -1,6 +1,69 @@
 #Plugin
 
-###Following settings can be defined:
+###Quick Start
+
+####Minimal build settings contain
+1.1 `projectPropsPath` set to an option of a file looking something like this:
+
+    dsl {
+      username=<your username @ dsl-platform.com>,
+      password=<your password for this username,
+      projectId=<optional projectId for some tests>
+      package-name=<namespace of target sources>
+    }
+    db {
+      ServerName=x,
+      Port=x,
+      DatabaseName=x,
+      User=x,
+      Password=x
+    }
+    
+db part is and projectId are optional depending on a type of a project.
+
+1.2 If `projectPropsPath` is not set then `username`, `password` and optional `projectId` can be set like this (in build.sbt):
+
+    val credentials = com.typesafe.config.ConfigFactory.parseFile(file(System.getProperty("user.home")) / ".config" / "dsl-compiler-client" / "test.credentials")
+    
+    username := credentials.getString("dsl.username")
+   
+    password := credentials.getString("dsl.password")
+   
+    packageName := "namespace"  // if you wouldn't like to have the default namespace of "model".
+
+2.1 Unmanaged projects need `revenj` in case you decide to compile or deploy with a plugin. Following keys must be set:
+
+    monoDependencyFolder    := file(System.getProperty("user.home")) / "code" / "dsl_compiler_client_user" / "revenj"
+   
+    performDatabaseMigration  := false // or true if you would like a database to be upgraded
+    
+    performServerDeploy := true
+
+this will probably change!
+
+3.1 `targetSources` are by default sent to Set(Scala). Java, PHP, C# can also be added as client code.
+
+#####To be able to deploy 
+
+install mono
+
+log in as user `mono`
+
+    su - mono -s $SHELL
+    
+cd to your projects directory and run:
+
+    sbt upgradeCSharpServer
+
+restart mono server
+
+    sudo /etc/init.d/mono restart
+
+- check at `http://<hostname>/Domain.svc/search/<packagename.some_root_name>`
+
+customize config at: `Revenj.Http.exe.config`
+
+##Settings in detail:
 
   - `username`: String  User name - setting it in a project will override the values red from the projectIni file
 
@@ -10,7 +73,7 @@
 
   - `packageName`: String - package name - setting it in a project will override the values red from the projectIni file.
 
-  - `projectIniPath: Option[File]` - Location of a projectIni definition. This file can hold username, password, projectId, namespace. Can be of form:
+  - `projectPropsPath: Option[File]` - Location of a projectIni definition. This file can hold username, password, projectId, namespace. Can be of form:
 
     dsl {
       username=<your username @ dsl-platfrom.com>,
@@ -64,7 +127,7 @@
 
   - `performServerDeploy`: Boolean - Should the server be deployed automatically.
 
-###Useing:
+##Tasks:
 #####Following tasks can be called
 
 To have diff with last dsl be outputted to the console:
@@ -97,10 +160,10 @@ Following tasks will upgrade the database and/or deploy the server based on keys
     upgradeCSharpServer
     upgradeUnmanagedDatabase
 
-###Plugin Testing
+####Plugin Testing
 
 To be able to preform system tests credentials for dsl-platform and database must be supplied.
-they are loaded from `<user.home>/.config/dsl-compiler-client/test.credentials` and look something like this:
+They are loaded from `<user.home>/.config/dsl-compiler-client/test.credentials` and can look something like this:
 
     dsl {
       username=<your username @ dsl-platfrom.com>,
@@ -117,11 +180,13 @@ they are loaded from `<user.home>/.config/dsl-compiler-client/test.credentials` 
 
 db credentials are needed for testing an unmanaged functions.
 
-To compile the C# sources revenj lib is needed. In the tests this is set to revenj folder versioned under the
+To compile the C# sources revenj lib is needed. In the tests this is set to the revenj folder versioned under the
 `dsl_compiler_client_user` project until those sources become stable and exposed via api functionality.
 
 
-To run sbt test call `scripted`
+To run sbt test call 
+
+    scripted
 
 To run a single test call
 
@@ -129,4 +194,5 @@ To run a single test call
     scripted dsl-platform/upgradeUnmanagedServer_singleAB
     scripted dsl-platform/upgradeUnmanagedServer_singleAB_Java_CSharp
     scripted dsl-platform/parseDSL
+    scripted dsl-platform/getDiffManaged
     scripted dsl-platform/generateSourcesWithOutput

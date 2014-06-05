@@ -18,7 +18,7 @@ public class UpdateManagedProjectTransportTest extends HttpTransportImplTest {
         final HttpRequest updateManagedProjectRequest; {
             final Set<String> targets = new HashSet<String>() {{
                 add("Java");
-                add("Scala");
+                // add("Scala");
             }};
             final Set<String> options = new HashSet<String>() {{
                 add("opt1");
@@ -32,6 +32,7 @@ public class UpdateManagedProjectTransportTest extends HttpTransportImplTest {
         }
 
         final HttpResponse response = httpTransport.sendRequest(updateManagedProjectRequest);
+        MockData.writeToResource("test_managed_AB/ClientSource_J_2.response", response.body);
         logger.info(new String(response.body, Charsets.UTF_8));
         assertEquals(201, response.code);
     }
