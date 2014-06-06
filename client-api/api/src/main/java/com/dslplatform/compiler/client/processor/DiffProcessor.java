@@ -49,6 +49,7 @@ public class DiffProcessor {
 
                 case CREATED:
                     sb.append("Created ").append(action.source);
+                    sb.append(new String(newFiles.get(action.source), Charsets.UTF_8));
                     break;
 
                 case MODIFIED:

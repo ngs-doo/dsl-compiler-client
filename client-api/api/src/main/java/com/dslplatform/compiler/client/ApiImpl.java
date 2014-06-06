@@ -18,8 +18,11 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 
-
 public class ApiImpl implements Api {
+
+    private static final String NGSdbmigrationAbsent = "relation \"-NGS-.database_migration\" does not exist";
+    private static final String version_real = "1.0.1.24037"; // todo - hardcodeie -> argument
+
     private final HttpRequestBuilder httpRequestBuilder;
     private final HttpTransport httpTransport;
     private final UnmanagedDSL unmanagedDSL;
@@ -380,7 +383,7 @@ public class ApiImpl implements Api {
     }
 
     @Override public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(DataSource dataSource) {
-        if (dataSource == null) return new DoesUnmanagedDSLExitsResponse(true, null, false );
+        if (dataSource == null) return new DoesUnmanagedDSLExitsResponse(true, null, false);
         try {
             return new DoesUnmanagedDSLExitsResponse(true, null, unmanagedDSL.doesUnmanagedDSLExits(dataSource));
         } catch (SQLException e) {
@@ -402,14 +405,16 @@ public class ApiImpl implements Api {
 
     @Override public GetLastUnmanagedDSLResponse getLastUnmanagedDSL(
             final DataSource dataSource) {
-        final Migration migration;
         try {
-            migration = unmanagedDSL.getLastUnmanagedDSL(dataSource);
+            final Migration migration;
+            if (doesUnmanagedDSLExits(dataSource).databaseExists) {
+                logger.trace("Getting last migration");
+                migration = unmanagedDSL.getLastUnmanagedDSL(dataSource);
+            } else return new GetLastUnmanagedDSLResponse(true, null, null);
+            return new GetLastUnmanagedDSLResponse(true, null, migration);
         } catch (SQLException e) {
             return new GetLastUnmanagedDSLResponse(false, e.getMessage(), null);
         }
-
-        return new GetLastUnmanagedDSLResponse(true, null, migration);
     }
 
     @Override public InspectUnmanagedProjectChangesResponse inspectUnmanagedProjectChanges(
@@ -434,7 +439,6 @@ public class ApiImpl implements Api {
         }
     }
 
-    private static final String version_real = "1.0.1.24037"; // todo - hardcodeie -> argument
 
     @Override public CreateUnmanagedServerResponse createUnmanagedServer(
             final String token,

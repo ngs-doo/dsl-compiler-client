@@ -73,7 +73,7 @@ object CompilerPlugin extends sbt.Plugin {
     projectPropsPath := None,
     projectConfiguration <<= projectConfigurationDef(),
     dslCharset := Charsets.UTF_8,
-    databaseConnection := projectConfiguration.value,
+    databaseConnection := projectConfiguration.value, // TODO - filter some
     testProject := false,
     outputDirectory := None,
     outputPathMapping <<= OutputPathMapping.plainMapping,
@@ -125,7 +125,12 @@ object CompilerPlugin extends sbt.Plugin {
       val pid = java.util.UUID.fromString(dslProjectId.value)
       api.value.getLastManagedDSL(token.value, pid).dsls.toMap
     } else {
-      dataSource.value.map{ds => api.value.getLastUnmanagedDSL(ds).lastMigration.dsls.toMap}.getOrElse(Map.empty[String, String])
+      dataSource.value.flatMap { ds =>
+        val getLastDslResponse = api.value.getLastUnmanagedDSL(ds)
+        if (!getLastDslResponse.databaseConnectionSuccessful)
+          sys.error(s"Database connection fail: ${getLastDslResponse.databaseConnectionErrorMessage}")
+        Option(getLastDslResponse.lastMigration).map(_.dsls.toMap)
+      }.getOrElse(Map.empty[String, String])
     }
   }
 
@@ -250,6 +255,7 @@ object CompilerPlugin extends sbt.Plugin {
       projectPropsPath =>
         val properties = com.typesafe.config.ConfigFactory.parseFile(projectPropsPath)
         def getConfig(key: String) = if (properties.hasPath(key)) Some(properties.getString(key)) else None
+        // TODO - do something
         Map(
           "project-id"    -> getConfig("dsl.projectId"),
           "username"      -> getConfig("dsl.username"),

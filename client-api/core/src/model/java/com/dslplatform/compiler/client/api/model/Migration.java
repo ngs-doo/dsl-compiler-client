@@ -15,4 +15,10 @@ public class Migration {
         this.version = version;
         this.dsls = dsls;
     }
+
+    public Migration(){
+        this.ordinal = 0;
+        this.version = "";
+        this.dsls = null;
+    }
 }

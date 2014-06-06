@@ -8,7 +8,7 @@
     dsl {
       username=<your username @ dsl-platform.com>,
       password=<your password for this username,
-      projectId=<optional projectId for some tests>
+      projectId=<optional projectId for some tests>,
       package-name=<namespace of target sources>
     }
     db {
@@ -166,9 +166,10 @@ To be able to preform system tests credentials for dsl-platform and database mus
 They are loaded from `<user.home>/.config/dsl-compiler-client/test.credentials` and can look something like this:
 
     dsl {
-      username=<your username @ dsl-platfrom.com>,
+      username=<your username @ dsl-platform.com>,
       password=<your password for this username,
-      projectId=<optional projectId for some tests>
+      projectId=<optional projectId for some tests>,
+      package-name=<namespace of target sources>
     }
     db {
       ServerName=x,
@@ -182,7 +183,6 @@ db credentials are needed for testing an unmanaged functions.
 
 To compile the C# sources revenj lib is needed. In the tests this is set to the revenj folder versioned under the
 `dsl_compiler_client_user` project until those sources become stable and exposed via api functionality.
-
 
 To run sbt test call 
 
