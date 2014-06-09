@@ -65,20 +65,21 @@ customize config at: `Revenj.Http.exe.config`
 
 ##Settings in detail:
 
-  - `username`: String  User name - setting it in a project will override the values red from the projectIni file
+  - `username`: String  User name - setting it in a project will override the values red from the projectProps file
 
-  - `password`: String  Password - setting it in a project will override the values red from the projectIni file.
+  - `password`: String  Password - setting it in a project will override the values red from the projectProps file.
 
-  - `dslProjectId`: String - projectId - setting it in a project will override the values red from the projectIni file.
+  - `dslProjectId`: String - projectId - setting it in a project will override the values red from the projectProps file.
 
-  - `packageName`: String - package name - setting it in a project will override the values red from the projectIni file.
+  - `packageName`: String - package name - setting it in a project will override the values red from the projectProps file.
 
-  - `projectPropsPath: Option[File]` - Location of a projectIni definition. This file can hold username, password, projectId, namespace. Can be of form:
+  - `projectPropsPath: Option[File]` - Location of a projectProps definition. This file can hold username, password, projectId, namespace. Can be of form:
 
     dsl {
-      username=<your username @ dsl-platfrom.com>,
-      password=<your password for this username,
-      projectId=<optional projectId for some tests>
+      username=<your username @ dsl-platform.com>,
+      password=<your password for this username>,
+      projectId=<optional projectId for some tests>,
+      package-name=<namespace of target sources>
     }
     db {
       ServerName=x,
@@ -93,7 +94,7 @@ customize config at: `Revenj.Http.exe.config`
 
   - `dslCharset`: Charset - for dsl files
 
-  - `projectConfiguration`: Map[String, String] - Project specific properties. This is set from a projecIniFile
+  - `projectConfiguration`: Map[String, String] - Project specific properties. This is set from a projectPropsFile
 
   - `outputDirectory`: Option[File] - Output directory for the client files.
 
@@ -150,7 +151,9 @@ To generate the C# server source
 
     generateUnmanagedCSSources 
 
-To compile the generated sources into the `assembleName`. Will look for the sources in `monoTempFolder`
+To compile the generated sources into the `assembleName`. Will look for the sources in `monoTempFolder`. 
+For compilation revenj lib is needed. There is one versioned under the
+`dsl_compiler_client_user` project, and can be used till those sources become stable and exposed via api functionality.
 
     compileCSharpServer
 
