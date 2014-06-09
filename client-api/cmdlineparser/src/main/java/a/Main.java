@@ -18,6 +18,9 @@ import com.dslplatform.compiler.client.util.PathExpander;
 public class Main {
     public static void main(final String[] args) throws IOException {
 
+        // TODO: generate java android
+        // generate-migration-sql ...
+
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "trace");
 
 
@@ -42,7 +45,7 @@ public class Main {
         final Arguments a = new CachingArgumentsProxy(
                 new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(q)));
-        
+
         System.out.println(a.getUsername());
         System.out.println(a.getProjectID());
         System.out.println(a.isWithActiveRecord());

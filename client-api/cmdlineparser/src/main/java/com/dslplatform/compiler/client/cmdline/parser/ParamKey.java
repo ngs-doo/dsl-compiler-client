@@ -18,7 +18,12 @@ public enum ParamKey {
     WITH_HELPER_METHODS_KEY("with-helper-methods"),
 
     SKIP_DIFF_KEY("skip-diff"),
-    ALLOW_UNSAFE_KEY("allow-unsafe");
+    ALLOW_UNSAFE_KEY("allow-unsafe"),
+
+    /* Action keys */
+    GENERATE_MIGRATION_SQL_KEY("generate-migration-sql"),
+    GENERATE_UNMANAGED_SOURCES_KEY("generate-unmanaged-sources"),
+    PARSE_KEY("parse");
 
     // TODO:
 //  skipdiff

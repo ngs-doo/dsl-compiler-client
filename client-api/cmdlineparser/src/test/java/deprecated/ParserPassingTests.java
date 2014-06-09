@@ -166,7 +166,6 @@ public class ParserPassingTests {
 
         }
         else if(paramSwitch.equals(ParamSwitches.PROJECT_NAME_SWITCHES)){
-            // TODO: wrong
 
             final String shortVersion = switches.get(0);
             final String longVersion = switches.get(1);

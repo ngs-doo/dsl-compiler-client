@@ -58,6 +58,8 @@ public class ArgumentsReader {
             final boolean isLast = args.isEmpty();
             if (isLast) logger.trace("This is the last argument ...");
 
+            /* --- Switches --- */
+
             /* Parameters that overwrite previous values */
             if (ifSwitchType_doParseOwerwriteOld(USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(OUTPUT_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
@@ -80,9 +82,20 @@ public class ArgumentsReader {
 
             /* Load properties from file: */
             if(ifPropsPath_doParsePropsFromPath(current_arg, args, props, isLast)) continue;
+
+            /* --- Actions: --- */
+            // (Everything else is an action)
+            if(processedAction(Action.valueOf(current_arg))) continue;
+
+            logger.error("Invalid argument token: " + current_arg);
         }
 
         return props;
+    }
+
+    private boolean processedAction(final Action action){
+
+        return false;
     }
 
     /**
@@ -209,8 +222,8 @@ public class ArgumentsReader {
         final SwitchArgument switchArgument = switchType.examine(current_arg);
         if (switchArgument.isSwitch) {
 
-            final ParamKey argument_KEY = switchType.getParamKey();
-            final String argumentStringName = switchType.getParamKey().toString();
+            final ParamKey argumentKey = switchType.getParamKey();
+            final String argumentKey_stringName = switchType.getParamKey().toString();
 
             // parse the argument, new arguments overwrite old ones
             logger.trace("Encountered switch [{}]", switchArgument.getSwitch());
@@ -218,24 +231,24 @@ public class ArgumentsReader {
 
             if (switchArgument.hasBody()) {
                 argument_string = switchArgument.getArgument();
-                logger.trace("Parsed " + argumentStringName + " argument [{}]", argument_string);
+                logger.trace("Parsed " + argumentKey_stringName + " argument [{}]", argument_string);
             } else {
-                if (isLast) { throw new IllegalArgumentException(argumentStringName + " cannot be empty!"); }
+                if (isLast) { throw new IllegalArgumentException(argumentKey_stringName + " cannot be empty!"); }
 
                 argument_string = args.poll();
-                logger.trace(argumentStringName + " was empty, read next argument [{}]", argument_string);
+                logger.trace(argumentKey_stringName + " was empty, read next argument [{}]", argument_string);
             }
 
             if (logger.isTraceEnabled()) {
-                final String oldArgument_string = properties.getProperty(argument_KEY.paramKey);
+                final String oldArgument_string = properties.getProperty(argumentKey.paramKey);
                 if (oldArgument_string != null && !oldArgument_string.equals(argument_string)) {
-                    logger.trace("Overwriting previous " + argumentStringName + " [{}] with [{}]", oldArgument_string,
+                    logger.trace("Overwriting previous " + argumentKey_stringName + " [{}] with [{}]", oldArgument_string,
                             argument_string);
                 }
             }
 
-            logger.debug("Read " + argumentStringName + " argument [{}]", argument_string);
-            properties.setProperty(argument_KEY.paramKey, argument_string);
+            logger.debug("Read " + argumentKey_stringName + " argument [{}]", argument_string);
+            properties.setProperty(argumentKey.paramKey, argument_string);
             return true;
         }
         else{

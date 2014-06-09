@@ -2,9 +2,12 @@ package com.dslplatform.compiler.client.cmdline.parser;
 
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.GENERATE_MIGRATION_SQL_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.GENERATE_UNMANAGED_SOURCES_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PARSE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPS_PATH_KEY;
@@ -40,8 +43,12 @@ public enum ParamSwitches {
     WITH_HELPER_METHODS_SWITCHES(WITH_HELPER_METHODS_KEY),
 
     SKIP_DIFF_SWITCHES(SKIP_DIFF_KEY),
-    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY);
+    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY),
 
+    /* Actions (are examined without '--')*/
+    GENERATE_MIGRATION_SQL(GENERATE_MIGRATION_SQL_KEY),
+    GENERATE_UNMANAGED_SOURCES(GENERATE_UNMANAGED_SOURCES_KEY),
+    PARSE(PARSE_KEY);
 
     private final ParamKey paramKey;
     private final String[] switches;
@@ -57,14 +64,11 @@ public enum ParamSwitches {
         this.switches = switches;
     }
 
-    private ParamSwitches(final ParamKey paramKey) {
-        this.paramKey = paramKey;
-        this.switches = new String[]{"--" + paramKey};
-    }
-
     public class SwitchArgument {
         public final boolean isSwitch;
         public final boolean isShortSwitch;
+
+        public final boolean isAction;
 
         public boolean isEqual() {
             return argBody != null && argBody.isEmpty();
@@ -99,16 +103,23 @@ public enum ParamSwitches {
             String sw = null;
             String argBody = null;
 
-            for (final String cur : switches) {
-                if (arg.startsWith(cur)) {
-                    sw = cur;
+            for (final String aSwitch : switches) {
+                if (arg.startsWith(aSwitch)) {
+                    sw = aSwitch;
                     argBody = arg.substring(sw.length());
                     break;
                 }
             }
 
-            isSwitch = sw != null;
-            isShortSwitch = isSwitch && sw.matches("^-[^-]");
+            if(!arg.startsWith("--")){
+                isSwitch = false;
+                isShortSwitch = false;
+                isAction = true;
+            }else{
+                isSwitch = sw != null;
+                isShortSwitch = isSwitch && sw.matches("^-[^-]");
+                isAction = false;
+            }
 
             this.sw = sw;
             this.argBody = argBody;
@@ -138,6 +149,5 @@ public enum ParamSwitches {
     public ParamKey getParamKey() {
         return paramKey;
     }
-
 
 }
