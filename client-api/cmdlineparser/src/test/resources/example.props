@@ -1,0 +1,9 @@
+project-name=RedEchidna
+username=knuckles-the-echidna@dsl-platform.com
+project-id=1-2-3-4-5
+api-url=https://example.com/
+# Example of a comment in property file
+package-name=com.dslplatform.knu\u010Dkles.foo
+logging-level=DEBUG
+output-path=~/knuckles/workspace/outputPath
+target=csharp_server, csharp, java, php, scala_server, csharp_client, java_client, csharp_portable, php_client, scala_client
