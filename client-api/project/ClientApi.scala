@@ -23,10 +23,15 @@ object ClientApi extends Build with Default {
     slf4j
   , commonsIo
   , util
+  , slf4jSimple % "test"
+  , jUnit % "test"
   , params
+  ) settings (
+      unmanagedResourceDirectories in Test := Seq(sourceDirectory.value / "test" / "resources")
+    , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
   )
 
-  lazy val core = clientApiProject("Core"). inject(
+  lazy val core = clientApiProject("Core") inject(
       jodaTime
     , postgresql % "provided"
     , slf4j
@@ -36,9 +41,9 @@ object ClientApi extends Build with Default {
     , jUnit % "test"
     ) settings (
       unmanagedSourceDirectories in Compile := Seq(
-          sourceDirectory.value / "model" / "java"
-        , sourceDirectory.value / "interface" / "java"
-        , sourceDirectory.value / "service" / "java"
+        sourceDirectory.value / "interface" / "java"
+      , sourceDirectory.value / "service" / "java"
+      , sourceDirectory.value / "model" / "java"
       )
     , unmanagedResourceDirectories in Compile := Seq(
       sourceDirectory.value / "main" / "resources"
