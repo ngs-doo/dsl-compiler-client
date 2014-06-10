@@ -3,7 +3,7 @@ package com.dslplatform.compiler.client;
 import com.dslplatform.compiler.client.api.config.*;
 import com.dslplatform.compiler.client.api.core.HttpTransport;
 import com.dslplatform.compiler.client.api.core.impl.HttpTransportImpl;
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 import org.slf4j.Logger;
 
 import java.io.IOException;

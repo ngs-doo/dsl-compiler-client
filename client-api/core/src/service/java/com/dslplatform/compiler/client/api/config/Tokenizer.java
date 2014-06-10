@@ -1,7 +1,6 @@
 package com.dslplatform.compiler.client.api.config;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;

@@ -2,9 +2,9 @@ package com.dslplatform.compiler.client.processor;
 
 import com.dslplatform.compiler.client.api.commons.FileLoader;
 import com.dslplatform.compiler.client.api.commons.Hash;
-import com.dslplatform.compiler.client.api.diff.HashBodyMapTool;
-import com.dslplatform.compiler.client.api.diff.PathAction;
-import com.dslplatform.compiler.client.api.diff.diff_match_patch;
+import com.dslplatform.compiler.client.diff.HashBodyMapTool;
+import com.dslplatform.compiler.client.diff.PathAction;
+import com.dslplatform.compiler.client.diff.diff_match_patch;
 import org.apache.commons.io.Charsets;
 import org.eclipse.jgit.diff.*;
 

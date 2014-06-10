@@ -6,7 +6,7 @@ import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 import com.dslplatform.compiler.client.api.core.impl.HttpTransportImpl;
 import com.dslplatform.compiler.client.api.core.HttpTransport;
 import com.dslplatform.compiler.client.api.core.mock.MockData;
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

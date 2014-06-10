@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
 import com.dslplatform.compiler.client.params.Target;
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 @RunWith(Parameterized.class)
 public class ProjectPropsSwitchTests {

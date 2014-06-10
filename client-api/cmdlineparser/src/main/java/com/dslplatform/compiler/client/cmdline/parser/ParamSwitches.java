@@ -34,9 +34,9 @@ public enum ParamSwitches {
     LOGGING_LEVEL_SWITCHES(LOGGING_LEVEL_KEY, "-l", "--" + LOGGING_LEVEL_KEY), // TODO: see if '-l' or smtn else
 
     /* Flags */
-    WITH_ACTIVE_RECORD_SWITCHES (WITH_ACTIVE_RECORD_KEY),
-    WITH_JAVA_BEANS_SWITCHES    (WITH_JAVA_BEANS_KEY),
-    WITH_JACKSON_SWITCHES       (WITH_JACKSON_KEY),
+    WITH_ACTIVE_RECORD_SWITCHES(WITH_ACTIVE_RECORD_KEY),
+    WITH_JAVA_BEANS_SWITCHES(WITH_JAVA_BEANS_KEY),
+    WITH_JACKSON_SWITCHES(WITH_JACKSON_KEY),
     WITH_HELPER_METHODS_SWITCHES(WITH_HELPER_METHODS_KEY),
 
     SKIP_DIFF_SWITCHES(SKIP_DIFF_KEY),
@@ -46,7 +46,7 @@ public enum ParamSwitches {
     private final String[] switches;
 
     private ParamSwitches(final ParamKey paramKey,
-            final String... switches) {
+                          final String... switches) {
         this.paramKey = paramKey;
         this.switches = switches;
     }
@@ -69,14 +69,17 @@ public enum ParamSwitches {
         }
 
         private final String sw;
+
         public final String getSwitch() {
             if (sw == null) throw new IllegalArgumentException("Argument is not a switch!");
             return sw;
         }
 
         private final String argBody;
+
         public final String getArgument() {
-            if (argBody == null) throw new IllegalArgumentException("There is no argument body; argument is not a switch!");
+            if (argBody == null)
+                throw new IllegalArgumentException("There is no argument body; argument is not a switch!");
 
             if (isShortSwitch) return argBody;
 
@@ -120,8 +123,8 @@ public enum ParamSwitches {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        for(final String sw : switches) sb.append(sw).append(", ");
-        sb.setLength(sb.length() -1);
+        for (final String sw : switches) sb.append(sw).append(", ");
+        sb.setLength(sb.length() - 1);
         return sb.toString();
     }
 

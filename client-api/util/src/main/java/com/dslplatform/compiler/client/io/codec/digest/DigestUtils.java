@@ -1,4 +1,4 @@
-package com.dslplatform.compiler.client.api.commons.codec.digest;
+package com.dslplatform.compiler.client.io.codec.digest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

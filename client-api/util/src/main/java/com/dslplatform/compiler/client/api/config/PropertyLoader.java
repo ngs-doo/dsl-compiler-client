@@ -15,16 +15,20 @@ public class PropertyLoader {
         this.streamLoader = streamLoader;
     }
 
-    public Properties read(final String path) throws IOException {
-        final InputStream is = streamLoader.open(path);
+    public Properties read(final InputStream inputStream) throws IOException {
         try {
             final Properties properties = new Properties();
-            properties.load(is);
+            properties.load(inputStream);
 
             logger.debug("Successfully loaded {} properties", properties.size());
             return properties;
         } finally {
-            is.close();
+            inputStream.close();
         }
+    }
+
+    public Properties read(final String path) throws IOException {
+        final InputStream is = streamLoader.open(path);
+        return read(is);
     }
 }

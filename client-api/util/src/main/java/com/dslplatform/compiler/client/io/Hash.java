@@ -1,9 +1,11 @@
-package com.dslplatform.compiler.client.api.commons;
+package com.dslplatform.compiler.client.io;
+
+import com.dslplatform.compiler.client.io.codec.digest.DigestUtils;
 
 import java.io.Serializable;
 import java.util.Arrays;
-
-import com.dslplatform.compiler.client.api.commons.codec.digest.DigestUtils;
+import java.util.UUID;
+import java.util.zip.CRC32;
 
 public class Hash implements Serializable {
     public final byte[] hash;
@@ -17,7 +19,7 @@ public class Hash implements Serializable {
     public Hash(
             final byte[] body) {
         hash = DigestUtils.sha1(body);
-        hashCode = HashUtil.hashCode(hash);
+        hashCode = hashCode(hash);
     }
 
     private Hash(
@@ -58,10 +60,31 @@ public class Hash implements Serializable {
 
 // ----------------------------------------------------------------------------
 
+    private static final long serialVersionUID = 0x0L;
+
     @Override
     public String toString() {
         return String.format("%08X", hashCode);
     }
 
-    private static final long serialVersionUID = 0x0L;
+// ----------------------------------------------------------------------------
+
+    public static int hashCode(final byte[] body) {
+        final CRC32 crc32 = new CRC32();
+        crc32.update(body);
+        return (int) crc32.getValue();
+    }
+
+    public static int hashCode(final UUID body) {
+
+        final CRC32 crc32 = new CRC32();
+        for (int i = 7; i >= 0; i--) {
+            crc32.update((byte) (body.getLeastSignificantBits() >>> (i << 3)));
+        }
+
+        for (int i = 7; i >= 0; i--) {
+            crc32.update((byte) (body.getMostSignificantBits() >>> (i << 3)));
+        }
+        return (int) crc32.getValue();
+    }
 }

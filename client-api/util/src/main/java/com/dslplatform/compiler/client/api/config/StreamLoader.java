@@ -7,7 +7,7 @@ import java.io.InputStream;
 
 import org.slf4j.Logger;
 
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 public class StreamLoader {
     private final Logger logger;

@@ -20,10 +20,10 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_
 
 import java.awt.Desktop.Action;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
+import java.util.*;
 
+import com.dslplatform.compiler.client.api.config.StreamLoader;
+import com.dslplatform.compiler.client.io.PathExpander;
 import org.slf4j.Logger;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
@@ -36,6 +36,17 @@ public class ArgumentsReader {
     public ArgumentsReader(final Logger logger, final PropertyLoader propertyLoader) {
         this.logger = logger;
         this.propertyLoader = propertyLoader;
+    }
+
+    public ArgumentsReader(final Logger logger) {
+        this.logger = logger;
+        this.propertyLoader = new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
+    }
+
+    public Properties readArguments(String ... args) throws IOException {
+        final Queue<String> q = new ArrayDeque<String>();
+        q.addAll(Arrays.asList(args));
+        return readArguments(q);
     }
 
     public Properties readArguments(final Queue<String> args) throws IOException {

@@ -1,4 +1,4 @@
-package com.dslplatform.compiler.client.api.diff;
+package com.dslplatform.compiler.client.diff;
 
 import com.dslplatform.compiler.client.api.commons.Hash;
 

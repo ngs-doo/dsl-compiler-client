@@ -13,7 +13,7 @@ import com.dslplatform.compiler.client.cmdline.parser.Arguments;
 import com.dslplatform.compiler.client.cmdline.parser.ArgumentsReader;
 import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
 import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 public class Main {
     public static void main(final String[] args) throws IOException {

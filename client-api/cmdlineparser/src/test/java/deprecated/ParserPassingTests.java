@@ -24,7 +24,7 @@ import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
 import com.dslplatform.compiler.client.cmdline.parser.ParamSwitches;
 import com.dslplatform.compiler.client.params.LoggingLevel;
 import com.dslplatform.compiler.client.params.Target;
-import com.dslplatform.compiler.client.util.PathExpander;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 @RunWith(Parameterized.class)
 public class ParserPassingTests {
