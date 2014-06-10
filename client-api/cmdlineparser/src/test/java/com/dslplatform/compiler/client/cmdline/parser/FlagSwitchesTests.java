@@ -10,6 +10,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.dslplatform.compiler.client.io.PathExpander;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -18,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.util.PathExpander;
 
 @RunWith(Parameterized.class)
 public class FlagSwitchesTests {
