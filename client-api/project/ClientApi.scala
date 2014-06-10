@@ -8,31 +8,33 @@ object ClientApi extends Build with Default {
     id.toLowerCase
     , file(id.toLowerCase)
     , settings = javaSettings ++ Seq(
-        name := "DSL-Compiler-Client-" + id
+      name := "DSL-Compiler-Client-" + id
       , initialCommands := "import com.dslplatform.compiler.client._"
     )
   )
 
   lazy val util = clientApiProject("Util") inject(
-    slf4j
-  )
+    slf4j, commonsIo
+    )
 
   lazy val params = clientApiProject("Params")
 
   lazy val cmdLineParser = clientApiProject("CmdLineParser") inject(
     slf4j
-  , commonsIo
-  , util
-  , slf4j % "test"
-  , jUnit % "test"
-  , params
-  ) settings (
-      unmanagedResourceDirectories in Test := Seq(sourceDirectory.value / "test" / "resources")
+    , commonsIo
+    , util
+    , logback % "test"
+    , jUnit % "test"
+    , params
+    ) settings (
+    unmanagedResourceDirectories in Test := Seq(sourceDirectory.value / "test" / "resources")
     , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-  )
+    )
+
+  lazy val cmdLineClient = clientApiProject("CmdLineClient") inject(api, cmdLineParser, util)
 
   lazy val core = clientApiProject("Core") inject(
-      jodaTime
+    jodaTime
     , postgresql % "provided"
     , slf4j
     , commonsCodec
@@ -40,38 +42,38 @@ object ClientApi extends Build with Default {
     , logback % "test"
     , jUnit % "test"
     ) settings (
-      unmanagedSourceDirectories in Compile := Seq(
-        sourceDirectory.value / "interface" / "java"
+    unmanagedSourceDirectories in Compile := Seq(
+      sourceDirectory.value / "interface" / "java"
       , sourceDirectory.value / "service" / "java"
       , sourceDirectory.value / "model" / "java"
-      )
-    , unmanagedResourceDirectories in Compile := Seq(
-      sourceDirectory.value / "main" / "resources"
     )
+    , unmanagedResourceDirectories in Compile := Seq(
+    sourceDirectory.value / "main" / "resources"
+  )
     , unmanagedResourceDirectories in Test := Seq(sourceDirectory.value / "test" / "resources")
     , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-    )/* not yet dependsOn (params) */
+    )
 
   lazy val api = clientApiProject("Api") inject(
-      commonsIo
+    commonsIo
     , jGit
     , logback
     , postgresql % "test"
     , jUnit % "test"
-    , hamcrest % "test") dependsOn (core % "test->test;compile->compile", util)
+    , hamcrest % "test") dependsOn (core % "test->test;compile->compile")
 
   lazy val dslCompilerSBT = Project(
-      "sbt"
+    "sbt"
     , file("sbt")
-    ) settings (ScriptedPlugin.scriptedSettings: _*) settings (
-      name := "DSL-Compiler-Client-SBT"
+  ) settings (ScriptedPlugin.scriptedSettings: _*) settings (
+    name := "DSL-Compiler-Client-SBT"
     , libraryDependencies ++= Seq(postgresql, config, jUnit % "test") // TODO - make mock scope
     , ScriptedPlugin.scriptedLaunchOpts := { ScriptedPlugin.scriptedLaunchOpts.value ++
-        Seq("-Xmx1024M"
-          , "-XX:MaxPermSize=256M"
-          , "-Dplugin.version=" + version.value
-        )
-      }
+    Seq("-Xmx1024M"
+      , "-XX:MaxPermSize=256M"
+      , "-Dplugin.version=" + version.value
+    )
+  }
     , unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
     , unmanagedSourceDirectories in Test := (unmanagedSourceDirectories in Test in core).value :+ (scalaSource in Test).value
     , unmanagedResourceDirectories in Test := (unmanagedResourceDirectories in Test in core).value
