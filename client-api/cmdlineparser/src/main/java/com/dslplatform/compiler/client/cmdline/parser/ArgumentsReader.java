@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ALLOW_UNSAFE_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.CACHE_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.END_OF_PARAMS;
@@ -17,6 +18,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JACKSON_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JAVA_BEANS_SWITCHES;
 
+import java.awt.Desktop.Action;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
@@ -85,7 +87,7 @@ public class ArgumentsReader {
 
             /* --- Actions: --- */
             // (Everything else is an action)
-            if(processedAction(Action.valueOf(current_arg))) continue;
+            if (parsedAction(current_arg, props)) continue;
 
             logger.error("Invalid argument token: " + current_arg);
         }
@@ -93,9 +95,22 @@ public class ArgumentsReader {
         return props;
     }
 
-    private boolean processedAction(final Action action){
+    private boolean parsedAction(final String current_arg, final Properties props){
+        try{
+            final Action a = Action.valueOf(current_arg);
 
-        return false;
+            if(!props.containsKey(ACTIONS_KEY.paramKey)){
+                props.setProperty(ACTIONS_KEY.paramKey, a.toString());
+            }else{
+                final String currentActions = props.getProperty(ACTIONS_KEY.paramKey);
+                props.setProperty(ACTIONS_KEY.paramKey, currentActions + "," + a.toString());
+            }
+
+            return true;
+        }catch(final IllegalArgumentException e){
+            logger.error("Invalid action: " + current_arg);
+            return false;
+        }
     }
 
     /**

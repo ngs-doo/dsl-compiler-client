@@ -8,13 +8,16 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_
 import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_HELPER_METHODS_DEFAULT;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JACKSON_DEFAULT;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JAVA_BEANS_DEFAULT;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
@@ -30,12 +33,17 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 
+import com.dslplatform.compiler.client.params.Action;
+import com.dslplatform.compiler.client.params.Actions;
 import com.dslplatform.compiler.client.params.CachePath;
+import com.dslplatform.compiler.client.params.DSLPath;
 import com.dslplatform.compiler.client.params.LoggingLevel;
 import com.dslplatform.compiler.client.params.OutputPath;
 import com.dslplatform.compiler.client.params.PackageName;
+import com.dslplatform.compiler.client.params.Password;
 import com.dslplatform.compiler.client.params.ProjectID;
 import com.dslplatform.compiler.client.params.ProjectName;
+import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
 import com.dslplatform.compiler.client.params.Target;
 import com.dslplatform.compiler.client.params.Targets;
 import com.dslplatform.compiler.client.params.Username;
@@ -70,6 +78,26 @@ public class ArgumentsValidator implements Arguments {
         if (outputPath == null) throw new IllegalArgumentException("Output path was not defined!");
         final OutputPath result = new OutputPath(new File(outputPath));
         logger.debug("Retrieved OutputPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DSLPath getDSLPath() {
+    final String dslPath = properties.getProperty(OUTPUT_PATH_KEY.paramKey);
+        logger.trace("Validating DSLPath [{}] ...", dslPath);
+        if (dslPath == null) throw new IllegalArgumentException("Output path was not defined!");
+        final DSLPath result = new DSLPath(new File(dslPath));
+        logger.debug("Retrieved DSLPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public ProjectPropertiesPath getProjectPropertiesPath() {
+    final String projectPropertiesPath = properties.getProperty(PROJECT_PROPERTIES_PATH_KEY.paramKey);
+        logger.trace("Validating ProjectPropertiesPath [{}] ...", projectPropertiesPath);
+        if (projectPropertiesPath == null) throw new IllegalArgumentException("ProjectProperties path was not defined!");
+        final ProjectPropertiesPath result = new ProjectPropertiesPath(new File(projectPropertiesPath));
+        logger.debug("Retrieved ProjectPropertiesPath from the properties [{}]", result);
         return result;
     }
 
@@ -133,6 +161,16 @@ public class ArgumentsValidator implements Arguments {
     }
 
     @Override
+    public Password getPassword() {
+        final String password = properties.getProperty(PASSWORD_KEY.paramKey);
+        logger.trace("Validating Password [{}] ...", password);
+        // TODO: handle if password is null
+        final Password result = new Password(password);
+        logger.debug("Retrieved Password from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
     public Targets getTargets() {
         String target = properties.getProperty(TARGET_KEY.paramKey);
         logger.trace("Validating Target(s) [{}] ...", target);
@@ -153,6 +191,26 @@ public class ArgumentsValidator implements Arguments {
 
         final Targets result = new Targets(targetSet);
         logger.debug("Retrieved Target(s) from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public Actions getActions() {
+        final String actions = properties.getProperty(ACTIONS_KEY.paramKey);
+        logger.trace("Validating Action(s) [{}] ...", actions);
+
+        final EnumSet<Action> actionSet = EnumSet.noneOf(Action.class);
+        for (final String action : actions.split("\\s*,+\\s*")) {
+            logger.trace("Validating Action [{}] ...", action);
+            final Action foundAction = Action.find(action);
+            if (foundAction == null) throw new IllegalArgumentException(
+                    "Action [" + action + "] does not exist, valid actions are: " + Action.getValidActions());
+
+            actionSet.add(foundAction);
+        }
+
+        final Actions result = new Actions(actionSet);
+        logger.debug("Retrieved Action(s) from the properties [{}]", result);
         return result;
     }
 

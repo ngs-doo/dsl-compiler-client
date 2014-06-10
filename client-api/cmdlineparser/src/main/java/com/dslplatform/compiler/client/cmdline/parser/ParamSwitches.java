@@ -2,15 +2,12 @@ package com.dslplatform.compiler.client.cmdline.parser;
 
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.GENERATE_MIGRATION_SQL_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.GENERATE_UNMANAGED_SOURCES_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PARSE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPS_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
@@ -24,7 +21,7 @@ public enum ParamSwitches {
     HELP("-h", "--help"),
 
     /* Read props from file */
-    PROJECT_PROPS_PATH_SWITCHES("-f", "--" + PROJECT_PROPS_PATH_KEY),
+    PROJECT_PROPS_PATH_SWITCHES("-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),
@@ -43,12 +40,7 @@ public enum ParamSwitches {
     WITH_HELPER_METHODS_SWITCHES(WITH_HELPER_METHODS_KEY),
 
     SKIP_DIFF_SWITCHES(SKIP_DIFF_KEY),
-    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY),
-
-    /* Actions (are examined without '--')*/
-    GENERATE_MIGRATION_SQL(GENERATE_MIGRATION_SQL_KEY),
-    GENERATE_UNMANAGED_SOURCES(GENERATE_UNMANAGED_SOURCES_KEY),
-    PARSE(PARSE_KEY);
+    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY);
 
     private final ParamKey paramKey;
     private final String[] switches;
@@ -67,8 +59,6 @@ public enum ParamSwitches {
     public class SwitchArgument {
         public final boolean isSwitch;
         public final boolean isShortSwitch;
-
-        public final boolean isAction;
 
         public boolean isEqual() {
             return argBody != null && argBody.isEmpty();
@@ -111,15 +101,8 @@ public enum ParamSwitches {
                 }
             }
 
-            if(!arg.startsWith("--")){
-                isSwitch = false;
-                isShortSwitch = false;
-                isAction = true;
-            }else{
-                isSwitch = sw != null;
-                isShortSwitch = isSwitch && sw.matches("^-[^-]");
-                isAction = false;
-            }
+            isSwitch = sw != null;
+            isShortSwitch = isSwitch && sw.matches("^-[^-]");
 
             this.sw = sw;
             this.argBody = argBody;

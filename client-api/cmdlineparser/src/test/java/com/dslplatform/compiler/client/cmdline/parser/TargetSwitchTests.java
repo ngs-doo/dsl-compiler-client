@@ -62,7 +62,7 @@ public class TargetSwitchTests {
             final PropertyLoader propertyLoader =
                     new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
             final Arguments arguments =
-                    new CachingArgumentsProxy(new ArgumentsValidator(logger,
+                    new CachingArgumentsProxy(logger, new ArgumentsValidator(logger,
                             new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
             logger.info("Asserting that the target set contains a value for: "+expectedParsedValue);

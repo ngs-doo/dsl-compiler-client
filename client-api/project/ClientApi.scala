@@ -23,7 +23,7 @@ object ClientApi extends Build with Default {
     slf4j
   , commonsIo
   , util
-  , slf4jSimple % "test"
+  , slf4j % "test"
   , jUnit % "test"
   , params
   ) settings (

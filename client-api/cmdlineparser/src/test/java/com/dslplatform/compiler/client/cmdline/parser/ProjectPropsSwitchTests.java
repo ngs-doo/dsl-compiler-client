@@ -59,7 +59,7 @@ public class ProjectPropsSwitchTests {
                 new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
 
         final Arguments arguments =
-                new CachingArgumentsProxy(new ArgumentsValidator(logger,
+                new CachingArgumentsProxy(logger, new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
         assertEquals("knuckles-the-echidna@dsl-platform.com",arguments.getUsername().username);

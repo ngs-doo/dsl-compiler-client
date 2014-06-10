@@ -18,11 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.cmdline.parser.Arguments;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsReader;
-import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
-import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
-import com.dslplatform.compiler.client.cmdline.parser.ParamSwitches;
 import com.dslplatform.compiler.client.util.PathExpander;
 
 @RunWith(Parameterized.class)
@@ -70,7 +65,7 @@ public class FlagSwitchesTests {
             final PropertyLoader propertyLoader =
                     new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
             final Arguments arguments =
-                    new CachingArgumentsProxy(new ArgumentsValidator(logger,
+                    new CachingArgumentsProxy(logger, new ArgumentsValidator(logger,
                             new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
             final String actualPattern = getExpectedOutputString(arguments);

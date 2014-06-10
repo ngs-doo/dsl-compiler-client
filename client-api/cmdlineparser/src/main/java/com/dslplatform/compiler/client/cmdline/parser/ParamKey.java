@@ -1,14 +1,19 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
 public enum ParamKey {
-    PROJECT_PROPS_PATH_KEY("project-properties-path"),
+    PROJECT_PROPERTIES_PATH_KEY("project-properties-path"),
+
+    /* Used only to enumerate actions in the properties read */
+    ACTIONS_KEY("actions"), /// XXX: Mind that this can probably be read from the properties file
 
     USERNAME_KEY("username"),
     PROJECT_ID_KEY("project-id"),
     PROJECT_NAME_KEY("project-name"),
     PACKAGE_NAME_KEY("package-name"),
+    PASSWORD_KEY("password"),
     TARGET_KEY("target"),
     OUTPUT_PATH_KEY("output-path"),
+    DSL_PATH_KEY("dsl-path"),
     CACHE_PATH_KEY("cache-path"),
     LOGGING_LEVEL_KEY("logging-level"),
 
@@ -18,12 +23,7 @@ public enum ParamKey {
     WITH_HELPER_METHODS_KEY("with-helper-methods"),
 
     SKIP_DIFF_KEY("skip-diff"),
-    ALLOW_UNSAFE_KEY("allow-unsafe"),
-
-    /* Action keys */
-    GENERATE_MIGRATION_SQL_KEY("generate-migration-sql"),
-    GENERATE_UNMANAGED_SOURCES_KEY("generate-unmanaged-sources"),
-    PARSE_KEY("parse");
+    ALLOW_UNSAFE_KEY("allow-unsafe");
 
     // TODO:
 //  skipdiff
