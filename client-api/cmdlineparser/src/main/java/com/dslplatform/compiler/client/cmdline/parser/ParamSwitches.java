@@ -11,6 +11,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KE
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
@@ -39,6 +40,8 @@ public enum ParamSwitches {
     DB_PORT_SWITCHES(DB_PORT_KEY),
     DB_DATABASE_NAME_SWITCHES(DB_DATABASE_NAME_KEY),
     DB_CONNECTION_STRING_SWITCHES(DB_CONNECTION_STRING_KEY),
+
+    MIGRATION_FILE_PATH_SWITCHES(MIGRATION_FILE_PATH_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),

@@ -14,6 +14,7 @@ import com.dslplatform.compiler.client.params.DBPort;
 import com.dslplatform.compiler.client.params.DBUsername;
 import com.dslplatform.compiler.client.params.DSLPath;
 import com.dslplatform.compiler.client.params.LoggingLevel;
+import com.dslplatform.compiler.client.params.MigrationFilePath;
 import com.dslplatform.compiler.client.params.OutputPath;
 import com.dslplatform.compiler.client.params.PackageName;
 import com.dslplatform.compiler.client.params.Password;
@@ -74,8 +75,15 @@ public class CachingArgumentsProxy implements Arguments {
                 : projectPropertiesPath;
     }
 
-    private CachePath cachePath;
+    private MigrationFilePath migrationFilePath;
+    @Override
+    public MigrationFilePath getMigrationFilePath() {
+        return migrationFilePath == null
+                ? migrationFilePath = underlying.getMigrationFilePath()
+                : migrationFilePath;
+    }
 
+    private CachePath cachePath;
     @Override
     public CachePath getCachePath() {
         return cachePath == null
@@ -304,6 +312,7 @@ public class CachingArgumentsProxy implements Arguments {
                     getDBAuth();
                     break;
                 case LAST_DSL:
+                    // TODO:
                     break;
                 case GENERATE_SOURCES:
                     getProjectPropertiesPath();
@@ -328,12 +337,19 @@ public class CachingArgumentsProxy implements Arguments {
                     // TODO:
                     break;
                 case UNMANAGED_SQL_MIGRATION:
-                    getProjectPropertiesPath();
-                    getUsername();
-                    getPassword();
+//                    getProjectPropertiesPath();
+//                    getUsername();
+//                    getPassword();
                     getDSLPath();
                     getDBAuth();
                     getOutputPath();
+                    break;
+                case UPGRADE_UNMANAGED_DATABASE:
+                    getDBAuth();
+                    getMigrationFilePath();
+                    break;
+                case DEPLOY_UNMANAGED_SERVER:
+                    // TODO:
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid action " + action);

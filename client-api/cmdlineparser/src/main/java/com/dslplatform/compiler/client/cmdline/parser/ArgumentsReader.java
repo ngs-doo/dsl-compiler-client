@@ -13,6 +13,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_US
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DSL_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.END_OF_PARAMS;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.LOGGING_LEVEL_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.MIGRATION_FILE_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.OUTPUT_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PACKAGE_NAME_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_ID_SWITCHES;
@@ -101,6 +102,8 @@ public class ArgumentsReader {
             if (ifSwitchType_doParseOwerwriteOld(DB_PORT_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(DB_DATABASE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(DB_CONNECTION_STRING_SWITCHES, current_arg, args, props, isLast)) continue;
+
+            if (ifSwitchType_doParseOwerwriteOld(MIGRATION_FILE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
 
             /* Parameters that join new values to the old ones */
             if (ifSwitchType_doParseJoinOld(TARGET_SWITCHES, current_arg, args, props, isLast)) continue;

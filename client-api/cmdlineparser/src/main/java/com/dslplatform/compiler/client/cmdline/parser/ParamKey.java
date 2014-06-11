@@ -14,6 +14,8 @@ public enum ParamKey {
     DB_DATABASE_NAME_KEY("db-database-name"),
     DB_CONNECTION_STRING_KEY("db-connection-string"),
 
+    MIGRATION_FILE_PATH_KEY("migration-file"),
+
     USERNAME_KEY("username"),
     PROJECT_ID_KEY("project-id"),
     PROJECT_NAME_KEY("project-name"),

@@ -18,6 +18,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWOR
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
@@ -51,6 +52,7 @@ import com.dslplatform.compiler.client.params.DBPort;
 import com.dslplatform.compiler.client.params.DBUsername;
 import com.dslplatform.compiler.client.params.DSLPath;
 import com.dslplatform.compiler.client.params.LoggingLevel;
+import com.dslplatform.compiler.client.params.MigrationFilePath;
 import com.dslplatform.compiler.client.params.OutputPath;
 import com.dslplatform.compiler.client.params.PackageName;
 import com.dslplatform.compiler.client.params.Password;
@@ -91,6 +93,16 @@ public class ArgumentsValidator implements Arguments {
         if (outputPath == null) throw new IllegalArgumentException("Output path was not defined!");
         final OutputPath result = new OutputPath(new File(outputPath));
         logger.debug("Retrieved OutputPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public MigrationFilePath getMigrationFilePath() {
+    final String migrationFilePath = properties.getProperty(MIGRATION_FILE_PATH_KEY.paramKey);
+        logger.trace("Validating MigrationFilePath [{}] ...", migrationFilePath);
+        if (migrationFilePath == null) throw new IllegalArgumentException("Output path was not defined!");
+        final MigrationFilePath result = new MigrationFilePath(new File(migrationFilePath));
+        logger.debug("Retrieved MigrationFilePath from the properties [{}]", result);
         return result;
     }
 

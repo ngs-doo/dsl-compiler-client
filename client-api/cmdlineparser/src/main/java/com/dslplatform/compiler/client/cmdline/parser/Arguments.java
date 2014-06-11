@@ -11,6 +11,7 @@ import com.dslplatform.compiler.client.params.DBPort;
 import com.dslplatform.compiler.client.params.DBUsername;
 import com.dslplatform.compiler.client.params.DSLPath;
 import com.dslplatform.compiler.client.params.LoggingLevel;
+import com.dslplatform.compiler.client.params.MigrationFilePath;
 import com.dslplatform.compiler.client.params.OutputPath;
 import com.dslplatform.compiler.client.params.PackageName;
 import com.dslplatform.compiler.client.params.Password;
@@ -34,6 +35,8 @@ public interface Arguments {
     public DBPort getDBPort();
     public DBDatabaseName getDBDatabaseName();
     public DBConnectionString getDBConnectionString();
+
+    public MigrationFilePath getMigrationFilePath();
 
     public Username getUsername();
     public ProjectID getProjectID();
