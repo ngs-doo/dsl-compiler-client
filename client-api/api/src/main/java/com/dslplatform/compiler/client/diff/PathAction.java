@@ -1,6 +1,6 @@
 package com.dslplatform.compiler.client.diff;
 
-import com.dslplatform.compiler.client.api.commons.Hash;
+import com.dslplatform.compiler.client.io.Hash;
 
 public class PathAction implements Comparable<PathAction> {
     public final String source;
