@@ -1,10 +1,11 @@
 package com.dslplatform.compiler.client.diff;
 
+import com.dslplatform.compiler.client.io.Hash;
+
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
-import com.dslplatform.compiler.client.api.commons.Hash;
 
 public class HashBodyMapTool {
 

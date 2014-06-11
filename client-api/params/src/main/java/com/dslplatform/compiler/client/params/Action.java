@@ -17,7 +17,9 @@ public enum Action {
     , DOWNLOAD_GENERATED_MODEL("download-generated-model")
     , UNMANAGED_CS_SERVER("unmanaged-cs-server")// <- parametar je folder name
     , UNMANAGED_SOURCE("unmanaged-source")
-    , UNMANAGED_SQL_MIGRATION("unmanaged-sql-migration"); // unmanaged postgres migration
+    , UNMANAGED_SQL_MIGRATION("unmanaged-sql-migration") // unmanaged postgres migration
+    , UPGRADE_UNMANAGED_DATABASE("upgrade-unmanaged-database")
+    , DEPLOY_UNMANAGED_SERVER("deploy_unmanaged_server");
     // FW: UPGRADE_DATABASE
 
 //  CREATE_PROJECT("")

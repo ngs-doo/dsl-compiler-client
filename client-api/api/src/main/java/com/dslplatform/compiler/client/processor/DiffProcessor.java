@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.processor;
 
-import com.dslplatform.compiler.client.api.commons.FileLoader;
-import com.dslplatform.compiler.client.api.commons.Hash;
+import com.dslplatform.compiler.client.io.FileLoader;
+import com.dslplatform.compiler.client.io.Hash;
 import com.dslplatform.compiler.client.diff.HashBodyMapTool;
 import com.dslplatform.compiler.client.diff.PathAction;
 import com.dslplatform.compiler.client.diff.diff_match_patch;
