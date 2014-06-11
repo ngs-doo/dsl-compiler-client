@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ALLOW_UNSAFE_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.*;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.CACHE_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.END_OF_PARAMS;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.LOGGING_LEVEL_SWITCHES;
@@ -20,14 +20,18 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_
 
 import java.awt.Desktop.Action;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
 
-import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.io.PathExpander;
 import org.slf4j.Logger;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
+import com.dslplatform.compiler.client.api.config.StreamLoader;
 import com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.SwitchArgument;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 public class ArgumentsReader {
     private final Logger logger;
@@ -76,6 +80,7 @@ public class ArgumentsReader {
             /* Parameters that overwrite previous values */
             if (ifSwitchType_doParseOwerwriteOld(USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(OUTPUT_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DSL_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(CACHE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(LOGGING_LEVEL_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(PROJECT_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
@@ -84,6 +89,7 @@ public class ArgumentsReader {
 
             /* Parameters that join new values to the old ones */
             if (ifSwitchType_doParseJoinOld(TARGET_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseJoinOld(ACTIONS_SWITCHES, current_arg, args, props, isLast)) continue;
 
             /* Boolean flag switches: */
             if (ifSwitchType_doParseFlag(WITH_ACTIVE_RECORD_SWITCHES, current_arg, args, props)) continue;

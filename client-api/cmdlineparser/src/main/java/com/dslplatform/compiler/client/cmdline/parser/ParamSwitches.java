@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
@@ -22,6 +23,8 @@ public enum ParamSwitches {
 
     /* Read props from file */
     PROJECT_PROPS_PATH_SWITCHES("-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
+    
+    ACTIONS_SWITCHES(ACTIONS_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),
@@ -30,6 +33,7 @@ public enum ParamSwitches {
     PACKAGE_NAME_SWITCHES(PACKAGE_NAME_KEY, "-n", "--" + PACKAGE_NAME_KEY),
     TARGET_SWITCHES(TARGET_KEY, "-t", "--" + TARGET_KEY),
     OUTPUT_PATH_SWITCHES(OUTPUT_PATH_KEY, "-o", "--" + OUTPUT_PATH_KEY),
+    DSL_PATH_SWITCHES(DSL_PATH_KEY),
     CACHE_PATH_SWITCHES(CACHE_PATH_KEY),
     LOGGING_LEVEL_SWITCHES(LOGGING_LEVEL_KEY, "-l", "--" + LOGGING_LEVEL_KEY), // TODO: see if '-l' or smtn else
 

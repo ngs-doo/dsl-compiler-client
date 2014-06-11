@@ -15,23 +15,25 @@ import com.dslplatform.compiler.client.params.Username;
 
 public interface Arguments {
 
-    public LoggingLevel getLoggingLevel();
-    public OutputPath getOutputPath();
-    public CachePath getCachePath();
-    public Username getUsername();
-    public Password getPassword();
+	public ProjectPropertiesPath getProjectPropertiesPath();
+	
+	public Actions getActions();
+	
+	public Username getUsername();
     public ProjectID getProjectID();
     public ProjectName getProjectName();
     public PackageName getPackageName();
+    public Password getPassword();       
     public Targets getTargets();
-    public Actions getActions();
-    public ProjectPropertiesPath getProjectPropertiesPath();
+    public OutputPath getOutputPath();
     public DSLPath getDSLPath();
+    public CachePath getCachePath();    
+    public LoggingLevel getLoggingLevel();           
 
     public boolean isWithActiveRecord();
     public boolean isWithJavaBeans();
     public boolean isWithJackson();
     public boolean isWithHelperMethods();
-    public boolean isAllowUnsafe();
     public boolean isSkipDiff();
+    public boolean isAllowUnsafe();    
 }
