@@ -11,6 +11,12 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_DATABASE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
@@ -36,6 +42,13 @@ import org.slf4j.Logger;
 import com.dslplatform.compiler.client.params.Action;
 import com.dslplatform.compiler.client.params.Actions;
 import com.dslplatform.compiler.client.params.CachePath;
+import com.dslplatform.compiler.client.params.DBAuth;
+import com.dslplatform.compiler.client.params.DBConnectionString;
+import com.dslplatform.compiler.client.params.DBDatabaseName;
+import com.dslplatform.compiler.client.params.DBHost;
+import com.dslplatform.compiler.client.params.DBPassword;
+import com.dslplatform.compiler.client.params.DBPort;
+import com.dslplatform.compiler.client.params.DBUsername;
 import com.dslplatform.compiler.client.params.DSLPath;
 import com.dslplatform.compiler.client.params.LoggingLevel;
 import com.dslplatform.compiler.client.params.OutputPath;
@@ -122,6 +135,115 @@ public class ArgumentsValidator implements Arguments {
     }
 
     @Override
+    public Password getPassword() {
+        final String password = properties.getProperty(PASSWORD_KEY.paramKey);
+        logger.trace("Validating Password [{}] ...", password);
+        if (password == null) throw new IllegalArgumentException("Password was not defined!");
+        final Password result = new Password(password);
+        logger.debug("Retrieved Password from the properties [{}]", result);
+        return result;
+    }
+
+    /** Note: computed from the underlying subproperties*/
+    @Override
+    public DBAuth getDBAuth() {
+
+        final DBUsername dbUsername = getDBUsername();
+        final DBPassword dbPassword = getDBPassword();
+        final DBHost dbHost = getDBHost();
+        final DBPort dbPort = getDBPort();
+        final DBDatabaseName dbDatabaseName = getDBDatabaseName();
+        final DBConnectionString dbConnectionString = getDBConnectionString();
+
+        final String username = dbUsername.dbUsername;
+        final String password = dbPassword.dbPassword;
+        final String host = dbHost.dbHost;
+        final Integer port = dbPort.dbPort;
+        final String databaseName = dbDatabaseName.dbDatabaseName;
+        final String connectionString = dbConnectionString.dbConnectionString;
+
+        if((connectionString == null)
+            &&
+            (username == null
+             || password == null
+             || host == null
+             || port == null
+             || databaseName == null
+             || connectionString == null)){
+                throw
+                new IllegalArgumentException("Illegal database authentication parameters. The authentication requires either a valid connection string, or all individual connection parameters set.");
+         }
+
+        return new DBAuth(
+                getDBUsername()
+                , getDBPassword()
+                , getDBHost()
+                , getDBPort()
+                , getDBDatabaseName()
+                , getDBConnectionString());
+    }
+
+    @Override
+    public DBUsername getDBUsername() {
+        final String dbusername = properties.getProperty(DB_USERNAME_KEY.paramKey);
+        logger.trace("Validating DBUsername [{}] ...", dbusername);
+//        if (dbusername == null) throw new IllegalArgumentException("DBUsername was not defined!");
+        final DBUsername result = new DBUsername(dbusername);
+        logger.debug("Retrieved DBUsername from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DBPassword getDBPassword() {
+        final String dbpassword = properties.getProperty(DB_PASSWORD_KEY.paramKey);
+        logger.trace("Validating DBPassword [{}] ...", dbpassword);
+//        if (dbpassword == null) throw new IllegalArgumentException("DBPassword was not defined!");
+        final DBPassword result = new DBPassword(dbpassword);
+        logger.debug("Retrieved DBPassword from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DBHost getDBHost() {
+        final String DBhost = properties.getProperty(DB_HOST_KEY.paramKey);
+        logger.trace("Validating DBHost [{}] ...", DBhost);
+//        if (DBhost == null) throw new IllegalArgumentException("DBHost was not defined!");
+        final DBHost result = new DBHost(DBhost);
+        logger.debug("Retrieved DBHost from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DBPort getDBPort() {
+        final String DBport = properties.getProperty(DB_PORT_KEY.paramKey);
+        logger.trace("Validating DBPort [{}] ...", DBport);
+//        if (DBport == null) throw new IllegalArgumentException("DBPort was not defined!");
+        final DBPort result = new DBPort(DBport);
+        logger.debug("Retrieved DBPort from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DBDatabaseName getDBDatabaseName() {
+        final String DBdatabasename = properties.getProperty(DB_DATABASE_NAME_KEY.paramKey);
+        logger.trace("Validating DBDatabaseName [{}] ...", DBdatabasename);
+//        if (DBdatabasename == null) throw new IllegalArgumentException("DBDatabaseName was not defined!");
+        final DBDatabaseName result = new DBDatabaseName(DBdatabasename);
+        logger.debug("Retrieved DBDatabaseName from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public DBConnectionString getDBConnectionString() {
+        final String DBconnectionstring = properties.getProperty(DB_CONNECTION_STRING_KEY.paramKey);
+        logger.trace("Validating DBConnectionString [{}] ...", DBconnectionstring);
+//        if (DBconnectionstring == null) throw new IllegalArgumentException("DBConnectionString was not defined!");
+        final DBConnectionString result = new DBConnectionString(DBconnectionstring);
+        logger.debug("Retrieved DBConnectionString from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
     public ProjectID getProjectID() {
         final String projectID = properties.getProperty(PROJECT_ID_KEY.paramKey);
         logger.trace("Validating ProjectID [{}] ...", projectID);
@@ -157,16 +279,6 @@ public class ArgumentsValidator implements Arguments {
         }
         final PackageName result = new PackageName(packageName);
         logger.debug("Retrieved PackageName from the properties [{}]", result);
-        return result;
-    }
-
-    @Override
-    public Password getPassword() {
-        final String password = properties.getProperty(PASSWORD_KEY.paramKey);
-        logger.trace("Validating Password [{}] ...", password);
-        // TODO: handle if password is null
-        final Password result = new Password(password);
-        logger.debug("Retrieved Password from the properties [{}]", result);
         return result;
     }
 

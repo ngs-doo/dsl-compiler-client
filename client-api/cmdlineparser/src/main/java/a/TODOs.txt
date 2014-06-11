@@ -1,0 +1,9 @@
+Working example unmanaged projekta:
+- na postgresu
+- targetira android
+- ne zahtijeva SBT
+- mono
+- omogućuje stvaranje SQL-a
+- kompajliranje servera
+- deployanje?
+- generiranje klijentskog koda

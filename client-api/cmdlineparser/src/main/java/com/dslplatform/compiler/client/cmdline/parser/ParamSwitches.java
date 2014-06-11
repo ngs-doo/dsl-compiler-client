@@ -1,8 +1,15 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_DATABASE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
@@ -21,10 +28,17 @@ public enum ParamSwitches {
     END_OF_PARAMS("--"),
     HELP("-h", "--help"),
 
-    /* Read props from file */
-    PROJECT_PROPS_PATH_SWITCHES("-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
-    
+    /* Read properties from file */
+    PROJECT_PROPERTIES_PATH_SWITCHES(PROJECT_PROPERTIES_PATH_KEY, "-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
+
     ACTIONS_SWITCHES(ACTIONS_KEY),
+
+    DB_USERNAME_SWITCHES(DB_USERNAME_KEY),
+    DB_PASSWORD_SWITCHES(DB_PASSWORD_KEY),
+    DB_HOST_SWITCHES(DB_HOST_KEY),
+    DB_PORT_SWITCHES(DB_PORT_KEY),
+    DB_DATABASE_NAME_SWITCHES(DB_DATABASE_NAME_KEY),
+    DB_CONNECTION_STRING_SWITCHES(DB_CONNECTION_STRING_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),

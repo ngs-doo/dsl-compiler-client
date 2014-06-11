@@ -92,7 +92,7 @@ public class ParserPassingTests {
 
         for(final ParamSwitches paramSwitch : ParamSwitches.values()){
             /* Skip the PROJECT_PROPS_PATH_SWITCHES, it's tested elsewhere */
-            if(paramSwitch.equals(ParamSwitches.PROJECT_PROPS_PATH_SWITCHES))
+            if(paramSwitch.equals(ParamSwitches.PROJECT_PROPERTIES_PATH_SWITCHES))
                 continue;
 
             inputPatterns.addAll(inputPatternsForParamSwitch(paramSwitch));

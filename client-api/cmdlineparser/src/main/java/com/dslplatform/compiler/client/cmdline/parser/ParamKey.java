@@ -6,6 +6,14 @@ public enum ParamKey {
     /* Used only to enumerate actions in the properties read */
     ACTIONS_KEY("actions"), /// XXX: Mind that this can probably be read from the properties file
 
+    /* Database authentication properties, these properties will all be aggregated in a DBAuth object */
+    DB_USERNAME_KEY("db-username"),
+    DB_PASSWORD_KEY("db-password"),
+    DB_HOST_KEY("db-host"),
+    DB_PORT_KEY("db-port"),
+    DB_DATABASE_NAME_KEY("db-database-name"),
+    DB_CONNECTION_STRING_KEY("db-connection-string"),
+
     USERNAME_KEY("username"),
     PROJECT_ID_KEY("project-id"),
     PROJECT_NAME_KEY("project-name"),

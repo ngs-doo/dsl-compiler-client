@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client.params;
 
+import java.util.regex.Pattern;
 
 
 /**
@@ -8,11 +9,12 @@ package com.dslplatform.compiler.client.params;
 public enum Action {
 
     UPDATE("update")
-    , GET_CHANGES("diff")
-    , LAST_DSL("last-dsl")
     , CONFIG("config")
     , PARSE("parse")
+    , GET_CHANGES("diff")
+    , LAST_DSL("last-dsl")
     , GENERATE_SOURCES("generate-sources")
+    , DOWNLOAD_GENERATED_MODEL("download-generated-model")
     , UNMANAGED_CS_SERVER("unmanaged-cs-server")// <- parametar je folder name
     , UNMANAGED_SOURCE("unmanaged-source")
     , UNMANAGED_SQL_MIGRATION("unmanaged-sql-migration"); // unmanaged postgres migration
@@ -20,7 +22,7 @@ public enum Action {
 
 //  CREATE_PROJECT("")
 //, DOWNLOAD_PROJECT("")
-//, DOWNLOAD_GENERATED_MODEL("")
+
 //, DOWNLOAD_TEMPLATE("")
 //, LIST_TEMPLATES("")
 //    GENERATE_MIGRATION_SQL("generate-migration-sql"),
@@ -29,10 +31,12 @@ public enum Action {
 
     public final String actionKey;
 
+    private final Pattern actionPattern;
 
     private Action(
             final String actionKey) {
         this.actionKey = actionKey;
+        actionPattern = Pattern.compile("(?i)" + actionKey);
     }
 
     @Override
@@ -40,14 +44,11 @@ public enum Action {
         return actionKey;
     }
 
-    public static Action find(final String action) {
-
-        try{
-            final Action a = Action.valueOf(action);
-            return a;
-        }catch(final IllegalArgumentException e){
-            return null;
+    public static Action find(final String actionName) {
+        for (final Action action : Action.values()) {
+            if (action.actionPattern.matcher(actionName).matches()) return action;
         }
+        return null;
     }
 
     public static String getValidActions() {

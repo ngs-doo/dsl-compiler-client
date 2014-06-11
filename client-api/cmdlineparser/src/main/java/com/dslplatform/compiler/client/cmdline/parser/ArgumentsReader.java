@@ -1,15 +1,23 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.*;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ACTIONS_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ALLOW_UNSAFE_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.CACHE_PATH_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_CONNECTION_STRING_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_DATABASE_NAME_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_HOST_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_PASSWORD_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_PORT_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_USERNAME_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DSL_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.END_OF_PARAMS;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.LOGGING_LEVEL_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.OUTPUT_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PACKAGE_NAME_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_ID_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_NAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_PROPS_PATH_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_PROPERTIES_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.SKIP_DIFF_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.TARGET_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.USERNAME_SWITCHES;
@@ -47,7 +55,7 @@ public class ArgumentsReader {
         this.propertyLoader = new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
     }
 
-    public Properties readArguments(String ... args) throws IOException {
+    public Properties readArguments(final String ... args) throws IOException {
         final Queue<String> q = new ArrayDeque<String>();
         q.addAll(Arrays.asList(args));
         return readArguments(q);
@@ -87,6 +95,13 @@ public class ArgumentsReader {
             if (ifSwitchType_doParseOwerwriteOld(PACKAGE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(PROJECT_ID_SWITCHES, current_arg, args, props, isLast)) continue;
 
+            if (ifSwitchType_doParseOwerwriteOld(DB_USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DB_PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DB_HOST_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DB_PORT_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DB_DATABASE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(DB_CONNECTION_STRING_SWITCHES, current_arg, args, props, isLast)) continue;
+
             /* Parameters that join new values to the old ones */
             if (ifSwitchType_doParseJoinOld(TARGET_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseJoinOld(ACTIONS_SWITCHES, current_arg, args, props, isLast)) continue;
@@ -100,7 +115,7 @@ public class ArgumentsReader {
             if (ifSwitchType_doParseFlag(ALLOW_UNSAFE_SWITCHES, current_arg, args, props)) continue;
 
             /* Load properties from file: */
-            if(ifPropsPath_doParsePropsFromPath(current_arg, args, props, isLast)) continue;
+            if(ifPropsPath_parsePropertiesFromPath(current_arg, args, props, isLast)) continue;
 
             /* --- Actions: --- */
             // (Everything else is an action)
@@ -125,7 +140,7 @@ public class ArgumentsReader {
 
             return true;
         }catch(final IllegalArgumentException e){
-            logger.error("Invalid action: " + current_arg);
+            // No need to double the error msgs logger.error("Invalid action: " + current_arg);
             return false;
         }
     }
@@ -138,15 +153,19 @@ public class ArgumentsReader {
      *
      * @throws IOException if loading of the props file failed.
      */
-    private boolean ifPropsPath_doParsePropsFromPath(
+    private boolean ifPropsPath_parsePropertiesFromPath(
             final String current_arg,
             final Queue<String> args,
             final Properties props,
             final boolean isLast
             )throws IOException{
 
-        final SwitchArgument switchArgument = PROJECT_PROPS_PATH_SWITCHES.examine(current_arg);
+        final SwitchArgument switchArgument = PROJECT_PROPERTIES_PATH_SWITCHES.examine(current_arg);
         if (switchArgument.isSwitch) {
+
+            final ParamKey argument_KEY = PROJECT_PROPERTIES_PATH_SWITCHES.getParamKey();
+            final String argumentKey_stringName = PROJECT_PROPERTIES_PATH_SWITCHES.getParamKey().toString();
+
             // parse ProjectPropertiesPath, new arguments overwrite old ones
             logger.trace("Encountered switch [{}]", switchArgument.getSwitch());
             String projectPropertiesPath;
@@ -161,6 +180,17 @@ public class ArgumentsReader {
                 logger.trace("ProjectPropertgetiesPath argument was empty, read next argument [{}]",
                         projectPropertiesPath);
             }
+
+            if (logger.isTraceEnabled()) {
+                final String oldArgument_string = props.getProperty(argument_KEY.paramKey);
+                if (oldArgument_string != null && !oldArgument_string.equals(projectPropertiesPath)) {
+                    logger.trace("Overwriting previous " + argumentKey_stringName + " [{}] with [{}]", oldArgument_string,
+                            projectPropertiesPath);
+                }
+            }
+
+            logger.debug("Read " + argumentKey_stringName + " argument [{}]", projectPropertiesPath);
+            props.setProperty(argument_KEY.paramKey, projectPropertiesPath);
 
             logger.debug("Read ProjectPropertiesPath argument [{}]", projectPropertiesPath);
             final Properties projectProperties = propertyLoader.read(projectPropertiesPath);

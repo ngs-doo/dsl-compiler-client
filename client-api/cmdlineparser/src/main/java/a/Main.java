@@ -28,7 +28,7 @@ public class Main {
                 "-i|kekec|-ibekec|-i|tukac|-ipero|--project-id=pero|--project-id|pero2|--project-id=x|--project-id=|y|-iqwe|--project-id=1-2-3-4-5|"
                 + "-uu|"
                 + "--with-active-record|--with-active-record=yes|"
-                + "-f~/code/element-doo/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/example.props|"
+                + "-f~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/example.props|"
                 + "-tjava client,java,scala-server|"
                 + "--project-name|KiklopZdenski|"
                 + "--package-name=com.`dsl platform`.test|--target=!java,c# server"
@@ -48,7 +48,7 @@ public class Main {
                         new ArgumentsReader(logger, propertyLoader).readArguments(q)));
 
         System.out.println(a.getActions().getActionSet().toString());
-        System.out.println(a.getCachePath());
+//        System.out.println(a.getCachePath());
         System.out.println(a.getDSLPath());
         System.out.println(a.getLoggingLevel());
         System.out.println(a.getOutputPath());
@@ -59,6 +59,6 @@ public class Main {
         System.out.println(a.getProjectPropertiesPath());
         System.out.println(a.getTargets());
         System.out.println(a.getUsername());
-        System.out.println(a.getUsername());
+        System.out.println(a.getPassword());
     }
 }

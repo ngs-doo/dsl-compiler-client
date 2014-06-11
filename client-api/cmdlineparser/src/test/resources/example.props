@@ -1,5 +1,6 @@
 project-name=RedEchidna
 username=knuckles-the-echidna@dsl-platform.com
+password=m15m13p0713p0p4s3l
 project-id=1-2-3-4-5
 api-url=https://example.com/
 # Example of a comment in property file
@@ -8,4 +9,5 @@ logging-level=DEBUG
 output-path=~/knuckles/workspace/outputPath
 target=csharp_server, csharp, java, php, scala_server, csharp_client, java_client, csharp_portable, php_client, scala_client
 #output-postgres-migration-path=bla/bla/
-actions=diff, last-dsl, config, parse
+actions=update, config, parse, diff, last-dsl, generate-sources, download-generated-model, unmanaged-sql-migration
+#, unmanaged-cs-server, unmanaged-source,

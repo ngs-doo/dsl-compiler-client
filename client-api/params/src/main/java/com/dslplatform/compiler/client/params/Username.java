@@ -6,6 +6,8 @@ public class Username implements Param {
     public Username(
             final String username) {
         this.username = username;
+        // TODO: see if this needs to be validated for whitespaces, etc.
+        // TODO: do the same for Password, and other recently added single string params
     }
 
     @Override
