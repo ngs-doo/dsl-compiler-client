@@ -21,6 +21,7 @@ import com.dslplatform.compiler.client.params.Password;
 import com.dslplatform.compiler.client.params.ProjectID;
 import com.dslplatform.compiler.client.params.ProjectName;
 import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
+import com.dslplatform.compiler.client.params.RevenjPath;
 import com.dslplatform.compiler.client.params.Targets;
 import com.dslplatform.compiler.client.params.Username;
 
@@ -101,7 +102,6 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private ProjectID projectID;
-
     @Override
     public ProjectID getProjectID() {
         return projectID == null
@@ -110,7 +110,6 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private ProjectName projectName;
-
     @Override
     public ProjectName getProjectName() {
         return projectName == null
@@ -119,7 +118,6 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private PackageName packageName;
-
     @Override
     public PackageName getPackageName() {
         return packageName == null
@@ -127,8 +125,15 @@ public class CachingArgumentsProxy implements Arguments {
                 : packageName;
     }
 
-    private Targets targets;
+    private RevenjPath revenjPath;
+    @Override
+    public RevenjPath getRevenjPath() {
+        return revenjPath == null
+                ? revenjPath = underlying.getRevenjPath()
+                : revenjPath;
+    }
 
+    private Targets targets;
     @Override
     public Targets getTargets() {
         return targets == null

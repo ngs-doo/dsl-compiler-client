@@ -15,9 +15,11 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.LOGGI
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.MIGRATION_FILE_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.OUTPUT_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PACKAGE_NAME_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PASSWORD_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_ID_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_NAME_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_PROPERTIES_PATH_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.REVENJ_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.SKIP_DIFF_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.TARGET_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.USERNAME_SWITCHES;
@@ -87,9 +89,11 @@ public class ArgumentsReader {
 
             /* Parameters that overwrite previous values */
             if (ifSwitchType_doParseOwerwriteOld(USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(OUTPUT_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(DSL_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(CACHE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOwerwriteOld(REVENJ_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(LOGGING_LEVEL_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(PROJECT_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
             if (ifSwitchType_doParseOwerwriteOld(PACKAGE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;

@@ -22,19 +22,30 @@ public class ActionsTest {
 
         final Queue<String> q = new ArrayDeque<String>();
 
-        q.add(Action.UPDATE.toString());
+//        q.add(Action.UPDATE.toString());
+//        q.add("-f~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/empty.props");
+//        q.add("--username=peroperic");
+//        q.add("--password=pasvurd");
+//        q.add("--project-id=1-2-3-4-5");
+//        q.add("--package-name=peroperic");
+//        q.add("--dsl-path=peroperic");
 
         q.add(Action.CONFIG.toString());
+        q.add("-f~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/empty.props");
+        q.add("--username=konfigurator");
+        q.add("--password=pasvurd_konfiguratora");
+        q.add("--project-id=2-4-6-8-10");
 
-        q.add(Action.PARSE.toString());
-
-        q.add(Action.GET_CHANGES.toString());
-
-        q.add(Action.GENERATE_SOURCES.toString());
-
-        q.add(Action.DOWNLOAD_GENERATED_MODEL.toString());
-
-        q.add(Action.UNMANAGED_SQL_MIGRATION.toString());
+//
+//        q.add(Action.PARSE.toString());
+//
+//        q.add(Action.GET_CHANGES.toString());
+//
+//        q.add(Action.GENERATE_SOURCES.toString());
+//
+//        q.add(Action.DOWNLOAD_GENERATED_MODEL.toString());
+//
+//        q.add(Action.UNMANAGED_SQL_MIGRATION.toString());
 
 
         final PropertyLoader propertyLoader = new PropertyLoader(logger,

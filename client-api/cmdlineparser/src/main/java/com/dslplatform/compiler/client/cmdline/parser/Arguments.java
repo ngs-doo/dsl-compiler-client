@@ -18,6 +18,7 @@ import com.dslplatform.compiler.client.params.Password;
 import com.dslplatform.compiler.client.params.ProjectID;
 import com.dslplatform.compiler.client.params.ProjectName;
 import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
+import com.dslplatform.compiler.client.params.RevenjPath;
 import com.dslplatform.compiler.client.params.Targets;
 import com.dslplatform.compiler.client.params.Username;
 
@@ -47,6 +48,7 @@ public interface Arguments {
     public OutputPath getOutputPath();
     public DSLPath getDSLPath();
     public CachePath getCachePath();
+    public RevenjPath getRevenjPath();
     public LoggingLevel getLoggingLevel();
 
     public boolean isWithActiveRecord();

@@ -13,9 +13,11 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LE
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.REVENJ_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
@@ -39,9 +41,11 @@ public enum ParamSwitches {
     DB_CONNECTION_STRING_SWITCHES(DB_CONNECTION_STRING_KEY),
 
     MIGRATION_FILE_PATH_SWITCHES(MIGRATION_FILE_PATH_KEY),
+    REVENJ_PATH_SWITCHES(REVENJ_PATH_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),
+    PASSWORD_SWITCHES(PASSWORD_KEY, "-u", "--" + PASSWORD_KEY),
     PROJECT_ID_SWITCHES(PROJECT_ID_KEY, "-i", "--" + PROJECT_ID_KEY),
     PROJECT_NAME_SWITCHES(PROJECT_NAME_KEY, "-k", "--" + PROJECT_NAME_KEY),
     PACKAGE_NAME_SWITCHES(PACKAGE_NAME_KEY, "-n", "--" + PACKAGE_NAME_KEY),
@@ -49,7 +53,7 @@ public enum ParamSwitches {
     OUTPUT_PATH_SWITCHES(OUTPUT_PATH_KEY, "-o", "--" + OUTPUT_PATH_KEY),
     DSL_PATH_SWITCHES(DSL_PATH_KEY),
     CACHE_PATH_SWITCHES(CACHE_PATH_KEY),
-    LOGGING_LEVEL_SWITCHES(LOGGING_LEVEL_KEY, "-l", "--" + LOGGING_LEVEL_KEY), // TODO: see if '-l' or smtn else
+    LOGGING_LEVEL_SWITCHES(LOGGING_LEVEL_KEY, "-l", "--" + LOGGING_LEVEL_KEY),
 
     /* Flags */
     WITH_ACTIVE_RECORD_SWITCHES(WITH_ACTIVE_RECORD_KEY),

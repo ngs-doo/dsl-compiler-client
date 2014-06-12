@@ -15,6 +15,7 @@ public enum ParamKey {
     DB_CONNECTION_STRING_KEY("db-connection-string"),
 
     MIGRATION_FILE_PATH_KEY("migration-file"),
+    REVENJ_PATH_KEY("revenj-path"),
 
     USERNAME_KEY("username"),
     PROJECT_ID_KEY("project-id"),

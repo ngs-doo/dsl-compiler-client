@@ -26,6 +26,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_K
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.REVENJ_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
@@ -60,6 +61,7 @@ import com.dslplatform.compiler.client.params.Password;
 import com.dslplatform.compiler.client.params.ProjectID;
 import com.dslplatform.compiler.client.params.ProjectName;
 import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
+import com.dslplatform.compiler.client.params.RevenjPath;
 import com.dslplatform.compiler.client.params.Target;
 import com.dslplatform.compiler.client.params.Targets;
 import com.dslplatform.compiler.client.params.Username;
@@ -114,6 +116,16 @@ public class ArgumentsValidator implements Arguments {
         if (dslPath == null) throw new IllegalArgumentException("DSL path was not defined!");
         final DSLPath result = new DSLPath(new File(dslPath));
         logger.debug("Retrieved DSLPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public RevenjPath getRevenjPath() {
+    final String revenjPath = properties.getProperty(REVENJ_PATH_KEY.paramKey);
+        logger.trace("Validating RevenjPath [{}] ...", revenjPath);
+        if (revenjPath == null) throw new IllegalArgumentException("Revenj path was not defined!");
+        final RevenjPath result = new RevenjPath(new File(revenjPath));
+        logger.debug("Retrieved RevenjPath from the properties [{}]", result);
         return result;
     }
 
