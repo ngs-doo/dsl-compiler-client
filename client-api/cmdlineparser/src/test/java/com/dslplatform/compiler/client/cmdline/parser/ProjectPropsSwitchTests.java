@@ -17,8 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
-import com.dslplatform.compiler.client.params.Target;
 import com.dslplatform.compiler.client.io.PathExpander;
+import com.dslplatform.compiler.client.params.Action;
+import com.dslplatform.compiler.client.params.Target;
 
 @RunWith(Parameterized.class)
 public class ProjectPropsSwitchTests {
@@ -62,17 +63,39 @@ public class ProjectPropsSwitchTests {
                 new CachingArgumentsProxy(logger, new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(inputPatternQueue)));
 
-        assertEquals("knuckles-the-echidna@dsl-platform.com",arguments.getUsername().username);
-        assertEquals(UUID.fromString("1-2-3-4-5").toString(),arguments.getProjectID().projectID.toString());
         assertEquals("RedEchidna",arguments.getProjectName().projectName);
+        assertEquals("knuckles-the-echidna@dsl-platform.com",arguments.getUsername().username);
+        assertEquals("m15m13p0713p0p4s3l",arguments.getPassword().password);
+        assertEquals(UUID.fromString("1-2-3-4-5").toString(),arguments.getProjectID().projectID.toString());
+        // todo: api-url
+        assertEquals("com.dslplatform.knučkles.foo",arguments.getPackageName().packageName);
         assertEquals("DEBUG",arguments.getLoggingLevel().level);
         assertEquals("~/knuckles/workspace/outputPath",arguments.getOutputPath().outputPath.getPath());
-        assertEquals("com.dslplatform.knučkles.foo",arguments.getPackageName().packageName);
+        assertEquals("~/knuckles/workspace/dslPath",arguments.getDSLPath().dslPath.getPath());
+        assertEquals("/knuckles/workspace/migrationPath",arguments.getMigrationFilePath().migrationFilePath.getPath());
+        assertEquals("aUsername",arguments.getDBAuth().getDbUsername().dbUsername);
+        assertEquals("anPassword",arguments.getDBAuth().getDbPassword().dbPassword);
+        assertEquals("localhost",arguments.getDBAuth().getDbHost().dbHost);
+        assertEquals(true, 5432==arguments.getDBAuth().getDbPort().dbPort);
+        assertEquals("dbname",arguments.getDBAuth().getDbDatabaseName().dbDatabaseName);
+
+        assertEquals("dbconnstring",arguments.getDBAuth().getDbConnectionString().dbConnectionString);
+
+        assertEquals(
+                arguments.getActions().getActionSet(),
+                EnumSet.of(Action.UPDATE
+                        , Action.CONFIG
+                        , Action.PARSE
+                        , Action.GET_CHANGES
+                        , Action.LAST_DSL
+                        , Action.GENERATE_SOURCES
+                        , Action.DOWNLOAD_GENERATED_MODEL
+                        , Action.UNMANAGED_SQL_MIGRATION
+                        ));
 
         assertEquals(
                 arguments.getTargets().getTargetSet(),
-                EnumSet.of(
-                        Target.JAVA_CLIENT
+                EnumSet.of(Target.JAVA_CLIENT
                         , Target.CSHARP_CLIENT
                         , Target.CSHARP_PORTABLE
                         , Target.CSHARP_SERVER

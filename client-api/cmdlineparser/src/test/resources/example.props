@@ -7,7 +7,14 @@ api-url=https://example.com/
 package-name=com.dslplatform.knu\u010Dkles.foo
 logging-level=DEBUG
 output-path=~/knuckles/workspace/outputPath
-target=csharp_server, csharp, java, php, scala_server, csharp_client, java_client, csharp_portable, php_client, scala_client
-#output-postgres-migration-path=bla/bla/
+dsl-path=~/knuckles/workspace/dslPath
+migration-file=/knuckles/workspace/migrationPath
+db-username=aUsername
+db-password=anPassword
+db-host=localhost
+db-port=5432
+db-database-name=dbname
+db-connection-string=dbconnstring
 actions=update, config, parse, diff, last-dsl, generate-sources, download-generated-model, unmanaged-sql-migration
 #, unmanaged-cs-server, unmanaged-source,
+target=csharp_server, csharp, java, php, scala_server, csharp_client, java_client, csharp_portable, php_client, scala_client

@@ -17,6 +17,7 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KE
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
@@ -100,7 +101,7 @@ public class ArgumentsValidator implements Arguments {
     public MigrationFilePath getMigrationFilePath() {
     final String migrationFilePath = properties.getProperty(MIGRATION_FILE_PATH_KEY.paramKey);
         logger.trace("Validating MigrationFilePath [{}] ...", migrationFilePath);
-        if (migrationFilePath == null) throw new IllegalArgumentException("Output path was not defined!");
+        if (migrationFilePath == null) throw new IllegalArgumentException("Migration file path was not defined!");
         final MigrationFilePath result = new MigrationFilePath(new File(migrationFilePath));
         logger.debug("Retrieved MigrationFilePath from the properties [{}]", result);
         return result;
@@ -108,9 +109,9 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public DSLPath getDSLPath() {
-    final String dslPath = properties.getProperty(OUTPUT_PATH_KEY.paramKey);
+    final String dslPath = properties.getProperty(DSL_PATH_KEY.paramKey);
         logger.trace("Validating DSLPath [{}] ...", dslPath);
-        if (dslPath == null) throw new IllegalArgumentException("Output path was not defined!");
+        if (dslPath == null) throw new IllegalArgumentException("DSL path was not defined!");
         final DSLPath result = new DSLPath(new File(dslPath));
         logger.debug("Retrieved DSLPath from the properties [{}]", result);
         return result;
@@ -180,8 +181,7 @@ public class ArgumentsValidator implements Arguments {
              || password == null
              || host == null
              || port == null
-             || databaseName == null
-             || connectionString == null)){
+             || databaseName == null)){
                 throw
                 new IllegalArgumentException("Illegal database authentication parameters. The authentication requires either a valid connection string, or all individual connection parameters set.");
          }
