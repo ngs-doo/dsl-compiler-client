@@ -1,8 +1,6 @@
 package com.dslplatform.compiler.client.params;
 
 import java.util.regex.Pattern;
-
-
 /**
  * Actions supported by the command line client
  */
@@ -35,10 +33,9 @@ public enum Action {
 
     private final Pattern actionPattern;
 
-    private Action(
-            final String actionKey) {
+    private Action(final String actionKey) {
         this.actionKey = actionKey;
-        actionPattern = Pattern.compile("(?i)" + actionKey);
+        this.actionPattern = Pattern.compile("(?i)" + actionKey);
     }
 
     @Override
@@ -61,5 +58,4 @@ public enum Action {
         sb.setLength(sb.length() - 2);
         return sb.toString();
     }
-
 }

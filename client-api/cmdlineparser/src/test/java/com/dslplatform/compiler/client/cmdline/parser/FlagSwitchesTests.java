@@ -8,9 +8,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.regex.Pattern;
 
-import com.dslplatform.compiler.client.io.PathExpander;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -19,11 +17,12 @@ import org.slf4j.LoggerFactory;
 
 import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
+import com.dslplatform.compiler.client.io.PathExpander;
 
 @RunWith(Parameterized.class)
 public class FlagSwitchesTests {
 
-    final Logger logger = LoggerFactory.getLogger(FlagSwitchesTests.class);
+    final static Logger logger = LoggerFactory.getLogger(FlagSwitchesTests.class);
 
     private final String inputValue;
     private final String expectedParsedValue;
@@ -85,11 +84,18 @@ public class FlagSwitchesTests {
         final List<Object[]> inputPatterns = new ArrayList<Object[]>();
 
         final Set<ParamSwitches> booleanFlagSwitches =
-                EnumSet.of(ParamSwitches.WITH_ACTIVE_RECORD_SWITCHES, ParamSwitches.WITH_HELPER_METHODS_SWITCHES,
-                        ParamSwitches.WITH_JACKSON_SWITCHES, ParamSwitches.WITH_JAVA_BEANS_SWITCHES,
-                        ParamSwitches.SKIP_DIFF_SWITCHES, ParamSwitches.ALLOW_UNSAFE_SWITCHES);
+                EnumSet.of(
+                          ParamSwitches.WITH_ACTIVE_RECORD_SWITCHES
+                        , ParamSwitches.WITH_HELPER_METHODS_SWITCHES
+                        , ParamSwitches.WITH_JACKSON_SWITCHES
+                        , ParamSwitches.WITH_JAVA_BEANS_SWITCHES
+                        , ParamSwitches.SKIP_DIFF_SWITCHES
+                        , ParamSwitches.ALLOW_UNSAFE_SWITCHES);
+
+        logger.info(ParamSwitches.WITH_ACTIVE_RECORD_SWITCHES.toString());
 
         for (final ParamSwitches paramSwitch : booleanFlagSwitches) {
+            logger.info("Doing paramSwitch: " + paramSwitch);
             inputPatterns.addAll(inputPatternsForParamSwitch(paramSwitch));
         }
 
@@ -130,51 +136,4 @@ public class FlagSwitchesTests {
                 return null;
         }
     }
-
-    /**
-     * Definition for test cases
-     *
-     * @param inputParameterValue - The input value for the tests' assertion
-     * @param shortSwitchVersion - the short name of the switch
-     * @param longSwitchVersion - the long name of the switch
-     * @param paramSwitch - the {@code ParamSwitches} value, used in getting the actual value of the test.
-     *
-     * @return A list of test cases that will be fed by the test provider function to the test
-     */
-    private static List<Object[]> commonTestCases(
-            final String inputParameterValue,
-            final String shortSwitchVersion,
-            final String longSwitchVersion,
-            final ParamSwitches paramSwitch) {
-        final List<Object[]> testCases = new ArrayList<Object[]>();
-
-        final String expectedParameterValue;
-
-        /* The expected value for target switches is different from the input value*/
-        if (paramSwitch.equals(ParamSwitches.TARGET_SWITCHES)) {
-            final Pattern p = Pattern.compile("^$");
-
-            expectedParameterValue =
-                    inputParameterValue.replaceAll("^c#", "csharp").replaceAll("^(csharp|java|scala|php)[-_ ]", "$1_")
-                            .replaceAll("^(csharp|java|scala|php)_client", "$1");
-        } else {
-            /* For all other cases, the expected parameter value is equal to the input value */
-            expectedParameterValue = inputParameterValue;
-        }
-
-        /* The second element of the Object[] array is the input value for the tests. */
-
-        testCases.add(new Object[] { expectedParameterValue, shortSwitchVersion + "|" + inputParameterValue,
-                longSwitchVersion, paramSwitch });
-        testCases.add(new Object[] { expectedParameterValue, shortSwitchVersion + inputParameterValue,
-                longSwitchVersion, paramSwitch });
-
-        testCases.add(new Object[] { expectedParameterValue, longSwitchVersion + "=" + inputParameterValue,
-                longSwitchVersion, paramSwitch });
-        testCases.add(new Object[] { expectedParameterValue, longSwitchVersion + "|" + inputParameterValue,
-                longSwitchVersion, paramSwitch });
-
-        return testCases;
-    }
-
 }

@@ -1,6 +1,5 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
@@ -31,8 +30,6 @@ public enum ParamSwitches {
 
     /* Read properties from file */
     PROJECT_PROPERTIES_PATH_SWITCHES(PROJECT_PROPERTIES_PATH_KEY, "-f", "--" + PROJECT_PROPERTIES_PATH_KEY),
-
-    ACTIONS_SWITCHES(ACTIONS_KEY),
 
     DB_USERNAME_SWITCHES(DB_USERNAME_KEY),
     DB_PASSWORD_SWITCHES(DB_PASSWORD_KEY),
@@ -65,6 +62,11 @@ public enum ParamSwitches {
 
     private final ParamKey paramKey;
     private final String[] switches;
+
+    private ParamSwitches(final ParamKey paramKey) {
+        this.paramKey = paramKey;
+        this.switches = new String[]{"--" + paramKey};
+    }
 
     private ParamSwitches(final ParamKey paramKey,
                           final String... switches) {

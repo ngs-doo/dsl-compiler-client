@@ -1,7 +1,6 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ACTIONS_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ALLOW_UNSAFE_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.CACHE_PATH_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_CONNECTION_STRING_SWITCHES;
@@ -27,7 +26,6 @@ import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JACKSON_SWITCHES;
 import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JAVA_BEANS_SWITCHES;
 
-import java.awt.Desktop.Action;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -41,6 +39,7 @@ import com.dslplatform.compiler.client.api.config.PropertyLoader;
 import com.dslplatform.compiler.client.api.config.StreamLoader;
 import com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.SwitchArgument;
 import com.dslplatform.compiler.client.io.PathExpander;
+import com.dslplatform.compiler.client.params.Action;
 
 public class ArgumentsReader {
     private final Logger logger;
@@ -107,7 +106,6 @@ public class ArgumentsReader {
 
             /* Parameters that join new values to the old ones */
             if (ifSwitchType_doParseJoinOld(TARGET_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseJoinOld(ACTIONS_SWITCHES, current_arg, args, props, isLast)) continue;
 
             /* Boolean flag switches: */
             if (ifSwitchType_doParseFlag(WITH_ACTIVE_RECORD_SWITCHES, current_arg, args, props)) continue;
@@ -131,19 +129,20 @@ public class ArgumentsReader {
     }
 
     private boolean parsedAction(final String current_arg, final Properties props){
-        try{
-            final Action a = Action.valueOf(current_arg);
+        logger.trace("Trying to parse [" + current_arg + "] as action.");
+        final Action a = Action.find(current_arg);
 
+        if(a != null){
             if(!props.containsKey(ACTIONS_KEY.paramKey)){
                 props.setProperty(ACTIONS_KEY.paramKey, a.toString());
             }else{
                 final String currentActions = props.getProperty(ACTIONS_KEY.paramKey);
                 props.setProperty(ACTIONS_KEY.paramKey, currentActions + "," + a.toString());
             }
-
             return true;
-        }catch(final IllegalArgumentException e){
-            // No need to double the error msgs logger.error("Invalid action: " + current_arg);
+        }
+        else{
+            logger.error("Invalid action: " + current_arg);
             return false;
         }
     }

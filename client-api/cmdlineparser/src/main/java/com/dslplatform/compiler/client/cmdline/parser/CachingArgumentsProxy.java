@@ -142,13 +142,11 @@ public class CachingArgumentsProxy implements Arguments {
     public Actions getActions() {
         if (actions == null) {
             final Actions acts = underlying.getActions();
-
             validateActionsAgainstProperties(acts);
-
             actions = acts;
         }
-        return actions;
 
+        return actions;
     }
 
     /** Note: computed from the underlying subproperties*/
@@ -268,91 +266,93 @@ public class CachingArgumentsProxy implements Arguments {
         /* To validate actions against properties, we need to check if all neccessary properties are loaded */
         logger.trace("Validating actions.");
         for(final Action action : actionsToValidate.getActionSet()){
-            logger.trace("Checking if all neccessary parameters exist for the action [" + action.toString() + "] ...");
-            switch(action){
-                case UPDATE:
-                    getProjectPropertiesPath();
-                    getUsername();
-                    getPassword();
-                    getProjectID();
-                    getPackageName();
-                    getDSLPath();
-                    isAllowUnsafe();
-                    getTargets();
-                    break;
-                case CONFIG:
-                    getProjectPropertiesPath();
-                    getUsername();
-                    getPassword();
-                    getProjectID();
-                    break;
-                case PARSE:
-                    getUsername();
-                    getPassword();
-                    getDSLPath();
-                    break;
-                case GET_CHANGES:// a.k.a. diff
-                    /* (TODO: differentiate managed vs. unmanaged;
-                     * or do so in a different app layer)
-                     * Managed:
-                     *  - project properties path (optional)
-                     *  - username/password
-                     *  - project ID
-                     *  - DSL path
-                     * Unmanaged:
-                     *  - project properties path (optional)
-                     *  - DSL path
-                     *  - DBAuth
-                     */
-                    //getProjectPropertiesPath(); // Optional, no check
-                    getUsername();
-                    getPassword();
-                    getProjectID();
-                    getDSLPath();
-                    getDBAuth();
-                    break;
-                case LAST_DSL:
-                    // TODO:
-                    break;
-                case GENERATE_SOURCES:
-                    getProjectPropertiesPath();
-                    getUsername();
-                    getPassword();
-                    getPackageName();
-                    getDSLPath();
-                    getDBAuth();
-                    getOutputPath();
-                    break;
-                case DOWNLOAD_GENERATED_MODEL:
-                    getProjectPropertiesPath();
-                    getUsername();
-                    getPassword();
-                    getProjectID();
-                    getTargets();
-                    break;
-                case UNMANAGED_CS_SERVER:
-                    // TODO:
-                    break;
-                case UNMANAGED_SOURCE:
-                    // TODO:
-                    break;
-                case UNMANAGED_SQL_MIGRATION:
-//                    getProjectPropertiesPath();
-//                    getUsername();
-//                    getPassword();
-                    getDSLPath();
-                    getDBAuth();
-                    getOutputPath();
-                    break;
-                case UPGRADE_UNMANAGED_DATABASE:
-                    getDBAuth();
-                    getMigrationFilePath();
-                    break;
-                case DEPLOY_UNMANAGED_SERVER:
-                    // TODO:
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid action " + action);
+            try{
+                logger.trace("Checking if all neccessary parameters exist for the action [" + action.toString() + "] ...");
+                switch(action){
+                    case UPDATE:
+                        getProjectPropertiesPath();
+                        getUsername();
+                        getPassword();
+                        getProjectID();
+                        getPackageName();
+                        getDSLPath();
+                        isAllowUnsafe();
+                        getTargets();
+                        break;
+                    case CONFIG:
+                        getProjectPropertiesPath();
+                        getUsername();
+                        getPassword();
+                        getProjectID();
+                        break;
+                    case PARSE:
+                        getUsername();
+                        getPassword();
+                        getDSLPath();
+                        break;
+                    case GET_CHANGES:// a.k.a. diff
+                        /* (TODO: differentiate managed vs. unmanaged;
+                         * or do so in a different app layer)
+                         * Managed:
+                         *  - project properties path (optional)
+                         *  - username/password
+                         *  - project ID
+                         *  - DSL path
+                         * Unmanaged:
+                         *  - project properties path (optional)
+                         *  - DSL path
+                         *  - DBAuth
+                         */
+                        //getProjectPropertiesPath(); // Optional, no check
+                        getUsername();
+                        getPassword();
+                        getProjectID();
+                        getDSLPath();
+                        getDBAuth();
+                        break;
+                    case LAST_DSL:
+                        // TODO:
+                        break;
+                    case GENERATE_SOURCES:
+                        getProjectPropertiesPath();
+                        getUsername();
+                        getPassword();
+                        getPackageName();
+                        getDSLPath();
+                        getDBAuth();
+                        getOutputPath();
+                        break;
+                    case DOWNLOAD_GENERATED_MODEL:
+                        getProjectPropertiesPath();
+                        getUsername();
+                        getPassword();
+                        getProjectID();
+                        getTargets();
+                        break;
+                    case UNMANAGED_CS_SERVER:
+                        // TODO:
+                        break;
+                    case UNMANAGED_SOURCE:
+                        // TODO:
+                        break;
+                    case UNMANAGED_SQL_MIGRATION:
+                        getDSLPath();
+                        getDBAuth();
+                        getOutputPath();
+                        break;
+                    case UPGRADE_UNMANAGED_DATABASE:
+                        getDBAuth();
+                        getMigrationFilePath();
+                        break;
+                    case DEPLOY_UNMANAGED_SERVER:
+                        // TODO:
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Invalid action " + action);
+                }
+            }catch(final IllegalArgumentException e){
+                throw new IllegalArgumentException(
+                        "Parameters missing for action: " + action, e);
             }
             logger.trace("Done.");
         }

@@ -3,7 +3,7 @@ package com.dslplatform.compiler.client.cmdline.parser;
 public enum ParamKey {
     PROJECT_PROPERTIES_PATH_KEY("project-properties-path"),
 
-    /* Used only to enumerate actions in the properties read */
+    /* Used only to enumerate actions in the properties read - no switch*/
     ACTIONS_KEY("actions"), /// XXX: Mind that this can probably be read from the properties file
 
     /* Database authentication properties, these properties will all be aggregated in a DBAuth object */
