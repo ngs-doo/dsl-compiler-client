@@ -1,5 +1,7 @@
 package com.dslplatform.compiler.client.cmdline;
 
+import com.dslplatform.compiler.client.response.GenerateMigrationSQLResponse;
+
 public interface CLCAction {
 
     /**
@@ -45,7 +47,7 @@ public interface CLCAction {
      *
      * @return migration or null if failed.
      */
-    public String sqlMigration();
+    public GenerateMigrationSQLResponse sqlMigration();
 
     /**
      * Applies a migration sql to the database

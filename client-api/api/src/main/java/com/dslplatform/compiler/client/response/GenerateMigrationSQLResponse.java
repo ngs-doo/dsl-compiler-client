@@ -25,9 +25,16 @@ public class GenerateMigrationSQLResponse extends AuthorizationResponse {
             String migration) {
         super(authorized, authorizationErrorMessage);
         this.migration = migration;
-        this.migrationInformation = stripInformationComents(migration);
+        this.migrationInformation = stripInformationComments(migration);
         this.migrationRequestSuccessful = migrationRequestSuccessful;
         this.isMigrationDestructive = findDestructive(migrationInformation);
     }
 
+    public GenerateMigrationSQLResponse(String migration) {
+        super(true, null);
+        this.migration = migration;
+        this.migrationInformation = stripInformationComments(migration);
+        this.migrationRequestSuccessful = true;
+        this.isMigrationDestructive = findDestructive(migrationInformation);
+    }
 }

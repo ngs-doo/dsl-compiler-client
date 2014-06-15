@@ -35,7 +35,7 @@ object ClientApi extends Build with Default {
 
   lazy val cmdLineClient = clientApiProject("CmdLineClient") inject(
     cmdLineParser,
-    slf4jSimple,
+    logback, //slf4jSimple,
     util
     ) dependsOn (api % "test->test;compile->compile") settings(
     assemblySettings: _*) settings (

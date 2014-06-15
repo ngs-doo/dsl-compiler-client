@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static com.dslplatform.compiler.client.diff.MigrationStrip.*;
-
 /**
  * Class that proxies responses to from the Api to the output and provides user experience in sense of validating chosen actions.
  */
@@ -42,7 +40,7 @@ public class ActionDefinition extends ActionContext implements CLCAction {
     private final static String retrying_unmanaged_source_request_msg = "Retrying unmanaged source request";
     private final static String retrying_unmanaged_compilation_request_msg = "Retrying unmanaged source compilation";
     private final static String database_connection_failure = "There was a problem connection to the database ";
-    private final static String migration_applie_failed = "Migration was not applied successfully";
+    private final static String migration_application_failed = "Migration was not applied successfully";
     private final static String database_upgrade_successful = "Database upgrade successful";
 
     private final static String correct_DSL_and_try_again_prompt = "Correct DSL and try again";
@@ -54,7 +52,7 @@ public class ActionDefinition extends ActionContext implements CLCAction {
     private final static String retry_compilation_prompt = "Retry compilation";
 
     public ActionDefinition(Logger logger, Arguments arguments) throws IOException {
-        super(new ApiImpl(
+        this(new ApiImpl(
                         logger,
                         new HttpRequestBuilderImpl(),
                         HttpTransportProvider.httpTransport(),
@@ -62,10 +60,7 @@ public class ActionDefinition extends ActionContext implements CLCAction {
                 ),
                 logger,
                 new PrintStreamOutput(),
-                arguments,
-                new SystemInCommandLinePrompt(
-                        new PrintStreamOutput()),
-                new ClcIO(logger)
+                arguments
         );
     }
 
@@ -174,29 +169,36 @@ public class ActionDefinition extends ActionContext implements CLCAction {
      *
      * @return migration or null if failed.
      */
-    public String sqlMigration() {
+    public GenerateMigrationSQLResponse sqlMigration() {
         return sqlMigration(getDSL());
     }
 
-    public String sqlMigration(DSL dsl) {
+    public GenerateMigrationSQLResponse sqlMigration(DSL dsl) {
         GenerateMigrationSQLResponse generateMigrationSQLResponse = api.generateMigrationSQL(getToken(), getDataSource(), dsl.files);
         if (generateMigrationSQLResponse.migrationRequestSuccessful) {
             String migration = generateMigrationSQLResponse.migration;
 
             output.println(success_receive_migration_msg);
             File migrationOutputPath = getMigrationPath();
-            try {
-                io.write(migrationOutputPath, migration, Charsets.UTF_8);
-            } catch (IOException e) {
-                output.println(error_writing_migration + e.getMessage());
-                logger.error(error_writing_migration + e.getMessage());
-                return null;
+            if (migrationOutputPath == null) {
+                output.println("Migration path was not specified, skipping writing to disk.");
+                logger.info("Migration path was not specified, skipping writing to disk.");
+            } else {
+                try {
+                    output.println("Writing migration to " + migrationOutputPath.getAbsolutePath());
+                    logger.info("Writing migration to " + migrationOutputPath.getAbsolutePath());
+                    io.write(migrationOutputPath, migration, Charsets.UTF_8);
+                } catch (IOException e) {
+                    output.println(error_writing_migration + e.getMessage());
+                    logger.error(error_writing_migration + e.getMessage());
+                    return null;
+                }
             }
-            return migration;
+            return generateMigrationSQLResponse;
         } else {
             output.println(error_getting_sql_migration + generateMigrationSQLResponse.authorizationErrorMessage);
             logger.error(error_getting_sql_migration + generateMigrationSQLResponse.authorizationErrorMessage);
-            return null;
+            return clp.promptRetry("Retry request for sql migration") ? sqlMigration(dsl) : null;
         }
     }
 
@@ -205,49 +207,62 @@ public class ActionDefinition extends ActionContext implements CLCAction {
      * migrationSQL is read from the disk if existing, otherwise user is prompted to request it.
      */
     public boolean upgradeUnmanagedDatabase() {
-        final String migration;
-        if (getMigrationPath().exists()) {
-            try {
-                migration = FileUtils.readFileToString(getMigrationPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-                output.println(migration_file_read_failed_msg + e.getMessage());
-                logger.error(migration_file_read_failed_msg + e.getMessage());
-                return false;
-            }
-            String migrationInformation = stripInformationComents(migration);
-                /* Prompt user about migration we just found on disk */
-            if (!clp.promptMigrationInformation(migrationInformation, findDestructive(migrationInformation), true))
-                return false;
+        final File migrationPath = getMigrationPath();
+        /* see if there is a migration file in path, ask weather to upgrade with it */
+        if (migrationPath.exists() && clp.promptContinue(" read migration sql from " + migrationPath + "  and use it to upgrade")) {
+            String migrationOrNull = readMigrationFromDisk(migrationPath, logger, output, clp);
+            if (migrationOrNull == null) return upgradeUnmanagedDatabase(); /* back to the start */
+            else return upgradeUnmanagedDatabase(migrationOrNull);
         } else {
-            if (clp.promptContinue(migration_request_prompt)) {
-                migration = sqlMigration();
-            } else
-                return false;
+            /* or get the migration from the remote */
+            output.println("Upgrading with remotely requested migration");
+            logger.info("Upgrading with remotely requested migration");
+            GenerateMigrationSQLResponse generateMigrationSQLResponse = sqlMigration();
+            return upgradeUnmanagedDatabase(generateMigrationSQLResponse);
         }
+    }
 
-        return upgradeUnmanagedDatabase(migration);
+    private static String readMigrationFromDisk(File migrationPath, Logger logger, Output output, CommandLinePrompt clp) {
+        String migration;
+        try {
+            migration = FileUtils.readFileToString(migrationPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            output.println(migration_file_read_failed_msg + e.getMessage());
+            return clp.promptRetry("Unable to read file " + migrationPath.getAbsolutePath())
+                    ? readMigrationFromDisk(migrationPath, logger, output, clp)
+                    : null;
+        }
+        return migration;
     }
 
     private boolean upgradeUnmanagedDatabase(String migration) {
-        UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabaseResponse = api.upgradeUnmanagedDatabase(getDataSource(), Arrays.asList(migration));
+        return upgradeUnmanagedDatabase(new GenerateMigrationSQLResponse(migration));
+    }
 
-        if (upgradeUnmanagedDatabaseResponse.databaseConnectionSuccessful) {
-            if (upgradeUnmanagedDatabaseResponse.successfulUpgrade) {
-                output.println(database_upgrade_successful);
-                logger.info(database_upgrade_successful);
-                return true;
+    private boolean upgradeUnmanagedDatabase(GenerateMigrationSQLResponse migration) {
+        /* print migration information and prompt to continue if destructive */
+        if (arguments.isAllowUnsafe() || !migration.isMigrationDestructive || clp.promptContinue("a destructive migration")) {
+            UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabaseResponse = api.upgradeUnmanagedDatabase(getDataSource(), Arrays.asList(migration.migration));
+
+            /* be informal */
+            if (upgradeUnmanagedDatabaseResponse.databaseConnectionSuccessful) {
+                if (upgradeUnmanagedDatabaseResponse.successfulUpgrade) {
+                    output.println(database_upgrade_successful);
+                    logger.info(database_upgrade_successful);
+                    return true;
+                } else {
+                    output.println(migration_application_failed);
+                    logger.error(migration_application_failed);
+                    return false;
+                }
             } else {
-
-                output.println(migration_applie_failed);
+                output.println(database_connection_failure + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
+                logger.error(database_connection_failure + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
                 return false;
             }
-        } else {
-
-            output.println(database_connection_failure);
-            logger.error(database_connection_failure + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
+        } else
             return false;
-        }
     }
 
     /**
@@ -274,24 +289,19 @@ public class ActionDefinition extends ActionContext implements CLCAction {
         if (parseDSL(dsl)) {
             if (!skip_diff) {
                 getChanges(dataSource, dsl);
+                /* todo - maybe add a 3 way here reload, continue, quit */
                 if (!clp.promptContinue(are_diff_changes_good_prompt)) return false;
             }
         } else {
+            /* prompt user to fix dsl and try again */
             return (clp.promptRetry(correct_DSL_and_try_again_prompt)) && deployUnmanagedServer();
         }
 
-        /* 2: Show migration information
-            Drop out if allow_unsafe is not selected and user chose not to continue
-         */
-        String migration = sqlMigration(dsl);
-        String stripMigrationInformation = stripInformationComents(migration);
-        output.println(stripMigrationInformation);
-        if (findDestructive(stripMigrationInformation)) {
-            if (!allow_unsafe && !clp.promptContinue(apply_changes_to_the_database_prompt)) return false;
-        }
-
-        /* 3: Apply migration  */
-        if (!upgradeUnmanagedDatabase(migration)) {
+        /* 2,3 : upgrade database
+           2: Show migration information
+           3: Apply migration
+           */
+        if (!upgradeUnmanagedDatabase()) {
             if (!clp.promptContinue(generate_sources_if_DB_failed_continue_prompt)) return false;
         }
 
@@ -306,7 +316,7 @@ public class ActionDefinition extends ActionContext implements CLCAction {
             output.println(retrying_unmanaged_compilation_request_msg);
             logger.trace(retrying_unmanaged_compilation_request_msg);
         }
-        /* 6: Deploy, generated sources */
+        /* 6: Deploy, generated sources - todo */
 
         return true;
     }

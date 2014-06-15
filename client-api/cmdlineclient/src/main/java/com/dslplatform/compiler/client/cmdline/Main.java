@@ -28,7 +28,7 @@ public class Main {
                         new ArgumentsReader(logger, propertyLoader).readArguments(argv)));
         Actions actions = arguments.getActions();
 
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", arguments.getLoggingLevel().level);
+        //System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", arguments.getLoggingLevel().level);
         for (Action action : actions.getActionSet()) {
             logger.trace("Performing action " + action.actionKey);
             CLCAction clcAction = new ActionDefinition(logger, arguments);
