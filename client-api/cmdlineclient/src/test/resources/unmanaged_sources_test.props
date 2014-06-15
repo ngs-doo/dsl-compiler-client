@@ -1,0 +1,7 @@
+username=knuckles-the-echidna@dsl-platform.com
+password=m15m13p0713p0p4s3l
+package-name=com.dslplatform.test
+output-path=~/knuckles/workspace/outputPath
+dsl-path=~/knuckles/workspace/dslPath
+actions=generate-sources
+target=csharp_server

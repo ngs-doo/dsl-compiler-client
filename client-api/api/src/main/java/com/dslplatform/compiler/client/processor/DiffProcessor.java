@@ -16,6 +16,7 @@ import java.util.SortedSet;
 
 public class DiffProcessor {
 
+    private final static String newLine = System.getProperty("line.separator");
     public static String jGitDiff(
             final Map<String, String> olddsl,
             final Map<String, String> newdsl) {
@@ -37,42 +38,41 @@ public class DiffProcessor {
 
             switch (action.action) {
                 case NO_CHANGE:
-                    sb.append("No Change ").append(action.source);
+                    sb.append("No Change ").append(action.source).append(newLine);
                     break;
 
                 case SKIPPED:
-                    sb.append("Skipped ").append(action.source);
+                    sb.append("Skipped ").append(action.source).append(newLine);
                     break;
 
                 case CREATED_DIR:
                     break;
 
                 case CREATED:
-                    sb.append("Created ").append(action.source);
-                    sb.append(new String(newFiles.get(action.source), Charsets.UTF_8));
+                    sb.append("Created ").append(action.source).append(newLine);
+                    sb.append(new String(newFiles.get(action.source), Charsets.UTF_8)).append(newLine);
                     break;
 
                 case MODIFIED:
-                    sb.append("Modified ").append(action.source);
-                    sb.append(action.source);
+                    sb.append("Modified ").append(action.source).append(newLine);
 
                     histogramDiff(sb, oldFiles.get(action.source), newFiles.get(action.source));
                     break;
 
                 case MOVED:
-                    sb.append("Moved ").append(action.source).append("->").append(action.destination);
+                    sb.append("Moved ").append(action.source).append("->").append(action.destination).append(newLine);
                     break;
 
                 case COPY:
-                    sb.append("Copied ").append(action.source);
+                    sb.append("Copied ").append(action.source).append(newLine);
                     break;
 
                 case DELETED_DIR:
-                    sb.append("Deleted directory ").append(action.source);
+                    sb.append("Deleted directory ").append(action.source).append(newLine);
                     break;
 
                 case DELETED:
-                    sb.append("Deleted file ").append(action.source);
+                    sb.append("Deleted file ").append(action.source).append(newLine);
                     break;
             }
         }
@@ -101,7 +101,7 @@ public class DiffProcessor {
             sb.append(e.getMessage());
         }
 
-        sb.append(new String(baos.toByteArray(), Charsets.UTF_8));
+        sb.append(new String(baos.toByteArray(), Charsets.UTF_8)).append(newLine);
     }
 
     public static void diffMatchPatch(final StringBuilder sb, final byte[] ba1, final byte[] ba2) {
@@ -123,8 +123,8 @@ public class DiffProcessor {
                     break;
                 default:
             }
-            sb.append(operation);
-            sb.append(diff.text + "\u001B[0m");
+            sb.append(operation).append(newLine);
+            sb.append(diff.text + "\u001B[0m").append(newLine);
         }
     }
 }

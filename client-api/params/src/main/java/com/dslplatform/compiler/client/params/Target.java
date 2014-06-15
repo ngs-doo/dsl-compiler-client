@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 public enum Target {
     CSHARP_CLIENT(CSHARP, CLIENT),
     CSHARP_PORTABLE(CSHARP, PORTABLE),
-    CSHARP_SERVER(CSHARP, SERVER),
+    CSHARP_SERVER(CSHARP, SERVER, "CSharpServer"),
     JAVA_CLIENT(JAVA, CLIENT),
     PHP_CLIENT(PHP, CLIENT),
     SCALA_CLIENT(SCALA, CLIENT),
@@ -23,6 +23,13 @@ public enum Target {
         this.language = language;
         this.version = version;
         targetName = language.languageName + version.versionName;
+        targetPattern = Pattern.compile("(?i)" + language.languagePattern + version.versionPattern);
+    }
+
+    private Target(final Language language, final Version version, final String targetName) {
+        this.language = language;
+        this.version = version;
+        this.targetName =targetName;
         targetPattern = Pattern.compile("(?i)" + language.languagePattern + version.versionPattern);
     }
 

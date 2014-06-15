@@ -21,16 +21,17 @@ public interface MockProcessor {
 
     final static Set<String> supportedLanguagesUnmanaged = new HashSet<String>() {{
         add("ScalaServer");
+        add("csharp_server"); // not sure about this one
         add("CSharpServer");
         addAll(supportedLanguages);
     }};
-
 
     public final static int success             = 0;
     public final static int unknown_language    = 1;
     public final static int name_invalid        = 2;
     public final static int name_missing        = 3;
     public final static int bad_dsl             = 11;
+
 /*
     HttpResponse mockResponse(final int state) {
 

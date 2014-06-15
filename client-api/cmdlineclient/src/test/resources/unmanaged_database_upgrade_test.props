@@ -1,0 +1,11 @@
+username=knuckles-the-echidna@dsl-platform.com
+password=m15m13p0713p0p4s3l
+logging-level=DEBUG
+dsl-path=~/knuckles/workspace/dslPath
+db-username=aUsername
+db-password=anPassword
+db-host=localhost
+db-port=5432
+db-database-name=dbname
+db-connection-string=dbconnstring
+actions=upgrade-unmanaged-database

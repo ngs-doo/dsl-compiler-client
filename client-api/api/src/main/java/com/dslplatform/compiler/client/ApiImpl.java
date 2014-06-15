@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -21,24 +22,39 @@ import java.util.*;
 public class ApiImpl implements Api {
 
     private static final String NGSdbmigrationAbsent = "relation \"-NGS-.database_migration\" does not exist";
-    private static final String version_real = "1.0.1.24037"; // todo - hardcodeie -> argument
+    private static final String version_real = "1.0.1.24037";
+    private static final String compilationMessage = "Compilation successful";
+    private static final String compileScriptWriteErrorMsg = "Unable to write script to file ";
 
     private final HttpRequestBuilder httpRequestBuilder;
     private final HttpTransport httpTransport;
     private final UnmanagedDSL unmanagedDSL;
 
-    private static Logger logger = LoggerFactory.getLogger(ApiImpl.class);
+    public Logger logger;
 
     public ApiImpl(
+            Logger logger,
             HttpRequestBuilder httpRequestBuilder,
             HttpTransport httpTransport,
             UnmanagedDSL unmanagedDSL) {
+        this.logger = logger;
         this.httpRequestBuilder = httpRequestBuilder;
         this.httpTransport = httpTransport;
         this.unmanagedDSL = unmanagedDSL;
     }
 
-    @Override public RegisterUserResponse registerUser(
+    public ApiImpl(
+            HttpRequestBuilder httpRequestBuilder,
+            HttpTransport httpTransport,
+            UnmanagedDSL unmanagedDSL) {
+        this.logger = LoggerFactory.getLogger(ApiImpl.class);
+        this.httpRequestBuilder = httpRequestBuilder;
+        this.httpTransport = httpTransport;
+        this.unmanagedDSL = unmanagedDSL;
+    }
+
+    @Override
+    public RegisterUserResponse registerUser(
             String email) {
         final HttpResponse httpResponse;
         try {
@@ -51,7 +67,8 @@ public class ApiImpl implements Api {
         return new RegisterUserProcessor().process(httpResponse);
     }
 
-    @Override public ParseDSLResponse parseDSL(
+    @Override
+    public ParseDSLResponse parseDSL(
             String token,
             Map<String, String> dsl
     ) {
@@ -65,7 +82,8 @@ public class ApiImpl implements Api {
         return new ParseDSLProcessor().process(httpResponse);
     }
 
-    @Override public CreateTestProjectResponse createTestProject(
+    @Override
+    public CreateTestProjectResponse createTestProject(
             String token, String projectName) {
         final HttpResponse httpResponse;
         try {
@@ -77,7 +95,8 @@ public class ApiImpl implements Api {
         return new CreateTestProjectProcessor().process(httpResponse);
     }
 
-    @Override public CreateExternalProjectResponse createExternalProject(
+    @Override
+    public CreateExternalProjectResponse createExternalProject(
             String token,
             String projectName,
             String serverName,
@@ -95,7 +114,8 @@ public class ApiImpl implements Api {
 
     }
 
-    @Override public DownloadBinariesResponse downloadBinaries(
+    @Override
+    public DownloadBinariesResponse downloadBinaries(
             String token, UUID projectID) {
         final HttpResponse httpResponse;
         try {
@@ -107,7 +127,8 @@ public class ApiImpl implements Api {
         return new DownloadBinariesProcessor().process(httpResponse);
     }
 
-    @Override public DownloadGeneratedModelResponse downloadGeneratedModel(
+    @Override
+    public DownloadGeneratedModelResponse downloadGeneratedModel(
             String token, UUID projectID) {
         final HttpResponse httpResponse;
         try {
@@ -120,7 +141,8 @@ public class ApiImpl implements Api {
         return new DownloadGeneratedModelProcessor().process(httpResponse);
     }
 
-    @Override public InspectManagedProjectChangesResponse inspectManagedProjectChanges(
+    @Override
+    public InspectManagedProjectChangesResponse inspectManagedProjectChanges(
             String token,
             UUID projectID,
             Map<String, String> dsl) {
@@ -135,7 +157,8 @@ public class ApiImpl implements Api {
         return new InspectManagedProjectChangesProcessor().process(httpResponse);
     }
 
-    @Override public GetLastManagedDSLResponse getLastManagedDSL(
+    @Override
+    public GetLastManagedDSLResponse getLastManagedDSL(
             String token, UUID projectID) {
         final HttpResponse httpResponse;
         try {
@@ -147,7 +170,8 @@ public class ApiImpl implements Api {
         return new GetLastManagedDSLProcessor().process(httpResponse);
     }
 
-    @Override public GetConfigResponse getConfig(
+    @Override
+    public GetConfigResponse getConfig(
             String token,
             UUID projectID,
             Set<String> targets,
@@ -164,7 +188,8 @@ public class ApiImpl implements Api {
         return new GetConfigProcessor().process(httpResponse);
     }
 
-    @Override public UpdateManagedProjectResponse updateManagedProject(
+    @Override
+    public UpdateManagedProjectResponse updateManagedProject(
             String token,
             UUID projectID,
             Set<String> targets,
@@ -184,7 +209,8 @@ public class ApiImpl implements Api {
         return new UpdateManagedProjectProcessor().process(httpResponse);
     }
 
-    @Override public GenerateMigrationSQLResponse generateMigrationSQL(
+    @Override
+    public GenerateMigrationSQLResponse generateMigrationSQL(
             String token,
             String version,
             Map<String, String> oldDsl,
@@ -200,7 +226,8 @@ public class ApiImpl implements Api {
         return new GenerateMigrationSQLProcessor().process(httpResponse);
     }
 
-    @Override public GenerateMigrationSQLResponse generateMigrationSQL(
+    @Override
+    public GenerateMigrationSQLResponse generateMigrationSQL(
             final String token,
             final DataSource dataSource,
             final Map<String, String> dsl
@@ -228,7 +255,8 @@ public class ApiImpl implements Api {
         return generateMigrationSQL(token, version, lastdsl, dsl);
     }
 
-    @Override public GenerateSourcesResponse generateSources(
+    @Override
+    public GenerateSourcesResponse generateSources(
             String token,
             UUID projectID,
             Set<String> targets,
@@ -252,7 +280,8 @@ public class ApiImpl implements Api {
         return new GenerateSourcesProcessor().process(httpResponse);
     }
 
-    @Override public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
+    @Override
+    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
             String token,
             String packageName,
             Set<String> targets,
@@ -273,7 +302,8 @@ public class ApiImpl implements Api {
         return new GenerateUnmanagedSourcesProcessor().process(generateSourcesResponse);
     }
 
-    @Override public GetProjectByNameResponse getProjectByName(
+    @Override
+    public GetProjectByNameResponse getProjectByName(
             String token, String projectName) {
         final HttpResponse httpResponse;
         try {
@@ -285,7 +315,8 @@ public class ApiImpl implements Api {
         return new GetProjectByNameProcessor().process(httpResponse);
     }
 
-    @Override public GetAllProjectsResponse getAllProjects(
+    @Override
+    public GetAllProjectsResponse getAllProjects(
             String token) {
         final HttpResponse httpResponse;
         try {
@@ -298,7 +329,8 @@ public class ApiImpl implements Api {
 
     }
 
-    @Override public RenameProjectResponse renameProject(
+    @Override
+    public RenameProjectResponse renameProject(
             String token, String oldName, String newName) {
         final HttpResponse httpResponse;
         try {
@@ -310,7 +342,8 @@ public class ApiImpl implements Api {
         return new RenameProjectProcessor().process(httpResponse);
     }
 
-    @Override public CleanProjectResponse cleanProject(
+    @Override
+    public CleanProjectResponse cleanProject(
             String token) {
         final HttpResponse httpResponse;
         try {
@@ -322,7 +355,8 @@ public class ApiImpl implements Api {
         return new CleanProjectProcessor().process(httpResponse);
     }
 
-    @Override public TemplateGetResponse templateGet(
+    @Override
+    public TemplateGetResponse templateGet(
             String token,
             String projectID,
             String templateName) {
@@ -336,7 +370,8 @@ public class ApiImpl implements Api {
         return new TemplateGetProcessor().process(httpResponse);
     }
 
-    @Override public TemplateCreateResponse templateCreate(
+    @Override
+    public TemplateCreateResponse templateCreate(
             String token,
             String projectID,
             String templateName,
@@ -354,7 +389,8 @@ public class ApiImpl implements Api {
         return new TemplateCreateProcessor().process(httpResponse);
     }
 
-    @Override public TemplateListAllResponse templateListAll(
+    @Override
+    public TemplateListAllResponse templateListAll(
             String token,
             String projectID) {
         final HttpResponse httpResponse;
@@ -368,7 +404,8 @@ public class ApiImpl implements Api {
         return new TemplateListAllProcessor().process(httpResponse);
     }
 
-    @Override public TemplateDeleteResponse templateDelete(
+    @Override
+    public TemplateDeleteResponse templateDelete(
             String token,
             String projectID,
             String templateName) {
@@ -382,7 +419,8 @@ public class ApiImpl implements Api {
         return new TemplateDeleteProcessor().process(httpResponse);
     }
 
-    @Override public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(DataSource dataSource) {
+    @Override
+    public DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExits(DataSource dataSource) {
         if (dataSource == null) return new DoesUnmanagedDSLExitsResponse(true, null, false);
         try {
             return new DoesUnmanagedDSLExitsResponse(true, null, unmanagedDSL.doesUnmanagedDSLExits(dataSource));
@@ -391,7 +429,8 @@ public class ApiImpl implements Api {
         }
     }
 
-    @Override public GetAllUnmanagedDSLResponse getAllUnmanagedDSL(
+    @Override
+    public GetAllUnmanagedDSLResponse getAllUnmanagedDSL(
             DataSource dataSource) {
         final List<Migration> migrations;
         try {
@@ -403,7 +442,8 @@ public class ApiImpl implements Api {
         return new GetAllUnmanagedDSLResponse(true, null, migrations);
     }
 
-    @Override public GetLastUnmanagedDSLResponse getLastUnmanagedDSL(
+    @Override
+    public GetLastUnmanagedDSLResponse getLastUnmanagedDSL(
             final DataSource dataSource) {
         try {
             final Migration migration;
@@ -417,18 +457,21 @@ public class ApiImpl implements Api {
         }
     }
 
-    @Override public InspectUnmanagedProjectChangesResponse inspectUnmanagedProjectChanges(
+    @Override
+    public InspectUnmanagedProjectChangesResponse inspectUnmanagedProjectChanges(
             DataSource dataSource, String version, Map<String, String> dsl) {
         return null;
     }
 
-    @Override public CreateUnmanagedProjectResponse createUnmanagedProject(
+    @Override
+    public CreateUnmanagedProjectResponse createUnmanagedProject(
             String token, DataSource dataSource, String serverName, String applicationName) {
 
         return null;
     }
 
-    @Override public UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabase(
+    @Override
+    public UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabase(
             DataSource dataSource,
             List<String> migration) {
         try {
@@ -440,7 +483,8 @@ public class ApiImpl implements Api {
     }
 
 
-    @Override public CreateUnmanagedServerResponse createUnmanagedServer(
+    @Override
+    public CreateUnmanagedServerResponse createUnmanagedServer(
             final String token,
             final DataSource dataSource,
             final String packageName,
@@ -459,7 +503,8 @@ public class ApiImpl implements Api {
                 generateUnmanagedSourcesResponse.sources);
     }
 
-    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+    @Override
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
             DataSource dataSource,
             String migration,
             List<Source> sources,
@@ -478,7 +523,8 @@ public class ApiImpl implements Api {
         return upgradeUnmanagedServerAndDatabaseResponse;
     }
 
-    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+    @Override
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
             DataSource dataSource,
             String migration,
             List<Source> sources,
@@ -501,7 +547,8 @@ public class ApiImpl implements Api {
         return upgradeUnmanagedServerAndDatabaseResponse;
     }
 
-    @Override public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
+    @Override
+    public UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDataBase(
             DataSource dataSource,
             String migration,
             List<Source> sources,
@@ -529,11 +576,11 @@ public class ApiImpl implements Api {
 
         // TODO - link Revenj.Http.config to given path?
 
-        // todo - HERE !
         return new UpgradeUnmanagedServerAndDatabaseResponse(true, null, true, true);
     }
 
-    @Override public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
+    @Override
+    public UpgradeUnmanagedServerResponse upgradeUnmanagedServer(
             final String token,
             final DataSource dataSource,
             final String packageName,
@@ -552,7 +599,7 @@ public class ApiImpl implements Api {
         }
         final DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExitsResponse = doesUnmanagedDSLExits(dataSource);
         final Map<String, String> lastdsl;
-        String version = "1.0.1.24037";
+        String version = version_real;
         if (!doesUnmanagedDSLExitsResponse.databaseExists) {
             lastdsl = new HashMap<String, String>();
         } else {
@@ -579,36 +626,61 @@ public class ApiImpl implements Api {
                 generateUnmanagedSourcesResponse.sources);
     }
 
-    @Override public File compileCSharpServer(
+    @Override
+    public CompileCSharpServerResponse compileCSharpServer(
             File sourcePath,
             File dependencies,
             File target) {
+        String runScript = makeRunScript(sourcePath, dependencies, target);
+
+        try {
+            FileUtils.write(new File("runScript"), runScript, Charsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            new RuntimeException(compileScriptWriteErrorMsg + e.getMessage());
+        }
+
+        ProcessBuilder runScriptProc = new ProcessBuilder("sh", "runScript");
+        try {
+            logger.trace("About to run mcs script");
+            Process process = runScriptProc.start();
+            if (logger.isTraceEnabled()) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                baos.writeTo(process.getOutputStream());
+                process.waitFor();
+                logger.trace(baos.toString("UTF-8"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new CompileCSharpServerResponse(false, e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return new CompileCSharpServerResponse(true, compilationMessage);
+    }
+
+    private static String makeRunScript(File sourcePath,
+                                 File dependencies,
+                                 File target) {
         StringBuilder sb = new StringBuilder("mcs -v");
+        String[] systemDependencies = {"System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing"};
 
         final String targetOutputPath = target.getPath();
         sb.append(" -out:").append(targetOutputPath)
                 .append(" -target:library")
                 .append(" -lib:").append(dependencies.getPath());
+        for (String systemDependency : systemDependencies)
+            addCSCompileDependency(sb, systemDependency);
         for (File dependency : dependencies.listFiles())
             if (dependency.getName().endsWith(".dll"))
-                sb.append(" -r:").append(dependency.getName());
+                addCSCompileDependency(sb, dependency.getName());
         sb.append(" -recurse:").append(sourcePath.getAbsolutePath()).append("/*.cs");
+        return sb.toString();
+    }
 
-        try {
-            FileUtils.write(new File("runScript"), sb.toString(), Charsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-            new RuntimeException("unable to write script to file " + e.getMessage());
-        }
-
-        ProcessBuilder runscript = new ProcessBuilder("sh", "runScript");
-        try {
-            runscript.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-            // TODO - log or fail
-        }
-        return target;
+    private static void addCSCompileDependency(StringBuilder sb, String dependency) {
+        sb.append(" -r:").append(dependency);
     }
 
     public String getDiff(

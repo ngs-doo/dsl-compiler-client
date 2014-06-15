@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenerateUnmanagedSourcesProcessor implements MockProcessor {
+public class GenerateUnmanagedSourcesProcessor extends TestProcesorContext implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
         return request.method == Method.PUT && request.path.startsWith("Alpha.svc/unmanaged/source");
@@ -45,7 +45,7 @@ public class GenerateUnmanagedSourcesProcessor implements MockProcessor {
             case unknown_language:
                 code = 400;
                 headers.put("Content-Type", Arrays.asList("text/plain; charset=\"utf-8\""));
-                body = "Unknown language specified".getBytes(ENCODING);
+                body = ("Unknown language specified " + mkString(targets)).getBytes(ENCODING);
                 break;
             default:
                 code = 400;

@@ -1,0 +1,15 @@
+username=knuckles-the-echidna@dsl-platform.com
+password=m15m13p0713p0p4s3l
+package-name=com.dslplatform.test
+logging-level=DEBUG
+output-path=/tmp/ #will be overridden
+dsl-path=~/knuckles/workspace/dslPath
+migration-file=/knuckles/workspace/migrationPath
+db-username=aUsername
+db-password=anPassword
+db-host=localhost
+db-port=5432
+db-database-name=dbname
+db-connection-string=dbconnstring
+actions=deploy-unmanaged-server
+target=CSharpServer

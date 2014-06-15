@@ -17,7 +17,7 @@ public enum Action {
     , UNMANAGED_SOURCE("unmanaged-source")
     , UNMANAGED_SQL_MIGRATION("unmanaged-sql-migration") // unmanaged postgres migration
     , UPGRADE_UNMANAGED_DATABASE("upgrade-unmanaged-database")
-    , DEPLOY_UNMANAGED_SERVER("deploy_unmanaged_server");
+    , DEPLOY_UNMANAGED_SERVER("deploy-unmanaged-server");
     // FW: UPGRADE_DATABASE
 
 //  CREATE_PROJECT("")

@@ -16,9 +16,10 @@ general use case:
 deploy (each step considers previous successful):
  - displays diff
  - parse result
+ - if not skip-diff prompt user to continue with this changes
  - migration information
  - if the migration performs a destructive operation user will be informed and prompted to continue
- - apply migration 
+ - apply migration
  - generate sources
  - compile sources
  - deploy assembly

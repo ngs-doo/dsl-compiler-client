@@ -13,6 +13,10 @@ public class StreamLoader {
     private final Logger logger;
     private final PathExpander pathExpander;
 
+    public StreamLoader(final Logger logger) {
+        this(logger, new PathExpander(logger));
+    }
+
     public StreamLoader(final Logger logger, final PathExpander pathExpander) {
         this.logger = logger;
         this.pathExpander = pathExpander;

@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.response.*;
+import org.slf4j.Logger;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface Api {
+
     /**
      * Registers a user and sends an email confirmation to the provided address
      */
@@ -265,8 +267,9 @@ public interface Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl);
+
     /**
-     * Compare new DSL with the old one, retrieved from the unamanaged database.
+     * Upgrades the database with a given migration.
      * @param dataSource
      * @param migration
      * @return
@@ -328,7 +331,7 @@ public interface Api {
             final File sourceOutput
             );
 
-    /* todo - private? */public File compileCSharpServer(
+    public CompileCSharpServerResponse compileCSharpServer(
             File sourcePath,
             File dependencies,
             File target);
@@ -350,6 +353,12 @@ public interface Api {
             final Set<String> options,
             final Map<String, String> dsl);
 
+    /**
+     * Returns formatted changes between two dsls
+     * @param olddsl
+     * @param newdsl
+     * @return
+     */
     public String getDiff(
             final Map<String, String> olddsl,
             final Map<String, String> newdsl);

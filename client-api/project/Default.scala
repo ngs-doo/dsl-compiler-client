@@ -39,7 +39,7 @@ trait Default extends Dependencies {
       , "-Yrepl-sync"
       , "-Xlint"
       , "-Xverify"
-      , "-Ywarn-all"
+    //  , "-Ywarn-all"
       , "-feature"
       , "-language:postfixOps"
       , "-language:implicitConversions"

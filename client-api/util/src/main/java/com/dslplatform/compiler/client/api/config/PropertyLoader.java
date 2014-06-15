@@ -10,6 +10,10 @@ public class PropertyLoader {
     private final Logger logger;
     private final StreamLoader streamLoader;
 
+    public PropertyLoader(final Logger logger) {
+        this(logger, new StreamLoader(logger));
+    }
+
     public PropertyLoader(final Logger logger, final StreamLoader streamLoader) {
         this.logger = logger;
         this.streamLoader = streamLoader;

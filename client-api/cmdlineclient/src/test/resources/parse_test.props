@@ -1,0 +1,6 @@
+project-name=RedEchidna
+username=knuckles-the-echidna@dsl-platform.com
+password=m15m13p0713p0p4s3l
+logging-level=DEBUG
+dsl-path=~/knuckles/workspace/dslPath
+actions=parse

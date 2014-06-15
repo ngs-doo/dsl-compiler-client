@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.response.*;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.sql.DataSource;
@@ -28,7 +28,7 @@ public class ApiImplTest extends MockData {
 
     final String auth = Tokenizer.basicHeader(validUser, validPassword);
 
-    @Before
+    @BeforeClass
     public void setUp() throws IOException {
         final DataSource dataSource = null;
         //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
@@ -369,7 +369,6 @@ public class ApiImplTest extends MockData {
         protected boolean matchesSafely(Source item) {
             return item.language.equals(language) && item.path.equals(path);
         }
-
 
         @Override
         public void describeTo(Description description) {

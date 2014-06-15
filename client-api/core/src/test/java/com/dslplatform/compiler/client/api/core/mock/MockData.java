@@ -133,7 +133,7 @@ public class MockData {
     }
 
     private static void appendTargets(StringBuilder sb, List<String> targets) {
-        if (targets.contains("CSharpServer")) sb.append("_CS");
+        if (targets.contains("CSharpServer") || targets.contains("csharp_server")) sb.append("_CS");
         if (targets.contains("ScalaServer")) sb.append("_ScalaServer");
         if (targets.contains("Java")) sb.append("_J");
         if (targets.contains("Scala")) sb.append("_S");

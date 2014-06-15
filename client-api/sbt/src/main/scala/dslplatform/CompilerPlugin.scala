@@ -95,9 +95,9 @@ object CompilerPlugin extends sbt.Plugin {
     monoServerLocation        := file("mono"),
     generatedModel            := monoServerLocation.value / "bin" / "generatedModel.dll",
 
-    getDiffString             <<= getDiffStringDef(),
-    getDiff                   <<= getDiffDef(),
-    parseDSL                  <<= parseDSLDef(),
+    getDiffString             <<= getDiffStringDef,
+    getDiff                   <<= getDiffDef,
+    parseDSL                  <<= parseDSLDef,
     generateSourcesList       <<= generateAndReturnSourcesDef(),
     generateSources           <<= generateSourcesDef(),
     upgradeDatabaseList       <<= upgradeManagedDatabaseAndReturnSourceDef,
@@ -134,16 +134,16 @@ object CompilerPlugin extends sbt.Plugin {
     }
   }
 
-  private def getDiffStringDef(): Def.Initialize[Task[String]] = Def.task {
+  private def getDiffStringDef: Def.Initialize[Task[String]] = Def.task {
     api.value.getDiff(getLastDsl.value, dslFiles.value)
   }
 
-  private def getDiffDef(): Def.Initialize[Task[Unit]] = Def.task {
-    val diff = getDiffStringDef().value
+  private def getDiffDef: Def.Initialize[Task[Unit]] = Def.task {
+    val diff = getDiffStringDef.value
     streams.value.log.info("diff:/n" + diff)
   }
 
-  private def parseDSLDef(): Def.Initialize[Task[Boolean]] = Def.task {
+  private def parseDSLDef: Def.Initialize[Task[Boolean]] = Def.task {
     val log = streams.value.log
 
     val response = api.value.parseDSL(token.value, dslFiles.value)
@@ -368,7 +368,6 @@ object CompilerPlugin extends sbt.Plugin {
       val csParc:  OutputPathMappingType = {
         case Src(language, path, content) if (language.toLowerCase == "csharpserver") =>
           (monoTempFolder.value / path, content)
-
       }
       csParc orElse outputPathMapping.value
     }
