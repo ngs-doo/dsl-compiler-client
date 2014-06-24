@@ -9,10 +9,10 @@ public enum Target {
     CSHARP_CLIENT(CSHARP, CLIENT),
     CSHARP_PORTABLE(CSHARP, PORTABLE),
     CSHARP_SERVER(CSHARP, SERVER, "CSharpServer"),
-    JAVA_CLIENT(JAVA, CLIENT),
+    JAVA_CLIENT(JAVA, CLIENT, "Java"),
     PHP_CLIENT(PHP, CLIENT),
-    SCALA_CLIENT(SCALA, CLIENT),
-    SCALA_SERVER(SCALA, SERVER);
+    SCALA_CLIENT(SCALA, CLIENT, "Scala"),
+    SCALA_SERVER(SCALA, SERVER, "ScalaServer");
 
     public final Language language;
     public final Version version;
@@ -29,7 +29,7 @@ public enum Target {
     private Target(final Language language, final Version version, final String targetName) {
         this.language = language;
         this.version = version;
-        this.targetName =targetName;
+        this.targetName = targetName;
         targetPattern = Pattern.compile("(?i)" + language.languagePattern + version.versionPattern);
     }
 

@@ -4,4 +4,4 @@ package-name=com.dslplatform.test
 output-path=~/knuckles/workspace/outputPath
 dsl-path=~/knuckles/workspace/dslPath
 actions=generate-sources
-target=csharp_server
+target=csharp_server, java

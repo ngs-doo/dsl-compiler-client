@@ -30,7 +30,7 @@ public class ApiImplTest extends MockData {
 
     @BeforeClass
     public void setUp() throws IOException {
-        final DataSource dataSource = null;
+        dataSource = null;
         //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
         api = new ApiImpl(new HttpRequestBuilderImpl(), HttpTransportProvider.httpTransport(), UnmanagedDSLMock.mock_single_integrated);
         //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), new UnmanagedDSLImpl());

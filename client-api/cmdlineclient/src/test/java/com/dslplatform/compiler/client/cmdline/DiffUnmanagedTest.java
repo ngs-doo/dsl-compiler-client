@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.cmdline;
 import com.dslplatform.compiler.client.Api;
 import com.dslplatform.compiler.client.ApiImpl;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
-import com.dslplatform.compiler.client.api.core.impl.UnmanagedDSLImpl;
 import com.dslplatform.compiler.client.api.core.mock.HttpTransportMock;
 import com.dslplatform.compiler.client.api.core.mock.UnmanagedDSLMock;
 import com.dslplatform.compiler.client.cmdline.parser.Arguments;

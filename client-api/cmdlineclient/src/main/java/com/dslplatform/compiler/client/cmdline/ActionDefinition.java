@@ -34,14 +34,14 @@ public class ActionDefinition extends ActionContext implements CLCAction {
     private final static String no_successfully_generated_sources_msg = "Successfully generated sources ";
     private final static String writing_files_to_msg = "Writing files to ";
     private final static String success_receive_migration_msg = "Successfully received migration sql from remote.";
-    private final static String error_writing_migration = "An error occurred while writing migration ";
-    private final static String error_getting_sql_migration = "There was an error with get sql migration request.";
+    private final static String error_writing_migration_msg = "An error occurred while writing migration ";
+    private final static String error_getting_sql_migration_msg = "There was an error with get sql migration request.";
     private final static String migration_file_read_failed_msg = "Failed to read migration file";
     private final static String retrying_unmanaged_source_request_msg = "Retrying unmanaged source request";
     private final static String retrying_unmanaged_compilation_request_msg = "Retrying unmanaged source compilation";
-    private final static String database_connection_failure = "There was a problem connection to the database ";
-    private final static String migration_application_failed = "Migration was not applied successfully";
-    private final static String database_upgrade_successful = "Database upgrade successful";
+    private final static String database_connection_failure_msg = "There was a problem connection to the database ";
+    private final static String migration_application_failed_msg = "Migration was not applied successfully";
+    private final static String database_upgrade_successful_msg = "Database upgrade successful";
 
     private final static String correct_DSL_and_try_again_prompt = "Correct DSL and try again";
     private final static String generate_sources_if_DB_failed_continue_prompt = "download sources even thou database upgrade failed.";
@@ -189,15 +189,15 @@ public class ActionDefinition extends ActionContext implements CLCAction {
                     logger.info("Writing migration to " + migrationOutputPath.getAbsolutePath());
                     io.write(migrationOutputPath, migration, Charsets.UTF_8);
                 } catch (IOException e) {
-                    output.println(error_writing_migration + e.getMessage());
-                    logger.error(error_writing_migration + e.getMessage());
+                    output.println(error_writing_migration_msg + e.getMessage());
+                    logger.error(error_writing_migration_msg + e.getMessage());
                     return null;
                 }
             }
             return generateMigrationSQLResponse;
         } else {
-            output.println(error_getting_sql_migration + generateMigrationSQLResponse.authorizationErrorMessage);
-            logger.error(error_getting_sql_migration + generateMigrationSQLResponse.authorizationErrorMessage);
+            output.println(error_getting_sql_migration_msg + generateMigrationSQLResponse.authorizationErrorMessage);
+            logger.error(error_getting_sql_migration_msg + generateMigrationSQLResponse.authorizationErrorMessage);
             return clp.promptRetry("Retry request for sql migration") ? sqlMigration(dsl) : null;
         }
     }
@@ -248,17 +248,17 @@ public class ActionDefinition extends ActionContext implements CLCAction {
             /* be informal */
             if (upgradeUnmanagedDatabaseResponse.databaseConnectionSuccessful) {
                 if (upgradeUnmanagedDatabaseResponse.successfulUpgrade) {
-                    output.println(database_upgrade_successful);
-                    logger.info(database_upgrade_successful);
+                    output.println(database_upgrade_successful_msg);
+                    logger.info(database_upgrade_successful_msg);
                     return true;
                 } else {
-                    output.println(migration_application_failed);
-                    logger.error(migration_application_failed);
+                    output.println(migration_application_failed_msg);
+                    logger.error(migration_application_failed_msg);
                     return false;
                 }
             } else {
-                output.println(database_connection_failure + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
-                logger.error(database_connection_failure + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
+                output.println(database_connection_failure_msg + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
+                logger.error(database_connection_failure_msg + upgradeUnmanagedDatabaseResponse.databaseConnectionErrorMessage);
                 return false;
             }
         } else
