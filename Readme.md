@@ -1,2 +1,7 @@
+All clients are currently under development.
 
-So far only the plugin has been developed to almost full functionality, [Continue to the plugin!](client-api/sbt)
+[Register at dsl-platform](https://dsl-platform.com/)
+ 
+[Continue to the java client!](client-api/cmdlineclient)
+
+[Continue to the plugin!](client-api/sbt)
