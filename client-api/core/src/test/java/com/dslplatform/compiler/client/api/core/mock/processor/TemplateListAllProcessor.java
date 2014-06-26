@@ -13,7 +13,7 @@ import java.util.Map;
 public class TemplateListAllProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.GET && request.path.startsWith("Alpha.svc/templates/");
+        return request.method == Method.GET && request.path.startsWith("Platform.svc/templates/");
     }
 
     @Override

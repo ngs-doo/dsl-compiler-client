@@ -13,7 +13,7 @@ import java.util.Map;
 public class DownloadGeneratedModelProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.GET && request.path.startsWith("Alpha.svc/generated-model/");
+        return request.method == Method.GET && request.path.startsWith("Platform.svc/generated-model/");
     }
 
     @Override

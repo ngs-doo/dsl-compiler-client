@@ -13,7 +13,7 @@ import java.util.Map;
 public class DownloadBinariesProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.GET && request.path.startsWith("Alpha.svc/download/");
+        return request.method == Method.GET && request.path.startsWith("Platform.svc/download/");
     }
 
     @Override

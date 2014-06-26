@@ -19,6 +19,7 @@ This file can look something like this
     dsl-path=<where your model definition resides at>
     migration-file=<where migration file will be outputed at>
     revenj-path=<optional path to revenj library>
+    mono-path=<optional path where to deploy mono to>
     skip-diff=<true or false - should the diff be skipped if its a part of a called task>
     db-username=<username with which to connect to the database> 
     db-password=<password with which to connect to the database>

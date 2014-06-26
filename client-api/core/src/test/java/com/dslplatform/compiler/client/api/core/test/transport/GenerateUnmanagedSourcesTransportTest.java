@@ -20,7 +20,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("CSharpServer");
             }};
             final Set<String> options = new HashSet<String>() {{
-                add("with-active-record");
+                add("active-record");
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = new LinkedHashMap<String, String>(){{
@@ -44,7 +44,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("Java");
             }};
             final Set<String> options = new HashSet<String>() {{
-                add("with-active-record");
+                add("active-record");
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
@@ -66,7 +66,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("Scala");
             }};
             final Set<String> options = new HashSet<String>() {{
-                add("with-active-record");
+                add("active-record");
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.dsl_test_migration_single_2;
@@ -87,7 +87,7 @@ public class GenerateUnmanagedSourcesTransportTest extends HttpTransportImplTest
                 add("ScalaServer");
             }};
             final Set<String> options = new HashSet<String>() {{
-                add("with-active-record");
+                add("active-record");
             }};
             final String packageName = "namespace";
             final Map<String, String> dsl = MockData.migrate_with;

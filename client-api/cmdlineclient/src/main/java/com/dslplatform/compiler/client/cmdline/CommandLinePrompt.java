@@ -5,7 +5,7 @@ public interface CommandLinePrompt {
 
     public boolean promptContinue(String what);
 
-    public boolean promptMigrationInformation(String migrationInformation, boolean isMigrationDestructive, boolean promptAnyway);
+    public ActionContext.ContinueRetryQuit promptCRQ(String what);
 
     public char readCharacter(final String message, final String allowed);
 

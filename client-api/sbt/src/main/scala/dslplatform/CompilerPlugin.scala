@@ -79,15 +79,15 @@ object CompilerPlugin extends sbt.Plugin {
     outputPathMapping <<= OutputPathMapping.plainMapping,
     migration := "unsafe",
     migrationOutputFile := Some(file("migration.sql")),
-    sourceOptions := Set("with-active-record"),
+    sourceOptions := Set("active-record"),
     targetSources := Set("Scala"),
     dslDirectory := baseDirectory.value / "dsl" ** "*.dsl",
     dslFiles <<= dslFilesDef,
 
-    username                  := projectConfiguration.value.get("username").getOrElse(""),
-    password                  := projectConfiguration.value.get("password").getOrElse(""),
-    dslProjectId              := projectConfiguration.value.get("project-id").getOrElse(""),
-    packageName               := projectConfiguration.value.get("dsl.package-name").getOrElse("model"),
+    username                  := projectConfiguration.value.getOrElse("username", ""),
+    password                  := projectConfiguration.value.getOrElse("password", ""),
+    dslProjectId              := projectConfiguration.value.getOrElse("project-id", ""),
+    packageName               := projectConfiguration.value.getOrElse("dsl.package-name", "model"),
     token                     := com.dslplatform.compiler.client.api.config.Tokenizer.basicHeader(username.value, password.value),
 
     monoTempFolder            := file("mono_src_tmp"),
@@ -109,12 +109,11 @@ object CompilerPlugin extends sbt.Plugin {
     compileCSharpServer       <<= monoCompileDef,
     upgradeCSharpServer       <<= unmanagedServerUpgradeDef("CSharpServer").andFinally(upgradeUnmanagedDatabase),
 
-    migrationOutputFile       := Some(file("migration.sql")),
     performDatabaseMigration  := false,
     performServerDeploy       := false
   )
 
-  private def dslFilesDef(): Def.Initialize[Task[Map[String, String]]] = Def.task {
+  private def dslFilesDef: Def.Initialize[Task[Map[String, String]]] = Def.task {
     (dslDirectory in Compile).value.get.map {
       file => file.name -> IO.read(file, Charsets.UTF_8)
     }.toMap
@@ -219,7 +218,7 @@ object CompilerPlugin extends sbt.Plugin {
     Def.task {
       if (performDatabaseMigration.value) {
         // TODO : ask for confirmation.
-        val upgradeResult = api.value.upgradeUnmanagedDatabase(dataSource.value.getOrElse(null), List(migration))
+        val upgradeResult = api.value.upgradeUnmanagedDatabase(dataSource.value.orNull, List(migration))
         if (upgradeResult.successfulUpgrade) log.info("Database upgrade successful.") else sys.error("Migration failed! " + upgradeResult.databaseConnectionErrorMessage)
       }
       migrationOutputFile.value.map{ migrationOutPath => IO.write(migrationOutPath, migration, Charsets.UTF_8)}
@@ -227,7 +226,7 @@ object CompilerPlugin extends sbt.Plugin {
   }
 
   private def generateMigrationSQLDef(): Def.Initialize[Task[String]] = Def.task {
-    val migration = api.value.generateMigrationSQL(token.value, dataSource.value.getOrElse(null), dslFiles.value)
+    val migration = api.value.generateMigrationSQL(token.value, dataSource.value.orNull, dslFiles.value)
     if (!migration.migrationRequestSuccessful)
       sys.error(s"Migration SQL request failed: ${migration.authorizationErrorMessage}" )
     // TODO : may be an outdated DB, migrate with old dsl then with new.
@@ -254,7 +253,7 @@ object CompilerPlugin extends sbt.Plugin {
     projectPropsPath.value.fold(Map.empty[String, String]) {
       projectPropsPath =>
         val properties = com.typesafe.config.ConfigFactory.parseFile(projectPropsPath)
-        def getConfig(key: String) = if (properties.hasPath(key)) Some(properties.getString(key)) else None
+        def getConfig(key: String) = if ( properties.hasPath(key)) Some(properties.getString(key)) else None
         // TODO - do something
         Map(
           "project-id"    -> getConfig("dsl.projectId"),
@@ -266,7 +265,7 @@ object CompilerPlugin extends sbt.Plugin {
           "DatabaseName"  -> getConfig("db.DatabaseName"),
           "User"          -> getConfig("db.User"),
           "Password"      -> getConfig("db.Password")
-        ).collect{case (k: String, Some(v: String)) => k -> v}
+        ).collect { case (k: String, Some(v: String)) => k -> v }
     }
   }
 
@@ -295,31 +294,15 @@ object CompilerPlugin extends sbt.Plugin {
       1
     }
     else {
-      val mono_app = monoServerLocation.value
-      val monoTmp = monoTempFolder.value
-      val systemDeps = Seq("System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing")
-      val revenj = monoLib.listFiles.map(_.getName).filter(_.endsWith("dll"))
-      val deps = (systemDeps ++ revenj).map(d => s"-r:$d")
-      val assemblyNameVal = generatedModel.value
-
-      if (!(mono_app / "bin").exists()) {
-        (mono_app / "bin").mkdirs()
-        (mono_app / "bin").mkdir()
-      }
-      val cmd = Seq("mcs", "-v", s"-out:$assemblyNameVal", "-target:library", s"-lib:$monoLib") ++ deps :+ s"-recurse:${monoTmp}/*.cs"
-
-      // Make a mono compile command.
-
-      IO.write(file("runScript.sh"), cmd.mkString(" "), Charsets.UTF_8)
-      log.info(Seq("sh", "runScript.sh").!!)
-
-      log.info(s"Successfully compiled mono at ${mono_app.getAbsoluteFile}")
+      generatedModel.value.mkdirs()
+      api.value.compileCSharpServer(monoTempFolder.value, monoDependencyFolder.value, generatedModel.value)
+      log.info(s"Successfully compiled mono at ${monoServerLocation.value}")
       0
     }
   }
 
-  private def monoDeploy(monoLib: File, mono_app: File, monoTempFolder: File, log: sbt.Logger): Int = {
-    log.info("About to Compile CS files and deploy them to server location.")
+  private def monoDeploy(monoLib: File, mono_app: File, generatedModel: File, log: sbt.Logger): Int = {
+    log.info("About to compile CS files and deploy them to server location.")
     import scala.sys.process._
     if (!(mono_app / "bin").exists()) {
       (mono_app / "bin" ).mkdirs()
@@ -348,6 +331,9 @@ object CompilerPlugin extends sbt.Plugin {
     0
   }
 
+  /** Output Path Mapping Type definition
+    * with some common implementations.
+    */
   object OutputPathMapping {
     type OutputPathMappingType = PartialFunction[Source, (File, Array[Byte])]
 
@@ -358,22 +344,22 @@ object CompilerPlugin extends sbt.Plugin {
 
     def plainMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
       Function.unlift {
-        case Src(language, path, content) =>
-          outputDirectory.value.map{ b => (b / language / path, content)}
+        case Src( language, path, content ) =>
+          outputDirectory.value.map{ b => ( b / language / path, content ) }
         case _ => None
       }
     }
 
     val csOutputMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
       val csParc:  OutputPathMappingType = {
-        case Src(language, path, content) if (language.toLowerCase == "csharpserver") =>
-          (monoTempFolder.value / path, content)
+        case Src(language, path, content) if language.toLowerCase == "csharpserver" =>
+          ( monoTempFolder.value / path, content )
       }
       csParc orElse outputPathMapping.value
     }
   }
 
   object Src {
-    def unapply(s: com.dslplatform.compiler.client.response.Source): Option[(String, String, Array[Byte])] =  Some(s.language, s.path, s.content)
+    def unapply( s: com.dslplatform.compiler.client.response.Source): Option[(String, String, Array[Byte])] =  Some( s.language, s.path, s.content )
   }
 }

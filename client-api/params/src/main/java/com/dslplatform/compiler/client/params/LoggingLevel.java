@@ -2,12 +2,7 @@ package com.dslplatform.compiler.client.params;
 
 public enum LoggingLevel implements Param {
 
-        INFO("INFO")
-        , WARN("WARN")
-        , ERROR("ERROR")
-        , DEBUG("DEBUG")
-        , TRACE("TRACE")
-        , NONE("NONE");
+    INFO("INFO"), WARN("WARN"), ERROR("ERROR"), DEBUG("DEBUG"), TRACE("TRACE"), NONE("NONE");
 
     public final String level;
 
@@ -20,9 +15,9 @@ public enum LoggingLevel implements Param {
         return "Logging(" + level + ")";
     }
 
-    public static boolean contains(final String string){
-        for(final LoggingLevel loggingLevel : LoggingLevel.values()){
-            if(loggingLevel.level.equals(string))
+    public static boolean contains(final String string) {
+        for (final LoggingLevel loggingLevel : LoggingLevel.values()) {
+            if (loggingLevel.level.equals(string))
                 return true;
         }
         return true;
