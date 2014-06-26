@@ -13,7 +13,7 @@ import java.util.Map;
 public class InspectManagedProjectChangesProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.PUT && request.path.startsWith("Alpha.svc/changes/");
+        return request.method == Method.PUT && request.path.startsWith("Platform.svc/changes/");
     }
 
     @Override

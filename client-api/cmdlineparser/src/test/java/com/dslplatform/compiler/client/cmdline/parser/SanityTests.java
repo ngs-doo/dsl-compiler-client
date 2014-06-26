@@ -33,8 +33,8 @@ public class SanityTests {
         q.add("-iqwe");
         q.add("--project-id=1-2-3-4-5");
         q.add("-uu");
-        q.add("--with-active-record");
-        q.add("--with-active-record=yes");
+        q.add("--active-record");
+        q.add("--active-record=yes");
         q.add("-f~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/example.props");
         q.add("--cache-path=~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/cache");
         q.add("-tjava client,java,scala-server");

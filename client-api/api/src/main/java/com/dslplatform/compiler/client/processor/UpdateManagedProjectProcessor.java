@@ -3,18 +3,28 @@ package com.dslplatform.compiler.client.processor;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import com.dslplatform.compiler.client.response.Source;
 import com.dslplatform.compiler.client.response.UpdateManagedProjectResponse;
+import org.apache.commons.codec.Charsets;
 
-import java.nio.charset.Charset;
 import java.util.List;
 
 public class UpdateManagedProjectProcessor {
     public UpdateManagedProjectResponse process(final HttpResponse httpResponse) {
         final boolean authSuccess = httpResponse.code != 403;
-        final String httpResponseString = new String(httpResponse.body, Charset.forName("UTF-8"));
-        final String authResponseMessage = authSuccess ? null : httpResponseString;
-        boolean updateSuccess = httpResponse.code == 201;
-        final List<Source> sources = updateSuccess ? FromJson.orderedSources(httpResponse.body) : null;
+        if (authSuccess) {
+            return processAuthSuccess(httpResponse);
+        } else {
+            final String authResponseMessage = new String(httpResponse.body, Charsets.UTF_8);
+            return new UpdateManagedProjectResponse(authSuccess, authResponseMessage);
+        }
+    }
 
-        return new UpdateManagedProjectResponse(authSuccess, authResponseMessage, updateSuccess, sources);
+    private UpdateManagedProjectResponse processAuthSuccess(final HttpResponse httpResponse) {
+        if (httpResponse.code == 201) {
+            final List<Source> sources = FromJson.orderedSources(httpResponse.body);
+            return new UpdateManagedProjectResponse(true, null, true, sources);
+        } else {
+            final String updateFailedMessage = new String(httpResponse.body, Charsets.UTF_8);
+            return new UpdateManagedProjectResponse(true, null, false, updateFailedMessage);
+        }
     }
 }

@@ -8,7 +8,7 @@ import com.dslplatform.compiler.client.api.core.HttpRequest;
 public class HttpRequestBuilderImpl implements HttpRequestBuilder {
     @Override
     public HttpRequest parseDSL(final String token, final Map<String, String> dsl) {
-        final HttpRequest request = HttpRequest.PUT("Alpha.svc/parse", dsl);
+        final HttpRequest request = HttpRequest.PUT("Platform.svc/parse", dsl);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -78,7 +78,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
     @Override
     public HttpRequest downloadBinaries(final String token, final UUID projectID) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/download/" + projectID.toString());
+        final HttpRequest request = HttpRequest.GET("Platform.svc/download/" + projectID.toString());
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -88,7 +88,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
     @Override
     public HttpRequest downloadGeneratedModel(final String token, final UUID projectID) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/generated-model/" + projectID.toString());
+        final HttpRequest request = HttpRequest.GET("Platform.svc/generated-model/" + projectID.toString());
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -101,7 +101,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final String token,
             final UUID projectID,
             final Map<String, String> dsl) {
-        final HttpRequest request = HttpRequest.PUT("Alpha.svc/changes/" + projectID.toString(), dsl);
+        final HttpRequest request = HttpRequest.PUT("Platform.svc/changes/" + projectID.toString(), dsl);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -111,7 +111,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
     @Override
     public HttpRequest getLastManagedDSL(final String token, final UUID projectID) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/dsl/" + projectID.toString());
+        final HttpRequest request = HttpRequest.GET("Platform.svc/dsl/" + projectID.toString());
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -126,7 +126,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final Set<String> targets,
             final String packageName,
             final Set<String> options) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/config/" + projectID.toString());
+        final HttpRequest request = HttpRequest.GET("Platform.svc/config/" + projectID.toString());
 
         if (targets != null && !targets.isEmpty()) request.query.put("targets", new ArrayList<String>(targets));
         if (options != null && !options.isEmpty()) request.query.put("options", new ArrayList<String>(options));
@@ -147,7 +147,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final Set<String> options,
             final Map<String, String> dsl
     ) {
-        final HttpRequest request = HttpRequest.POST("Alpha.svc/update/" + projectID.toString(), dsl);
+        final HttpRequest request = HttpRequest.POST("Platform.svc/update/" + projectID.toString(), dsl);
 
         if (targets != null && !targets.isEmpty()) request.query.put("targets", new ArrayList<String>(targets));
         if (options != null && !options.isEmpty()) request.query.put("options", new ArrayList<String>(options));
@@ -173,7 +173,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
         dsl.put("New", newDsl);
         dsl.put("Old", oldDsl);
 
-        final HttpRequest request = HttpRequest.PUT("Alpha.svc/unmanaged/postgres-migration", dsl);
+        final HttpRequest request = HttpRequest.PUT("Platform.svc/unmanaged/postgres-migration", dsl);
 
         request.query.put("version", Arrays.asList(version));
 
@@ -190,7 +190,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final Set<String> targets,
             final String packageName,
             final Set<String> options) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/source/" + projectID.toString());
+        final HttpRequest request = HttpRequest.GET("Platform.svc/source/" + projectID.toString());
 
         if (targets != null && !targets.isEmpty()) request.query.put("targets", new ArrayList<String>(targets));
         if (options != null && !options.isEmpty()) request.query.put("options", new ArrayList<String>(options));
@@ -208,7 +208,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl) {
-        final HttpRequest request = HttpRequest.PUT("Alpha.svc/unmanaged/source", dsl);
+        final HttpRequest request = HttpRequest.PUT("Platform.svc/unmanaged/source", dsl);
 
         if (targets != null && !targets.isEmpty()) request.query.put("targets", new ArrayList<String>(targets));
         if (options != null && !options.isEmpty()) request.query.put("options", new ArrayList<String>(options));
@@ -258,7 +258,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
     @Override
     public HttpRequest templateGet(final String token, final String projectId, final String templateName) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/template/" + projectId + "/" + templateName);
+        final HttpRequest request = HttpRequest.GET("Platform.svc/template/" + projectId + "/" + templateName);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));
@@ -283,7 +283,7 @@ public class HttpRequestBuilderImpl implements HttpRequestBuilder {
 
     @Override
     public HttpRequest templateListAll(final String token, final String projectId) {
-        final HttpRequest request = HttpRequest.GET("Alpha.svc/templates/" + projectId);
+        final HttpRequest request = HttpRequest.GET("Platform.svc/templates/" + projectId);
 
         request.headers.put("Authorization", Arrays.asList(token));
         request.headers.put("Content-Type", Arrays.asList("application/json"));

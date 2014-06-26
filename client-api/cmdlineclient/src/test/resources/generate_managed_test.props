@@ -1,0 +1,4 @@
+logging-level=DEBUG
+dsl-path=~/knuckles/workspace/dslPath
+output-path=src/main
+actions=generate-sources

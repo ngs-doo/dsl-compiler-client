@@ -1,73 +1,19 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.ALLOW_UNSAFE_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.PACKAGE_NAME_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.SKIP_DIFF_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.TARGET_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_ACTIVE_RECORD_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_HELPER_METHODS_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JACKSON_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JAVA_BEANS_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_DATABASE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.REVENJ_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_ACTIVE_RECORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_HELPER_METHODS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JACKSON_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JAVA_BEANS_KEY;
+import com.dslplatform.compiler.client.params.*;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-
-import com.dslplatform.compiler.client.params.Action;
-import com.dslplatform.compiler.client.params.Actions;
-import com.dslplatform.compiler.client.params.CachePath;
-import com.dslplatform.compiler.client.params.DBAuth;
-import com.dslplatform.compiler.client.params.DBConnectionString;
-import com.dslplatform.compiler.client.params.DBDatabaseName;
-import com.dslplatform.compiler.client.params.DBHost;
-import com.dslplatform.compiler.client.params.DBPassword;
-import com.dslplatform.compiler.client.params.DBPort;
-import com.dslplatform.compiler.client.params.DBUsername;
-import com.dslplatform.compiler.client.params.DSLPath;
-import com.dslplatform.compiler.client.params.LoggingLevel;
-import com.dslplatform.compiler.client.params.MigrationFilePath;
-import com.dslplatform.compiler.client.params.OutputPath;
-import com.dslplatform.compiler.client.params.PackageName;
-import com.dslplatform.compiler.client.params.Password;
-import com.dslplatform.compiler.client.params.ProjectID;
-import com.dslplatform.compiler.client.params.ProjectName;
-import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
-import com.dslplatform.compiler.client.params.RevenjPath;
-import com.dslplatform.compiler.client.params.Target;
-import com.dslplatform.compiler.client.params.Targets;
-import com.dslplatform.compiler.client.params.Username;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.*;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
 
 public class ArgumentsValidator implements Arguments {
-    private final Logger logger;
+
+    protected final Logger logger;
     private final Properties properties;
 
     public ArgumentsValidator(
@@ -79,10 +25,11 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public LoggingLevel getLoggingLevel() {
-    final String loggingLevel_strName = properties.getProperty(LOGGING_LEVEL_KEY.paramKey);
+        final String loggingLevel_strName = properties.getProperty(LOGGING_LEVEL_KEY.paramKey);
         logger.trace("Validating LoggingLevel [{}] ...", loggingLevel_strName);
         if (loggingLevel_strName == null) throw new IllegalArgumentException("Logging level was not defined!");
-        if (!LoggingLevel.contains(loggingLevel_strName) ) throw new IllegalArgumentException("The given logging level is undefined: "+loggingLevel_strName);
+        if (!LoggingLevel.contains(loggingLevel_strName))
+            throw new IllegalArgumentException("The given logging level is undefined: " + loggingLevel_strName);
 
         final LoggingLevel result = LoggingLevel.valueOf(loggingLevel_strName);
         logger.debug("Retrieved OutputPath from the properties [{}]", result);
@@ -91,7 +38,7 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public OutputPath getOutputPath() {
-    final String outputPath = properties.getProperty(OUTPUT_PATH_KEY.paramKey);
+        final String outputPath = properties.getProperty(OUTPUT_PATH_KEY.paramKey);
         logger.trace("Validating OutputPath [{}] ...", outputPath);
         if (outputPath == null) throw new IllegalArgumentException("Output path was not defined!");
         final OutputPath result = new OutputPath(new File(outputPath));
@@ -101,7 +48,7 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public MigrationFilePath getMigrationFilePath() {
-    final String migrationFilePath = properties.getProperty(MIGRATION_FILE_PATH_KEY.paramKey);
+        final String migrationFilePath = properties.getProperty(MIGRATION_FILE_PATH_KEY.paramKey);
         logger.trace("Validating MigrationFilePath [{}] ...", migrationFilePath);
         if (migrationFilePath == null) throw new IllegalArgumentException("Migration file path was not defined!");
         final MigrationFilePath result = new MigrationFilePath(new File(migrationFilePath));
@@ -110,8 +57,30 @@ public class ArgumentsValidator implements Arguments {
     }
 
     @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        final String MonoApplicationPath = properties.getProperty(MONO_APPLICATION_KEY.paramKey);
+        logger.trace("Validating MonoApplicationPath [{}] ...", MonoApplicationPath);
+        if (MonoApplicationPath == null) return null;
+        final MonoApplicationPath result = new MonoApplicationPath(new File(MonoApplicationPath));
+        logger.debug("Retrieved MonoApplicationPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        String compilationTargetStr = properties.getProperty(COMPILATION_TARGET_KEY.paramKey);
+        if (compilationTargetStr == null) {
+            compilationTargetStr = GENERATED_MODEL_DEFAULT.defaultValue;
+            logger.debug("CompilationTargetPath was not defined defaulting to {}", compilationTargetStr);
+        }
+        final CompilationTargetPath result = new CompilationTargetPath(new File(compilationTargetStr));
+        logger.debug("Retrieved CompilationTargetPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
     public DSLPath getDSLPath() {
-    final String dslPath = properties.getProperty(DSL_PATH_KEY.paramKey);
+        final String dslPath = properties.getProperty(DSL_PATH_KEY.paramKey);
         logger.trace("Validating DSLPath [{}] ...", dslPath);
         if (dslPath == null) throw new IllegalArgumentException("DSL path was not defined!");
         final DSLPath result = new DSLPath(new File(dslPath));
@@ -121,9 +90,13 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public RevenjPath getRevenjPath() {
-    final String revenjPath = properties.getProperty(REVENJ_PATH_KEY.paramKey);
+        String revenjPath = properties.getProperty(REVENJ_PATH_KEY.paramKey);
         logger.trace("Validating RevenjPath [{}] ...", revenjPath);
-        if (revenjPath == null) throw new IllegalArgumentException("Revenj path was not defined!");
+        if (revenjPath == null) {
+            logger.debug("Revenj path was not defined!");
+            revenjPath = REVENJ_PATH_DEFAULT.defaultValue + "/" + getRevenjVersion().version;
+            logger.info("Revenj path set to {}", revenjPath);
+        }
         final RevenjPath result = new RevenjPath(new File(revenjPath));
         logger.debug("Retrieved RevenjPath from the properties [{}]", result);
         return result;
@@ -131,9 +104,11 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public ProjectPropertiesPath getProjectPropertiesPath() {
-    final String projectPropertiesPath = properties.getProperty(PROJECT_PROPERTIES_PATH_KEY.paramKey);
+        final String projectPropertiesPath = properties.getProperty(PROJECT_PROPERTIES_PATH_KEY.paramKey);
         logger.trace("Validating ProjectPropertiesPath [{}] ...", projectPropertiesPath);
-        if (projectPropertiesPath == null) throw new IllegalArgumentException("ProjectProperties path was not defined!");
+        if (projectPropertiesPath == null) return new ProjectPropertiesPath(null);
+        //    throw new IllegalArgumentException("ProjectProperties path was not defined!");
+
         final ProjectPropertiesPath result = new ProjectPropertiesPath(new File(projectPropertiesPath));
         logger.debug("Retrieved ProjectPropertiesPath from the properties [{}]", result);
         return result;
@@ -141,7 +116,7 @@ public class ArgumentsValidator implements Arguments {
 
     @Override
     public CachePath getCachePath() {
-    final String cachePath = properties.getProperty(CACHE_PATH_KEY.paramKey);
+        final String cachePath = properties.getProperty(CACHE_PATH_KEY.paramKey);
         logger.trace("Validating CachePath [{}] ...", cachePath);
         if (cachePath == null) throw new IllegalArgumentException("Cache path was not defined!");
         final CachePath result = new CachePath(new File(cachePath));
@@ -169,7 +144,9 @@ public class ArgumentsValidator implements Arguments {
         return result;
     }
 
-    /** Note: computed from the underlying subproperties*/
+    /**
+     * Note: computed from the underlying subproperties
+     */
     @Override
     public DBAuth getDBAuth() {
 
@@ -187,24 +164,18 @@ public class ArgumentsValidator implements Arguments {
         final String databaseName = dbDatabaseName.dbDatabaseName;
         final String connectionString = dbConnectionString.dbConnectionString;
 
-        if((connectionString == null)
-            &&
-            (username == null
-             || password == null
-             || host == null
-             || port == null
-             || databaseName == null)){
-                throw
-                new IllegalArgumentException("Illegal database authentication parameters. The authentication requires either a valid connection string, or all individual connection parameters set.");
-         }
+        if ((connectionString == null)
+                &&
+                (username == null
+                        || password == null
+                        || host == null
+                        || port == null
+                        || databaseName == null)) {
+            throw
+                    new IllegalArgumentException("Illegal database authentication parameters. The authentication requires either a valid connection string, or all individual connection parameters set.");
+        }
 
-        return new DBAuth(
-                getDBUsername()
-                , getDBPassword()
-                , getDBHost()
-                , getDBPort()
-                , getDBDatabaseName()
-                , getDBConnectionString());
+        return new DBAuth(getDBUsername(), getDBPassword(), getDBHost(), getDBPort(), getDBDatabaseName(), getDBConnectionString());
     }
 
     @Override
@@ -280,6 +251,21 @@ public class ArgumentsValidator implements Arguments {
                     "\"%s\" does not look like a ProjectID!", projectID));
         }
         logger.debug("Retrieved ProjectID from the properties [{}]", result);
+        return result;
+    }
+
+    RevenjVersion revenjVersion;
+
+    @Override
+    public RevenjVersion getRevenjVersion() {
+        String revenjVersion = properties.getProperty(PROJECT_NAME_KEY.paramKey);
+        logger.trace("Validating MonoVersion [{}] ...", revenjVersion);
+        if (revenjVersion == null) {
+            revenjVersion = REVENJ_VERSION_DEFAULT.defaultValue;
+            logger.debug("CompilationTargetPath was not defined defaulting to {}", revenjVersion);
+        }
+        final RevenjVersion result = new RevenjVersion(revenjVersion);
+        logger.debug("Retrieved MonoVersion from the properties [{}]", result);
         return result;
     }
 
@@ -419,6 +405,18 @@ public class ArgumentsValidator implements Arguments {
         }
         final boolean result = booleanValue(skipDiff);
         logger.debug("Retrieved SkipDiff from properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public boolean isManaged() {
+        String managed = properties.getProperty(MANAGED_KEY.paramKey);
+        if (managed == null) {
+            managed = MANAGED_DEFAULT.defaultValue;
+            logger.trace("Managed was not defined, defaulting to [{}]", managed);
+        }
+        final boolean result = booleanValue(managed);
+        logger.debug("Retrieved Managed from properties [{}]", result);
         return result;
     }
 

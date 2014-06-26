@@ -3,31 +3,31 @@ package com.dslplatform.compiler.client.cmdline;
 import com.dslplatform.compiler.client.Api;
 import com.dslplatform.compiler.client.ApiImpl;
 import com.dslplatform.compiler.client.HttpTransportProvider;
+import com.dslplatform.compiler.client.IO;
 import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
 import com.dslplatform.compiler.client.api.core.impl.UnmanagedDSLImpl;
 import com.dslplatform.compiler.client.cmdline.parser.Arguments;
-import com.dslplatform.compiler.client.diff.HashBodyMapTool;
-import com.dslplatform.compiler.client.diff.PathAction;
-import com.dslplatform.compiler.client.io.FileLoader;
-import com.dslplatform.compiler.client.io.Hash;
 import com.dslplatform.compiler.client.io.Output;
 import com.dslplatform.compiler.client.io.PrintStreamOutput;
 import com.dslplatform.compiler.client.params.*;
 import com.dslplatform.compiler.client.response.*;
 import org.apache.commons.codec.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Class that proxies responses to from the Api to the output and provides user experience in sense of validating chosen actions.
+ * Class that proxies responses to from the Api to the output and provides a user experience in a sense of validating chosen actions.
  */
-public class ActionDefinition extends ActionContext implements CLCAction {
+public class ActionDefinition extends ActionContext {
 
+    private final static String successfulManagedUpgrade = "Successful update!";
     private final static String source_compilation_failed_msg = "Source compilation failed ";
     private final static String error_while_writing_sources_msg = "An error occurred while writing sources ";
     private final static String source_generation_failed_msg = "Source generation failed ";
@@ -37,21 +37,31 @@ public class ActionDefinition extends ActionContext implements CLCAction {
     private final static String error_writing_migration_msg = "An error occurred while writing migration ";
     private final static String error_getting_sql_migration_msg = "There was an error with get sql migration request.";
     private final static String migration_file_read_failed_msg = "Failed to read migration file";
+    private final static String writing_migration_to_msg = "Writing migration to %s";
     private final static String retrying_unmanaged_source_request_msg = "Retrying unmanaged source request";
     private final static String retrying_unmanaged_compilation_request_msg = "Retrying unmanaged source compilation";
+    private final static String migration_not_specified_skipping_writing_msg = "Migration path was not specified, skipping writing to disk.";
     private final static String database_connection_failure_msg = "There was a problem connection to the database ";
     private final static String migration_application_failed_msg = "Migration was not applied successfully";
     private final static String database_upgrade_successful_msg = "Database upgrade successful";
+    private final static String upgrading_with_requested_migration_msg = "Upgrading with remotely requested migration";
+    private final static String database_upgrade_empty_msg = "Migration SQL will make no changes!";
+    private final static String missing_mono_location_msg = "Mono Location was not provided!";
 
     private final static String correct_DSL_and_try_again_prompt = "Correct DSL and try again";
     private final static String generate_sources_if_DB_failed_continue_prompt = "download sources even thou database upgrade failed.";
     private final static String migration_request_prompt = "Request migration from remote?";
     private final static String apply_changes_to_the_database_prompt = "Apply changes to the database";
-    private final static String are_diff_changes_good_prompt = "those changes";
+    private final static String read_and_upgrade_prompt = "read migration sql from %s and use it to upgrade the database";
+    private final static String unable_to_read_file_retry_prompt = "Unable to read file %s";
+    private final static String destructive_migration_prompt = "a destructive migration";
+    private final static String are_diff_changes_good_raw_prompt = "Do you wish to continue with this changes, quit or reload?";
+    private final static String continue_with_destructive_upgrade = "Would you like to continue with a destructive upgrade?";
+    private final static String retry_sql_migration_request = "Retry request for sql migration";
     private final static String retry_get_sources_prompt = "Retry get sources";
     private final static String retry_compilation_prompt = "Retry compilation";
 
-    public ActionDefinition(Logger logger, Arguments arguments) throws IOException {
+    public ActionDefinition(final Logger logger, final Arguments arguments) throws IOException {
         this(new ApiImpl(
                         logger,
                         new HttpRequestBuilderImpl(),
@@ -64,25 +74,29 @@ public class ActionDefinition extends ActionContext implements CLCAction {
         );
     }
 
-    public ActionDefinition(Api api, Logger logger, Output output, Arguments arguments) {
-        super(api, logger, output, arguments, new SystemInCommandLinePrompt(output), new ClcIO(logger));
+    public ActionDefinition(final Api api, final Logger logger, final Output output, final Arguments arguments) {
+        super(api, logger, output, arguments, new SystemInCommandLinePrompt(output));
     }
 
-    public ActionDefinition(Api api, Logger logger, Output output, Arguments arguments, CommandLinePrompt clp, IO io) {
-        super(api, logger, output, arguments, clp, io);
+    public ActionDefinition(final Api api, final Logger logger, final Output output, final Arguments arguments, final CommandLinePrompt clp) {
+        super(api, logger, output, arguments, clp);
     }
 
     public boolean parseDSL() {
-        DSL dsl = getDSL();
-        return parseDSL(dsl);
+        return parseDSL(getDSL());
     }
 
-    private boolean parseDSL(DSL dsl) {
+    private boolean parseDSL(final DSL dsl) {
         logger.trace("About to parse DSL");
-        ParseDSLResponse parseDSLResponse = api.parseDSL(getToken(), dsl.files);
+        final ParseDSLResponse parseDSLResponse = api.parseDSL(getToken(), dsl.files);
         if (parseDSLResponse.authorized) output.println(parseDSLResponse.parseMessage);
         else output.println(parseDSLResponse.authorizationErrorMessage);
         return parseDSLResponse.parsed;
+    }
+
+    @Override
+    public void lastDSL() {
+
     }
 
     /**
@@ -90,68 +104,127 @@ public class ActionDefinition extends ActionContext implements CLCAction {
      */
     public void getChanges() {
         logger.trace("About to get changes.");
-        DSL dsl = getDSL();
-        DataSource dataSource = getDataSource(); // todo - missing DBAuth parametar
-        getChanges(dataSource, dsl);
+        getChanges(getDSL());
     }
 
-    public void getChanges(DataSource dataSource, DSL dsl) {
-        GetLastUnmanagedDSLResponse getLastUnmanagedDSLResponse = api.getLastUnmanagedDSL(dataSource);
-        final Map<String, String> olddsl;
-        if (getLastUnmanagedDSLResponse.lastMigration == null) olddsl = DSL.empty().files;
-        else olddsl = getLastUnmanagedDSLResponse.lastMigration.dsls;
-        String formattedDiff = api.getDiff(olddsl, dsl.files);
+    /* For diffing. */
+    private void getChanges(final DSL dsl) {
+        /* if managed get last dsl from remote, if unmanaged query it from the database, using api */
+        if (arguments.isManaged()) {
+            final GetLastManagedDSLResponse getLastManagedDSLResponse = api.getLastManagedDSL(getToken(), arguments.getProjectID().projectID);
+            getChanges(getLastManagedDSLResponse.dsls, dsl.files);
+        } else {
+            final GetLastUnmanagedDSLResponse getLastUnmanagedDSLResponse = api.getLastUnmanagedDSL(getDataSource());
+            final Map<String, String> oldDsl;
+            if (getLastUnmanagedDSLResponse.lastMigration == null) oldDsl = DSL.empty().files;
+            else oldDsl = getLastUnmanagedDSLResponse.lastMigration.dsls;
+            getChanges(oldDsl, dsl.files);
+        }
+    }
+
+    private void getChanges(final Map<String, String> oldDsl, final Map<String, String> newDsl) {
+        final String formattedDiff = api.getDiff(oldDsl, newDsl);
         output.print(formattedDiff);
     }
 
-    public void generateSources() {
-    } // todo - managed - on hold
-
-    private void generateSources(DSL dsl) {
-    } // todo - managed - on hold
-
-    public void unmanagerCSServer() {
-    } // todo - ambiguous - on hold
-
-    private void unmanagerCSServer(DSL dsl) {
-    } // todo - ambiguous - on hold
-
     /**
-     * Requests for Unmanaged source.
+     * Parse Diff procedure interacting with the user
+     *
+     * @param dsl
+     * @return Users choice on continuation with procedure
      */
-    public boolean unmanagedSource() {
-        final DSL dsl = getDSL();
-        final OutputPath outputPath = arguments.getOutputPath();
-        final PackageName packageName = arguments.getPackageName();
-        return unmanagedSource(dsl, packageName, outputPath);
+    private ContinueRetryQuit parseDiff(DSL dsl) {
+        if (parseDSL(dsl)) {
+            if (!skip_diff) {
+                getChanges(dsl);
+                /* prompt user to continue, retry (reload DSL) or quit. */
+                return prompt.promptCRQ(are_diff_changes_good_raw_prompt);
+            }
+            return ContinueRetryQuit.Continue;
+        } else {
+            /* Prompt user to fix dsl and try again. */
+            return (prompt.promptRetry(correct_DSL_and_try_again_prompt)) ?
+                    ContinueRetryQuit.Retry : ContinueRetryQuit.Quit;
+        }
     }
 
-    private boolean unmanagedSource(DSL dsl, PackageName packageName, OutputPath outputPath) {
-        Set<String> targetStringSet = mapTargets();
-        Set<String> options = mapOptions();
-        GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse = api.generateUnmanagedSources(getToken(), packageName.packageName, targetStringSet, options, dsl.files);
+    @Override
+    public boolean upgrade() {
+        final Set<String> targetStringSet = mapTargets();
 
-        if (generateUnmanagedSourcesResponse.generationSuccessful) {
-            List<Source> sourceList = generateUnmanagedSourcesResponse.sources;
-
-            output.println(no_successfully_generated_sources_msg + sourceList.size());
-            output.println(writing_files_to_msg + outputPath.outputPath.getAbsolutePath());
-            try {
-                updateFiles(logger, generateUnmanagedSourcesResponse.sources, outputPath.outputPath);
-                return true;
-            } catch (IOException e) {
-                output.println(error_while_writing_sources_msg + e.getMessage());
-                logger.error(error_while_writing_sources_msg + e.getMessage());
-            }
-        } else {
-            output.println(source_generation_failed_msg + generateUnmanagedSourcesResponse.authorizationErrorMessage);
-            logger.error(source_generation_failed_msg + generateUnmanagedSourcesResponse.authorizationErrorMessage);
+        final Set<String> options = mapOptions();
+        final String migration_unsafe = (arguments.isAllowUnsafe()) ? "unsafe" : null;
+        final DSL dsl = getDSL();
+        switch (parseDiff(dsl)) {
+            case Retry:
+                return upgrade();
+            case Quit:
+                return false;
         }
-        return false;
+        final UpdateManagedProjectResponse updateManagedProjectResponse = api.updateManagedProject(getToken(), arguments.getProjectID().projectID, targetStringSet, arguments.getPackageName().packageName, migration_unsafe, options, dsl.files);
+
+        if (!updateManagedProjectResponse.authorized) {
+            output.println(updateManagedProjectResponse.authorizationErrorMessage);
+            return false;
+        } else {
+            if (updateManagedProjectResponse.updateSuccessful) {
+                output.print(successfulManagedUpgrade);
+                return true;
+            } else {
+                output.print(updateManagedProjectResponse.unsuccessfulUpdateMessage);
+                switch (prompt.promptCRQ(continue_with_destructive_upgrade)) {
+                    case Retry:
+                        return upgrade();
+                    case Quit:
+                        return false;
+                }
+                final String user_chosen_migration_unsafe = "unsafe";
+                final UpdateManagedProjectResponse updateUnsafeManagedProjectResponse =
+                        api.updateManagedProject(getToken(), arguments.getProjectID().projectID, targetStringSet, arguments.getPackageName().packageName, user_chosen_migration_unsafe, options, dsl.files);
+                if (updateUnsafeManagedProjectResponse.updateSuccessful) {
+                    output.println(successfulManagedUpgrade);
+                } else {
+                    output.println(updateUnsafeManagedProjectResponse.unsuccessfulUpdateMessage);
+                }
+                return true;
+            }
+        }
+    }
+
+    /**
+     * Generates client source for connecting to the managed revenj instance.
+     *
+     * @return true if successful.
+     */
+    public boolean generateSources() {
+        final Set<String> targetStringSet = mapTargets();
+        final Set<String> options = mapOptions();
+        final GenerateSourcesResponse generateSourcesResponse = api.generateSources(getToken(), arguments.getProjectID().projectID, targetStringSet, arguments.getPackageName().packageName, options);
+
+        return writeGenerateSourcesResponseToOutputPath(generateSourcesResponse, arguments.getOutputPath());
+    }
+
+    /**
+     * Requests for the unmanaged source.
+     */
+    public boolean unmanagedSource() {
+        return unmanagedSource(getDSL(), arguments.getPackageName(), arguments.getOutputPath());
+    }
+
+    private boolean unmanagedSource(final DSL dsl, final PackageName packageName, final OutputPath outputPath) {
+        final Set<String> targetStringSet = mapTargets();
+        final Set<String> options = mapOptions();
+        final GenerateSourcesResponse generateSourcesResponse = api.generateUnmanagedSources(getToken(), packageName.packageName, targetStringSet, options, dsl.files);
+        return writeGenerateSourcesResponseToOutputPath(generateSourcesResponse, outputPath);
     }
 
     public boolean compileCSServer() {
-        CompileCSharpServerResponse compileCSharpServerResponse = api.compileCSharpServer(arguments.getOutputPath().outputPath, getRevenjPath(), getTargetPath());
+        /* pre 5: check for revenj */
+        while (!getRevenj() && prompt.promptRetry("Do you wish to retry fetching revenj?")) {
+            output.println("Retrying fetching revenj!");
+            logger.info("Retrying fetching revenj!");
+        }
+        final CompileCSharpServerResponse compileCSharpServerResponse = api.compileCSharpServer(arguments.getOutputPath().outputPath, getRevenjPath(), getTargetPath());
         if (compileCSharpServerResponse.compilationSuccessful) {
             output.println(compileCSharpServerResponse.compilationMessage);
             logger.info(compileCSharpServerResponse.compilationMessage);
@@ -164,8 +237,8 @@ public class ActionDefinition extends ActionContext implements CLCAction {
     }
 
     /**
-     * Requests a migration based on the last migration in the provided database at the moment, or null if database is new, and the dsl provided in the parameters.
-     * Will output migration to a file.
+     * Requests a migration based on the last migration in the provided database at the moment, or null if the database is new, and the dsl provided in the parameters.
+     * Will output the migration to the file.
      *
      * @return migration or null if failed.
      */
@@ -173,21 +246,22 @@ public class ActionDefinition extends ActionContext implements CLCAction {
         return sqlMigration(getDSL());
     }
 
-    public GenerateMigrationSQLResponse sqlMigration(DSL dsl) {
-        GenerateMigrationSQLResponse generateMigrationSQLResponse = api.generateMigrationSQL(getToken(), getDataSource(), dsl.files);
+    public GenerateMigrationSQLResponse sqlMigration(final DSL dsl) {
+        final GenerateMigrationSQLResponse generateMigrationSQLResponse = api.generateMigrationSQL(getToken(), getDataSource(), dsl.files);
         if (generateMigrationSQLResponse.migrationRequestSuccessful) {
-            String migration = generateMigrationSQLResponse.migration;
+            final String migration = generateMigrationSQLResponse.migration;
 
             output.println(success_receive_migration_msg);
-            File migrationOutputPath = getMigrationPath();
+            final File migrationOutputPath = getMigrationPath();
             if (migrationOutputPath == null) {
-                output.println("Migration path was not specified, skipping writing to disk.");
-                logger.info("Migration path was not specified, skipping writing to disk.");
+                output.println(migration_not_specified_skipping_writing_msg);
+                logger.info(migration_not_specified_skipping_writing_msg);
             } else {
                 try {
-                    output.println("Writing migration to " + migrationOutputPath.getAbsolutePath());
-                    logger.info("Writing migration to " + migrationOutputPath.getAbsolutePath());
-                    io.write(migrationOutputPath, migration, Charsets.UTF_8);
+                    final String formatted_migration_write_information = String.format(writing_migration_to_msg, migrationOutputPath.getAbsolutePath());
+                    output.println(formatted_migration_write_information);
+                    logger.info(formatted_migration_write_information);
+                    IO.write(migrationOutputPath, migration, Charsets.UTF_8);
                 } catch (IOException e) {
                     output.println(error_writing_migration_msg + e.getMessage());
                     logger.error(error_writing_migration_msg + e.getMessage());
@@ -198,54 +272,33 @@ public class ActionDefinition extends ActionContext implements CLCAction {
         } else {
             output.println(error_getting_sql_migration_msg + generateMigrationSQLResponse.authorizationErrorMessage);
             logger.error(error_getting_sql_migration_msg + generateMigrationSQLResponse.authorizationErrorMessage);
-            return clp.promptRetry("Retry request for sql migration") ? sqlMigration(dsl) : null;
+            return prompt.promptRetry(retry_sql_migration_request) ? sqlMigration(dsl) : null;
         }
     }
 
     /**
      * Applies a migration sql to the database
-     * migrationSQL is read from the disk if existing, otherwise user is prompted to request it.
+     * migrationSQL is read from the disk if existing, otherwise user is prompted should the client request for it.
      */
     public boolean upgradeUnmanagedDatabase() {
-        final File migrationPath = getMigrationPath();
-        /* see if there is a migration file in path, ask weather to upgrade with it */
-        if (migrationPath.exists() && clp.promptContinue(" read migration sql from " + migrationPath + "  and use it to upgrade")) {
-            String migrationOrNull = readMigrationFromDisk(migrationPath, logger, output, clp);
-            if (migrationOrNull == null) return upgradeUnmanagedDatabase(); /* back to the start */
-            else return upgradeUnmanagedDatabase(migrationOrNull);
-        } else {
-            /* or get the migration from the remote */
-            output.println("Upgrading with remotely requested migration");
-            logger.info("Upgrading with remotely requested migration");
-            GenerateMigrationSQLResponse generateMigrationSQLResponse = sqlMigration();
-            return upgradeUnmanagedDatabase(generateMigrationSQLResponse);
-        }
+        /* Get the migration from the remote */
+        output.println(upgrading_with_requested_migration_msg);
+        logger.info(upgrading_with_requested_migration_msg);
+        final GenerateMigrationSQLResponse generateMigrationSQLResponse = sqlMigration();
+        return upgradeUnmanagedDatabase(generateMigrationSQLResponse, getDataSource());
     }
 
-    private static String readMigrationFromDisk(File migrationPath, Logger logger, Output output, CommandLinePrompt clp) {
-        String migration;
-        try {
-            migration = FileUtils.readFileToString(migrationPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-            output.println(migration_file_read_failed_msg + e.getMessage());
-            return clp.promptRetry("Unable to read file " + migrationPath.getAbsolutePath())
-                    ? readMigrationFromDisk(migrationPath, logger, output, clp)
-                    : null;
-        }
-        return migration;
-    }
+    private boolean upgradeUnmanagedDatabase(final GenerateMigrationSQLResponse migration, final DataSource dataSource) {
+        /* print migration information and, if its destructive, prompt user, then continue  */
 
-    private boolean upgradeUnmanagedDatabase(String migration) {
-        return upgradeUnmanagedDatabase(new GenerateMigrationSQLResponse(migration));
-    }
+        if (migration.migration.isEmpty()) {
+            output.println(database_upgrade_empty_msg);
+            logger.info(database_upgrade_empty_msg);
+            return true;
+        } else if (arguments.isAllowUnsafe() || !migration.isMigrationDestructive || prompt.promptContinue(destructive_migration_prompt)) {
+            final UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabaseResponse = api.upgradeUnmanagedDatabase(dataSource, Arrays.asList(migration.migration));
 
-    private boolean upgradeUnmanagedDatabase(GenerateMigrationSQLResponse migration) {
-        /* print migration information and prompt to continue if destructive */
-        if (arguments.isAllowUnsafe() || !migration.isMigrationDestructive || clp.promptContinue("a destructive migration")) {
-            UpgradeUnmanagedDatabaseResponse upgradeUnmanagedDatabaseResponse = api.upgradeUnmanagedDatabase(getDataSource(), Arrays.asList(migration.migration));
-
-            /* be informal */
+            /* return true if success, false if upgrade failed and be informal */
             if (upgradeUnmanagedDatabaseResponse.databaseConnectionSuccessful) {
                 if (upgradeUnmanagedDatabaseResponse.successfulUpgrade) {
                     output.println(database_upgrade_successful_msg);
@@ -277,168 +330,88 @@ public class ActionDefinition extends ActionContext implements CLCAction {
      * Deploy to mono service.
      */
     public boolean deployUnmanagedServer() {
-        DataSource dataSource = getDataSource();
-        DSL dsl = getDSL();
-        return deployUnmanagedServer(dsl, dataSource);
-    }
+        final DSL dsl = getDSL();
 
-    private boolean deployUnmanagedServer(DSL dsl, DataSource dataSource) {
         /* 1: Parse DSL, continue if parseable prompt retry if not.
            Optional step 1.1 Show diff prompt continuation.
          */
-        if (parseDSL(dsl)) {
-            if (!skip_diff) {
-                getChanges(dataSource, dsl);
-                /* todo - maybe add a 3 way here reload, continue, quit */
-                if (!clp.promptContinue(are_diff_changes_good_prompt)) return false;
-            }
-        } else {
-            /* prompt user to fix dsl and try again */
-            return (clp.promptRetry(correct_DSL_and_try_again_prompt)) && deployUnmanagedServer();
+        switch (parseDiff(dsl)) {
+            case Retry:
+                return deployUnmanagedServer();
+            case Quit:
+                return false;
         }
 
-        /* 2,3 : upgrade database
+        /* 2, 3: Upgrade database.
            2: Show migration information
            3: Apply migration
            */
         if (!upgradeUnmanagedDatabase()) {
-            if (!clp.promptContinue(generate_sources_if_DB_failed_continue_prompt)) return false;
+            /* Something went wrong upgrading the database, prompt user if (s)he wishes to continue fetching the sources and to optionally compile them. */
+            if (!prompt.promptContinue(generate_sources_if_DB_failed_continue_prompt)) return false;
         }
 
-        /* 4: Get sources */
-        while (!unmanagedSource(dsl, arguments.getPackageName(), arguments.getOutputPath()) && clp.promptRetry(retry_get_sources_prompt)) {
+        /* 4: Get sources. */
+        while (!unmanagedSource(dsl, arguments.getPackageName(), arguments.getOutputPath()) && prompt.promptRetry(retry_get_sources_prompt)) {
             output.println(retrying_unmanaged_source_request_msg);
             logger.trace(retrying_unmanaged_source_request_msg);
         }
 
-        /* 5: Try, Retry compilation */
-        while (!compileCSServer() && clp.promptRetry(retry_compilation_prompt)) {
+        /* 5: Try, Retry compilation... */
+        while (!compileCSServer() && prompt.promptRetry(retry_compilation_prompt)) {
             output.println(retrying_unmanaged_compilation_request_msg);
             logger.trace(retrying_unmanaged_compilation_request_msg);
         }
-        /* 6: Deploy, generated sources - todo */
+
+        /* 6: Deploy generated sources, actually just copy them */
+        final MonoApplicationPath monoApplicationPath = arguments.getMonoApplicationPath();
+        if (monoApplicationPath != null) {
+            api.makeMonoServer(monoApplicationPath, arguments.getRevenjPath(), arguments.getCompilationTargetPath(), getConnectionString());
+        } else {
+            output.println(missing_mono_location_msg);
+        }
 
         return true;
     }
 
-// °º¤ø,¸¸,ø¤º°`°º¤ø, Output Helpers ,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸
+    /* °º¤ø,¸¸,ø¤º°`°º¤ø, Output Helpers ,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸ */
 
-    private void updateFiles(
-            Logger logger,
-            final List<Source> fileBodies,
-            final File outputPath) throws IOException {
+    protected boolean writeGenerateSourcesResponseToOutputPath(final GenerateSourcesResponse generateSourcesResponse, final OutputPath outputPath) {
+        if (generateSourcesResponse.generatedSuccess) {
+            final List<Source> sourceList = generateSourcesResponse.sources;
 
-        if (!outputPath.exists()) {
-            outputPath.mkdirs();
-        }
-
-        final Set<String> languagePaths = new LinkedHashSet<String>();
-        for (final Source source : fileBodies) {
-            languagePaths.add(source.path.replaceFirst("/.*", ""));
-        }
-
-        final FileLoader fileLoader = new FileLoader();
-        for (final String path : languagePaths) {
-            final String language = path.replaceFirst("/.*", "");
-            final File languagePath = new File(outputPath.getPath(), language);
-
-            if (languagePath.isDirectory()) {
-                logger.trace("Marking managed directory: " + languagePath);
-                fileLoader.addPath(outputPath.getPath(), languagePath.getPath());
+            output.println(no_successfully_generated_sources_msg + sourceList.size());
+            output.println(writing_files_to_msg + outputPath.outputPath.getAbsolutePath());
+            try {
+                IO.updateFiles(logger, generateSourcesResponse.sources, outputPath.outputPath);
+                return true;
+            } catch (IOException e) {
+                output.println(error_while_writing_sources_msg + e.getMessage());
+                logger.error(error_while_writing_sources_msg + e.getMessage());
+                return false;
             }
+        } else {
+            output.println(source_generation_failed_msg + generateSourcesResponse.authorizationErrorMessage);
+            logger.error(source_generation_failed_msg + generateSourcesResponse.authorizationErrorMessage);
+            return false;
         }
+    }
 
-        final Map<Hash, SortedSet<String>> oldHash = fileLoader
-                .getHashBodyMap();
-
-        final FileLoader newFilesLoader = new FileLoader();
-
-        for (final Source source : fileBodies) {
-            newFilesLoader.addBytes(cleanFilename(source.path),
-                    source.content);
-        }
-
-        final Map<Hash, SortedSet<String>> newHash = newFilesLoader
-                .getHashBodyMap();
-        final Map<String, PathAction> actions = HashBodyMapTool.compareHashBodyMaps(oldHash, newHash);
-        final SortedMap<String, byte[]> newFiles = newFilesLoader.getBodies();
-
-        for (final Map.Entry<String, PathAction> hashAction : actions
-                .entrySet()) {
-            final String hash = hashAction.getKey();
-            final PathAction action = hashAction.getValue();
-
-            final File source = action.source == null ? null : new File(outputPath,
-                    action.source);
-
-            final File destination = action.destination == null
-                    ? null
-                    : new File(outputPath, action.destination);
-
-            logger.debug("Performing action: " + action.action.name()
-                    + " on file " + source
-                    + (destination == null ? "" : " -> dest:" + destination));
-
-            switch (action.action) {
-                case NO_CHANGE:
-                case SKIPPED:
-                case CREATED_DIR:
-                    break;
-
-                case CREATED:
-                case MODIFIED:
-                    io.write(source, newFiles.get(hash));
-                    break;
-
-                case MOVED:
-                    try {
-                        io.move(source, destination);
-                    } catch (final IOException e) {
-                        if (source.getCanonicalPath().equalsIgnoreCase(
-                                destination.getCanonicalPath())
-                                && System.getProperty("os.name").contains(
-                                "Windows")) {
-                            logger.debug(String
-                                    .format("Could not move \"%s\" to \"%s\" (Windows is case insensitive)",
-                                            source, destination));
-                        } else {
-                            throw e;
-                        }
-                    }
-                    checkIfParentEmptyAndDelete(source, outputPath);
-                    break;
-
-                case COPY:
-                    io.copy(source, destination);
-                    break;
-
-                case DELETED_DIR:
-                case DELETED:
-                    io.delete(source);
-                    checkIfParentEmptyAndDelete(source, outputPath);
-                    break;
+    private boolean getRevenj() {
+        final RevenjPath revenjPath = arguments.getRevenjPath();
+        /* if its already present at a given location just return true */
+        if (revenjPath.revenjPath.exists()) {
+            logger.info("Revenj exists at {}", revenjPath.revenjPath);
+            return true;
+        } else {
+            if (prompt.promptContinue(String.format("Download version %s of revenj.", revenjPath.revenjPath))) {
+                final CacheRevenjResponse cacheRevenjResponse = api.cacheRevenj(arguments.getRevenjVersion(), revenjPath);
+                output.print(cacheRevenjResponse.message);
+                return cacheRevenjResponse.success;
             }
+            else
+                return false;
         }
     }
 
-    private void checkIfParentEmptyAndDelete(
-            final File source,
-            final File outputPath) {
-        final File parent = source.getParentFile();
-        if (parent.list().length == 0 && !parent.equals(outputPath)) {
-            io.delete(parent);
-            checkIfParentEmptyAndDelete(parent, outputPath);
-        }
-    }
-
-    private static String cleanFilename(final String path) {
-        if (path == null) {
-            return null;
-        }
-        if (path.startsWith("/")) {
-            return cleanFilename(path.substring(1));
-        }
-        return path.replace("//", "/");
-    }
 }
-

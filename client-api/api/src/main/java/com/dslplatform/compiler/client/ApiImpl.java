@@ -4,33 +4,50 @@ import com.dslplatform.compiler.client.api.core.HttpRequestBuilder;
 import com.dslplatform.compiler.client.api.core.HttpResponse;
 import com.dslplatform.compiler.client.api.core.HttpTransport;
 import com.dslplatform.compiler.client.api.core.UnmanagedDSL;
+import com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl;
+import com.dslplatform.compiler.client.api.core.impl.UnmanagedDSLImpl;
 import com.dslplatform.compiler.client.api.model.Migration;
+import com.dslplatform.compiler.client.params.*;
 import com.dslplatform.compiler.client.processor.*;
 import com.dslplatform.compiler.client.response.*;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class ApiImpl implements Api {
 
-    private static final String NGSdbmigrationAbsent = "relation \"-NGS-.database_migration\" does not exist";
-    private static final String version_real = "1.0.1.24037";
-    private static final String compilationMessage = "Compilation successful";
-    private static final String compileScriptWriteErrorMsg = "Unable to write script to file ";
-
+    private static final String revenjURLformat = "https://github.com/ngs-doo/revenj/releases/download/%s/http-server.zip";
     private final HttpRequestBuilder httpRequestBuilder;
     private final HttpTransport httpTransport;
     private final UnmanagedDSL unmanagedDSL;
 
     public Logger logger;
+
+    public ApiImpl() throws IOException {
+        this(new HttpRequestBuilderImpl(), HttpTransportProvider.httpTransport(), new UnmanagedDSLImpl());
+    }
 
     public ApiImpl(
             Logger logger,
@@ -111,7 +128,6 @@ public class ApiImpl implements Api {
         }
 
         return new CreateExternalProjectProcessor().process(httpResponse);
-
     }
 
     @Override
@@ -202,10 +218,11 @@ public class ApiImpl implements Api {
             httpResponse = httpTransport.sendRequest(httpRequestBuilder.updateManagedProject(token, projectID, targets,
                     packageName, migration, options, dsl));
         } catch (IOException e) {
-            return new UpdateManagedProjectResponse(false, e.getMessage(), false, null);
+            return new UpdateManagedProjectResponse(false, e.getMessage());
         }
 
-        logger.trace("Upgrade managed response {}", new String(httpResponse.body), Charsets.UTF_8);
+        if (logger.isTraceEnabled())
+            logger.trace("Upgrade managed response {}", new String(httpResponse.body), Charsets.UTF_8);
         return new UpdateManagedProjectProcessor().process(httpResponse);
     }
 
@@ -281,7 +298,7 @@ public class ApiImpl implements Api {
     }
 
     @Override
-    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
+    public GenerateSourcesResponse generateUnmanagedSources(
             String token,
             String packageName,
             Set<String> targets,
@@ -294,7 +311,7 @@ public class ApiImpl implements Api {
                             httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl));
         } catch (IOException e) {
             e.printStackTrace();
-            return new GenerateUnmanagedSourcesResponse(false, e.getMessage());
+            return new GenerateSourcesResponse(false, e.getMessage());
         }
 
         logger.trace("Response for unmanaged request: {}", new String(generateSourcesResponse.body, Charsets.UTF_8));
@@ -326,7 +343,6 @@ public class ApiImpl implements Api {
         }
 
         return new GetAllProjectsProcessor().process(httpResponse);
-
     }
 
     @Override
@@ -463,11 +479,15 @@ public class ApiImpl implements Api {
         return null;
     }
 
+    /**
+     * todo -?
+     */
+
     @Override
     public CreateUnmanagedProjectResponse createUnmanagedProject(
             String token, DataSource dataSource, String serverName, String applicationName) {
 
-        return null;
+        return null; /** todo -? */
     }
 
     @Override
@@ -482,7 +502,6 @@ public class ApiImpl implements Api {
         }
     }
 
-
     @Override
     public CreateUnmanagedServerResponse createUnmanagedServer(
             final String token,
@@ -491,16 +510,16 @@ public class ApiImpl implements Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl) {
-        final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
+        final GenerateSourcesResponse generateSourcesResponse =
                 generateUnmanagedSources(token, packageName, targets, options, dsl);
 
         final GenerateMigrationSQLResponse generateMigrationSQLResponse =
-                generateMigrationSQL(token, version_real, new HashMap<String, String>(), dsl);
+                generateMigrationSQL(token, "", new HashMap<String, String>(), dsl);
         if (!generateMigrationSQLResponse.authorized)
             return new CreateUnmanagedServerResponse(false, generateMigrationSQLResponse.authorizationErrorMessage);
 
         return new CreateUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
-                generateUnmanagedSourcesResponse.sources);
+                generateSourcesResponse.sources);
     }
 
     @Override
@@ -510,10 +529,6 @@ public class ApiImpl implements Api {
             List<Source> sources,
             File dependencies,
             File serverPath) {
-        if (dependencies == null || dependencies.isFile())
-            new IllegalArgumentException("Must provide a folder in which source build dependencies reside.");
-        if (serverPath == null || serverPath.isFile())
-            new IllegalArgumentException("Must provide a folder to deploy server to");
         final String tmpName = "tmp-" + java.util.UUID.randomUUID().toString();
         final File tempFile = new File(tmpName);
         final UpgradeUnmanagedServerAndDatabaseResponse upgradeUnmanagedServerAndDatabaseResponse =
@@ -531,6 +546,8 @@ public class ApiImpl implements Api {
             File dependencies,
             File serverPath,
             File targetOutput) {
+        if (dependencies == null || dependencies.isFile())
+            new IllegalArgumentException("Must provide a folder in which source build dependencies reside.");
         if (serverPath == null || serverPath.isFile())
             new IllegalArgumentException("Must provide a folder to deploy server to");
         if (targetOutput == null || targetOutput.isDirectory())
@@ -542,7 +559,7 @@ public class ApiImpl implements Api {
         try {
             FileUtils.deleteDirectory(tempFile);
         } catch (IOException e) {
-            // todo - log this, and everything else
+            logger.error(e.getMessage());
         }
         return upgradeUnmanagedServerAndDatabaseResponse;
     }
@@ -587,19 +604,19 @@ public class ApiImpl implements Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl) {
-        final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
+        final GenerateSourcesResponse generateSourcesResponse =
                 generateUnmanagedSources(token, packageName, targets, options, dsl);
-        if (!generateUnmanagedSourcesResponse.generationSuccessful) {
+        if (!generateSourcesResponse.generatedSuccess) {
             final String authMsg = "Source generation unsuccessful " +
-                    (generateUnmanagedSourcesResponse.authorizationErrorMessage != null
-                            ? generateUnmanagedSourcesResponse.authorizationErrorMessage
+                    (generateSourcesResponse.authorizationErrorMessage != null
+                            ? generateSourcesResponse.authorizationErrorMessage
                             : "<generate msg null>");
 
             return new UpgradeUnmanagedServerResponse(false, authMsg);
         }
         final DoesUnmanagedDSLExitsResponse doesUnmanagedDSLExitsResponse = doesUnmanagedDSLExits(dataSource);
         final Map<String, String> lastdsl;
-        String version = version_real;
+        String version = "";
         if (!doesUnmanagedDSLExitsResponse.databaseExists) {
             lastdsl = new HashMap<String, String>();
         } else {
@@ -623,7 +640,7 @@ public class ApiImpl implements Api {
             return new UpgradeUnmanagedServerResponse(false, generateMigrationSQLResponse.authorizationErrorMessage);
 
         return new UpgradeUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
-                generateUnmanagedSourcesResponse.sources);
+                generateSourcesResponse.sources);
     }
 
     @Override
@@ -631,56 +648,7 @@ public class ApiImpl implements Api {
             File sourcePath,
             File dependencies,
             File target) {
-        String runScript = makeRunScript(sourcePath, dependencies, target);
-
-        try {
-            FileUtils.write(new File("runScript"), runScript, Charsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-            new RuntimeException(compileScriptWriteErrorMsg + e.getMessage());
-        }
-
-        ProcessBuilder runScriptProc = new ProcessBuilder("sh", "runScript");
-        try {
-            logger.trace("About to run mcs script");
-            Process process = runScriptProc.start();
-            if (logger.isTraceEnabled()) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                baos.writeTo(process.getOutputStream());
-                process.waitFor();
-                logger.trace(baos.toString("UTF-8"));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new CompileCSharpServerResponse(false, e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        return new CompileCSharpServerResponse(true, compilationMessage);
-    }
-
-    private static String makeRunScript(File sourcePath,
-                                 File dependencies,
-                                 File target) {
-        StringBuilder sb = new StringBuilder("mcs -v");
-        String[] systemDependencies = {"System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing"};
-
-        final String targetOutputPath = target.getPath();
-        sb.append(" -out:").append(targetOutputPath)
-                .append(" -target:library")
-                .append(" -lib:").append(dependencies.getPath());
-        for (String systemDependency : systemDependencies)
-            addCSCompileDependency(sb, systemDependency);
-        for (File dependency : dependencies.listFiles())
-            if (dependency.getName().endsWith(".dll"))
-                addCSCompileDependency(sb, dependency.getName());
-        sb.append(" -recurse:").append(sourcePath.getAbsolutePath()).append("/*.cs");
-        return sb.toString();
-    }
-
-    private static void addCSCompileDependency(StringBuilder sb, String dependency) {
-        sb.append(" -r:").append(dependency);
+        return new CompileCSharpServerProcessor(logger, sourcePath, dependencies, target).process();
     }
 
     public String getDiff(
@@ -688,5 +656,130 @@ public class ApiImpl implements Api {
             final Map<String, String> newdsl) {
 
         return DiffProcessor.jGitDiff(olddsl, newdsl);
+    }
+
+    @Override
+    public CacheRevenjResponse cacheRevenj(
+            final RevenjVersion revenjVersion,
+            final RevenjPath revenjPath
+    ) {
+        final File cachePath = revenjPath.revenjPath;
+        final String version = revenjVersion.version;
+        final String revenjURL = String.format(revenjURLformat, version);
+        ZipInputStream zipInputStream = null;
+        cachePath.mkdirs();
+        try {
+            final URL url = new URL(revenjURL);
+            final URLConnection urlConnection = url.openConnection();
+            zipInputStream = new ZipInputStream(urlConnection.getInputStream());
+
+            while (true) {
+                final ZipEntry zipEntry = zipInputStream.getNextEntry();
+                if (zipEntry == null) break;
+                else {
+                    final File file = new File(cachePath, zipEntry.getName());
+                    if (file.exists()) {
+                        logger.warn("{} already exists skipping.", file.getAbsolutePath());
+                    } else {
+                        file.createNewFile();
+                        logger.debug("Unpacking {}.", file.getAbsolutePath());
+                        final FileOutputStream fileOutputStream = new FileOutputStream(file);
+                        try {
+                            IOUtils.copy(zipInputStream, fileOutputStream);
+                        } finally {
+                            fileOutputStream.close();
+                        }
+                    }
+                }
+            }
+            return new CacheRevenjResponse(true, String.format("Received revenj {} from {}", version, revenjURL));
+        } catch (MalformedURLException e) {
+            logger.error(e.getMessage());
+            return new CacheRevenjResponse(false, e.getMessage());
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage());
+            return new CacheRevenjResponse(false, e.getMessage());
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return new CacheRevenjResponse(false, e.getMessage());
+        } finally {
+            try {
+                zipInputStream.close();
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+        }
+    }
+
+    public boolean mingleDatabaseConnectionString(final MonoApplicationPath monoApplicationPath, final DBConnectionString dbConnectionString, final CompilationTargetPath compilationTargetPath) {
+        final File revenjConfigPath = new File(monoApplicationPath.monoApplicationPath, "bin/Revenj.Http.exe.config");
+        String connectionString = dbConnectionString.dbConnectionString;
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db;
+        try {
+            db = dbf.newDocumentBuilder();
+            Document doc = db.parse(revenjConfigPath);
+            /* find appSettings tag */
+            NodeList appSettings = doc.getElementsByTagName("appSettings").item(0).getChildNodes();
+            boolean cschange = false;
+            boolean sachange = false;
+            for (int i = 1; i < appSettings.getLength() && !(cschange && sachange); i++) {
+                Node tmpNod = appSettings.item(i);
+                if (tmpNod.hasAttributes()) {
+                    NamedNodeMap namedNodeMap = tmpNod.getAttributes();
+                    /* find key with ConnectionString value, and change value */
+                    if (!cschange && changeKeyValue(namedNodeMap, "ConnectionString", connectionString))
+                        cschange = true;
+                    /* find key with ServerAssembly value, and change its value */
+                    if (!sachange && changeKeyValue(namedNodeMap, "ServerAssembly", compilationTargetPath.compilationTargetPath.getName()))
+                        sachange = true;
+                }
+            }
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+            StreamResult result = new StreamResult(revenjConfigPath);
+            transformer.transform(source, result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean changeKeyValue(NamedNodeMap namedNodeMap, String key, String value) {
+        Node keyNode = namedNodeMap.getNamedItem("key");
+        if (keyNode.getNodeValue().equals(key)) {
+            Node valueNode = namedNodeMap.getNamedItem("value");
+            valueNode.setNodeValue(value);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean makeMonoServer(final MonoApplicationPath monoApplicationPath,
+                                  final RevenjPath revenjPath,
+                                  final CompilationTargetPath compilationTargetPath,
+                                  final DBConnectionString dbConnectionString) {
+        final File monoApplicationFile = monoApplicationPath.monoApplicationPath;
+        final File monoBin = new File(monoApplicationFile, "bin");
+        final File startSh = new File(monoApplicationFile, "start.sh");
+        if (!monoApplicationFile.exists()) monoApplicationFile.mkdir();
+        new File(monoApplicationFile, "cache").mkdir();
+        new File(monoApplicationFile, "logs").mkdir();
+
+        try {
+            final InputStream startShIS = getClass().getResourceAsStream("/start.sh");
+            IO.copyToDir(revenjPath.revenjPath, monoBin);
+            IO.copyToDir(compilationTargetPath.compilationTargetPath, monoBin);
+            mingleDatabaseConnectionString(monoApplicationPath, dbConnectionString, compilationTargetPath);
+            FileUtils.copyInputStreamToFile(startShIS, startSh);
+        } catch (IOException e) {
+            logger.error("There was an error copying files to mono location {}", e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

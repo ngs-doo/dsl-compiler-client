@@ -14,13 +14,19 @@ packageName := "namespace"
 
 targetSources := Set("Java")
 
-monoDependencyFolder    := file(System.getProperty("user.home")) / "code" / "dsl_compiler_client_user" / "revenj"
+monoDependencyFolder    := file(System.getProperty("user.home")) / "code" / "dcc-java-user" / "revenj"
 
-//api := new com.dslplatform.compiler.client.ApiImpl(new com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl(), new com.dslplatform.compiler.client.api.core.mock.HttpTransportMock(), com.dslplatform.compiler.client.api.core.mock.UnmanagedDSLMock.mock_single_integrated)
+api := new com.dslplatform.compiler.client.ApiImpl(new com.dslplatform.compiler.client.api.core.impl.HttpRequestBuilderImpl(), new com.dslplatform.compiler.client.api.core.mock.HttpTransportMock(), com.dslplatform.compiler.client.api.core.mock.UnmanagedDSLMock.mock_single_integrated)
 
 performServerDeploy := true
 
 TaskKey[Unit]("checkOut") := {
-  val output = generatedModel.value
-  assert(output.exists())
+  val startScript = monoServerLocation.value / "start.sh"
+  val monoBinGen = monoServerLocation.value / "bin" / "generatedModel.dll"
+  val monoBinExe = monoServerLocation.value / "bin" / "Revenj.Http.exe"
+  val monoBinConfig = monoServerLocation.value / "bin" / "Revenj.Http.exe.config"
+  assert(startScript.exists())
+  assert(monoBinGen.exists())
+  assert(monoBinExe.exists())
+  assert(monoBinConfig.exists())
 }

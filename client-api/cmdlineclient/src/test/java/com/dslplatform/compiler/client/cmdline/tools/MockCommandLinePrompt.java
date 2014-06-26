@@ -1,9 +1,11 @@
 package com.dslplatform.compiler.client.cmdline.tools;
 
+import com.dslplatform.compiler.client.cmdline.ActionContext;
 import com.dslplatform.compiler.client.cmdline.CommandLinePrompt;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MockCommandLinePrompt implements CommandLinePrompt {
@@ -13,6 +15,8 @@ public class MockCommandLinePrompt implements CommandLinePrompt {
     public List<String> whats;
 
     public MockCommandLinePrompt(Boolean... responses) {
+
+        whats = new LinkedList<String>();
         this.responses = Arrays.asList(responses).iterator();
     }
 
@@ -22,24 +26,26 @@ public class MockCommandLinePrompt implements CommandLinePrompt {
     }
 
     @Override
+    public ActionContext.ContinueRetryQuit promptCRQ(String what) {
+        return ActionContext.ContinueRetryQuit.Continue;
+    }
+
+    @Override
     public boolean promptRetry(String what) {
-        System.out.println(what);
+        whats.add(what);
         return responses.next();
     }
 
     @Override
     public boolean promptContinue(String what) {
-        return responses.next();
-    }
-
-    @Override
-    public boolean promptMigrationInformation(String migrationInformation, boolean isMigrationDestructive, boolean promptAnyway) {
+        whats.add(what);
         return responses.next();
     }
 
     @Override
     public char readCharacter(String message, String allowed) {
-        return 0;
+        whats.add(message);
+        return 'c';
     }
 
     @Override

@@ -10,6 +10,26 @@ public class EmptyArguments implements Arguments {
     }
 
     @Override
+    public RevenjVersion getRevenjVersion() {
+        return null;
+    }
+
+    @Override
+    public boolean isManaged() {
+        return false;
+    }
+
+    @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        return null;
+    }
+
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        return null;
+    }
+
+    @Override
     public Actions getActions() {
         return null;
     }
