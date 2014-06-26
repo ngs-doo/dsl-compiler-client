@@ -79,15 +79,15 @@ object CompilerPlugin extends sbt.Plugin {
     outputPathMapping <<= OutputPathMapping.plainMapping,
     migration := "unsafe",
     migrationOutputFile := Some(file("migration.sql")),
-    sourceOptions := Set("with-active-record"),
+    sourceOptions := Set("active-record"),
     targetSources := Set("Scala"),
     dslDirectory := baseDirectory.value / "dsl" ** "*.dsl",
     dslFiles <<= dslFilesDef,
 
-    username                  := projectConfiguration.value.get("username").getOrElse(""),
-    password                  := projectConfiguration.value.get("password").getOrElse(""),
-    dslProjectId              := projectConfiguration.value.get("project-id").getOrElse(""),
-    packageName               := projectConfiguration.value.get("dsl.package-name").getOrElse("model"),
+    username                  := projectConfiguration.value.getOrElse("username", ""),
+    password                  := projectConfiguration.value.getOrElse("password", ""),
+    dslProjectId              := projectConfiguration.value.getOrElse("project-id", ""),
+    packageName               := projectConfiguration.value.getOrElse("dsl.package-name", "model"),
     token                     := com.dslplatform.compiler.client.api.config.Tokenizer.basicHeader(username.value, password.value),
 
     monoTempFolder            := file("mono_src_tmp"),
@@ -114,7 +114,7 @@ object CompilerPlugin extends sbt.Plugin {
     performServerDeploy       := false
   )
 
-  private def dslFilesDef(): Def.Initialize[Task[Map[String, String]]] = Def.task {
+  private def dslFilesDef: Def.Initialize[Task[Map[String, String]]] = Def.task {
     (dslDirectory in Compile).value.get.map {
       file => file.name -> IO.read(file, Charsets.UTF_8)
     }.toMap
@@ -366,7 +366,7 @@ object CompilerPlugin extends sbt.Plugin {
 
     val csOutputMapping: Def.Initialize[OutputPathMappingType] = Def.setting {
       val csParc:  OutputPathMappingType = {
-        case Src(language, path, content) if (language.toLowerCase == "csharpserver") =>
+        case Src(language, path, content) if language.toLowerCase == "csharpserver" =>
           (monoTempFolder.value / path, content)
       }
       csParc orElse outputPathMapping.value

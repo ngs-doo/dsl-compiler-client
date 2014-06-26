@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.response.*;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.sql.DataSource;
@@ -28,7 +28,7 @@ public class ApiImplTest extends MockData {
 
     final String auth = Tokenizer.basicHeader(validUser, validPassword);
 
-    @BeforeClass
+    @Before
     public void setUp() throws IOException {
         dataSource = null;
         //api = new ApiImpl(new HttpRequestBuilderImpl(), new HttpTransportMock(), UnmanagedDSLMock.mock_single_integrated);
@@ -102,7 +102,7 @@ public class ApiImplTest extends MockData {
     @Test
     public void inspectManagedProjectChangesTest() {
         final Map<String, String> dsl = new LinkedHashMap<String, String>() {{
-            put("only", "module A { root B; root C{ B b;}}");
+            put("only", "module A { root B; root C{ B *b;}}");
         }};
 
         final InspectManagedProjectChangesResponse response = api.inspectManagedProjectChanges(auth, UUID.fromString(validId), dsl);
@@ -157,10 +157,10 @@ public class ApiImplTest extends MockData {
 
         assertNull(ump.authorizationErrorMessage);
 
-        Source [] sources = ump.sources.toArray(new Source[ump.sources.size()]);
+        Source[] sources = ump.sources.toArray(new Source[ump.sources.size()]);
 
         assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/B.java")));
-        assertThat(sources, hasItemInArray(containsSource("java","/namespace/A/C.java")));
+        assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/C.java")));
         assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/A/B.scala")));
     }
 
@@ -183,7 +183,7 @@ public class ApiImplTest extends MockData {
             add("Scala");
         }};
         final Set<String> options = new HashSet<String>() {{
-            add("with-active-record");
+            add("active-record");
         }};
 
         final String packageName = "namespace";
@@ -191,7 +191,7 @@ public class ApiImplTest extends MockData {
         final GenerateSourcesResponse gsr =
                 api.generateSources(auth, UUID.fromString(validId), targets, packageName, options);
 
-        Source [] sources = gsr.sources.toArray(new Source[gsr.sources.size()]);
+        Source[] sources = gsr.sources.toArray(new Source[gsr.sources.size()]);
 
         assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/A/B.scala")));
         assertThat(sources, hasItemInArray(containsSource("java", "/namespace/A/B.java")));
@@ -212,12 +212,12 @@ public class ApiImplTest extends MockData {
             put("2.dsl", MockData.test_migration_sql_simple_2);
         }};
 
-        final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
+        final GenerateSourcesResponse GenerateSourcesResponse =
                 api.generateUnmanagedSources(auth, packageName, targets, options, dsl);
 
-        Source [] sources = generateUnmanagedSourcesResponse.sources.toArray(new Source[generateUnmanagedSourcesResponse.sources.size()]);
+        Source[] sources = GenerateSourcesResponse.sources.toArray(new Source[GenerateSourcesResponse.sources.size()]);
 
-        assertTrue(generateUnmanagedSourcesResponse.authorized);
+        assertTrue(GenerateSourcesResponse.authorized);
         assertThat(sources, hasItemInArray(containsSource("scala", "/namespace/myModule/IBRepository.scala")));
     }
 
@@ -272,7 +272,8 @@ public class ApiImplTest extends MockData {
         assertNull(response.authorizationErrorMessage);
     }
 
-    @Test public void doesUnmanagedDSLExitsTest() {
+    @Test
+    public void doesUnmanagedDSLExitsTest() {
         final DoesUnmanagedDSLExitsResponse response = api.doesUnmanagedDSLExits(dataSource);
         assertTrue(response.databaseConnectionSuccessful);
         assertNull(response.databaseConnectionErrorMessage);
@@ -344,9 +345,9 @@ public class ApiImplTest extends MockData {
                 "}");
         newdsl.put(
                 "model.dsl", "module Foo {\n" +
-                "\taggregate Bar { String baz; }\n" +
-                "\taggregate Foo { String bre; }\n" +
-                "}");
+                        "\taggregate Bar { String baz; }\n" +
+                        "\taggregate Foo { String bre; }\n" +
+                        "}");
         newdsl.put("model2.dsl", "");
         String diff = api.getDiff(olddsl, newdsl);
         logger.info(diff);

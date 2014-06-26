@@ -13,9 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -111,7 +109,6 @@ public class ApiImpl implements Api {
         }
 
         return new CreateExternalProjectProcessor().process(httpResponse);
-
     }
 
     @Override
@@ -202,10 +199,11 @@ public class ApiImpl implements Api {
             httpResponse = httpTransport.sendRequest(httpRequestBuilder.updateManagedProject(token, projectID, targets,
                     packageName, migration, options, dsl));
         } catch (IOException e) {
-            return new UpdateManagedProjectResponse(false, e.getMessage(), false, null);
+            return new UpdateManagedProjectResponse(false, e.getMessage());
         }
 
-        logger.trace("Upgrade managed response {}", new String(httpResponse.body), Charsets.UTF_8);
+        if (logger.isTraceEnabled())
+            logger.trace("Upgrade managed response {}", new String(httpResponse.body), Charsets.UTF_8);
         return new UpdateManagedProjectProcessor().process(httpResponse);
     }
 
@@ -281,7 +279,7 @@ public class ApiImpl implements Api {
     }
 
     @Override
-    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
+    public GenerateSourcesResponse generateUnmanagedSources(
             String token,
             String packageName,
             Set<String> targets,
@@ -294,7 +292,7 @@ public class ApiImpl implements Api {
                             httpRequestBuilder.generateUnmanagedSources(token, packageName, targets, options, dsl));
         } catch (IOException e) {
             e.printStackTrace();
-            return new GenerateUnmanagedSourcesResponse(false, e.getMessage());
+            return new GenerateSourcesResponse(false, e.getMessage());
         }
 
         logger.trace("Response for unmanaged request: {}", new String(generateSourcesResponse.body, Charsets.UTF_8));
@@ -491,7 +489,7 @@ public class ApiImpl implements Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl) {
-        final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
+        final GenerateSourcesResponse GenerateSourcesResponse =
                 generateUnmanagedSources(token, packageName, targets, options, dsl);
 
         final GenerateMigrationSQLResponse generateMigrationSQLResponse =
@@ -500,7 +498,7 @@ public class ApiImpl implements Api {
             return new CreateUnmanagedServerResponse(false, generateMigrationSQLResponse.authorizationErrorMessage);
 
         return new CreateUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
-                generateUnmanagedSourcesResponse.sources);
+                GenerateSourcesResponse.sources);
     }
 
     @Override
@@ -542,7 +540,7 @@ public class ApiImpl implements Api {
         try {
             FileUtils.deleteDirectory(tempFile);
         } catch (IOException e) {
-            // todo - log this, and everything else
+            logger.error(e.getMessage());
         }
         return upgradeUnmanagedServerAndDatabaseResponse;
     }
@@ -587,12 +585,12 @@ public class ApiImpl implements Api {
             final Set<String> targets,
             final Set<String> options,
             final Map<String, String> dsl) {
-        final GenerateUnmanagedSourcesResponse generateUnmanagedSourcesResponse =
+        final GenerateSourcesResponse GenerateSourcesResponse =
                 generateUnmanagedSources(token, packageName, targets, options, dsl);
-        if (!generateUnmanagedSourcesResponse.generationSuccessful) {
+        if (!GenerateSourcesResponse.generatedSuccess) {
             final String authMsg = "Source generation unsuccessful " +
-                    (generateUnmanagedSourcesResponse.authorizationErrorMessage != null
-                            ? generateUnmanagedSourcesResponse.authorizationErrorMessage
+                    (GenerateSourcesResponse.authorizationErrorMessage != null
+                            ? GenerateSourcesResponse.authorizationErrorMessage
                             : "<generate msg null>");
 
             return new UpgradeUnmanagedServerResponse(false, authMsg);
@@ -623,7 +621,7 @@ public class ApiImpl implements Api {
             return new UpgradeUnmanagedServerResponse(false, generateMigrationSQLResponse.authorizationErrorMessage);
 
         return new UpgradeUnmanagedServerResponse(true, null, generateMigrationSQLResponse.migration,
-                generateUnmanagedSourcesResponse.sources);
+                GenerateSourcesResponse.sources);
     }
 
     @Override
@@ -645,23 +643,21 @@ public class ApiImpl implements Api {
             logger.trace("About to run mcs script");
             Process process = runScriptProc.start();
             if (logger.isTraceEnabled()) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                baos.writeTo(process.getOutputStream());
-                process.waitFor();
-                logger.trace(baos.toString("UTF-8"));
+                final InputStream inputStream = process.getInputStream();
+                final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                final BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String line;
+                while ((line = bufferedReader.readLine()) != null) logger.trace(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
             return new CompileCSharpServerResponse(false, e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
-
         return new CompileCSharpServerResponse(true, compilationMessage);
     }
 
     private static String makeRunScript(File sourcePath,
-                                 File dependencies,
+                                 File revenj,
                                  File target) {
         StringBuilder sb = new StringBuilder("mcs -v");
         String[] systemDependencies = {"System.ComponentModel.Composition", "System", "System.Data", "System.Xml", "System.Runtime.Serialization", "System.Configuration", "System.Drawing"};
@@ -669,10 +665,10 @@ public class ApiImpl implements Api {
         final String targetOutputPath = target.getPath();
         sb.append(" -out:").append(targetOutputPath)
                 .append(" -target:library")
-                .append(" -lib:").append(dependencies.getPath());
+                .append(" -lib:").append(revenj.getPath());
         for (String systemDependency : systemDependencies)
             addCSCompileDependency(sb, systemDependency);
-        for (File dependency : dependencies.listFiles())
+        for (File dependency : revenj.listFiles()) /* todo - dereference may cause NPE, unable to test. */
             if (dependency.getName().endsWith(".dll"))
                 addCSCompileDependency(sb, dependency.getName());
         sb.append(" -recurse:").append(sourcePath.getAbsolutePath()).append("/*.cs");

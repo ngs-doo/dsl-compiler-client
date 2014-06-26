@@ -1,29 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
+import com.dslplatform.compiler.client.params.*;
 import org.slf4j.Logger;
-
-import com.dslplatform.compiler.client.params.Action;
-import com.dslplatform.compiler.client.params.Actions;
-import com.dslplatform.compiler.client.params.CachePath;
-import com.dslplatform.compiler.client.params.DBAuth;
-import com.dslplatform.compiler.client.params.DBConnectionString;
-import com.dslplatform.compiler.client.params.DBDatabaseName;
-import com.dslplatform.compiler.client.params.DBHost;
-import com.dslplatform.compiler.client.params.DBPassword;
-import com.dslplatform.compiler.client.params.DBPort;
-import com.dslplatform.compiler.client.params.DBUsername;
-import com.dslplatform.compiler.client.params.DSLPath;
-import com.dslplatform.compiler.client.params.LoggingLevel;
-import com.dslplatform.compiler.client.params.MigrationFilePath;
-import com.dslplatform.compiler.client.params.OutputPath;
-import com.dslplatform.compiler.client.params.PackageName;
-import com.dslplatform.compiler.client.params.Password;
-import com.dslplatform.compiler.client.params.ProjectID;
-import com.dslplatform.compiler.client.params.ProjectName;
-import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
-import com.dslplatform.compiler.client.params.RevenjPath;
-import com.dslplatform.compiler.client.params.Targets;
-import com.dslplatform.compiler.client.params.Username;
 
 public class CachingArgumentsProxy implements Arguments {
     private final Arguments underlying;
@@ -58,6 +36,22 @@ public class CachingArgumentsProxy implements Arguments {
         return dslPath == null
                 ? dslPath = underlying.getDSLPath()
                 : dslPath;
+    }
+
+    private MonoApplicationPath monoApplicationPath;
+    @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        return monoApplicationPath == null
+                ? monoApplicationPath = underlying.getMonoApplicationPath()
+                : monoApplicationPath;
+    }
+
+    private CompilationTargetPath compilationTargetPath;
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        return compilationTargetPath == null
+                ? compilationTargetPath = underlying.getCompilationTargetPath()
+                : compilationTargetPath;
     }
 
     private Password password;
@@ -262,6 +256,15 @@ public class CachingArgumentsProxy implements Arguments {
         return skipDiff == null
                 ? skipDiff = underlying.isSkipDiff()
                 : skipDiff;
+    }
+
+    private Boolean managed;
+
+    @Override
+    public boolean isManaged() {
+        return managed == null
+                ? managed = underlying.isManaged()
+                : managed;
     }
 
     /**
