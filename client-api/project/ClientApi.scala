@@ -42,7 +42,7 @@ object ClientApi extends Build with Default {
       artifact in (Compile, assembly) ~= (_.copy(`classifier` = Some("assembly")))
       , test in assembly := {}
       , mainClass in assembly := Some("com.dslplatform.compiler.client.cmdline.Main")
-      , jarName   in assembly := "dsl-clc.jar"
+      , jarName   in assembly := s"dsl-clc-${System.currentTimeMillis() / 100000}.jar"
       , test      in assembly := {}
     )
 

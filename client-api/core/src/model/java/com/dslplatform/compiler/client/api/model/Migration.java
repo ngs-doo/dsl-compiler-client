@@ -16,7 +16,7 @@ public class Migration {
         this.dsls = dsls;
     }
 
-    public Migration(){
+    public Migration() {
         this.ordinal = 0;
         this.version = "";
         this.dsls = null;

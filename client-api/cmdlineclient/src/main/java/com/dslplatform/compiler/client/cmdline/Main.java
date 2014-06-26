@@ -8,7 +8,6 @@ import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
 import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
 import com.dslplatform.compiler.client.io.PathExpander;
 import com.dslplatform.compiler.client.params.Action;
-import com.dslplatform.compiler.client.params.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +15,7 @@ import java.io.IOException;
 
 public class Main {
 
-    public static void main(String ... argv) throws IOException {
+    public static void main(String... argv) throws IOException {
         final Logger logger = LoggerFactory.getLogger("dsl-clc");
 
         final PropertyLoader propertyLoader = new PropertyLoader(logger,
@@ -26,26 +25,27 @@ public class Main {
                 logger,
                 new ArgumentsValidator(logger,
                         new ArgumentsReader(logger, propertyLoader).readArguments(argv)));
-        Actions actions = arguments.getActions();
-
+        final CLCAction clcAction = new ActionDefinition(logger, arguments);
         //System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", arguments.getLoggingLevel().level);
-        for (Action action : actions.getActionSet()) {
-            logger.trace("Performing action " + action.actionKey);
-            CLCAction clcAction = new ActionDefinition(logger, arguments);
+        processArguments(clcAction, arguments);
+    }
+
+    public static void processArguments(CLCAction clcAction, Arguments arguments) throws IOException {
+        for (Action action : arguments.getActions().getActionSet()) {
             performAction(clcAction, action);
         }
     }
 
-    public static void performAction(CLCAction clcAction, Action action) throws IOException {
+    public static void performAction(final CLCAction clcAction, final Action action) throws IOException {
         switch (action) {
             case UPDATE:
-                /* todo - managed action */
+                clcAction.upgrade();
                 break;
             case GET_CHANGES:
                 clcAction.getChanges();
                 break;
             case LAST_DSL:
-                /* todo - missing use case */
+                clcAction.lastDSL();
                 break;
             case CONFIG:
                 /* todo - managed action */
@@ -54,7 +54,7 @@ public class Main {
                 clcAction.parseDSL();
                 break;
             case GENERATE_SOURCES:
-                /* todo - managed action */
+                clcAction.generateSources();
                 break;
             case UNMANAGED_CS_SERVER:
                 clcAction.deployUnmanagedServer();

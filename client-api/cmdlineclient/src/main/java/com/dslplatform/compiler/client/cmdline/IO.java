@@ -15,6 +15,10 @@ public interface IO {
 
     public void copy(File fromFile, File toFile) throws IOException;
 
+    public void copyToDir(File fromFile, File toFile) throws IOException;
+
+    public void mkdirs(File dir) throws IOException;
+
     public void delete(File fileToDelete);
 
     public DSL readDSL(File from) throws IOException;

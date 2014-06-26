@@ -1,73 +1,21 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.ALLOW_UNSAFE_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.PACKAGE_NAME_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.SKIP_DIFF_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.TARGET_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_ACTIVE_RECORD_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_HELPER_METHODS_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JACKSON_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.WITH_JAVA_BEANS_DEFAULT;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_DATABASE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.REVENJ_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_ACTIVE_RECORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_HELPER_METHODS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JACKSON_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JAVA_BEANS_KEY;
+import com.dslplatform.compiler.client.params.*;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-
-import com.dslplatform.compiler.client.params.Action;
-import com.dslplatform.compiler.client.params.Actions;
-import com.dslplatform.compiler.client.params.CachePath;
-import com.dslplatform.compiler.client.params.DBAuth;
-import com.dslplatform.compiler.client.params.DBConnectionString;
-import com.dslplatform.compiler.client.params.DBDatabaseName;
-import com.dslplatform.compiler.client.params.DBHost;
-import com.dslplatform.compiler.client.params.DBPassword;
-import com.dslplatform.compiler.client.params.DBPort;
-import com.dslplatform.compiler.client.params.DBUsername;
-import com.dslplatform.compiler.client.params.DSLPath;
-import com.dslplatform.compiler.client.params.LoggingLevel;
-import com.dslplatform.compiler.client.params.MigrationFilePath;
-import com.dslplatform.compiler.client.params.OutputPath;
-import com.dslplatform.compiler.client.params.PackageName;
-import com.dslplatform.compiler.client.params.Password;
-import com.dslplatform.compiler.client.params.ProjectID;
-import com.dslplatform.compiler.client.params.ProjectName;
-import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
-import com.dslplatform.compiler.client.params.RevenjPath;
-import com.dslplatform.compiler.client.params.Target;
-import com.dslplatform.compiler.client.params.Targets;
-import com.dslplatform.compiler.client.params.Username;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamDefaults.*;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
 
 public class ArgumentsValidator implements Arguments {
-    private final Logger logger;
+
+    final String defaultCompilationTarget = "generatedModel.dll";
+
+    protected final Logger logger;
     private final Properties properties;
 
     public ArgumentsValidator(
@@ -106,6 +54,28 @@ public class ArgumentsValidator implements Arguments {
         if (migrationFilePath == null) throw new IllegalArgumentException("Migration file path was not defined!");
         final MigrationFilePath result = new MigrationFilePath(new File(migrationFilePath));
         logger.debug("Retrieved MigrationFilePath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        final String MonoApplicationPath = properties.getProperty(MONO_APPLICATION_KEY.paramKey);
+        logger.trace("Validating MonoApplicationPath [{}] ...", MonoApplicationPath);
+        if (MonoApplicationPath == null) return null;
+        final MonoApplicationPath result = new MonoApplicationPath(new File(MonoApplicationPath));
+        logger.debug("Retrieved MonoApplicationPath from the properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        String CompilationTargetPath = properties.getProperty(COMPILATION_TARGET_KEY.paramKey);
+        if (CompilationTargetPath == null) {
+            logger.debug("CompilationTargetPath was not defined defaulting to {}", defaultCompilationTarget);
+            CompilationTargetPath = defaultCompilationTarget;
+        }
+        final CompilationTargetPath result = new CompilationTargetPath(new File(CompilationTargetPath));
+        logger.debug("Retrieved CompilationTargetPath from the properties [{}]", result);
         return result;
     }
 
@@ -419,6 +389,18 @@ public class ArgumentsValidator implements Arguments {
         }
         final boolean result = booleanValue(skipDiff);
         logger.debug("Retrieved SkipDiff from properties [{}]", result);
+        return result;
+    }
+
+    @Override
+    public boolean isManaged() {
+        String managed = properties.getProperty(MANAGED_KEY.paramKey);
+        if (managed == null) {
+            managed = MANAGED_DEFAULT.defaultValue;
+            logger.trace("Managed was not defined, defaulting to [{}]", managed);
+        }
+        final boolean result = booleanValue(managed);
+        logger.debug("Retrieved Managed from properties [{}]", result);
         return result;
     }
 

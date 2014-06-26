@@ -1,0 +1,10 @@
+logging-level=DEBUG
+dsl-path=~/knuckles/workspace/dslPath
+output-path=src/main
+db-username=aUsername
+db-password=anPassword
+db-host=localhost
+db-port=5432
+db-database-name=dbname
+db-connection-string=dbconnstring
+actions=generate-sources

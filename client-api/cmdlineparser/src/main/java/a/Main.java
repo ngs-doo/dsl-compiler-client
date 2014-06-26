@@ -16,7 +16,7 @@ import com.dslplatform.compiler.client.cmdline.parser.CachingArgumentsProxy;
 import com.dslplatform.compiler.client.io.PathExpander;
 
 public class Main {
-    public static void main(final String[] args) throws IOException {
+    private static void main(final String[] args) throws IOException {
 
         // TODO: generate java android
         // generate-migration-sql ...
@@ -27,7 +27,7 @@ public class Main {
         final String[] argses = (
                 "-i|kekec|-ibekec|-i|tukac|-ipero|--project-id=pero|--project-id|pero2|--project-id=x|--project-id=|y|-iqwe|--project-id=1-2-3-4-5|"
                 + "-uu|"
-                + "--with-active-record|--with-active-record=yes|"
+                + "--active-record|--active-record=yes|"
                 + "-f~/code/ngs/dsl-compiler-client/client-api/cmdlineparser/src/test/resources/example.props|"
                 + "-tjava client,java,scala-server|"
                 + "--project-name|KiklopZdenski|"

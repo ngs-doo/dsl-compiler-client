@@ -31,9 +31,6 @@ applyMigrations                         (final Map<String, Object> databaseConne
 inspectUnmanagedProjectChanges          (final Map<String, Object> databaseConnection,  final String version, final Map<String, String> dsl);
 createUnmanagedProject                  (final String token, final String serverName, final String applicationName, final Map<String, Object> databaseConnection);
 
-
-
-
 parseDsl                      PUT("Alpha.svc/parse", dsl)
 renameProject                 POST("Domain.svc/submit/Client.RenameProject", event)
 registerUser                  POST("Domain.svc/submit/Client.Register", event)
@@ -55,5 +52,3 @@ templateGet                   GET("template/" + templateName);
 templateCreate                POST("Domain.svc/submit/Client.UploadTemplate", event);
 templateListAll               GET("templates/" + projectID.toString());
 templateDelete                POST("Domain.svc/submit/Client.DeleteTemplate", event);
-
-

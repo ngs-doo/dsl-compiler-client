@@ -39,6 +39,12 @@ public class ClcIO implements IO {
     }
 
     @Override
+    public void copyToDir(File fromFile, File toFile) throws IOException {
+        if (fromFile.isDirectory()) FileUtils.copyDirectory(fromFile, toFile);
+        else FileUtils.copyFile(fromFile, new File(toFile, fromFile.getName()));
+    }
+
+    @Override
     public void delete(File fileToDelete) {
         FileUtils.deleteQuietly(fileToDelete);
     }
@@ -46,5 +52,10 @@ public class ClcIO implements IO {
     @Override
     public DSL readDSL(File from) throws IOException {
         return new DSL(new DSLLoader(logger, Charsets.UTF_8).addPath(from.getAbsolutePath()).getDSL());
+    }
+
+    @Override
+    public void mkdirs(File dir) throws IOException {
+        dir.mkdirs();
     }
 }
