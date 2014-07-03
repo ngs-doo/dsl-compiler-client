@@ -19,7 +19,7 @@ public class GetConfigTransportTest extends HttpTransportImplTest {
                 add("Scala");
             }};
             final Set<String> options = new HashSet<String>() {{
-                add("with-active-record");
+                add("active-record");
             }};
             final String packageName = "namespace";
             getConfigRequest = httpRequestBuilder.getConfig(auth, UUID.fromString(validId), targets, packageName, options);

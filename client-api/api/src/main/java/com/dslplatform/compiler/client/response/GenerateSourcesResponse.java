@@ -8,6 +8,12 @@ public class GenerateSourcesResponse extends AuthorizationResponse {
 
     public final boolean generatedSuccess;
 
+    public GenerateSourcesResponse(boolean authorized, String authorizationErrorMessage) {
+        super(authorized, authorizationErrorMessage);
+        sources = null;
+        generatedSuccess = false;
+    }
+
     public GenerateSourcesResponse(
             boolean authorized,
             String authorizationErrorMessage,

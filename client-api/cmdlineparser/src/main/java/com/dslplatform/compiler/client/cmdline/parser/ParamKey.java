@@ -24,17 +24,20 @@ public enum ParamKey {
     PASSWORD_KEY("password"),
     TARGET_KEY("target"),
     OUTPUT_PATH_KEY("output-path"),
+    MONO_APPLICATION_KEY("mono"),
+    COMPILATION_TARGET_KEY("compilation-target"),
     DSL_PATH_KEY("dsl-path"),
     CACHE_PATH_KEY("cache-path"),
     LOGGING_LEVEL_KEY("logging-level"),
 
-    WITH_ACTIVE_RECORD_KEY("with-active-record"),
+    WITH_ACTIVE_RECORD_KEY("active-record"),
     WITH_JAVA_BEANS_KEY("with-java-beans"),
     WITH_JACKSON_KEY("with-jackson"),
     WITH_HELPER_METHODS_KEY("with-helper-methods"),
 
     SKIP_DIFF_KEY("skip-diff"),
-    ALLOW_UNSAFE_KEY("allow-unsafe");
+    ALLOW_UNSAFE_KEY("allow-unsafe"),
+    MANAGED_KEY("managed");
 
     // TODO:
 //  skipdiff

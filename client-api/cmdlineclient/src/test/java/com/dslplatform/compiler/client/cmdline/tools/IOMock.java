@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 
-public class IOMock implements IO {
+public class IOMock implements IO { /* todo - Probably useless and too complicated. */
 
     public List<MockedIO> stack;
 
@@ -39,12 +39,16 @@ public class IOMock implements IO {
     }
 
     @Override
-    public void delete(File fileToDelete) {
-        stack.add(mockedIO(MockedAction.Delete, fileToDelete));
+    public void copyToDir(File fromFile, File toFile) throws IOException {
+        stack.add(mockedIO(MockedAction.Copy, fromFile, toFile));
     }
 
-    public static enum MockedAction {
-        Copy, Move, Delete, Write
+    @Override
+    public void mkdirs(File dir) throws IOException { /* no need here for this one. */ }
+
+    @Override
+    public void delete(File fileToDelete) {
+        stack.add(mockedIO(MockedAction.Delete, fileToDelete));
     }
 
     @Override
@@ -74,7 +78,6 @@ public class IOMock implements IO {
         return false;
     }
 
-
     public static MockedIO mockedIO(MockedAction mockedAction) {
         return new MockedIO(mockedAction, null, null, null);
     }
@@ -89,6 +92,10 @@ public class IOMock implements IO {
 
     public static MockedIO mockedIO(MockedAction mockedAction, File from, byte[] content) {
         return new MockedIO(mockedAction, from, null, content);
+    }
+
+    public static enum MockedAction {
+        Copy, Move, Delete, Write
     }
 
     public static class MockedIO {

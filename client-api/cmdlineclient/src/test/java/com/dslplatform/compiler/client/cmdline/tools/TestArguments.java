@@ -4,15 +4,22 @@ import com.dslplatform.compiler.client.api.config.PropertyLoader;
 
 import com.dslplatform.compiler.client.cmdline.parser.Arguments;
 import com.dslplatform.compiler.client.cmdline.parser.ArgumentsValidator;
-import com.dslplatform.compiler.client.cmdline.tools.EmptyArguments;
 import com.dslplatform.compiler.client.params.*;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Random;
 
 public class TestArguments extends ArgumentsValidator {
 
     private final static String livePropsPath = "~/.config/dsl-compiler-client/dsl-clc-test.props";
+
+    private final File tempBase = new File("/tmp/dcc-test");
+    private final File tempFile = new File(tempBase, "" + new Random().nextInt(111111));
+    private final File testRevenjFile = new File(tempBase, "testrevenj");
 
     private final Arguments liveArguments;
 
@@ -22,19 +29,64 @@ public class TestArguments extends ArgumentsValidator {
         try {
             tempArgs = new ArgumentsValidator(logger, new PropertyLoader(logger).read(livePropsPath));
         } catch (IOException ioe) {
+            logger.error("There were some troubles reading props from {}, so are now testing with empty props instead, some things will surely fail!", livePropsPath);
             tempArgs = new EmptyArguments();
         }
         liveArguments = tempArgs;
     }
 
     @Override
+    public OutputPath getOutputPath() {
+        return new OutputPath(new File(tempFile, cleanPath(super.getOutputPath().outputPath.getPath())));
+    }
+
+    @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        if (super.getMonoApplicationPath() == null ) return null;
+        else return new MonoApplicationPath(new File(tempFile, cleanPath(super.getMonoApplicationPath().monoApplicationPath.getPath())));
+    }
+
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        return new CompilationTargetPath(new File(tempFile, cleanPath(super.getCompilationTargetPath().compilationTargetPath.getPath())));
+    }
+
+    @Override
+    public RevenjPath getRevenjPath() {
+        if (!testRevenjFile.exists()) {
+            try {
+            /* todo - use server.zip from dsl-platform.com, remove revenj the from test resources. */
+                File revenjFile = new File(getClass().getResource("/revenj").toURI());
+                FileUtils.copyDirectory(revenjFile, testRevenjFile);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return new RevenjPath(testRevenjFile);
+    }
+
+    public MigrationFilePath getMigrationFilePath() {
+        return new MigrationFilePath(new File(tempFile, cleanPath(super.getMigrationFilePath().migrationFilePath.getPath())));
+    }
+
+    @Override
     public Username getUsername() {
-        return (liveArguments.getUsername() == null) ?  super.getUsername() : liveArguments.getUsername();
+        try {
+            return liveArguments.getUsername();
+        } catch (IllegalArgumentException e) {
+            return super.getUsername();
+        }
     }
 
     @Override
     public ProjectID getProjectID() {
-        return (liveArguments.getProjectID() == null) ? super.getProjectID() : liveArguments.getProjectID();
+        try {
+            return liveArguments.getProjectID();
+        } catch (IllegalArgumentException e) {
+            return super.getProjectID();
+        }
     }
 
     @Override
@@ -49,7 +101,11 @@ public class TestArguments extends ArgumentsValidator {
 
     @Override
     public Password getPassword() {
-        return (liveArguments.getPassword() == null) ? super.getPassword() : liveArguments.getPassword();
+        try {
+            return liveArguments.getPassword();
+        } catch (IllegalArgumentException e) {
+            return super.getPassword();
+        }
     }
 
     @Override
@@ -80,5 +136,13 @@ public class TestArguments extends ArgumentsValidator {
     @Override
     public DBConnectionString getDBConnectionString() {
         return (liveArguments.getDBConnectionString() == null) ? super.getDBConnectionString() : liveArguments.getDBConnectionString();
+    }
+
+    private String cleanPath(String file) {
+        if (file.startsWith("~")) {
+            return file.replaceFirst("~", System.getProperty("user.home"));
+        } else {
+            return file;
+        }
     }
 }

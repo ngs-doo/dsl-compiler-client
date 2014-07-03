@@ -29,8 +29,8 @@ public class GenerateMigrationSQLTest {
         TestingOutput output = new TestingOutput();
         CLCAction action = new ActionDefinition(api, logger, output, arguments, clcp, io);
 
-        action.sqlMigration();
-        Assert.assertTrue("Migration file was not written to test output!",
+        Main.processArguments(action, arguments);
+        Assert.assertTrue("Migration file was not written to the test output!",
                 io.contains(IOMock.MockedAction.Write, arguments.getMigrationFilePath().migrationFilePath));
     }
 }

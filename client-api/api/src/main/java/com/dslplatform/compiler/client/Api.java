@@ -129,7 +129,7 @@ public interface Api {
     /**
      * Retrieves the client source files for an unmanaged project
      */
-    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
+    public GenerateSourcesResponse generateUnmanagedSources(
             final String token,
             final String packageName,
             final Set<String> targets,
