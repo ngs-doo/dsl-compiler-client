@@ -12,7 +12,8 @@ public enum ParamDefaults {
     WITH_HELPER_METHODS_DEFAULT(true),
 
     SKIP_DIFF_DEFAULT(false),
-    ALLOW_UNSAFE_DEFAULT(true);
+    ALLOW_UNSAFE_DEFAULT(false),
+    MANAGED_DEFAULT(false);
 
     public final String defaultValue;
 

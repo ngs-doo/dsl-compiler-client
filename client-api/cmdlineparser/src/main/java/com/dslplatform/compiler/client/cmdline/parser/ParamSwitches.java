@@ -1,30 +1,6 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ALLOW_UNSAFE_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.CACHE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_CONNECTION_STRING_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_DATABASE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_HOST_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_PORT_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DB_USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.DSL_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.LOGGING_LEVEL_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.MIGRATION_FILE_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.OUTPUT_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PACKAGE_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PASSWORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_ID_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_NAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.PROJECT_PROPERTIES_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.REVENJ_PATH_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.SKIP_DIFF_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.TARGET_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.USERNAME_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_ACTIVE_RECORD_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_HELPER_METHODS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JACKSON_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.WITH_JAVA_BEANS_KEY;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.*;
 
 public enum ParamSwitches {
     END_OF_PARAMS("--"),
@@ -42,6 +18,9 @@ public enum ParamSwitches {
 
     MIGRATION_FILE_PATH_SWITCHES(MIGRATION_FILE_PATH_KEY),
     REVENJ_PATH_SWITCHES(REVENJ_PATH_KEY),
+
+    COMPILATION_TARGET_PATH_SWITCH(COMPILATION_TARGET_KEY),
+    MONO_APPLICATION_PATH_SWITCH(MONO_APPLICATION_KEY),
 
     /* Single property value */
     USERNAME_SWITCHES(USERNAME_KEY, "-u", "--" + USERNAME_KEY),
@@ -62,7 +41,8 @@ public enum ParamSwitches {
     WITH_HELPER_METHODS_SWITCHES(WITH_HELPER_METHODS_KEY),
 
     SKIP_DIFF_SWITCHES(SKIP_DIFF_KEY),
-    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY);
+    ALLOW_UNSAFE_SWITCHES(ALLOW_UNSAFE_KEY),
+    MANAGED_SWITCH(MANAGED_KEY);
 
     private final ParamKey paramKey;
     private final String[] switches;

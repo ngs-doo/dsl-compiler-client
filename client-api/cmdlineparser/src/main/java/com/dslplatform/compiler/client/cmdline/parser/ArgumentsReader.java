@@ -1,32 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
 import static com.dslplatform.compiler.client.cmdline.parser.ParamKey.ACTIONS_KEY;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.ALLOW_UNSAFE_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.CACHE_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_CONNECTION_STRING_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_DATABASE_NAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_HOST_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_PASSWORD_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_PORT_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DB_USERNAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.DSL_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.END_OF_PARAMS;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.LOGGING_LEVEL_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.MIGRATION_FILE_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.OUTPUT_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PACKAGE_NAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PASSWORD_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_ID_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_NAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.PROJECT_PROPERTIES_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.REVENJ_PATH_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.SKIP_DIFF_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.TARGET_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.USERNAME_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_ACTIVE_RECORD_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_HELPER_METHODS_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JACKSON_SWITCHES;
-import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.WITH_JAVA_BEANS_SWITCHES;
+import static com.dslplatform.compiler.client.cmdline.parser.ParamSwitches.*;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -51,13 +26,12 @@ public class ArgumentsReader {
         this.logger = logger;
         this.propertyLoader = propertyLoader;
     }
-
     public ArgumentsReader(final Logger logger) {
         this.logger = logger;
         this.propertyLoader = new PropertyLoader(logger, new StreamLoader(logger, new PathExpander(logger)));
     }
 
-    public Properties readArguments(final String ... args) throws IOException {
+    public Properties readArguments(final String... args) throws IOException {
         final Queue<String> q = new ArrayDeque<String>();
         q.addAll(Arrays.asList(args));
         return readArguments(q);
@@ -88,25 +62,31 @@ public class ArgumentsReader {
             /* --- Switches --- */
 
             /* Parameters that overwrite previous values */
-            if (ifSwitchType_doParseOwerwriteOld(USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(OUTPUT_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DSL_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(CACHE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(REVENJ_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(LOGGING_LEVEL_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(PROJECT_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(PACKAGE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(PROJECT_ID_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(OUTPUT_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DSL_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(CACHE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(REVENJ_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(MONO_APPLICATION_PATH_SWITCH, current_arg, args, props, isLast))
+                continue;
+            if (ifSwitchType_doParseOverwriteOld(COMPILATION_TARGET_PATH_SWITCH, current_arg, args, props, isLast))
+                continue;
+            if (ifSwitchType_doParseOverwriteOld(LOGGING_LEVEL_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(PROJECT_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(PACKAGE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(PROJECT_ID_SWITCHES, current_arg, args, props, isLast)) continue;
 
-            if (ifSwitchType_doParseOwerwriteOld(DB_USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DB_PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DB_HOST_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DB_PORT_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DB_DATABASE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
-            if (ifSwitchType_doParseOwerwriteOld(DB_CONNECTION_STRING_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_USERNAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_PASSWORD_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_HOST_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_PORT_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_DATABASE_NAME_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(DB_CONNECTION_STRING_SWITCHES, current_arg, args, props, isLast))
+                continue;
 
-            if (ifSwitchType_doParseOwerwriteOld(MIGRATION_FILE_PATH_SWITCHES, current_arg, args, props, isLast)) continue;
+            if (ifSwitchType_doParseOverwriteOld(MIGRATION_FILE_PATH_SWITCHES, current_arg, args, props, isLast))
+                continue;
 
             /* Parameters that join new values to the old ones */
             if (ifSwitchType_doParseJoinOld(TARGET_SWITCHES, current_arg, args, props, isLast)) continue;
@@ -118,34 +98,34 @@ public class ArgumentsReader {
             if (ifSwitchType_doParseFlag(WITH_HELPER_METHODS_SWITCHES, current_arg, args, props)) continue;
             if (ifSwitchType_doParseFlag(SKIP_DIFF_SWITCHES, current_arg, args, props)) continue;
             if (ifSwitchType_doParseFlag(ALLOW_UNSAFE_SWITCHES, current_arg, args, props)) continue;
+            if (ifSwitchType_doParseFlag(MANAGED_SWITCH, current_arg, args, props)) continue;
 
             /* Load properties from file: */
-            if(ifPropsPath_parsePropertiesFromPath(current_arg, args, props, isLast)) continue;
+            if (ifPropsPath_parsePropertiesFromPath(current_arg, args, props, isLast)) continue;
 
             /* --- Actions: --- */
             // (Everything else is an action)
             if (parsedAction(current_arg, props)) continue;
 
-            logger.error("Invalid argument token: " + current_arg);
+            logger.error("Invalid argument token: {}", current_arg);
         }
 
         return props;
     }
 
-    private boolean parsedAction(final String current_arg, final Properties props){
-        logger.trace("Trying to parse [" + current_arg + "] as action.");
+    private boolean parsedAction(final String current_arg, final Properties props) {
+        logger.trace("Trying to parse [{}] as action.", current_arg);
         final Action a = Action.find(current_arg);
 
-        if(a != null){
-            if(!props.containsKey(ACTIONS_KEY.paramKey)){
+        if (a != null) {
+            if (!props.containsKey(ACTIONS_KEY.paramKey)) {
                 props.setProperty(ACTIONS_KEY.paramKey, a.toString());
-            }else{
+            } else {
                 final String currentActions = props.getProperty(ACTIONS_KEY.paramKey);
                 props.setProperty(ACTIONS_KEY.paramKey, currentActions + "," + a.toString());
             }
             return true;
-        }
-        else{
+        } else {
             logger.error("Invalid action: " + current_arg);
             return false;
         }
@@ -154,9 +134,7 @@ public class ArgumentsReader {
     /**
      * If {@code current_arg} is of type {@code PROJECT_PROPS_PATH_SWITCHES} processes it.
      *
-     * @return true {@code current_arg} is of {@code switchType}
      * @return true {@code current_arg} is not of {@code switchType}
-     *
      * @throws IOException if loading of the props file failed.
      */
     private boolean ifPropsPath_parsePropertiesFromPath(
@@ -164,7 +142,7 @@ public class ArgumentsReader {
             final Queue<String> args,
             final Properties props,
             final boolean isLast
-            )throws IOException{
+    ) throws IOException {
 
         final SwitchArgument switchArgument = PROJECT_PROPERTIES_PATH_SWITCHES.examine(current_arg);
         if (switchArgument.isSwitch) {
@@ -180,17 +158,19 @@ public class ArgumentsReader {
                 projectPropertiesPath = switchArgument.getArgument();
                 logger.trace("Parsed ProjectPropertiesPath argument [{}]", projectPropertiesPath);
             } else {
-                if (isLast) { throw new IllegalArgumentException("ProjectPropertiesPath cannot be empty!"); }
+                if (isLast) {
+                    throw new IllegalArgumentException("ProjectPropertiesPath cannot be empty!");
+                }
 
                 projectPropertiesPath = args.poll();
-                logger.trace("ProjectPropertgetiesPath argument was empty, read next argument [{}]",
+                logger.trace("ProjectPropertiesPath argument was empty, read next argument [{}]",
                         projectPropertiesPath);
             }
 
             if (logger.isTraceEnabled()) {
                 final String oldArgument_string = props.getProperty(argument_KEY.paramKey);
                 if (oldArgument_string != null && !oldArgument_string.equals(projectPropertiesPath)) {
-                    logger.trace("Overwriting previous " + argumentKey_stringName + " [{}] with [{}]", oldArgument_string,
+                    logger.trace("Overwriting previous {} [{}] with [{}]", argumentKey_stringName, oldArgument_string,
                             projectPropertiesPath);
                 }
             }
@@ -216,8 +196,7 @@ public class ArgumentsReader {
 
             logger.debug("Imported {} project properties", projectProperties.size());
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
@@ -225,8 +204,7 @@ public class ArgumentsReader {
     /**
      * If {@code current_arg} is of {@code switchType} processes it.
      *
-     *  @return true {@code current_arg} is of {@code switchType}
-     *  @return true {@code current_arg} is not of {@code switchType}
+     * @return true {@code current_arg} is not of {@code switchType}
      */
     private boolean ifSwitchType_doParseJoinOld(
             final ParamSwitches switchType,
@@ -248,7 +226,9 @@ public class ArgumentsReader {
                 newArgument = switchArgument.getArgument();
                 logger.trace("Parsed " + argumentStringName + "(s) argument [{}]", newArgument);
             } else {
-                if (isLast) { throw new IllegalArgumentException(argumentStringName + "(s) cannot be empty!"); }
+                if (isLast) {
+                    throw new IllegalArgumentException(argumentStringName + "(s) cannot be empty!");
+                }
 
                 newArgument = args.poll();
                 logger.trace(argumentStringName + "(s) argument was empty, read next argument [{}]", newArgument);
@@ -269,8 +249,7 @@ public class ArgumentsReader {
             logger.debug("Read " + argumentStringName + "(s) argument [{}]", newArgument);
             props.setProperty(argument_KEY.paramKey, newArgument);
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
@@ -278,10 +257,9 @@ public class ArgumentsReader {
     /**
      * If {@code current_arg} is of {@code switchType} processes it.
      *
-     *  @return true {@code current_arg} is of {@code switchType}
-     *  @return true {@code current_arg} is not of {@code switchType}
+     * @return true {@code current_arg} is not of {@code switchType}
      */
-    private boolean ifSwitchType_doParseOwerwriteOld(
+    private boolean ifSwitchType_doParseOverwriteOld(
             final ParamSwitches switchType,
             final String current_arg,
             final Queue<String> args,
@@ -301,7 +279,9 @@ public class ArgumentsReader {
                 argument_string = switchArgument.getArgument();
                 logger.trace("Parsed " + argumentKey_stringName + " argument [{}]", argument_string);
             } else {
-                if (isLast) { throw new IllegalArgumentException(argumentKey_stringName + " cannot be empty!"); }
+                if (isLast) {
+                    throw new IllegalArgumentException(argumentKey_stringName + " cannot be empty!");
+                }
 
                 argument_string = args.poll();
                 logger.trace(argumentKey_stringName + " was empty, read next argument [{}]", argument_string);
@@ -318,17 +298,15 @@ public class ArgumentsReader {
             logger.debug("Read " + argumentKey_stringName + " argument [{}]", argument_string);
             properties.setProperty(argumentKey.paramKey, argument_string);
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }
 
     /**
-     *  If {@code current_arg} is of {@code switchType} processes it.
+     * If {@code current_arg} is of {@code switchType} processes it.
      *
-     *  @return true {@code current_arg} is of {@code switchType}
-     *  @return true {@code current_arg} is not of {@code switchType}
+     * @return true {@code current_arg} is not of {@code switchType}
      */
     private boolean ifSwitchType_doParseFlag(
             final ParamSwitches switchType,

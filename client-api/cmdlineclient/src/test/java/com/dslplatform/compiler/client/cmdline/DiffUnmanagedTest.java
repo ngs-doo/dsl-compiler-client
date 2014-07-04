@@ -10,12 +10,12 @@ import com.dslplatform.compiler.client.cmdline.tools.IOMock;
 import com.dslplatform.compiler.client.cmdline.tools.MockCommandLinePrompt;
 import com.dslplatform.compiler.client.cmdline.tools.TestArguments;
 import com.dslplatform.compiler.client.cmdline.tools.TestingOutput;
-import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 public class DiffUnmanagedTest {
 
@@ -29,7 +29,7 @@ public class DiffUnmanagedTest {
         TestingOutput output = new TestingOutput();
         CLCAction action = new ActionDefinition(api, logger, output, arguments, clcp, io);
 
-        action.getChanges();
-        System.out.println(output.acc.toString());
+        Main.processArguments(action, arguments);
+        assertTrue(output.acc.toString().contains("Created 2.dsl"));
     }
 }
