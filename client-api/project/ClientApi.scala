@@ -92,7 +92,7 @@ object ClientApi extends Build with Default {
     , unmanagedSourceDirectories in Test := (unmanagedSourceDirectories in Test in core).value :+ (scalaSource in Test).value
     , unmanagedResourceDirectories in Test := (unmanagedResourceDirectories in Test in core).value
     , publishArtifact in(Test, packageBin) := true
-    , publishLocal <<= publishLocal dependsOn( /* publishLocal in params,*/ publishLocal in core, publishLocal in api, publishLocal in util)
+    , publishLocal <<= publishLocal dependsOn( publishLocal in core, publishLocal in params, publishLocal in api, publishLocal in util)
     , sbtPlugin := true
     ) dependsOn (api)
 }
