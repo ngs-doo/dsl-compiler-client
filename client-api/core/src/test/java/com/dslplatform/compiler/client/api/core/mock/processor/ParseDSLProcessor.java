@@ -16,7 +16,7 @@ import com.dslplatform.compiler.client.api.json.JsonReader;
 public class ParseDSLProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.PUT && request.path.equals("Alpha.svc/parse");
+        return request.method == Method.PUT && request.path.equals("Platform.svc/parse");
     }
 
     @Override

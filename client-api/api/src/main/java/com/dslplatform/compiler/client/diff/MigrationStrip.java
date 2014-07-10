@@ -6,11 +6,11 @@ public class MigrationStrip {
     private final static String migration_description_end = "MIGRATION_DESCRIPTION*/";
 
     public static boolean findDestructive(String migrationInformation) {
-        return migrationInformation.contains(droppedIndicator); // todo - find keywords
+        return migrationInformation.contains(droppedIndicator);
     }
     public static String stripInformationComments(String migration) {
-        int migrationInfoStart = migration.indexOf(migration_description_start) + migration_description_start.length();
-        int migrationInfoEnd = migration.indexOf(migration_description_end);
+        final int migrationInfoStart = migration.indexOf(migration_description_start) + migration_description_start.length();
+        final int migrationInfoEnd = migration.indexOf(migration_description_end);
         return (migrationInfoEnd > -1 && migrationInfoStart > -1) ? migration.substring(migrationInfoStart, migrationInfoEnd) : "";
     }
 }

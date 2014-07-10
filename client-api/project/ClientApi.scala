@@ -21,9 +21,8 @@ object ClientApi extends Build with Default {
 
   lazy val params = clientApiProject("Params")
 
-  lazy val cmdLineParser = clientApiProject("CmdLineParser") inject(
+  lazy val cmdLineParser = clientApiProject("CmdLineParser") inject (
       slf4j
-    , commonsIo
     , util
     , logback % "test"
     , jUnit % "test"
@@ -33,16 +32,15 @@ object ClientApi extends Build with Default {
       , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
     )
 
-  lazy val cmdLineClient = clientApiProject("CmdLineClient") inject(
+  lazy val cmdLineClient = clientApiProject("CmdLineClient") inject (
     cmdLineParser,
-    logback, //slf4jSimple,
-    util
-    ) dependsOn (api % "test->test;compile->compile") settings(
+    logback //slf4jSimple,
+    ) dependsOn (api % "test->test;compile->compile") settings (
     assemblySettings: _*) settings (
       artifact in (Compile, assembly) ~= (_.copy(`classifier` = Some("assembly")))
       , test in assembly := {}
       , mainClass in assembly := Some("com.dslplatform.compiler.client.cmdline.Main")
-      , jarName   in assembly := "dsl-clc.jar"
+      , jarName   in assembly := s"dsl-clc-${System.currentTimeMillis() / 100000}.jar"
       , test      in assembly := {}
     )
 
@@ -54,7 +52,7 @@ object ClientApi extends Build with Default {
     , util
     , logback % "test"
     , jUnit % "test"
-    ) settings(
+    ) settings (
     unmanagedSourceDirectories in Compile := Seq(
         sourceDirectory.value / "interface" / "java"
       , sourceDirectory.value / "service" / "java"
@@ -67,7 +65,7 @@ object ClientApi extends Build with Default {
     , EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
     )
 
-  lazy val api = clientApiProject("Api") inject(
+  lazy val api = clientApiProject("Api") inject (
       commonsIo
     , jGit
     , logback % "test"
@@ -78,7 +76,7 @@ object ClientApi extends Build with Default {
   lazy val dslCompilerSBT = Project(
       "sbt"
     , file("sbt")
-    ) settings (ScriptedPlugin.scriptedSettings: _*) settings(
+    ) settings (ScriptedPlugin.scriptedSettings: _*) settings (
       name := "DSL-Compiler-Client-SBT"
     , libraryDependencies ++= Seq(postgresql, config, logback, jUnit % "test")
     , ScriptedPlugin.scriptedLaunchOpts := {
@@ -89,10 +87,10 @@ object ClientApi extends Build with Default {
           )
       }
     , unmanagedSourceDirectories in Compile := Seq((scalaSource in Compile).value)
-    , unmanagedSourceDirectories in Test := (unmanagedSourceDirectories in Test in core).value :+ (scalaSource in Test).value
-    , unmanagedResourceDirectories in Test := (unmanagedResourceDirectories in Test in core).value
+    , unmanagedSourceDirectories in Test <++= unmanagedSourceDirectories in Test in core
+    , unmanagedResourceDirectories in Test <++= unmanagedResourceDirectories in Test in core
     , publishArtifact in(Test, packageBin) := true
-    , publishLocal <<= publishLocal dependsOn( /* publishLocal in params,*/ publishLocal in core, publishLocal in api, publishLocal in util)
+    , publishLocal <<= publishLocal dependsOn (publishLocal in core, publishLocal in params, publishLocal in api, publishLocal in util)
     , sbtPlugin := true
     ) dependsOn (api)
 }

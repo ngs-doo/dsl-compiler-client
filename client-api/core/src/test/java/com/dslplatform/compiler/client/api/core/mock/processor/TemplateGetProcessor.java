@@ -14,7 +14,7 @@ import java.util.Map;
 public class TemplateGetProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.GET && request.path.startsWith("Alpha.svc/template/");
+        return request.method == Method.GET && request.path.startsWith("Platform.svc/template/");
     }
 
     final int template_name_missing = 101;

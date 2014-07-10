@@ -4,40 +4,46 @@ import com.dslplatform.compiler.client.response.GenerateMigrationSQLResponse;
 
 public interface CLCAction {
 
+    public void process();
+
     /**
      * Informs if current DSL is syntactically correct.
      */
     public boolean parseDSL();
 
     /**
+     * Outputs last dsl to the standard output.
+     */
+    public void lastDSL();
+
+    /**
      * Informs a user of the changes made to the DSL.
      */
     public void getChanges();
-/*
-    public void generateSources() {
-    } // todo - managed - on hold
 
-    private void generateSources(DSL dsl) {
-    } // todo - managed - on hold
+    /**
+     * Upgrades the managed project with a given dsl.
+     *
+     * @return true if successful
+     */
+    public boolean upgrade();
 
-    public void unmanagerCSServer() {
-    } // todo - ambiguous - on hold
-
-    private void unmanagerCSServer(DSL dsl) {
-    } // todo - ambiguous - on hold
-*/
+    /**
+     * Generates client source for connecting to the managed revenj instance
+     */
+    public boolean generateSources();
 
     /**
      * Requests for Unmanaged source.
      *
-     * @return is operation successfull
+     * @return is operation successful
      */
     public boolean unmanagedSource();
 
     /**
      * Compiles C# sources provided at {@value }
      *
-     * @return is operation successfull
+     * @return is operation successful
      */
     public boolean compileCSServer();
 

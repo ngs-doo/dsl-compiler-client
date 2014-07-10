@@ -44,7 +44,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.PUT, parseRequest.method);
-        assertEquals("Alpha.svc/parse", parseRequest.path);
+        assertEquals("Platform.svc/parse", parseRequest.path);
         assertEquals(parseRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -167,7 +167,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, downloadBinariesRequest.method);
-        assertEquals("Alpha.svc/download/" + projectID, downloadBinariesRequest.path);
+        assertEquals("Platform.svc/download/" + projectID, downloadBinariesRequest.path);
         assertEquals(downloadBinariesRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -185,7 +185,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, downloadGeneratedSourceRequest.method);
-        assertEquals("Alpha.svc/generated-model/" + projectID, downloadGeneratedSourceRequest.path);
+        assertEquals("Platform.svc/generated-model/" + projectID, downloadGeneratedSourceRequest.path);
         assertEquals(downloadGeneratedSourceRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -207,7 +207,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.PUT, inspectManagedProjectRequest.method);
-        assertEquals("Alpha.svc/changes/" + projectID, inspectManagedProjectRequest.path);
+        assertEquals("Platform.svc/changes/" + projectID, inspectManagedProjectRequest.path);
         assertEquals(inspectManagedProjectRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -228,7 +228,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, getLastManagedDSLRequest.method);
-        assertEquals("Alpha.svc/dsl/" + projectID, getLastManagedDSLRequest.path);
+        assertEquals("Platform.svc/dsl/" + projectID, getLastManagedDSLRequest.path);
         assertEquals(getLastManagedDSLRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -264,7 +264,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, getConfigRequest.method);
-        assertEquals("Alpha.svc/config/" + projectID, getConfigRequest.path);
+        assertEquals("Platform.svc/config/" + projectID, getConfigRequest.path);
         assertEquals(getConfigRequest.headers, new HashMap<String, List<String>>() {{
             put("Content-Type", Arrays.asList("application/json"));
             put("Accept", Arrays.asList("application/json"));
@@ -302,7 +302,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.PUT, updateManagedRequest.method);
-        assertEquals("Alpha.svc/update/" + projectID, updateManagedRequest.path);
+        assertEquals("Platform.svc/update/" + projectID, updateManagedRequest.path);
         assertEquals(updateManagedRequest.headers, new HashMap<String, List<String>>() {{
 
             put("Authorization", Arrays.asList(testToken));
@@ -337,7 +337,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.PUT, generateMigrationSQLRequest.method);
-        assertEquals("Alpha.svc/unmanaged/postgres-migration", generateMigrationSQLRequest.path);
+        assertEquals("Platform.svc/unmanaged/postgres-migration", generateMigrationSQLRequest.path);
         assertEquals(generateMigrationSQLRequest.headers, new HashMap<String, List<String>>() {{
             put("version", Arrays.asList("someversion"));
 
@@ -372,7 +372,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, updateManagedRequest.method);
-        assertEquals("Alpha.svc/source/" + projectID, updateManagedRequest.path);
+        assertEquals("Platform.svc/source/" + projectID, updateManagedRequest.path);
         assertEquals(updateManagedRequest.headers, new HashMap<String, List<String>>() {{
             put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
@@ -407,7 +407,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.PUT, generateUnmanagedRequest.method);
-        assertEquals("Alpha.svc/unmanaged/source", generateUnmanagedRequest.path);
+        assertEquals("Platform.svc/unmanaged/source", generateUnmanagedRequest.path);
 
         assertEquals(generateUnmanagedRequest.headers, new HashMap<String, List<String>>() {{
             put("Authorization", Arrays.asList(testToken));
@@ -493,7 +493,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, getAllProjectsRequest.method);
-        assertEquals("Alpha.svc/template/templateName", getAllProjectsRequest.path);
+        assertEquals("Platform.svc/template/templateName", getAllProjectsRequest.path);
         assertEquals(getAllProjectsRequest.headers, new HashMap<String, List<String>>() {{
             put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));
@@ -533,7 +533,7 @@ public class HttpRequestBuilderImplTest {
         }
 
         assertEquals(HttpRequest.Method.GET, templateListAllRequest.method);
-        assertEquals("Alpha.svc/templates/" + projectID, templateListAllRequest.path);
+        assertEquals("Platform.svc/templates/" + projectID, templateListAllRequest.path);
         assertEquals(templateListAllRequest.headers, new HashMap<String, List<String>>() {{
             put("Authorization", Arrays.asList(testToken));
             put("Content-Type", Arrays.asList("application/json"));

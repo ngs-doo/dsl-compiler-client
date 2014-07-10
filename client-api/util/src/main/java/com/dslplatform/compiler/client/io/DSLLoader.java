@@ -1,7 +1,5 @@
 package com.dslplatform.compiler.client.io;
 
-import org.slf4j.Logger;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -11,19 +9,11 @@ import java.util.SortedMap;
 import java.util.regex.Pattern;
 
 public class DSLLoader {
-    private final Logger logger;
     private final Charset encoding;
 
-    public DSLLoader(
-            final Logger logger,
-            final String encoding) {
-        this(logger, Charset.forName(encoding));
-    }
 
     public DSLLoader(
-            final Logger logger,
             final Charset encoding) {
-        this.logger = logger;
         this.encoding = encoding;
         fileLoader = new FileLoader();
     }
@@ -58,7 +48,6 @@ public class DSLLoader {
 
         for (final Map.Entry<String, byte[]> entry : binaryFiles.entrySet()) {
             final String file = entry.getKey();
-            logger.trace("Dsl file path: " + file);
             final byte[] body = entry.getValue();
 
             try {

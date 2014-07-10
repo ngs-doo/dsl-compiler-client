@@ -1,29 +1,7 @@
 package com.dslplatform.compiler.client.cmdline.parser;
 
+import com.dslplatform.compiler.client.params.*;
 import org.slf4j.Logger;
-
-import com.dslplatform.compiler.client.params.Action;
-import com.dslplatform.compiler.client.params.Actions;
-import com.dslplatform.compiler.client.params.CachePath;
-import com.dslplatform.compiler.client.params.DBAuth;
-import com.dslplatform.compiler.client.params.DBConnectionString;
-import com.dslplatform.compiler.client.params.DBDatabaseName;
-import com.dslplatform.compiler.client.params.DBHost;
-import com.dslplatform.compiler.client.params.DBPassword;
-import com.dslplatform.compiler.client.params.DBPort;
-import com.dslplatform.compiler.client.params.DBUsername;
-import com.dslplatform.compiler.client.params.DSLPath;
-import com.dslplatform.compiler.client.params.LoggingLevel;
-import com.dslplatform.compiler.client.params.MigrationFilePath;
-import com.dslplatform.compiler.client.params.OutputPath;
-import com.dslplatform.compiler.client.params.PackageName;
-import com.dslplatform.compiler.client.params.Password;
-import com.dslplatform.compiler.client.params.ProjectID;
-import com.dslplatform.compiler.client.params.ProjectName;
-import com.dslplatform.compiler.client.params.ProjectPropertiesPath;
-import com.dslplatform.compiler.client.params.RevenjPath;
-import com.dslplatform.compiler.client.params.Targets;
-import com.dslplatform.compiler.client.params.Username;
 
 public class CachingArgumentsProxy implements Arguments {
     private final Arguments underlying;
@@ -45,6 +23,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private OutputPath outputPath;
+
     @Override
     public OutputPath getOutputPath() {
         return outputPath == null
@@ -53,6 +32,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DSLPath dslPath;
+
     @Override
     public DSLPath getDSLPath() {
         return dslPath == null
@@ -60,7 +40,26 @@ public class CachingArgumentsProxy implements Arguments {
                 : dslPath;
     }
 
+    private MonoApplicationPath monoApplicationPath;
+
+    @Override
+    public MonoApplicationPath getMonoApplicationPath() {
+        return monoApplicationPath == null
+                ? monoApplicationPath = underlying.getMonoApplicationPath()
+                : monoApplicationPath;
+    }
+
+    private CompilationTargetPath compilationTargetPath;
+
+    @Override
+    public CompilationTargetPath getCompilationTargetPath() {
+        return compilationTargetPath == null
+                ? compilationTargetPath = underlying.getCompilationTargetPath()
+                : compilationTargetPath;
+    }
+
     private Password password;
+
     @Override
     public Password getPassword() {
         return password == null
@@ -69,6 +68,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private ProjectPropertiesPath projectPropertiesPath;
+
     @Override
     public ProjectPropertiesPath getProjectPropertiesPath() {
         return projectPropertiesPath == null
@@ -77,6 +77,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private MigrationFilePath migrationFilePath;
+
     @Override
     public MigrationFilePath getMigrationFilePath() {
         return migrationFilePath == null
@@ -85,6 +86,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private CachePath cachePath;
+
     @Override
     public CachePath getCachePath() {
         return cachePath == null
@@ -102,6 +104,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private ProjectID projectID;
+
     @Override
     public ProjectID getProjectID() {
         return projectID == null
@@ -109,7 +112,17 @@ public class CachingArgumentsProxy implements Arguments {
                 : projectID;
     }
 
+    private RevenjVersion revenjVersion;
+
+    @Override
+    public RevenjVersion getRevenjVersion() {
+        return revenjVersion == null
+                ? revenjVersion = underlying.getRevenjVersion()
+                : revenjVersion;
+    }
+
     private ProjectName projectName;
+
     @Override
     public ProjectName getProjectName() {
         return projectName == null
@@ -118,6 +131,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private PackageName packageName;
+
     @Override
     public PackageName getPackageName() {
         return packageName == null
@@ -126,6 +140,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private RevenjPath revenjPath;
+
     @Override
     public RevenjPath getRevenjPath() {
         return revenjPath == null
@@ -134,6 +149,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private Targets targets;
+
     @Override
     public Targets getTargets() {
         return targets == null
@@ -154,8 +170,11 @@ public class CachingArgumentsProxy implements Arguments {
         return actions;
     }
 
-    /** Note: computed from the underlying subproperties*/
+    /**
+     * Note: computed from the underlying subproperties
+     */
     private DBAuth dbAuth;
+
     @Override
     public DBAuth getDBAuth() {
         return dbAuth == null
@@ -164,6 +183,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBUsername dbUsername;
+
     @Override
     public DBUsername getDBUsername() {
         return dbUsername == null
@@ -172,6 +192,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBPassword dbPassword;
+
     @Override
     public DBPassword getDBPassword() {
         return dbPassword == null
@@ -180,6 +201,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBHost dbHost;
+
     @Override
     public DBHost getDBHost() {
         return dbHost == null
@@ -188,6 +210,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBPort dbPort;
+
     @Override
     public DBPort getDBPort() {
         return dbPort == null
@@ -196,6 +219,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBDatabaseName dbDatabaseName;
+
     @Override
     public DBDatabaseName getDBDatabaseName() {
         return dbDatabaseName == null
@@ -204,6 +228,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private DBConnectionString dbConnectionString;
+
     @Override
     public DBConnectionString getDBConnectionString() {
         return dbConnectionString == null
@@ -212,6 +237,7 @@ public class CachingArgumentsProxy implements Arguments {
     }
 
     private Boolean withActiveRecord;
+
     @Override
     public boolean isWithActiveRecord() {
         return withActiveRecord == null
@@ -264,16 +290,25 @@ public class CachingArgumentsProxy implements Arguments {
                 : skipDiff;
     }
 
+    private Boolean managed;
+
+    @Override
+    public boolean isManaged() {
+        return managed == null
+                ? managed = underlying.isManaged()
+                : managed;
+    }
+
     /**
      * Validate that {@code actionsToValidate} have all neccessary properties loaded.
      */// TODO: Clumsy for this to be here, move it maybe to another layer
-    private void validateActionsAgainstProperties(final Actions actionsToValidate){
+    private void validateActionsAgainstProperties(final Actions actionsToValidate) {
         /* To validate actions against properties, we need to check if all neccessary properties are loaded */
         logger.trace("Validating actions.");
-        for(final Action action : actionsToValidate.getActionSet()){
-            try{
+        for (final Action action : actionsToValidate.getActionSet()) {
+            try {
                 logger.trace("Checking if all neccessary parameters exist for the action [" + action.toString() + "] ...");
-                switch(action){
+                switch (action) {
                     case UPDATE:
                         getProjectPropertiesPath();
                         getUsername();
@@ -324,7 +359,6 @@ public class CachingArgumentsProxy implements Arguments {
                         getPassword();
                         getPackageName();
                         getDSLPath();
-                        getDBAuth();
                         getOutputPath();
                         break;
                     case DOWNLOAD_GENERATED_MODEL:
@@ -355,7 +389,7 @@ public class CachingArgumentsProxy implements Arguments {
                     default:
                         throw new IllegalArgumentException("Invalid action " + action);
                 }
-            }catch(final IllegalArgumentException e){
+            } catch (final IllegalArgumentException e) {
                 throw new IllegalArgumentException(
                         "Parameters missing for action: " + action, e);
             }

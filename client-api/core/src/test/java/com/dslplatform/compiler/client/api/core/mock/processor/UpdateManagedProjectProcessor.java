@@ -14,7 +14,7 @@ import java.util.Map;
 public class UpdateManagedProjectProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.POST && request.path.startsWith("Alpha.svc/update/");
+        return request.method == Method.POST && request.path.startsWith("Platform.svc/update/");
     }
 
     @Override

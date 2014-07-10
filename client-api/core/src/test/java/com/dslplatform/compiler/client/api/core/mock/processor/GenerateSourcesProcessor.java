@@ -14,7 +14,7 @@ import java.util.Map;
 public class GenerateSourcesProcessor implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.GET && request.path.startsWith("Alpha.svc/source/");
+        return request.method == Method.GET && request.path.startsWith("Platform.svc/source/");
     }
 
     @Override

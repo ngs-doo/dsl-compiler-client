@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client;
 
+import com.dslplatform.compiler.client.params.*;
 import com.dslplatform.compiler.client.response.*;
 import org.slf4j.Logger;
 
@@ -129,7 +130,7 @@ public interface Api {
     /**
      * Retrieves the client source files for an unmanaged project
      */
-    public GenerateUnmanagedSourcesResponse generateUnmanagedSources(
+    public GenerateSourcesResponse generateUnmanagedSources(
             final String token,
             final String packageName,
             final Set<String> targets,
@@ -362,4 +363,39 @@ public interface Api {
     public String getDiff(
             final Map<String, String> olddsl,
             final Map<String, String> newdsl);
+
+    /**
+     * Caches revenj from releases at github depending on version to cachePath.
+     *
+     * @param revenjVersion
+     * @param revenjPath
+     * @return
+     */
+    public CacheRevenjResponse cacheRevenj(
+            final RevenjVersion revenjVersion,
+            final RevenjPath revenjPath
+    );
+
+    /**
+     * Alters contents of the Database connection string in Revenj.Http.exe.config to connect to the database provided in properties.
+     *
+     * @param monoApplicationPath
+     * @param dbConnectionString
+     * @return
+     */
+    public boolean mingleDatabaseConnectionString(final MonoApplicationPath monoApplicationPath, final DBConnectionString dbConnectionString, final CompilationTargetPath compilationTargetPath);
+
+    /**
+     * Copies all files needed for a runnable mono instance.
+     *
+     * @param monoApplicationPath
+     * @param revenjPath
+     * @param compilationTargetPath
+     * @param dbConnectionString
+     * @return
+     */
+    public boolean makeMonoServer(final MonoApplicationPath monoApplicationPath,
+                                  final RevenjPath revenjPath,
+                                  final CompilationTargetPath compilationTargetPath,
+                                  final DBConnectionString dbConnectionString);
 }

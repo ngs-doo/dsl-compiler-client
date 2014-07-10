@@ -14,7 +14,7 @@ import java.util.Map;
 public class GenerateUnmanagedSourcesProcessor extends TestProcesorContext implements MockProcessor {
     @Override
     public boolean isDefinedAt(final HttpRequest request) {
-        return request.method == Method.PUT && request.path.startsWith("Alpha.svc/unmanaged/source");
+        return request.method == Method.PUT && request.path.startsWith("Platform.svc/unmanaged/source");
     }
 
     @Override
@@ -38,9 +38,8 @@ public class GenerateUnmanagedSourcesProcessor extends TestProcesorContext imple
                 final String requestBody = new String(request.body, "UTF-8");
                 if (requestBody.contains("2.dsl"))
                     body = getBodyFor(targets, 2);
-                else if (requestBody.contains("1.dsl"))
+                else
                     body = getBodyFor(targets, 1);
-                else body = "".getBytes();
                 break;
             case unknown_language:
                 code = 400;
