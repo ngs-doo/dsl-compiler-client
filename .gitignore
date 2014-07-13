@@ -1,0 +1,12 @@
+target
+.classpath
+.project
+.idea
+.settings
+.history
+.target
+.cache
+out/
+*.iml
+*.orig
+*~
