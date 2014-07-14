@@ -1,10 +1,8 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.json.JsonValue;
-import com.dslplatform.compiler.client.DslServer;
+
 import java.util.Map;
 
 public enum Parse implements CompileParameter {

@@ -39,23 +39,11 @@ public class DslServer {
 	}
 
 	private static String readJsonOrText(final String contentType, final InputStream stream) throws IOException {
-		final String result = read(stream);
+		final String result = Utils.read(stream);
 		if ("application/json".equals(contentType) && result.startsWith("\"") && result.endsWith("\"")) {
 			return JsonValue.readFrom(result).asString();
 		}
 		return result;
-	}
-
-	private static String read(final InputStream stream) throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-		StringBuilder sb = new StringBuilder();
-		char[] buffer = new char[8192];
-		int len;
-		while ((len = reader.read(buffer)) != -1) {
-			sb.append(buffer, 0, len);
-		}
-		reader.close();
-		return sb.toString();
 	}
 
 	private static Either<HttpsURLConnection> setupConnection(
@@ -105,7 +93,8 @@ public class DslServer {
 		}
 		System.out.print("Retry (y/N): ");
 		final String value = console.readLine();
-		if (value.trim().equalsIgnoreCase("Y")) {
+		if ("y".equalsIgnoreCase(value)) {
+			System.out.println("Retrying...");
 			Username.retryInput(parameters);
 			Password.retryInput(parameters);
 			return true;
@@ -120,7 +109,7 @@ public class DslServer {
 		}
 		HttpsURLConnection conn = tryConn.get();
 		try {
-			return Either.success(read(conn.getInputStream()));
+			return Either.success(Utils.read(conn.getInputStream()));
 		} catch (Exception ex) {
 			try {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
@@ -141,9 +130,9 @@ public class DslServer {
 		return send(address, "PUT", parameters, json.toString());
 	}
 
-	public static Either<String> post(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
+	/*public static Either<String> post(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
 		return send(address, "POST", parameters, json.toString());
-	}
+	}*/
 
 	private static Either<String> send(
 			final String address,
@@ -161,7 +150,7 @@ public class DslServer {
 			final OutputStream os = conn.getOutputStream();
 			os.write(argument.getBytes("UTF-8"));
 			os.close();
-			return Either.success(read(conn.getInputStream()));
+			return Either.success(Utils.read(conn.getInputStream()));
 		} catch (Exception ex) {
 			try {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {

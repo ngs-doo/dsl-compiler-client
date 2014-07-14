@@ -1,14 +1,10 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.json.JsonObject;
-import com.dslplatform.compiler.client.DslServer;
 
 import java.io.*;
 import java.util.Map;
-import java.util.UUID;
 
 public enum Targets implements CompileParameter {
 	INSTANCE;
@@ -45,26 +41,12 @@ public enum Targets implements CompileParameter {
 		System.out.println("Example usage: -target=java_client,revenj");
 	}
 
-	private static Either<File> getOrCreateTempPath() {
-		try {
-			final File temp = File.createTempFile(UUID.randomUUID().toString(), ".dsl-test");
-			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform");
-			temp.delete();
-			if (!path.exists()) {
-				path.mkdir();
-			}
-			return Either.success(path);
-		} catch (IOException e) {
-			return Either.fail(e.getMessage());
-		}
-	}
-
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (!parameters.containsKey(InputParameter.TARGET)) {
 			return true;
 		}
-		final Either<File> temp = getOrCreateTempPath();
+		final Either<File> temp = Utils.getOrCreateTempPath();
 		if (!temp.isSuccess()) {
 			System.out.println("Can't create temporary file. Please check access to temporary folder.");
 			System.out.println(temp.whyNot());
@@ -118,7 +100,7 @@ public enum Targets implements CompileParameter {
 			System.exit(0);
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
-		final Either<File> tryTemp = getOrCreateTempPath();
+		final Either<File> tryTemp = Utils.getOrCreateTempPath();
 		if (!tryTemp.isSuccess()) {
 			System.out.println("Can't create temporary file. Compilation results can't be saved locally.");
 			System.out.println(tryTemp.whyNot());
@@ -139,9 +121,7 @@ public enum Targets implements CompileParameter {
 					System.out.println("Failed creating target file: " + file.getAbsolutePath());
 					System.exit(0);
 				}
-				final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "utf-8");
-				writer.write(files.get(name).asString());
-				writer.close();
+				Utils.saveFile(file, files.get(name).asString());
 			}
 		} catch (IOException e) {
 			System.out.println("Can't create temporary target file. Compilation results can't be saved locally.");

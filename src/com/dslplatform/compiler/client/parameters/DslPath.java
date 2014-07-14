@@ -2,12 +2,11 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.Utils;
 
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,12 @@ import java.util.Map;
 public enum DslPath implements CompileParameter {
 	INSTANCE;
 
+	private static Map<String, String> cache;
+
 	public static Map<String, String> getCurrentDsl(final Map<InputParameter, String> parameters) {
+		if (cache != null) {
+			return cache;
+		}
 		String value = parameters.get(InputParameter.DSL);
 		if (value == null) {
 			if (!(new File("./dsl").exists())) {
@@ -45,7 +49,7 @@ public enum DslPath implements CompileParameter {
 				System.exit(0);
 			}
 		}
-		return dslMap;
+		return cache = dslMap;
 	}
 
 	@Override

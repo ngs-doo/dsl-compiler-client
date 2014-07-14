@@ -11,14 +11,17 @@ public enum InputParameter {
 	USERNAME("u", "username", Username.INSTANCE),
 	PASSWORD("p", "password", Password.INSTANCE),
 	DSL("dsl", "path", DslPath.INSTANCE),
-	PARSE("parse", null, Parse.INSTANCE),
-	TARGET("target", "options", Targets.INSTANCE),
+	SQL("sql", "path", SqlPath.INSTANCE),
 	NAMESPACE("namespace", "value", Namespace.INSTANCE),
 	SETTINGS("settings", "options", Settings.INSTANCE),
 	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),
+	PARSE("parse", null, Parse.INSTANCE),
 	DIFF("diff", null, Diff.INSTANCE),
-	REVENJ("revenj", "path", RevenjPath.INSTANCE),
-	SQL("sql", "path", SqlPath.INSTANCE);
+	TARGET("target", "options", Targets.INSTANCE),
+	MIGRATION("migration", null, Migration.INSTANCE),
+	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
+	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
+	REVENJ("revenj", "path", RevenjPath.INSTANCE);
 
 	public final String alias;
 	public final String usage;
