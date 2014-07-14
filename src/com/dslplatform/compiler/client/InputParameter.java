@@ -13,6 +13,7 @@ public enum InputParameter {
 	DSL("dsl", "path", DslPath.INSTANCE),
 	PARSE("parse", null, Parse.INSTANCE),
 	TARGET("target", "options", Targets.INSTANCE),
+	NAMESPACE("namespace", "value", Namespace.INSTANCE),
 	SETTINGS("settings", "options", Settings.INSTANCE),
 	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),
 	DIFF("diff", null, Diff.INSTANCE),

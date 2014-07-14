@@ -7,7 +7,9 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public enum DslPath implements CompileParameter {
@@ -22,25 +24,22 @@ public enum DslPath implements CompileParameter {
 			}
 			parameters.put(InputParameter.DSL, value = "./dsl");
 		}
-		final File dslPath = new File(value);
-		final File[] dslFiles = dslPath.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".dsl") || name.endsWith(".ddd");
-			}
-		});
+		final File dslPath = new File(value).getAbsoluteFile();
+		final List<File> dslFiles = Utils.findDslFiles(dslPath);
 		final Map<String, String> dslMap = new LinkedHashMap<String, String>();
+		final int pathLen = dslPath.getAbsolutePath().length();
 		for(final File file : dslFiles) {
 			if (!file.canRead()) {
 				System.out.println("Can't read DSL file: " + file.getName());
 				System.exit(0);
 			}
 			try {
-				byte[] bytes = new byte[(int) file.length()];
+				final byte[] bytes = new byte[(int) file.length()];
 				DataInputStream dis = new DataInputStream(new FileInputStream(file));
 				dis.readFully(bytes);
 				dis.close();
-				dslMap.put(file.getName(), new String(bytes, "UTF-8"));
+				final String relativeName = file.getAbsolutePath().substring(pathLen);
+				dslMap.put(relativeName, new String(bytes, "UTF-8"));
 			} catch (Exception ex) {
 				System.out.println("Error reading DSL file: " + file.getName());
 				System.exit(0);

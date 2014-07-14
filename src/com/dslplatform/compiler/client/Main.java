@@ -1,7 +1,5 @@
 package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.parameters.*;
-
 import java.util.*;
 
 public class Main {

@@ -1,12 +1,9 @@
-package com.dslplatform.compiler.client.network;
+package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.json.JsonValue;
 import com.dslplatform.compiler.client.parameters.Password;
 import com.dslplatform.compiler.client.parameters.Username;
 import sun.misc.BASE64Encoder;
-import sun.org.mozilla.javascript.internal.json.JsonParser;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -41,15 +38,15 @@ public class DslServer {
 		}
 	}
 
-	private static String readJsonOrText(InputStream stream) throws IOException {
+	private static String readJsonOrText(final String contentType, final InputStream stream) throws IOException {
 		final String result = read(stream);
-		if (result.startsWith("\"") && result.endsWith("\"")) {
+		if ("application/json".equals(contentType) && result.startsWith("\"") && result.endsWith("\"")) {
 			return JsonValue.readFrom(result).asString();
 		}
 		return result;
 	}
 
-	private static String read(InputStream stream) throws IOException {
+	private static String read(final InputStream stream) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		StringBuilder sb = new StringBuilder();
 		char[] buffer = new char[8192];
@@ -101,9 +98,13 @@ public class DslServer {
 			final HttpsURLConnection conn,
 			final Map<InputParameter, String> parameters) throws IOException {
 		System.out.println("Authorization failed.");
-		System.out.println(readJsonOrText(conn.getErrorStream()));
+		System.out.println(readJsonOrText(conn.getContentType(), conn.getErrorStream()));
+		final Console console = System.console();
+		if (console == null) {
+			System.exit(0);
+		}
 		System.out.print("Retry (y/N): ");
-		final String value = System.console().readLine();
+		final String value = console.readLine();
 		if (value.trim().equalsIgnoreCase("Y")) {
 			Username.retryInput(parameters);
 			Password.retryInput(parameters);
@@ -127,7 +128,7 @@ public class DslServer {
 				}
 				final InputStream error = conn.getErrorStream();
 				if (error != null) {
-					return Either.fail(readJsonOrText(error));
+					return Either.fail(readJsonOrText(conn.getContentType(), error));
 				}
 			} catch (Exception e) {
 				return Either.fail(e.getMessage());
@@ -136,19 +137,19 @@ public class DslServer {
 		}
 	}
 
-	public static Either<String> put(final String address, final Map<InputParameter, String> parameters, String argument) {
-		return send(address, "PUT", parameters, argument);
+	public static Either<String> put(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
+		return send(address, "PUT", parameters, json.toString());
 	}
 
-	public static Either<String> post(final String address, final Map<InputParameter, String> parameters, String argument) {
-		return send(address, "POST", parameters, argument);
+	public static Either<String> post(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
+		return send(address, "POST", parameters, json.toString());
 	}
 
 	private static Either<String> send(
 			final String address,
 			final String method,
 			final Map<InputParameter, String> parameters,
-			String argument) {
+			final String argument) {
 		Either<HttpsURLConnection> tryConn = setupConnection (address, parameters, true, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
@@ -168,7 +169,7 @@ public class DslServer {
 				}
 				final InputStream error = conn.getErrorStream();
 				if (error != null) {
-					return Either.fail(readJsonOrText(error));
+					return Either.fail(readJsonOrText(conn.getContentType(), error));
 				}
 			} catch (Exception e) {
 				return Either.fail(e.getMessage());

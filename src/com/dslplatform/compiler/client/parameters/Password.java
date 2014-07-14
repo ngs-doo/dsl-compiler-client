@@ -1,9 +1,9 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
 
+import java.io.Console;
 import java.util.Map;
 
 public enum Password implements CompileParameter {
@@ -22,7 +22,12 @@ public enum Password implements CompileParameter {
 		String value = parameters.get(InputParameter.PASSWORD);
 		if (value == null) {
 			System.out.print("Password: ");
-			char[] pass = System.console().readPassword();
+			final Console console = System.console();
+			if (console == null) {
+				System.out.println("Console not available. Specify password as argument.");
+				System.exit(0);
+			}
+			char[] pass = console.readPassword();
 			value = new String(pass);
 			parameters.put(InputParameter.PASSWORD, value);
 		}

@@ -8,6 +8,21 @@ import java.util.Map;
 public enum Settings implements CompileParameter {
 	INSTANCE;
 
+	public static String parseAndConvert(final Map<InputParameter, String> parameters) {
+		final String value = parameters.get(InputParameter.SETTINGS);
+		final String[] settingInputs = value != null ? value.split(",") : new String[0];
+		final StringBuilder sb = new StringBuilder();
+		for(int i=0;i<settingInputs.length;i++) {
+			Option s = Option.from(settingInputs[i]);
+			sb.append(s.platformName);
+			sb.append(',');
+		}
+		if (sb.length() > 0) {
+			sb.setLength(sb.length() - 1);
+		}
+		return sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "";
+	}
+
 	public static enum Option {
 		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "with-active-record"),
 		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),

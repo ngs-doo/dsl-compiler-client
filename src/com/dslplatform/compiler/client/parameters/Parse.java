@@ -3,7 +3,8 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.network.DslServer;
+import com.dslplatform.compiler.client.json.JsonValue;
+import com.dslplatform.compiler.client.DslServer;
 import java.util.Map;
 
 public enum Parse implements CompileParameter {
@@ -24,8 +25,8 @@ public enum Parse implements CompileParameter {
 	@Override
 	public void run(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.PARSE)) {
-			String arg = Utils.toJson(DslPath.getCurrentDsl(parameters)).toString();
-			Either<String> result = DslServer.put("Platform.svc/parse", parameters, arg);
+			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(parameters));
+			final Either<String> result = DslServer.put("Platform.svc/parse", parameters, json);
 			if (result.isSuccess()) {
 				System.out.println("Parse successful.");
 			}
