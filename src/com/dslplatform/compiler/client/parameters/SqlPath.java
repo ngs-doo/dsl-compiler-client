@@ -11,7 +11,7 @@ public enum SqlPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
-		if(parameters.containsKey(InputParameter.SQL)) {
+		if (parameters.containsKey(InputParameter.SQL)) {
 			final String value = parameters.get(InputParameter.SQL);
 			if (value != null && value.length() > 0) {
 				final File sqlPath = new File(value);

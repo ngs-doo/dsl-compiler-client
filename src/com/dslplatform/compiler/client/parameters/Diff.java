@@ -15,7 +15,7 @@ public enum Diff implements CompileParameter {
 
 		final Set<String> currentFiles = new HashSet<String>(currentDsl.keySet());
 		currentFiles.removeAll(previousDsl.keySet());
-		for(final String name : currentFiles) {
+		for (final String name : currentFiles) {
 			System.out.println("New file: " + name);
 			//TODO: options which control whether to show content
 			//System.out.println("----------------------------------------------");
@@ -23,7 +23,7 @@ public enum Diff implements CompileParameter {
 		}
 		final Set<String> previousFiles = new HashSet<String>(previousDsl.keySet());
 		previousFiles.removeAll(currentDsl.keySet());
-		for(final String name : previousFiles) {
+		for (final String name : previousFiles) {
 			System.out.println("Removed file: " + name);
 			//System.out.println("----------------------------------------------");
 			//System.out.println(previousDsl.get(name));
@@ -31,7 +31,7 @@ public enum Diff implements CompileParameter {
 		final Set<String> sharedFiles = new HashSet<String>(currentDsl.keySet());
 		sharedFiles.retainAll(previousDsl.keySet());
 		diff_match_patch diff = new diff_match_patch();
-		for(final String name : sharedFiles) {
+		for (final String name : sharedFiles) {
 			String current = currentDsl.get(name);
 			String previous = previousDsl.get(name);
 			if (current.equals(previous)) {
@@ -61,15 +61,14 @@ public enum Diff implements CompileParameter {
 						if (cur < totalDifs) {
 							if (lines.length <= 10) {
 								System.out.print(text);
-							}
-							else {
+							} else {
 								int width = 0;
-								for (int i=0;i<5;i++) {
+								for (int i = 0; i < 5; i++) {
 									width += lines[i].length() + 1;
 								}
 								System.out.print(text.substring(0, width));
 								width = 0;
-								for (int i=Math.max(5, lines.length - 5);i<lines.length;i++) {
+								for (int i = Math.max(5, lines.length - 5); i < lines.length; i++) {
 									width += lines[i].length() + 1;
 								}
 								System.out.println();
@@ -77,13 +76,12 @@ public enum Diff implements CompileParameter {
 								System.out.println();
 								System.out.print(text.substring(text.length() - width));
 							}
-						}
-						else {
+						} else {
 							if (lines.length <= 5) {
 								System.out.print(text);
 							}
 							int width = 0;
-							for (int i=0;i<5;i++) {
+							for (int i = 0; i < 5; i++) {
 								width += lines[i].length() + 1;
 							}
 							System.out.print(text.substring(0, width));
@@ -98,7 +96,7 @@ public enum Diff implements CompileParameter {
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.DIFF)) {
-			if(!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
+			if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
 				System.out.println("Connection string is required to perform a diff operation");
 				System.exit(0);
 			}

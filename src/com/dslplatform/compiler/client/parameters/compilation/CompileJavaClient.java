@@ -23,7 +23,7 @@ public class CompileJavaClient implements CompileAction {
 		});
 		if (found.length == 0) {
 			System.out.println("Java client not found in: " + javaDeps.getAbsolutePath());
-			if(parameters.containsKey(InputParameter.DOWNLOAD)) {
+			if (parameters.containsKey(InputParameter.DOWNLOAD)) {
 				System.out.println("Downloading dsl client for Java...");
 			} else {
 				System.out.println("Download option not enabled. Enable download option, change dependencies path or place java client files in specified folder.");

@@ -31,6 +31,7 @@ public enum Settings implements CompileParameter {
 		private final String value;
 		private final String description;
 		private final String platformName;
+
 		Option(final String value, final String description, final String platformName) {
 			this.value = value;
 			this.description = description;
@@ -38,7 +39,7 @@ public enum Settings implements CompileParameter {
 		}
 
 		private static Option from(final String value) {
-			for(final Option o : Option.values()) {
+			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
 				}
@@ -48,7 +49,7 @@ public enum Settings implements CompileParameter {
 	}
 
 	private static void listOptions() {
-		for(final Option o : Option.values()) {
+		for (final Option o : Option.values()) {
 			System.out.println(o.value + " - " + o.description);
 		}
 		System.out.println("Example usage: -settings=active-record,no-jackson");
@@ -58,7 +59,7 @@ public enum Settings implements CompileParameter {
 	public boolean check(final Map<InputParameter, String> parameters) {
 		final String value = parameters.get(InputParameter.SETTINGS);
 		final String[] settings = value != null ? value.split(",") : new String[0];
-		for(final String s : settings) {
+		for (final String s : settings) {
 			final Option o = Option.from(s);
 			if (o == null) {
 				System.out.println("Unknown setting: " + s);

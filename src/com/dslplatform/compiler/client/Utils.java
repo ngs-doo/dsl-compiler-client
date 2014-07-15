@@ -39,7 +39,7 @@ public class Utils {
 
 	public static JsonObject toJson(final Map<String, String> map) {
 		final JsonObject json = new JsonObject();
-		for(final Map.Entry<String, String> kv : map.entrySet()) {
+		for (final Map.Entry<String, String> kv : map.entrySet()) {
 			json.add(kv.getKey(), kv.getValue());
 		}
 		return json;
@@ -56,8 +56,7 @@ public class Utils {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
 				findDslFiles(f, foundFiles);
-			}
-			else if (f.getName().endsWith(".dsl") || f.getName().endsWith(".ddd")) {
+			} else if (f.getName().endsWith(".dsl") || f.getName().endsWith(".ddd")) {
 				foundFiles.add(f);
 			}
 		}
@@ -66,8 +65,7 @@ public class Utils {
 	public static void unpackZip(File path, InputStream stream) throws IOException {
 		final ZipInputStream zip = new ZipInputStream(stream);
 		ZipEntry entry;
-		while ((entry = zip.getNextEntry()) != null)
-		{
+		while ((entry = zip.getNextEntry()) != null) {
 			final File file = new File(path.getAbsolutePath() + "/" + entry.getName());
 			final FileOutputStream fos = new FileOutputStream(file);
 			for (int c = zip.read(); c != -1; c = zip.read()) {

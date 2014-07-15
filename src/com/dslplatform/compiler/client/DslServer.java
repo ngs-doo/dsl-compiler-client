@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.json.JsonValue;
 import com.dslplatform.compiler.client.parameters.Password;
+import com.dslplatform.compiler.client.parameters.Prompt;
 import com.dslplatform.compiler.client.parameters.Username;
 import org.w3c.dom.Document;
 import sun.misc.BASE64Encoder;
@@ -42,7 +43,7 @@ public class DslServer {
 	}
 
 	private static String readResponseError(final HttpsURLConnection conn) throws IOException {
-		if(conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
+		if (conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
 			try {
 				synchronized (sslSocketFactory) {
 					final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -51,7 +52,7 @@ public class DslServer {
 					final String error = doc.getDocumentElement().getTextContent();
 					return error != null ? error : "UNKNOWN ERROR";
 				}
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				return "INTERNAL ERROR: Error reading xml response";
 			}
 		}
@@ -103,23 +104,22 @@ public class DslServer {
 			final Map<InputParameter, String> parameters) throws IOException {
 		System.out.println("Authorization failed.");
 		System.out.println(readResponseError(conn));
-		final Console console = System.console();
-		if (console == null) {
+		if (!Prompt.canUsePrompt()) {
 			System.exit(0);
 		}
 		System.out.print("Retry (y/N): ");
-		final String value = console.readLine();
-		if ("y".equalsIgnoreCase(value)) {
-			System.out.println("Retrying...");
-			Username.retryInput(parameters);
-			Password.retryInput(parameters);
-			return true;
+		final String value = System.console().readLine();
+		if (!"y".equalsIgnoreCase(value)) {
+			System.exit(0);
 		}
-		return false;
+		System.out.println("Retrying...");
+		Username.retryInput(parameters);
+		Password.retryInput(parameters);
+		return true;
 	}
 
 	public static Either<String> get(final String address, final Map<InputParameter, String> parameters) {
-		Either<HttpsURLConnection> tryConn = setupConnection (address, parameters, false, true);
+		Either<HttpsURLConnection> tryConn = setupConnection(address, parameters, false, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
 		}
@@ -154,7 +154,7 @@ public class DslServer {
 			final String method,
 			final Map<InputParameter, String> parameters,
 			final String argument) {
-		Either<HttpsURLConnection> tryConn = setupConnection (address, parameters, true, true);
+		Either<HttpsURLConnection> tryConn = setupConnection(address, parameters, true, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
 		}

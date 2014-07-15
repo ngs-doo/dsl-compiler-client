@@ -10,7 +10,7 @@ public enum Password implements CompileParameter {
 	INSTANCE;
 
 	public static void retryInput(final Map<InputParameter, String> parameters) {
-		System.out.print("Password: ");
+		System.out.print("DSL Platform password: ");
 		char[] pass = System.console().readPassword();
 		if (pass.length == 0) {
 			return;
@@ -21,13 +21,12 @@ public enum Password implements CompileParameter {
 	public static String getOrLoad(final Map<InputParameter, String> parameters) {
 		String value = parameters.get(InputParameter.PASSWORD);
 		if (value == null) {
-			System.out.print("Password: ");
-			final Console console = System.console();
-			if (console == null) {
-				System.out.println("Console not available. Specify password as argument.");
+			if(!Prompt.canUsePrompt()) {
+				System.out.println("Password missing. Specify password as argument.");
 				System.exit(0);
 			}
-			char[] pass = console.readPassword();
+			System.out.print("DSL Platform password: ");
+			char[] pass = System.console().readPassword();
 			value = new String(pass);
 			parameters.put(InputParameter.PASSWORD, value);
 		}

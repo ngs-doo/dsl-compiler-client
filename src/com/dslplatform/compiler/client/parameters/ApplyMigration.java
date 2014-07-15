@@ -12,7 +12,7 @@ public enum ApplyMigration implements CompileParameter {
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.APPLY_MIGRATION)) {
-			if(!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
+			if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
 				System.out.println("Connection string is required to apply migration script");
 				System.exit(0);
 			}
@@ -27,7 +27,7 @@ public enum ApplyMigration implements CompileParameter {
 	private final static String DESCRIPTION_END = "MIGRATION_DESCRIPTION*/";
 
 	private static boolean hasDestructive(final String[] descriptions) {
-		for (int i = 1; i < descriptions.length; i+=2) {
+		for (int i = 1; i < descriptions.length; i += 2) {
 			if (descriptions[i].startsWith("--REMOVE:")) {
 				return true;
 			}
@@ -36,7 +36,7 @@ public enum ApplyMigration implements CompileParameter {
 	}
 
 	private static void explainMigrations(final String[] descriptions) {
-		for (int i = 2; i < descriptions.length; i+=2) {
+		for (int i = 2; i < descriptions.length; i += 2) {
 			System.out.println(descriptions[i]);
 		}
 	}
@@ -68,13 +68,12 @@ public enum ApplyMigration implements CompileParameter {
 						if (parameters.containsKey(InputParameter.FORCE_MIGRATION)) {
 							System.out.println("Applying destructive migration due to force option.");
 						} else {
-							final Console console = System.console();
-							if (console == null) {
-								System.out.println("Console not detected. Use force option to apply database migration.");
+							if (!Prompt.canUsePrompt()) {
+								System.out.println("Use force option to apply database migration.");
 								System.exit(0);
 							}
 							System.out.print("Apply migration (y/N):");
-							final String input = console.readLine();
+							final String input = System.console().readLine();
 							if (!"y".equalsIgnoreCase(input)) {
 								System.out.println("Migration canceled.");
 								System.exit(0);
@@ -98,6 +97,9 @@ public enum ApplyMigration implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "DSL Platform will compare previously applied DSL with the current one and provide a migration SQL script.\n" +
+				"When apply option is enabled, SQL script will be applied to the database directly.\n" +
+				"This helps with the workflow during early development, so that developer doesn't need to inspect the script,\n" +
+				"connect to the database and apply it on it.";
 	}
 }

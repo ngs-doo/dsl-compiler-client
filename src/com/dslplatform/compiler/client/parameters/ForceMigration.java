@@ -11,7 +11,7 @@ public enum ForceMigration implements CompileParameter {
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.FORCE_MIGRATION)) {
-			if(!parameters.containsKey(InputParameter.APPLY_MIGRATION)) {
+			if (!parameters.containsKey(InputParameter.APPLY_MIGRATION)) {
 				System.out.println("Force migration can only be used with the apply migration option");
 				System.exit(0);
 			}

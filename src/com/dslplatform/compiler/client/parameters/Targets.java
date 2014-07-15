@@ -31,7 +31,7 @@ public enum Targets implements CompileParameter {
 		}
 
 		private static Option from(final String value) {
-			for(final Option o : Option.values()) {
+			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
 				}
@@ -41,7 +41,7 @@ public enum Targets implements CompileParameter {
 	}
 
 	private static void listOptions() {
-		for(final Option o : Option.values()) {
+		for (final Option o : Option.values()) {
 			System.out.println(o.value + " - " + o.description);
 		}
 		System.out.println("Example usage: -target=java_client,revenj");
@@ -59,7 +59,7 @@ public enum Targets implements CompileParameter {
 			listOptions();
 			return false;
 		}
-		for(final String t : targets) {
+		for (final String t : targets) {
 			final Option o = Option.from(t);
 			if (o == null) {
 				System.out.println("Unknown target: " + t);
@@ -69,7 +69,8 @@ public enum Targets implements CompileParameter {
 		}
 		final Map<String, String> dsls = DslPath.getCurrentDsl(parameters);
 		if (dsls.size() == 0) {
-			System.out.println("Can't compile DSL to targets since no DSL was provided. Please check your DSL folder.");
+			System.out.println("Can't compile DSL to targets since no DSL was provided.");
+			System.out.println("Please check your DSL folder: " + parameters.get(InputParameter.DSL));
 			return false;
 		}
 		return true;
@@ -83,7 +84,7 @@ public enum Targets implements CompileParameter {
 		final String[] targetsInputs = parameters.get(InputParameter.TARGET).split(",");
 		final Option[] targets = new Option[targetsInputs.length];
 		final StringBuilder sb = new StringBuilder();
-		for (int i=0;i<targets.length;i++) {
+		for (int i = 0; i < targets.length; i++) {
 			targets[i] = Option.from(targetsInputs[i]);
 			sb.append(targets[i].platformName);
 			sb.append(',');
@@ -100,14 +101,14 @@ public enum Targets implements CompileParameter {
 		}
 		final Either<String> response = DslServer.put(url.toString(), parameters, Utils.toJson(dsls));
 		if (!response.isSuccess()) {
-			System.out.println("Error compiling DSL to specified targets:");
+			System.out.println("Error compiling DSL to specified target.");
 			System.out.println(response.whyNot());
 			System.exit(0);
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
 		final String temp = TempPath.getTempPath().getAbsolutePath();
 		try {
-			for(final String name : files.names()) {
+			for (final String name : files.names()) {
 				final File file = new File(temp + "/" + name);
 				final File parentPath = file.getParentFile();
 				if (!parentPath.exists()) {
@@ -127,7 +128,7 @@ public enum Targets implements CompileParameter {
 			System.out.println(e.getMessage());
 			System.exit(0);
 		}
-		for(final Option t : targets) {
+		for (final Option t : targets) {
 			if (t.action != null) {
 				t.action.compile(new File(temp + "/" + t.platformName), parameters);
 			}
@@ -136,7 +137,7 @@ public enum Targets implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Convert DSL to specified targets (Java client, PHP, Revenj server, ...)";
+		return "Convert DSL to specified target (Java client, PHP, Revenj server, ...)";
 	}
 
 	@Override

@@ -32,7 +32,7 @@ public enum DslPath implements CompileParameter {
 		final List<File> dslFiles = Utils.findDslFiles(dslPath);
 		final Map<String, String> dslMap = new LinkedHashMap<String, String>();
 		final int pathLen = dslPath.getAbsolutePath().length();
-		for(final File file : dslFiles) {
+		for (final File file : dslFiles) {
 			if (!file.canRead()) {
 				System.out.println("Can't read DSL file: " + file.getName());
 				System.exit(0);
@@ -62,10 +62,9 @@ public enum DslPath implements CompileParameter {
 				return false;
 			}
 			parameters.put(InputParameter.DSL, "./dsl");
-		}
-		else {
+		} else {
 			final File dslPath = new File(value);
-			if(!dslPath.exists()) {
+			if (!dslPath.exists()) {
 				System.out.println("Provided DSL path (" + value + ") does not exists. Please provide valid path to DSL files");
 				return false;
 			}

@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.InputParameter;
 
+import java.io.Console;
 import java.sql.*;
 import java.util.*;
 
@@ -126,6 +127,86 @@ public enum DbConnection implements CompileParameter {
 		}
 	}
 
+	private static Map<String, String> getArguments(final Map<InputParameter, String> parameters) {
+		final String cs = parameters.get(InputParameter.CONNECTION_STRING);
+		final String[] args = cs.substring(cs.indexOf("?") + 1).split("&");
+		final Map<String, String> map = new LinkedHashMap<String, String>();
+		for (final String a : args) {
+			final String[] vals = a.split("=");
+			if (vals.length != 2) {
+				return null;
+			}
+			map.put(vals[0], vals[1]);
+		}
+		return map;
+	}
+
+	private static boolean testConnection(final Map<InputParameter, String> parameters) {
+		final String connectionString = parameters.get(InputParameter.CONNECTION_STRING);
+		try {
+			final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + connectionString);
+			final Statement stmt = conn.createStatement();
+			stmt.execute(";");
+			stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+			System.out.println("Error connecting to the database.");
+			System.out.println(e.getMessage());
+			final Map<String, String> args = getArguments(parameters);
+			if (!Prompt.canUsePrompt()) {
+				//TODO: Postgres error messages are localized. Investigate error code
+				if ("The server requested password-based authentication, but no password was provided.".equals(e.getMessage())) {
+					System.out.println();
+					System.out.println("Since console is not available, password must be sent as argument.");
+					System.out.println("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
+				}
+				else if (e.getMessage() != null && e.getMessage().startsWith("FATAL: password authentication failed for user")) {
+					System.out.println();
+					System.out.println("Please provide correct password to access Postgres database.");
+				}
+				return false;
+			}
+			if (args == null) {
+				System.out.println();
+				System.out.println("Invalid connection string provided: " + connectionString);
+				System.out.println("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
+				return false;
+			}
+			if (args.get("password") != null) {
+				System.out.print("Retry database connection with different credentials (y/N):");
+				final String answer = System.console().readLine();
+				if (!"y".equalsIgnoreCase(answer)) {
+					return false;
+				}
+			} else {
+				final String user = args.get("user");
+				if (user != null) {
+					System.out.print("Database username (" + user + "): ");
+				} else {
+					System.out.print("Database username: ");
+				}
+				final String value = System.console().readLine();
+				if (value.length() > 0) {
+					args.put("user", value);
+				} else if (user == null) {
+					System.out.println("Username not provided");
+					return false;
+				}
+			}
+			System.out.print("Database password: ");
+			final char[] pass = System.console().readPassword();
+			args.put("password", new String(pass));
+			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") +1));
+			for(final Map.Entry<String, String> kv : args.entrySet()) {
+				newCs.append(kv.getKey() + "=" + kv.getValue());
+				newCs.append("&");
+			}
+			parameters.put(InputParameter.CONNECTION_STRING, newCs.toString());
+			return testConnection(parameters);
+		}
+		return true;
+	}
+
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
@@ -142,18 +223,7 @@ public enum DbConnection implements CompileParameter {
 			System.out.println("Error loading Postgres driver.");
 			System.exit(0);
 		}
-		try {
-			final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + value);
-			final Statement stmt = conn.createStatement();
-			stmt.execute(";");
-			stmt.close();
-			conn.close();
-		} catch (SQLException e) {
-			System.out.println("Error connecting to the database.");
-			System.out.println(e.getMessage());
-			System.exit(0);
-		}
-		return true;
+		return testConnection(parameters);
 	}
 
 	@Override
@@ -167,6 +237,8 @@ public enum DbConnection implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Previous version of DSL is required for various actions, such as diff and SQL migration.\n" +
+				"Connection string can be passed from the properties file or as command argument.\n" +
+				"If password is not defined in the connection string and console is available, it will prompt for database credentials.";
 	}
 }

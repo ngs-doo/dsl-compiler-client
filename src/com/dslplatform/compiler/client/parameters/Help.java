@@ -5,16 +5,28 @@ import com.dslplatform.compiler.client.json.JsonValue;
 
 import java.util.Map;
 
-public enum Parse implements CompileParameter {
+public enum Help implements CompileParameter {
 	INSTANCE;
 
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.PARSE)) {
-			final Map<String, String> dslMap = DslPath.getCurrentDsl(parameters);
-			if (dslMap.size() == 0) {
-				System.out.println("DSL files not found in: " + parameters.get(InputParameter.DSL) + ". At least one DSL file required.");
+		if (parameters.containsKey(InputParameter.HELP)) {
+			final String value = parameters.get(InputParameter.HELP);
+			final InputParameter input = InputParameter.from(value);
+			if (input == null) {
+				System.out.println("Unknown command: " + value);
 				System.exit(0);
+			}
+			final String help = input.parameter.getDetailedDescription();
+			if (help == null) {
+				System.out.println("Sorry, no detailed info about:" + value);
+			} else {
+				if (input.parameter.getShortDescription() != null) {
+					System.out.print(value + ": " + input.parameter.getShortDescription());
+				} else {
+					System.out.println(value);
+				}
+				System.out.println(input.parameter.getDetailedDescription());
 			}
 		}
 		return true;

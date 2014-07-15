@@ -9,9 +9,17 @@ public class Either<T> {
 		this.error = error;
 	}
 
-	public boolean isSuccess() { return error == null; }
-	public T get() { return value; }
-	public String whyNot() { return error; }
+	public boolean isSuccess() {
+		return error == null;
+	}
+
+	public T get() {
+		return value;
+	}
+
+	public String whyNot() {
+		return error;
+	}
 
 	public static <S> Either<S> success(S value) {
 		return new Either<S>(value, null);

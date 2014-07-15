@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public enum InputParameter {
+	HELP("help", "command", Help.INSTANCE),
 	USERNAME("u", "username", Username.INSTANCE),
 	PASSWORD("p", "password", Password.INSTANCE),
 	DSL("dsl", "path", DslPath.INSTANCE),
@@ -24,6 +25,7 @@ public enum InputParameter {
 	MIGRATION("migration", null, Migration.INSTANCE),
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
+	NO_PROMPT("no-prompt", null, Prompt.INSTANCE),
 	REVENJ("revenj", "path", RevenjPath.INSTANCE);
 
 	public final String alias;
@@ -36,8 +38,8 @@ public enum InputParameter {
 		this.parameter = parameter;
 	}
 
-	private static InputParameter from(final String value) {
-		for(final InputParameter cp : InputParameter.values()) {
+	public static InputParameter from(final String value) {
+		for (final InputParameter cp : InputParameter.values()) {
 			if (cp.alias.equalsIgnoreCase(value)) {
 				return cp;
 			}
@@ -48,9 +50,9 @@ public enum InputParameter {
 	public static Map<InputParameter, String> parse(String[] args) {
 		final Map<InputParameter, String> options = new HashMap<InputParameter, String>();
 		final List<String> errors = new ArrayList<String>();
-		for(final String a : args) {
-			if (a.charAt(0) != '-') {
-				errors.add("Invalid parameter: " + a + ". Expecting - at the beginning.");
+		for (final String a : args) {
+			if (a.charAt(0) != '-' && a.charAt(0) != '/') {
+				errors.add("Invalid parameter: " + a + ". Expecting - or / at the beginning.");
 				continue;
 			}
 			final int eq = a.indexOf('=');
@@ -67,7 +69,7 @@ public enum InputParameter {
 			}
 		}
 		if (options.size() == 0 || errors.size() > 0) {
-			for(final String err : errors) {
+			for (final String err : errors) {
 				System.out.println(err);
 			}
 			showHelpAndExit(options.size() == 0);
@@ -75,7 +77,7 @@ public enum InputParameter {
 		return options;
 	}
 
-	public static void showHelpAndExit(final boolean headers) {
+	private static void showHelpAndExit(final boolean headers) {
 		if (headers) {
 			System.out.println("DSL Platform command line client.");
 			System.out.println("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create an SQL migration.");
@@ -85,6 +87,9 @@ public enum InputParameter {
 		System.out.println("Command parameters:");
 		int max = 0;
 		for (final InputParameter ip : InputParameter.values()) {
+			if (ip.parameter.getShortDescription() == null) {
+				continue;
+			}
 			int width = ip.alias.length();
 			if (ip.usage != null) {
 				width += 1 + ip.usage.length();
@@ -95,18 +100,22 @@ public enum InputParameter {
 		}
 		max += 2;
 		for (final InputParameter ip : InputParameter.values()) {
+			if (ip.parameter.getShortDescription() == null) {
+				continue;
+			}
 			System.out.print(" -" + ip.alias);
 			int len = max - ip.alias.length();
 			if (ip.usage != null) {
 				System.out.print("=" + ip.usage);
 				len -= ip.usage.length() + 1;
 			}
-			for(;len >= 0; len--) {
+			for (; len >= 0; len--) {
 				System.out.print(' ');
 			}
 			System.out.println(ip.parameter.getShortDescription());
 		}
+		System.out.println();
+		System.out.println("Example usage: -target=java_client,revenj -db=localhost/Database?user=postgres");
 		System.exit(0);
 	}
-
 }

@@ -14,11 +14,11 @@ public enum Migration implements CompileParameter {
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.MIGRATION)) {
-			if(!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
+			if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
 				System.out.println("Connection string is required to create a migration script");
 				System.exit(0);
 			}
-			if(parameters.containsKey(InputParameter.SQL)) {
+			if (parameters.containsKey(InputParameter.SQL)) {
 				final String value = parameters.get(InputParameter.SQL);
 				if (value == null || value.length() == 0) {
 					return true;
@@ -44,7 +44,7 @@ public enum Migration implements CompileParameter {
 		if (parameters.containsKey(InputParameter.MIGRATION)) {
 			final Map<String, String> currentDsl = DslPath.getCurrentDsl(parameters);
 			final Map.Entry<Map<String, String>, String> previousDslAndVersion = DbConnection.getDatabaseDslAndVersion(parameters);
-			final String url =  "Platform.svc/unmanaged/postgres-migration?version=" + previousDslAndVersion.getValue();
+			final String url = "Platform.svc/unmanaged/postgres-migration?version=" + previousDslAndVersion.getValue();
 			final JsonObject arg =
 					new JsonObject()
 							.add("Old", Utils.toJson(previousDslAndVersion.getKey()))

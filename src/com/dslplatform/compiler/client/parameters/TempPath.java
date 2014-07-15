@@ -22,7 +22,7 @@ public enum TempPath implements CompileParameter {
 		for (final String fn : path.list()) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
-				if(!deletePath(f)) {
+				if (!deletePath(f)) {
 					return false;
 				}
 			}
@@ -44,7 +44,7 @@ public enum TempPath implements CompileParameter {
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform/" + projectName);
 			if (!temp.delete()) {
-				System.out.println("Unable to remove temporary created file: " +  temp.getAbsolutePath());
+				System.out.println("Unable to remove temporary created file: " + temp.getAbsolutePath());
 				return false;
 			}
 			if (path.exists()) {
@@ -64,7 +64,7 @@ public enum TempPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
-		if(parameters.containsKey(InputParameter.TEMP)) {
+		if (parameters.containsKey(InputParameter.TEMP)) {
 			final String value = parameters.get(InputParameter.TEMP);
 			if (value != null && value.length() > 0) {
 				final File path = new File(value);
