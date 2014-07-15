@@ -142,6 +142,13 @@ public enum Targets implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		final StringBuilder sb = new StringBuilder();
+		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n");
+		sb.append("This option specifies which target sources are available.\n");
+		sb.append("---------------------------------------------------------\n");
+		for (final Option o : Option.values()) {
+			sb.append(o.value).append(" - ").append(o.description).append("\n");
+		}
+		return sb.toString();
 	}
 }

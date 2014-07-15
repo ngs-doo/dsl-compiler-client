@@ -83,6 +83,11 @@ public enum DslPath implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Domain Specification Language files contain description of domain model in a language leveraging DDD (Domain-Driven-Design) concepts.\n" +
+				"DSL files should contain descriptions of data structures used through the application and from which various parts of the application will be maintained.\n" +
+				"Snapshot of DSL files will be saved to the database, for future comparison on database migrations.\n" +
+				"\n" +
+				"UTF-8 will be assumed for DSL files.\n" +
+				".dsl and .ddd extensions are supported.";
 	}
 }

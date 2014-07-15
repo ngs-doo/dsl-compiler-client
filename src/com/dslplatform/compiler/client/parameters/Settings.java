@@ -81,6 +81,13 @@ public enum Settings implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		final StringBuilder sb = new StringBuilder();
+		sb.append("DSL Platform compiler supports various compilation options for tweaking target library.\n");
+		sb.append("Some options are only available in some languages.\n");
+		sb.append("--------------------------------------------------\n");
+		for (final Option o : Option.values()) {
+			sb.append(o.value).append(" - ").append(o.description).append("\n");
+		}
+		return sb.toString();
 	}
 }

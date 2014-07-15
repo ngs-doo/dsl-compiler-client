@@ -49,6 +49,8 @@ public enum Password implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "DSL Platform account is required to compile DSL.\n" +
+				"Online DSL compiler is free to use for registered users.\n" +
+				"Specify password for DSL Platform account";
 	}
 }

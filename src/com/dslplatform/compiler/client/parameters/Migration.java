@@ -88,6 +88,13 @@ public enum Migration implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "DSL Platform will compare previously applied DSL with the current one and provide a migration SQL script.\n" +
+				"Developer can inspect migration (although it contains a lot of boilerplate due to Postgres dependency graph),\n" +
+				"to check if the requested migration matches what he had in mind.\n" +
+				"Every migration contains description of the important changes to the database.\n" +
+				"\n" +
+				"Postgres migrations are transactional due to Transactional DDL feature of the Postgres.\n" +
+				"\n" +
+				"While for most migrations ownership of the database is sufficient, some require superuser access (Enum changes, strange primary keys, ...).";
 	}
 }

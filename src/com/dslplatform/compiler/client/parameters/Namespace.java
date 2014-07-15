@@ -24,6 +24,11 @@ public enum Namespace implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Namespaces are supported in languages such as: PHP, Java, Scala.\n" +
+				"\n" +
+				"\n" +
+				"Examples:\n" +
+				"	com.company.project\n" +
+				"	Shipping";
 	}
 }

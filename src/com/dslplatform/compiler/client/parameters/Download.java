@@ -25,6 +25,6 @@ public enum Download implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "If no-prompt option is used, force download of missing dependencies.";
 	}
 }

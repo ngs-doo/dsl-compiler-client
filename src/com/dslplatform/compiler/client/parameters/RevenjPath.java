@@ -6,7 +6,7 @@ import com.dslplatform.compiler.client.InputParameter;
 import java.io.File;
 import java.util.Map;
 
-public enum RevenjPath implements CompileParameter {
+public enum RevenjPath implements CompileParameter { //TODO: overwries revenj target dependency?
 	INSTANCE;
 
 	@Override

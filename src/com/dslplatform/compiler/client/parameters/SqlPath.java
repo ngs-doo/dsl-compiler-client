@@ -37,6 +37,8 @@ public enum SqlPath implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "SQL migration script which contains DDL changes..\n" +
+				"When deploying changes to the production, previously created SQL script should be applied.\n" +
+				"SQL path can be specified so created/applied SQL scripts can be stored and used later.";
 	}
 }

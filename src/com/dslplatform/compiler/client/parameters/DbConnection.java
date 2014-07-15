@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.InputParameter;
 
-import java.io.Console;
 import java.sql.*;
 import java.util.*;
 
@@ -198,7 +197,7 @@ public enum DbConnection implements CompileParameter {
 			args.put("password", new String(pass));
 			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") +1));
 			for(final Map.Entry<String, String> kv : args.entrySet()) {
-				newCs.append(kv.getKey() + "=" + kv.getValue());
+				newCs.append(kv.getKey()).append("=").append(kv.getValue());
 				newCs.append("&");
 			}
 			parameters.put(InputParameter.CONNECTION_STRING, newCs.toString());
@@ -239,6 +238,14 @@ public enum DbConnection implements CompileParameter {
 	public String getDetailedDescription() {
 		return "Previous version of DSL is required for various actions, such as diff and SQL migration.\n" +
 				"Connection string can be passed from the properties file or as command argument.\n" +
-				"If password is not defined in the connection string and console is available, it will prompt for database credentials.";
+				"If password is not defined in the connection string and console is available, it will prompt for database credentials.\n" +
+				"\n" +
+				"Example connection strings:\n" +
+				"\n" +
+				"	localhost/Database?user=postgres\n" +
+				"	server:5432/DB?user=migration&password=secret&ssl=true\n" +
+				"\n" +
+				"More info about connection strings can be found on PostgreSQL JDBC site: http://jdbc.postgresql.org/documentation/80/connect.html\n" +
+				"Connection string is defined without the jdbc:postgresql:// part";
 	}
 }

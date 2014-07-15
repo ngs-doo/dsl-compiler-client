@@ -94,6 +94,7 @@ public enum TempPath implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Temporary path where sources provided by DSL Platform will be stored.\n" +
+				"When unspecified /DSL-Platform folder in system default temporary path will be used.";
 	}
 }

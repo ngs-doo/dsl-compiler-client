@@ -16,7 +16,7 @@ public enum Diff implements CompileParameter {
 		final Set<String> currentFiles = new HashSet<String>(currentDsl.keySet());
 		currentFiles.removeAll(previousDsl.keySet());
 		for (final String name : currentFiles) {
-			System.out.println("New file: " + name);
+			System.out.println("New file: " + name + ". Total lines: " + currentDsl.get(name).split("\n").length);
 			//TODO: options which control whether to show content
 			//System.out.println("----------------------------------------------");
 			//System.out.println(currentDsl.get(name));
@@ -24,7 +24,7 @@ public enum Diff implements CompileParameter {
 		final Set<String> previousFiles = new HashSet<String>(previousDsl.keySet());
 		previousFiles.removeAll(currentDsl.keySet());
 		for (final String name : previousFiles) {
-			System.out.println("Removed file: " + name);
+			System.out.println("Removed file: " + name + ". Total lines: " + previousDsl.get(name).split("\n").length);
 			//System.out.println("----------------------------------------------");
 			//System.out.println(previousDsl.get(name));
 		}
@@ -118,6 +118,7 @@ public enum Diff implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Provide diff on changed DSL files. For fast confirmation of changes done before creating new library models or SQL migrations.\n" +
+				"Diff requires read-only access to -NGS- schema in Postgres database where previously applied DSL is stored.\n";
 	}
 }

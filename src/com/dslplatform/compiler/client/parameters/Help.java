@@ -21,11 +21,18 @@ public enum Help implements CompileParameter {
 			if (help == null) {
 				System.out.println("Sorry, no detailed info about:" + value);
 			} else {
+				final int len;
 				if (input.parameter.getShortDescription() != null) {
-					System.out.print(value + ": " + input.parameter.getShortDescription());
+					len = value.length() + 2 + input.parameter.getShortDescription().length();
+					System.out.println(value + ": " + input.parameter.getShortDescription());
 				} else {
+					len = value.length();
 					System.out.println(value);
 				}
+				for(int i=0;i<len;i++) {
+					System.out.print("=");
+				}
+				System.out.println();
 				System.out.println(input.parameter.getDetailedDescription());
 			}
 		}
@@ -48,11 +55,11 @@ public enum Help implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Parse current DSL to check for errors";
+		return "Show detailed description of a command";
 	}
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "Recursion detected...";
 	}
 }

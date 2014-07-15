@@ -48,6 +48,8 @@ public enum Dependencies implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return null;
+		return "DSL client compiler will locally compile sources downloaded from DSL Platform.\n" +
+				"Developers are encouraged to use compiled dlls and jars instead of embedding code into their project.\n" +
+				"Compilation depends on external libraries which are located in the specified path.\n";
 	}
 }
