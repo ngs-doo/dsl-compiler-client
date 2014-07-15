@@ -49,22 +49,16 @@ public enum Migration implements CompileParameter {
 					new JsonObject()
 							.add("Old", Utils.toJson(previousDslAndVersion.getKey()))
 							.add("New", Utils.toJson(currentDsl));
-			final Either<String> response = DslServer.put(url.toString(), parameters, arg);
+			final Either<String> response = DslServer.put(url, parameters, arg);
 			if (!response.isSuccess()) {
 				System.out.println("Error creating SQL migration:");
 				System.out.println(response.whyNot());
 				System.exit(0);
 			}
 			final String value = parameters.get(InputParameter.SQL);
-			final Either<File> temp = Utils.getOrCreateTempPath();
 			final File path;
 			if (!parameters.containsKey(InputParameter.SQL) || value == null || value.length() == 0) {
-				if (!temp.isSuccess()) {
-					System.out.println("Error creating SQL migration to temporary path.");
-					System.out.println(response.whyNot());
-					System.exit(0);
-				}
-				path = temp.get();
+				path = TempPath.getTempPath();
 			} else {
 				path = new File(value);
 			}

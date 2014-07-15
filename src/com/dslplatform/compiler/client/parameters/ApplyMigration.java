@@ -1,13 +1,9 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.JsonObject;
-import com.dslplatform.compiler.client.json.JsonValue;
 
 import java.io.Console;
 import java.io.File;
-import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
 
 public enum ApplyMigration implements CompileParameter {

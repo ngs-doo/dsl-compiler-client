@@ -1,34 +1,15 @@
 package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.json.JsonObject;
 
 import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Utils {
-	private static File cache;
-
-	public static Either<File> getOrCreateTempPath() {
-		if (cache != null) {
-			return Either.success(cache);
-		}
-		try {
-			final String rnd = UUID.randomUUID().toString();
-			final File temp = File.createTempFile(rnd, ".dsl-test");
-			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform/" + rnd);
-			temp.delete();
-			path.mkdir();
-			path.deleteOnExit();
-			return Either.success(cache = path);
-		} catch (IOException e) {
-			return Either.fail(e.getMessage());
-		}
-	}
-
 	public static String read(final InputStream stream) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		StringBuilder sb = new StringBuilder();
@@ -71,7 +52,8 @@ public class Utils {
 	}
 
 	private static void findDslFiles(final File path, final List<File> foundFiles) {
-		for (final File f : path.listFiles()) {
+		for (final String fn : path.list()) {
+			final File f = new File(path, fn);
 			if (f.isDirectory()) {
 				findDslFiles(f, foundFiles);
 			}
@@ -79,5 +61,20 @@ public class Utils {
 				foundFiles.add(f);
 			}
 		}
+	}
+
+	public static void unpackZip(File path, InputStream stream) throws IOException {
+		final ZipInputStream zip = new ZipInputStream(stream);
+		ZipEntry entry;
+		while ((entry = zip.getNextEntry()) != null)
+		{
+			final File file = new File(path.getAbsolutePath() + "/" + entry.getName());
+			final FileOutputStream fos = new FileOutputStream(file);
+			for (int c = zip.read(); c != -1; c = zip.read()) {
+				fos.write(c);
+			}
+			zip.closeEntry();
+		}
+		zip.close();
 	}
 }

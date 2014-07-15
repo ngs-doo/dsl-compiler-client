@@ -40,7 +40,6 @@ public enum Diff implements CompileParameter {
 			LinkedList<diff_match_patch.Diff> changes = diff.diff_main(previous, current);
 			System.out.println("Changed file: " + name);
 			System.out.println("----------------------------------------------");
-			StringBuilder sb = new StringBuilder();
 			final int totalDifs = changes.size();
 			int cur = 0;
 			for (final diff_match_patch.Diff aDiff : changes) {

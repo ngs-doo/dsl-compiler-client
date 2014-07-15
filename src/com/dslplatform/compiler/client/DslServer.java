@@ -3,12 +3,15 @@ package com.dslplatform.compiler.client;
 import com.dslplatform.compiler.client.json.JsonValue;
 import com.dslplatform.compiler.client.parameters.Password;
 import com.dslplatform.compiler.client.parameters.Username;
+import org.w3c.dom.Document;
 import sun.misc.BASE64Encoder;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.net.URL;
 import java.security.KeyStore;
@@ -38,9 +41,22 @@ public class DslServer {
 		}
 	}
 
-	private static String readJsonOrText(final String contentType, final InputStream stream) throws IOException {
-		final String result = Utils.read(stream);
-		if ("application/json".equals(contentType) && result.startsWith("\"") && result.endsWith("\"")) {
+	private static String readResponseError(final HttpsURLConnection conn) throws IOException {
+		if(conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
+			try {
+				synchronized (sslSocketFactory) {
+					final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+					final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+					final Document doc = dBuilder.parse(conn.getErrorStream());
+					final String error = doc.getDocumentElement().getTextContent();
+					return error != null ? error : "UNKNOWN ERROR";
+				}
+			} catch(Exception ex) {
+				return "INTERNAL ERROR: Error reading xml response";
+			}
+		}
+		final String result = Utils.read(conn.getErrorStream());
+		if ("application/json".equals(conn.getContentType()) && result.length() > 0) {
 			return JsonValue.readFrom(result).asString();
 		}
 		return result;
@@ -86,7 +102,7 @@ public class DslServer {
 			final HttpsURLConnection conn,
 			final Map<InputParameter, String> parameters) throws IOException {
 		System.out.println("Authorization failed.");
-		System.out.println(readJsonOrText(conn.getContentType(), conn.getErrorStream()));
+		System.out.println(readResponseError(conn));
 		final Console console = System.console();
 		if (console == null) {
 			System.exit(0);
@@ -115,9 +131,8 @@ public class DslServer {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
 					return get(address, parameters);
 				}
-				final InputStream error = conn.getErrorStream();
-				if (error != null) {
-					return Either.fail(readJsonOrText(conn.getContentType(), error));
+				if (conn.getErrorStream() != null) {
+					return Either.fail(readResponseError(conn));
 				}
 			} catch (Exception e) {
 				return Either.fail(e.getMessage());
@@ -156,9 +171,8 @@ public class DslServer {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
 					return send(address, method, parameters, argument);
 				}
-				final InputStream error = conn.getErrorStream();
-				if (error != null) {
-					return Either.fail(readJsonOrText(conn.getContentType(), error));
+				if (conn.getErrorStream() != null) {
+					return Either.fail(readResponseError(conn));
 				}
 			} catch (Exception e) {
 				return Either.fail(e.getMessage());

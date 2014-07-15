@@ -1,16 +1,10 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
-import org.postgresql.*;
 
 import java.sql.*;
-import java.sql.Driver;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public enum DbConnection implements CompileParameter {
 	INSTANCE;

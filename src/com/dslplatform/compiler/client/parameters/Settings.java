@@ -12,8 +12,8 @@ public enum Settings implements CompileParameter {
 		final String value = parameters.get(InputParameter.SETTINGS);
 		final String[] settingInputs = value != null ? value.split(",") : new String[0];
 		final StringBuilder sb = new StringBuilder();
-		for(int i=0;i<settingInputs.length;i++) {
-			Option s = Option.from(settingInputs[i]);
+		for (String settingInput : settingInputs) {
+			Option s = Option.from(settingInput);
 			sb.append(s.platformName);
 			sb.append(',');
 		}

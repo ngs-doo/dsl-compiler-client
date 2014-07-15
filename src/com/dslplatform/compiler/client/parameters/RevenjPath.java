@@ -12,9 +12,7 @@ public enum RevenjPath implements CompileParameter {
 	@Override
 	public boolean check(final Map<InputParameter, String> parameters) {
 		final String value = parameters.get(InputParameter.REVENJ);
-		final boolean withRevenj = parameters.containsKey(InputParameter.TARGET)
-				? parameters.get(InputParameter.TARGET).contains("revenj")
-				: false;
+		final boolean withRevenj = parameters.containsKey(InputParameter.TARGET) && parameters.get(InputParameter.TARGET).contains("revenj");
 		if (value == null && !withRevenj) {
 			return true;
 		}
