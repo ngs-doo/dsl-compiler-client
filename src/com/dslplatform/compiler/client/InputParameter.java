@@ -80,7 +80,7 @@ public enum InputParameter {
 	private static void showHelpAndExit(final boolean headers) {
 		if (headers) {
 			System.out.println("DSL Platform command line client.");
-			System.out.println("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create an SQL migration.");
+			System.out.println("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
 		}
 		System.out.println();
 		System.out.println();
