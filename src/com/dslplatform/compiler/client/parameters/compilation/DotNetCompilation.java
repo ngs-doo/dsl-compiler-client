@@ -28,8 +28,8 @@ public class DotNetCompilation {
 				return name.toLowerCase().endsWith(".dll");
 			}
 		});
-		final char escapeChar = System.getProperty("os.name").contains("Windows") ? '/' : '-';
-		final char separatorChar = System.getProperty("os.name").contains("Windows") ? '\\' : '/';
+		final char escapeChar = Utils.isWindows() ? '/' : '-';
+		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final StringBuilder command = new StringBuilder(compiler);
 		command.append(" ").append(escapeChar).append("target:library ");
 		command.append(escapeChar).append("optimize+ ");

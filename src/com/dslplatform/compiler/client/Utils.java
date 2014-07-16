@@ -2,7 +2,6 @@ package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.json.JsonObject;
 import org.w3c.dom.Document;
-import sun.org.mozilla.javascript.internal.ast.NumberLiteral;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -115,6 +114,10 @@ public class Utils {
 		} catch (Exception ex) {
 			return false;
 		}
+	}
+
+	public static boolean isWindows() {
+		return System.getProperty("os.name").contains("Windows");
 	}
 
 	public static class CommandResult {

@@ -1,7 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.JsonValue;
 
 import java.util.Map;
 

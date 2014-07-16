@@ -36,6 +36,9 @@ public enum PropertiesFile implements CompileParameter {
 			final List<String> errors = new ArrayList<String>();
 			for (final String row : content.get().split("\n")) {
 				final String line = row.trim();
+				if (line.length() == 0 || line.startsWith("#") || line.startsWith("//")) {
+					continue;
+				}
 				final int eq = line.indexOf('=');
 				final String name = line.substring(0, eq != -1 ? eq : line.length());
 				final InputParameter cp = InputParameter.from(name);
@@ -61,7 +64,9 @@ public enum PropertiesFile implements CompileParameter {
 				return false;
 			}
 			for(final Map.Entry<InputParameter, String> kv : options.entrySet()) {
-				parameters.put(kv.getKey(), kv.getValue());
+				if (!parameters.containsKey(kv.getKey())) {
+					parameters.put(kv.getKey(), kv.getValue());
+				}
 			}
 		}
 		return true;

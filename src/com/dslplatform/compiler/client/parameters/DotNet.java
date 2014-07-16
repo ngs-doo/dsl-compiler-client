@@ -14,7 +14,7 @@ public enum DotNet implements CompileParameter {
 		if (parameters.containsKey(InputParameter.DOTNET)) {
 			return Either.success(parameters.get(InputParameter.DOTNET));
 		} else {
-			final boolean isWindows = System.getProperty("os.name").contains("Windows");
+			final boolean isWindows = Utils.isWindows();
 			final boolean is32Bit = System.getProperty("os.arch").equals("x86");
 			if (isWindows) {
 				if (Utils.testCommand("csc.exe", ".NET Framework")) {
@@ -38,7 +38,7 @@ public enum DotNet implements CompileParameter {
 	public boolean check(final Map<InputParameter, String> parameters) {
 		if (parameters.containsKey(InputParameter.DOTNET)) {
 			final String compiler = parameters.get(InputParameter.DOTNET);
-			final boolean isWindows = System.getProperty("os.name").contains("Windows");
+			final boolean isWindows = Utils.isWindows();
 			if (isWindows && !Utils.testCommand(compiler, ".NET Framework") && !Utils.testCommand(compiler, "Mono")
 					|| !isWindows && !Utils.testCommand(compiler, "Mono")) {
 				System.out.println("dotnet parameter is set, but .NET/Mono compiler not found/doesn't work. Please check specified dotnet parameter.");

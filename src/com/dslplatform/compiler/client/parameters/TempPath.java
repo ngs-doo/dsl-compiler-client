@@ -1,9 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.diff.diff_match_patch;
 
 import java.io.File;
 import java.io.IOException;

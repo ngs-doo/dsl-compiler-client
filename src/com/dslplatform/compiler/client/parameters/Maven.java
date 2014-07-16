@@ -14,12 +14,13 @@ public enum Maven implements CompileParameter {
 		if (parameters.containsKey(InputParameter.MAVEN)) {
 			return Either.success(parameters.get(InputParameter.MAVEN));
 		}
-		try {
-			final String env = System.getProperty("M2");
-			if (env != null && Utils.testCommand(env + " --version", "Apache Maven")) {
-				return Either.success(env);
-			}
-		} catch (Exception ex) {
+		final String env = System.getenv("M2");
+		if (env != null && Utils.testCommand(env + " --version", "Apache Maven")) {
+			return Either.success(env);
+		}
+		if (env != null && Utils.isWindows() && !env.toLowerCase().endsWith(".bat")
+				&& Utils.testCommand(env + ".bat" + " --version", "Apache Maven")) {
+			return Either.success(env + ".bat");
 		}
 		if (Utils.testCommand("mvn --version", "Apache Maven")) {
 			return Either.success("mvn");

@@ -56,8 +56,8 @@ public class JavaCompilation {
 			return Either.fail("Error creating temporary folder for Java class files: " + classOut.getAbsolutePath());
 		}
 		final int len = source.getAbsolutePath().length() + 1;
-		final char classpathSeparator = System.getProperty("os.name").contains("Windows") ? ';' : ':';
-		final char separatorChar = System.getProperty("os.name").contains("Windows") ? '\\' : '/';
+		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
+		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final List<File> javaDirs = findNonEmptyDirsFiles(source);
 
 		final StringBuilder javacCommand = new StringBuilder(javac);
