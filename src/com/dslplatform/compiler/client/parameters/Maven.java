@@ -1,18 +1,13 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
-
-import java.util.Map;
+import com.dslplatform.compiler.client.*;
 
 public enum Maven implements CompileParameter {
 	INSTANCE;
 
-	public static Either<String> findMaven(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.MAVEN)) {
-			return Either.success(parameters.get(InputParameter.MAVEN));
+	public static Either<String> findMaven(final Context context) {
+		if (context.contains(InputParameter.MAVEN)) {
+			return Either.success(context.get(InputParameter.MAVEN));
 		}
 		final String env = System.getenv("M2");
 		if (env != null && Utils.testCommand(env + " --version", "Apache Maven")) {
@@ -29,11 +24,11 @@ public enum Maven implements CompileParameter {
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.MAVEN)) {
-			final String mvn = parameters.get(InputParameter.MAVEN);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.MAVEN)) {
+			final String mvn = context.get(InputParameter.MAVEN);
 			if (!Utils.testCommand(mvn + " --version", "Apache Maven")) {
-				System.out.println("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
+				context.error("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
 				return false;
 			}
 		}
@@ -41,7 +36,7 @@ public enum Maven implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override
@@ -55,6 +50,7 @@ public enum Maven implements CompileParameter {
 				"If mvn is not in path, this option can be used to specify Maven directory.\n" +
 				"\n" +
 				"If Maven is not used, dependencies can be downloaded from DSL Platform.\n" +
+				"If set, M2 environment parameter will be checked." +
 				"\n" +
 				"Example:\n" +
 				"	C:/apache-maven-2.2.1/bin/mvn.bat";

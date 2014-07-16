@@ -1,18 +1,13 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
-
-import java.util.Map;
+import com.dslplatform.compiler.client.*;
 
 public enum DotNet implements CompileParameter {
 	INSTANCE;
 
-	public static Either<String> findCompiler(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.DOTNET)) {
-			return Either.success(parameters.get(InputParameter.DOTNET));
+	public static Either<String> findCompiler(final Context context) {
+		if (context.contains(InputParameter.DOTNET)) {
+			return Either.success(context.get(InputParameter.DOTNET));
 		} else {
 			final boolean isWindows = Utils.isWindows();
 			final boolean is32Bit = System.getProperty("os.arch").equals("x86");
@@ -35,13 +30,14 @@ public enum DotNet implements CompileParameter {
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.DOTNET)) {
-			final String compiler = parameters.get(InputParameter.DOTNET);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.DOTNET)) {
+			final String compiler = context.get(InputParameter.DOTNET);
 			final boolean isWindows = Utils.isWindows();
+			//TODO: should we even ask for Mono on Windows?
 			if (isWindows && !Utils.testCommand(compiler, ".NET Framework") && !Utils.testCommand(compiler, "Mono")
 					|| !isWindows && !Utils.testCommand(compiler, "Mono")) {
-				System.out.println("dotnet parameter is set, but .NET/Mono compiler not found/doesn't work. Please check specified dotnet parameter.");
+				context.error("dotnet parameter is set, but .NET/Mono compiler not found/doesn't work. Please check specified dotnet parameter.");
 				return false;
 			}
 		}
@@ -49,7 +45,7 @@ public enum DotNet implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

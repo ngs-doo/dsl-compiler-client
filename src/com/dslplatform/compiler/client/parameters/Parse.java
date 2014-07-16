@@ -9,11 +9,11 @@ public enum Parse implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.PARSE)) {
-			final Map<String, String> dslMap = DslPath.getCurrentDsl(parameters);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.PARSE)) {
+			final Map<String, String> dslMap = DslPath.getCurrentDsl(context);
 			if (dslMap.size() == 0) {
-				System.out.println("DSL files not found in: " + parameters.get(InputParameter.DSL) + ". At least one DSL file required.");
+				context.error("DSL files not found in: " + context.get(InputParameter.DSL) + ". At least one DSL file required.");
 				System.exit(0);
 			}
 		}
@@ -21,14 +21,14 @@ public enum Parse implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.PARSE)) {
-			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(parameters));
-			final Either<String> result = DslServer.put("Platform.svc/parse", parameters, json);
+	public void run(final Context context) {
+		if (context.contains(InputParameter.PARSE)) {
+			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
+			final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
 			if (result.isSuccess()) {
-				System.out.println("Parse successful.");
+				context.log("Parse successful.");
 			} else {
-				System.out.print(result.whyNot());
+				context.error(result.whyNot());
 				System.exit(0);
 			}
 		}

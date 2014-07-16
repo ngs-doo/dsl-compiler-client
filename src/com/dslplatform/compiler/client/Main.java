@@ -1,22 +1,25 @@
 package com.dslplatform.compiler.client;
 
-import java.util.*;
-
 public class Main {
-	public static void main(String[] args) {
-		final Map<InputParameter, String> options = InputParameter.parse(args);
+	public static void main(final String[] args) {
+		final Context context = new Context();
+		InputParameter.parse(args, context);
+		processContext(context);
+	}
+
+	public static void processContext(final Context context) {
 		for (final InputParameter ip : InputParameter.values()) {
-			if (!ip.parameter.check(options)) {
+			if (!ip.parameter.check(context)) {
 				if (ip.parameter.getDetailedDescription() != null) {
-					System.out.println();
-					System.out.println();
-					System.out.println(ip.parameter.getDetailedDescription());
+					context.log();
+					context.log();
+					context.log(ip.parameter.getDetailedDescription());
 				}
 				System.exit(0);
 			}
 		}
 		for (final InputParameter ip : InputParameter.values()) {
-			ip.parameter.run(options);
+			ip.parameter.run(context);
 		}
 	}
 }

@@ -1,28 +1,23 @@
 package com.dslplatform.compiler.client.parameters.compilation;
 
-import com.dslplatform.compiler.client.DslServer;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
-import com.dslplatform.compiler.client.parameters.Prompt;
 import com.dslplatform.compiler.client.parameters.TempPath;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
-import java.util.Map;
 
 public class CompileRevenj implements CompileAction {
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		final File depsRoot = Dependencies.getDependenciesRoot(parameters);
+	public boolean check(final Context context) {
+		final File depsRoot = Dependencies.getDependenciesRoot(context);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
 		if (!revenjDeps.exists()) {
 			if (!revenjDeps.mkdirs()) {
-				System.out.println("Failed to create Revenj dependencies folder: " + revenjDeps.getAbsolutePath());
+				context.error("Failed to create Revenj dependencies folder: " + revenjDeps.getAbsolutePath());
 				return false;
 			}
 		}
@@ -33,27 +28,26 @@ public class CompileRevenj implements CompileAction {
 			}
 		});
 		if (found.length == 0) {
-			System.out.println("Revenj dependencies not found in: " + revenjDeps.getAbsolutePath());
-			if (!parameters.containsKey(InputParameter.DOWNLOAD)) {
-				if (!Prompt.canUsePrompt()) {
-					System.out.println("Download option not enabled. Enable download option, change dependencies path or place Revenj files in specified folder.");
+			context.error("Revenj dependencies not found in: " + revenjDeps.getAbsolutePath());
+			if (!context.contains(InputParameter.DOWNLOAD)) {
+				if (!context.canInteract()) {
+					context.error("Download option not enabled. Enable download option, change dependencies path or place Revenj files in specified folder.");
 					return false;
 				}
-				System.out.print("Do you wish to download latest Revenj version from the Internet (y/N):");
-				final String answer = System.console().readLine();
+				final String answer = context.ask("Do you wish to download latest Revenj version from the Internet (y/N):");
 				if (!"y".equalsIgnoreCase(answer)) {
 					System.exit(0);
 				}
 			}
 			try {
-				System.out.println("Downloading Revenj from Github...");
+				context.log("Downloading Revenj from Github...");
 				final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
 				final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
 				conn.setInstanceFollowRedirects(false);
 				conn.setUseCaches(false);
 				conn.connect();
 				if (conn.getResponseCode() != 302) {
-					System.out.println("Error downloading Revenj from Github. Expecting redirect. Got: " + conn.getResponseCode());
+					context.error("Error downloading Revenj from Github. Expecting redirect. Got: " + conn.getResponseCode());
 					return false;
 				}
 				final String redirect = conn.getHeaderField("Location");
@@ -61,25 +55,24 @@ public class CompileRevenj implements CompileAction {
 				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
 				Utils.unpackZip(revenjDeps, httpServer.openConnection().getInputStream());
 			} catch (Exception ex) {
-				System.out.println("Unable to download Revenj from Github.");
-				System.out.println(ex.getMessage());
+				context.error("Unable to download Revenj from Github.");
+				context.error(ex);
 				final String answer;
-				if (!parameters.containsKey(InputParameter.DOWNLOAD)) {
-					if (!Prompt.canUsePrompt()) {
+				if (!context.contains(InputParameter.DOWNLOAD)) {
+					if (!context.canInteract()) {
 						System.exit(0);
 					}
-					System.out.print("Try alternative download from DSL Platform (y/N):");
-					answer = System.console().readLine();
+					answer = context.ask("Try alternative download from DSL Platform (y/N):");
 				} else {
 					answer = "y";
 				}
 				if ("y".equalsIgnoreCase(answer)) {
 					try {
-						System.out.println("Downloading Revenj from DSL Platform...");
+						context.log("Downloading Revenj from DSL Platform...");
 						DslServer.downloadAndUnpack("server", revenjDeps);
 					} catch (Exception ex2) {
-						System.out.println("Unable to download Revenj from DSL Platform.");
-						System.out.println(ex.getMessage());
+						context.error("Unable to download Revenj from DSL Platform.");
+						context.error(ex);
 						return false;
 					}
 				} else {
@@ -91,8 +84,8 @@ public class CompileRevenj implements CompileAction {
 	}
 
 	@Override
-	public void compile(final File path, final Map<InputParameter, String> parameters) {
-		final File depsRoot = Dependencies.getDependenciesRoot(parameters);
+	public void compile(final File path, final Context context) {
+		final File depsRoot = Dependencies.getDependenciesRoot(context);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
 		final File model = new File("./GeneratedModel.dll");
 		final Either<String> compilation =
@@ -109,19 +102,19 @@ public class CompileRevenj implements CompileAction {
 								"System.Xml.Linq.dll",
 								"System.Runtime.Serialization.dll"},
 						revenjDeps,
-						new File(TempPath.getTempPath(), "CSharpServer"),
+						new File(TempPath.getTempPath(context), "CSharpServer"),
 						model,
-						parameters);
+						context);
 		if (!compilation.isSuccess()) {
-			System.out.println("Error during Revenj library compilation.");
-			System.out.println(compilation.whyNot());
+			context.error("Error during Revenj library compilation.");
+			context.error(compilation.whyNot());
 			System.exit(0);
 		}
 		if (model.exists()) {
-			System.out.println("Compiled Revenj library to: " + model.getAbsolutePath());
+			context.log("Compiled Revenj library to: " + model.getAbsolutePath());
 		} else {
-			System.out.println("Can't seem to find compiled Revenj library: " + model.getAbsolutePath());
-			System.out.println(compilation.get());
+			context.error("Can't seem to find compiled Revenj library: " + model.getAbsolutePath());
+			context.log(compilation.get());
 			System.exit(0);
 		}
 	}

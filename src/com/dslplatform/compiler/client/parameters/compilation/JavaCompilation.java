@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.parameters.compilation;
 
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.parameters.JavaPath;
 
@@ -9,9 +9,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-public class JavaCompilation {
+class JavaCompilation {
 
 	private static List<File> findNonEmptyDirsFiles(final File path) {
 		final List<File> foundFiles = new LinkedList<File>();
@@ -36,13 +35,13 @@ public class JavaCompilation {
 		}
 	}
 
-	public static Either<String> compile(
+	static Either<String> compile(
 			final File libraries,
 			final File source,
 			final File output,
-			final Map<InputParameter, String> parameters) {
-		final Either<String> tryCompiler = JavaPath.findCompiler(parameters);
-		final Either<String> tryArchive = JavaPath.findArchive(parameters);
+			final Context context) {
+		final Either<String> tryCompiler = JavaPath.findCompiler(context);
+		final Either<String> tryArchive = JavaPath.findArchive(context);
 		if(!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
@@ -82,7 +81,7 @@ public class JavaCompilation {
 			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
 		}
 
-		System.out.println("Running javac for " + output.getName() + " ...");
+		context.log("Running javac for " + output.getName() + " ...");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(javacCommand.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());
@@ -104,7 +103,7 @@ public class JavaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		System.out.println("Running jar for " + output.getName() + " ...");
+		context.log("Running jar for " + output.getName() + " ...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
 		if (!execArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());

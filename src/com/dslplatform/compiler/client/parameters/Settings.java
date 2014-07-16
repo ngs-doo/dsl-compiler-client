@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.util.Map;
@@ -8,12 +9,11 @@ import java.util.Map;
 public enum Settings implements CompileParameter {
 	INSTANCE;
 
-	public static String parseAndConvert(final Map<InputParameter, String> parameters) {
-		final String value = parameters.get(InputParameter.SETTINGS);
-		final String[] settingInputs = value != null ? value.split(",") : new String[0];
+	public static String parseAndConvert(final String settings) {
+		final String[] inputs = settings != null ? settings.split(",") : new String[0];
 		final StringBuilder sb = new StringBuilder();
-		for (String settingInput : settingInputs) {
-			Option s = Option.from(settingInput);
+		for (String i : inputs) {
+			Option s = Option.from(i);
 			sb.append(s.platformName);
 			sb.append(',');
 		}
@@ -48,22 +48,22 @@ public enum Settings implements CompileParameter {
 		}
 	}
 
-	private static void listOptions() {
+	private static void listOptions(final Context context) {
 		for (final Option o : Option.values()) {
-			System.out.println(o.value + " - " + o.description);
+			context.log(o.value + " - " + o.description);
 		}
-		System.out.println("Example usage: -settings=active-record,no-jackson");
+		context.log("Example usage: -settings=active-record,no-jackson");
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		final String value = parameters.get(InputParameter.SETTINGS);
+	public boolean check(final Context context) {
+		final String value = context.get(InputParameter.SETTINGS);
 		final String[] settings = value != null ? value.split(",") : new String[0];
 		for (final String s : settings) {
 			final Option o = Option.from(s);
 			if (o == null) {
-				System.out.println("Unknown setting: " + s);
-				listOptions();
+				context.error("Unknown setting: " + s);
+				listOptions(context);
 				return false;
 			}
 		}
@@ -71,7 +71,7 @@ public enum Settings implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

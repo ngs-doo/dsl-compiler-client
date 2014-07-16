@@ -1,19 +1,15 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.*;
 
 import java.io.File;
-import java.util.Map;
 
 public enum JavaPath implements CompileParameter {
 	INSTANCE;
 
-	public static Either<String> findCompiler(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.JAVA)) {
-			final File javac = new File(parameters.get(InputParameter.JAVA), "javac");
+	public static Either<String> findCompiler(final Context context) {
+		if (context.contains(InputParameter.JAVA)) {
+			final File javac = new File(context.get(InputParameter.JAVA), "javac");
 			return Either.success(javac.getAbsolutePath());
 		} else {
 			if (Utils.testCommand("javac -help", "Usage: javac")) {
@@ -23,9 +19,9 @@ public enum JavaPath implements CompileParameter {
 		}
 	}
 
-	public static Either<String> findArchive(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.JAVA)) {
-			final File javac = new File(parameters.get(InputParameter.JAVA), "jar");
+	public static Either<String> findArchive(final Context context) {
+		if (context.contains(InputParameter.JAVA)) {
+			final File javac = new File(context.get(InputParameter.JAVA), "jar");
 			return Either.success(javac.getAbsolutePath());
 		} else {
 			if (Utils.testCommand("jar -help", "Usage: jar")) {
@@ -36,17 +32,17 @@ public enum JavaPath implements CompileParameter {
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.JAVA)) {
-			final String path = parameters.get(InputParameter.JAVA);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.JAVA)) {
+			final String path = context.get(InputParameter.JAVA);
 			final File javac = new File(path, "javac");
 			if (!Utils.testCommand(javac.getAbsolutePath(), "Usage: javac")) {
-				System.out.println("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");
+				context.error("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");
 				return false;
 			}
 			final File jar = new File(path, "jar");
 			if (!Utils.testCommand(jar.getAbsolutePath(), "Usage: jar")) {
-				System.out.println("java parameter is set, but Java archive tool not found/doesn't work. Please check specified java parameter.");
+				context.error("java parameter is set, but Java archive tool not found/doesn't work. Please check specified java parameter.");
 				return false;
 			}
 		}
@@ -54,7 +50,7 @@ public enum JavaPath implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

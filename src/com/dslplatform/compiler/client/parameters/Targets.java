@@ -49,44 +49,50 @@ public enum Targets implements CompileParameter {
 		}
 	}
 
-	private static void listOptions() {
+	private static void listOptions(final Context context) {
 		for (final Option o : Option.values()) {
-			System.out.println(o.value + " - " + o.description);
+			context.log(o.value + " - " + o.description);
 		}
-		System.out.println("Example usage: -target=java_client,revenj");
+		context.log("Example usage: -target=java_client,revenj");
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (!parameters.containsKey(InputParameter.TARGET)) {
+	public boolean check(final Context context) {
+		if (!context.contains(InputParameter.TARGET)) {
 			return true;
 		}
-		final String value = parameters.get(InputParameter.TARGET);
+		final String value = context.get(InputParameter.TARGET);
 		final String[] targets = value != null ? value.split(",") : new String[0];
 		if (targets.length == 0) {
-			System.out.println("Targets not provided. Available targets: ");
-			listOptions();
+			context.error("Targets not provided. Available targets: ");
+			listOptions(context);
 			return false;
 		}
 		final Option[] options = new Option[targets.length];
 		for (int i = 0; i < targets.length; i++) {
 			final String t = targets[i];
-			final Option o = Option.from(t);
+			final String name;
+			if (t.contains("=")) {
+				name = t.substring(0, t.indexOf('='));
+			} else {
+				name = t;
+			}
+			final Option o = Option.from(name);
 			if (o == null) {
-				System.out.println("Unknown target: " + t);
-				listOptions();
+				context.error("Unknown target: " + t);
+				listOptions(context);
 				return false;
 			}
 			options[i] = o;
 		}
-		final Map<String, String> dsls = DslPath.getCurrentDsl(parameters);
+		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		if (dsls.size() == 0) {
-			System.out.println("Can't compile DSL to targets since no DSL was provided.");
-			System.out.println("Please check your DSL folder: " + parameters.get(InputParameter.DSL));
+			context.error("Can't compile DSL to targets since no DSL was provided.");
+			context.error("Please check your DSL folder: " + context.get(InputParameter.DSL));
 			return false;
 		}
 		for(final Option o : options) {
-			if (!o.action.check(parameters)) {
+			if (!o.action.check(context)) {
 				return false;
 			}
 		}
@@ -94,11 +100,12 @@ public enum Targets implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
-		if (!parameters.containsKey(InputParameter.TARGET)) {
+	public void run(final Context context) {
+		//TODO: process custom targets
+		if (!context.contains(InputParameter.TARGET)) {
 			return;
 		}
-		final String[] targetsInputs = parameters.get(InputParameter.TARGET).split(",");
+		final String[] targetsInputs = context.get(InputParameter.TARGET).split(",");
 		final Option[] targets = new Option[targetsInputs.length];
 		final StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < targets.length; i++) {
@@ -106,24 +113,24 @@ public enum Targets implements CompileParameter {
 			sb.append(targets[i].platformName);
 			sb.append(',');
 		}
-		final Map<String, String> dsls = DslPath.getCurrentDsl(parameters);
+		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		final StringBuilder url = new StringBuilder("Platform.svc/unmanaged/source?targets=");
 		url.append(sb.substring(0, sb.length() - 1));
-		if (parameters.containsKey(InputParameter.NAMESPACE)) {
-			url.append("&namespace=").append(parameters.get(InputParameter.NAMESPACE));
+		if (context.contains(InputParameter.NAMESPACE)) {
+			url.append("&namespace=").append(context.get(InputParameter.NAMESPACE));
 		}
-		final String settings = Settings.parseAndConvert(parameters);
+		final String settings = Settings.parseAndConvert(context.get(InputParameter.SETTINGS));
 		if (settings.length() > 0) {
 			url.append("&options=").append(settings);
 		}
-		final Either<String> response = DslServer.put(url.toString(), parameters, Utils.toJson(dsls));
+		final Either<String> response = DslServer.put(url.toString(), context, Utils.toJson(dsls));
 		if (!response.isSuccess()) {
-			System.out.println("Error compiling DSL to specified target.");
-			System.out.println(response.whyNot());
+			context.error("Error compiling DSL to specified target.");
+			context.error(response.whyNot());
 			System.exit(0);
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
-		final String temp = TempPath.getTempPath().getAbsolutePath();
+		final String temp = TempPath.getTempPath(context).getAbsolutePath();
 		final Set<String> escapeNames = new HashSet<String>();
 		for (final Option t : targets) {
 			if (t.convertToPath) {
@@ -139,24 +146,24 @@ public enum Targets implements CompileParameter {
 				final File parentPath = file.getParentFile();
 				if (!parentPath.exists()) {
 					if (!parentPath.mkdirs()) {
-						System.out.println("Failed creating path for target file: " + parentPath.getAbsolutePath());
+						context.error("Failed creating path for target file: " + parentPath.getAbsolutePath());
 						System.exit(0);
 					}
 				}
 				if (!file.createNewFile()) {
-					System.out.println("Failed creating target file: " + file.getAbsolutePath());
+					context.error("Failed creating target file: " + file.getAbsolutePath());
 					System.exit(0);
 				}
 				Utils.saveFile(file, files.get(name).asString());
 			}
 		} catch (IOException e) {
-			System.out.println("Can't create temporary target file. Compilation results can't be saved locally.");
-			System.out.println(e.getMessage());
+			context.error("Can't create temporary target file. Compilation results can't be saved locally.");
+			context.error(e);
 			System.exit(0);
 		}
 		for (final Option t : targets) {
 			if (t.action != null) {
-				t.action.compile(new File(temp, t.platformName), parameters);
+				t.action.compile(new File(temp, t.platformName), context);
 			}
 		}
 	}
@@ -169,7 +176,8 @@ public enum Targets implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n");
+		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n\n");
+		sb.append("Custom output name can be specified with as java_client=/home/model.jar,revenj=/home/revenj.dll\n\n");
 		sb.append("This option specifies which target sources are available.\n");
 		sb.append("---------------------------------------------------------\n");
 		for (final Option o : Option.values()) {

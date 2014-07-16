@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.io.File;
@@ -10,30 +11,30 @@ import java.util.*;
 public enum TempPath implements CompileParameter {
 	INSTANCE;
 
-	private static File cache;
+	private static final String CACHE_NAME = "temp_path_cache";
 
-	public static File getTempPath() {
-		return cache;
+	public static File getTempPath(final Context context) {
+		return context.load(CACHE_NAME);
 	}
 
-	private static boolean deletePath(final File path) {
+	private static boolean deletePath(final File path, final Context context) {
 		for (final String fn : path.list()) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
-				if (!deletePath(f)) {
-					System.out.println("Error cleaning up temporary directory. Failed to delete: " + f.getAbsolutePath());
+				if (!deletePath(f, context)) {
+					context.error("Error cleaning up temporary directory. Failed to delete: " + f.getAbsolutePath());
 					return false;
 				}
 			}
 			if (!f.delete()) {
-				System.out.println("Error cleaning up temporary file. Failed to delete: " + f.getAbsolutePath());
+				context.error("Error cleaning up temporary file. Failed to delete: " + f.getAbsolutePath());
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private static boolean prepareSystemTempPath() {
+	private static boolean prepareSystemTempPath(final Context context) {
 		try {
 			final String projectLocation = TempPath.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 			final String projectName = projectLocation.lastIndexOf('/') < projectLocation.length() - 1
@@ -43,49 +44,49 @@ public enum TempPath implements CompileParameter {
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform/" + projectName);
 			if (!temp.delete()) {
-				System.out.println("Unable to remove temporary created file: " + temp.getAbsolutePath());
+				context.error("Unable to remove temporary created file: " + temp.getAbsolutePath());
 				return false;
 			}
 			if (path.exists()) {
-				if(!deletePath(path)) {
+				if(!deletePath(path, context)) {
 					return false;
 				}
 			} else if (!path.mkdir()) {
-				System.out.println("Error creating temporary path in: " + path.getAbsolutePath());
+				context.error("Error creating temporary path in: " + path.getAbsolutePath());
 				return false;
 			}
-			cache = path;
+			context.cache(CACHE_NAME, path);
 			return true;
 		} catch (IOException e) {
-			System.out.println("Error preparing system temporary path");
-			System.out.println(e.getMessage());
+			context.error("Error preparing system temporary path");
+			context.error(e);
 			return false;
 		}
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.TEMP)) {
-			final String value = parameters.get(InputParameter.TEMP);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.TEMP)) {
+			final String value = context.get(InputParameter.TEMP);
 			if (value != null && value.length() > 0) {
 				final File path = new File(value);
 				if (!path.exists()) {
-					System.out.println("Temporary path provided (" + value + "), but doesn't exists. Please create it or use system path.");
+					context.error("Temporary path provided (" + value + "), but doesn't exists. Please create it or use system path.");
 					return false;
 				}
 				if (!path.isDirectory()) {
-					System.out.println("Temporary path provided, but it's not a directory: " + value);
+					context.error("Temporary path provided, but it's not a directory: " + value);
 					return false;
 				}
-				cache = path;
+				context.cache(CACHE_NAME, path);
 				return true;
 			}
 		}
-		return prepareSystemTempPath();
+		return prepareSystemTempPath(context);
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

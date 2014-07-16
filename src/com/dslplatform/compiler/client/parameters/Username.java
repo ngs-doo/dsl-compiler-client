@@ -1,45 +1,44 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
-
-import java.util.Map;
 
 public enum Username implements CompileParameter {
 	INSTANCE;
 
-	public static void retryInput(final Map<InputParameter, String> parameters) {
-		String value = parameters.get(InputParameter.USERNAME);
+	public static void retryInput(final Context context) {
+		String value = context.get(InputParameter.USERNAME);
+		final String question;
 		if (value != null && value.length() > 0) {
-			System.out.print("DSL Platform username (" + value + "): ");
+			question = "DSL Platform username (" + value + "):";
 		} else {
-			System.out.print("DSL Platform username: ");
+			question = "DSL Platform username:";
 		}
-		value = System.console().readLine();
+		value = context.ask(question);
 		if (value.length() == 0) {
-			if (parameters.get(InputParameter.USERNAME) == null) {
-				System.out.println("Username not provided");
+			if (context.get(InputParameter.USERNAME) == null) {
+				context.error("Username not provided");
 				System.exit(0);
 			}
 			return;
 		}
 		if (value.contains(":")) {
-			System.out.println("Invalid char (:) found in username");
+			context.error("Invalid char (:) found in username");
 			System.exit(0);
 		}
-		parameters.put(InputParameter.USERNAME, value);
+		context.put(InputParameter.USERNAME, value);
 	}
 
-	public static Either<String> getOrLoad(final Map<InputParameter, String> parameters) {
-		String value = parameters.get(InputParameter.USERNAME);
+	public static Either<String> getOrLoad(final Context context) {
+		String value = context.get(InputParameter.USERNAME);
 		if (value == null || value.length() == 0) {
-			if (!Prompt.canUsePrompt()) {
+			if (!context.canInteract()) {
 				return Either.fail("Username missing. Specify username as argument.");
 			}
-			System.out.print("DSL Platform username: ");
-			value = System.console().readLine();
-			parameters.put(InputParameter.USERNAME, value);
+			value = context.ask("DSL Platform username:");
+			context.put(InputParameter.USERNAME, value);
 		}
 		if (value.length() == 0) {
 			return Either.fail("Username not provided");
@@ -51,20 +50,20 @@ public enum Username implements CompileParameter {
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (!parameters.containsKey(InputParameter.USERNAME)) {
+	public boolean check(final Context context) {
+		if (!context.contains(InputParameter.USERNAME)) {
 			return true;
 		}
-		Either<String> value = getOrLoad(parameters);
+		final Either<String> value = getOrLoad(context);
 		if (value.isSuccess()) {
 			return true;
 		}
-		System.out.println(value.whyNot());
+		context.error(value.whyNot());
 		return false;
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

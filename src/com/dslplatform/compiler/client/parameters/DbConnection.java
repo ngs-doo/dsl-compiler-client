@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.sql.*;
@@ -13,21 +14,21 @@ public enum DbConnection implements CompileParameter {
 		return element.replace("\\\"", "\"").replace("\\\\", "\\");
 	}
 
-	private static Map<String, String> convertToMap(final String dsls) {
+	private static Map<String, String> convertToMap(final String dsls, final Context context) {
 		final Map<String, String> tuples = new LinkedHashMap<String, String>();
 		if (dsls == null || dsls.length() == 0) {
 			return tuples;
 		}
 		final int endLength = dsls.length() - 1;
 		if (dsls.charAt(0) != '"' || dsls.charAt(endLength) != '"') {
-			System.out.print("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
+			context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
 			System.exit(0);
 		}
 		final String[] pairs = dsls.substring(1, endLength).split("\", ?\"", -1);
 		for (final String pair : pairs) {
 			final String[] kv = pair.split("\"=>\"", -1);
 			if (kv.length != 2) {
-				System.out.print("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
+				context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
 				System.exit(0);
 			}
 			tuples.put(unescape(kv[0]), unescape(kv[1]));
@@ -35,17 +36,18 @@ public enum DbConnection implements CompileParameter {
 		return tuples;
 	}
 
-	private static Map.Entry<Map<String, String>, String> cache;
+	private static final String CACHE_NAME = "database_dsl_cache";
 
-	public static Map<String, String> getDatabaseDsl(final Map<InputParameter, String> parameters) {
-		return getDatabaseDslAndVersion(parameters).getKey();
+	public static Map<String, String> getDatabaseDsl(final Context context) {
+		return getDatabaseDslAndVersion(context).getKey();
 	}
 
-	public static Map.Entry<Map<String, String>, String> getDatabaseDslAndVersion(final Map<InputParameter, String> parameters) {
+	public static Map.Entry<Map<String, String>, String> getDatabaseDslAndVersion(final Context context) {
+		final Map.Entry<Map<String, String>, String> cache = context.load(CACHE_NAME);
 		if (cache != null) {
 			return cache;
 		}
-		final String value = parameters.get(InputParameter.CONNECTION_STRING);
+		final String value = context.get(InputParameter.CONNECTION_STRING);
 		final Map.Entry<Map<String, String>, String> emptyResult
 				= new AbstractMap.SimpleEntry<Map<String, String>, String>(new HashMap<String, String>(), "");
 		final String connectionString = "jdbc:postgresql://" + value;
@@ -55,8 +57,8 @@ public enum DbConnection implements CompileParameter {
 			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
-			System.out.println("Error opening connection to " + connectionString);
-			System.out.println(e.getMessage());
+			context.error("Error opening connection to " + connectionString);
+			context.error(e);
 			System.exit(0);
 		}
 		try {
@@ -69,11 +71,12 @@ public enum DbConnection implements CompileParameter {
 			if (!hasTable) {
 				stmt.close();
 				conn.close();
-				return cache = emptyResult;
+				context.cache(CACHE_NAME, emptyResult);
+				return emptyResult;
 			}
 		} catch (SQLException ex) {
-			System.out.println("Error checking for migration table in -NGS- schema");
-			System.out.println(ex.getMessage());
+			context.error("Error checking for migration table in -NGS- schema");
+			context.error(ex);
 			System.exit(0);
 		}
 		try {
@@ -91,19 +94,23 @@ public enum DbConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 			if (lastDsl.length() > 0) {
-				final Map<String, String> dslMap = convertToMap(lastDsl);
-				return cache = new AbstractMap.SimpleEntry<Map<String, String>, String>(dslMap, version);
+				final Map<String, String> dslMap = convertToMap(lastDsl, context);
+				final Map.Entry<Map<String, String>, String> result =
+						new AbstractMap.SimpleEntry<Map<String, String>, String>(dslMap, version);
+				context.cache(CACHE_NAME, result);
+				return result;
 			}
 		} catch (SQLException ex) {
-			System.out.println("Error loading previous DSL from migration table in -NGS- schema");
-			System.out.println(ex.getMessage());
+			context.error("Error loading previous DSL from migration table in -NGS- schema");
+			context.error(ex);
 			System.exit(0);
 		}
-		return cache = emptyResult;
+		context.cache(CACHE_NAME, emptyResult);
+		return emptyResult;
 	}
 
-	public static void execute(final Map<InputParameter, String> parameters, final String sql) {
-		final String value = parameters.get(InputParameter.CONNECTION_STRING);
+	public static void execute(final Context context, final String sql) {
+		final String value = context.get(InputParameter.CONNECTION_STRING);
 		final String connectionString = "jdbc:postgresql://" + value;
 		Connection conn = null;
 		Statement stmt = null;
@@ -111,8 +118,8 @@ public enum DbConnection implements CompileParameter {
 			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
-			System.out.println("Error opening connection to " + connectionString);
-			System.out.println(e.getMessage());
+			context.error("Error opening connection to " + connectionString);
+			context.error(e);
 			System.exit(0);
 		}
 		try {
@@ -120,15 +127,14 @@ public enum DbConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException ex) {
-			System.out.println("Error executing sql script");
-			System.out.println(ex.getMessage());
+			context.error("Error executing sql script");
+			context.error(ex);
 			System.exit(0);
 		}
 	}
 
-	private static Map<String, String> getArguments(final Map<InputParameter, String> parameters) {
-		final String cs = parameters.get(InputParameter.CONNECTION_STRING);
-		final String[] args = cs.substring(cs.indexOf("?") + 1).split("&");
+	private static Map<String, String> parse(final String connectionString) {
+		final String[] args = connectionString.substring(connectionString.indexOf("?") + 1).split("&");
 		final Map<String, String> map = new LinkedHashMap<String, String>();
 		for (final String a : args) {
 			final String[] vals = a.split("=");
@@ -140,8 +146,8 @@ public enum DbConnection implements CompileParameter {
 		return map;
 	}
 
-	private static boolean testConnection(final Map<InputParameter, String> parameters) {
-		final String connectionString = parameters.get(InputParameter.CONNECTION_STRING);
+	private static boolean testConnection(final Context context) {
+		final String connectionString = context.get(InputParameter.CONNECTION_STRING);
 		try {
 			final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + connectionString);
 			final Statement stmt = conn.createStatement();
@@ -149,84 +155,83 @@ public enum DbConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			System.out.println("Error connecting to the database.");
-			System.out.println(e.getMessage());
-			final Map<String, String> args = getArguments(parameters);
-			if (!Prompt.canUsePrompt()) {
+			context.error("Error connecting to the database.");
+			context.error(e);
+			final Map<String, String> args = parse(connectionString);
+			if (!context.canInteract()) {
 				//TODO: Postgres error messages are localized. Investigate error code
 				if ("The server requested password-based authentication, but no password was provided.".equals(e.getMessage())) {
-					System.out.println();
-					System.out.println("Since console is not available, password must be sent as argument.");
-					System.out.println("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
+					context.log();
+					context.log("Since console is not available, password must be sent as argument.");
+					context.log("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
 				}
 				else if (e.getMessage() != null && e.getMessage().startsWith("FATAL: password authentication failed for user")) {
-					System.out.println();
-					System.out.println("Please provide correct password to access Postgres database.");
+					context.log();
+					context.log("Please provide correct password to access Postgres database.");
 				}
 				return false;
 			}
 			if (args == null) {
-				System.out.println();
-				System.out.println("Invalid connection string provided: " + connectionString);
-				System.out.println("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
+				context.log();
+				context.log("Invalid connection string provided: " + connectionString);
+				context.log("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
 			if (args.get("password") != null) {
-				System.out.print("Retry database connection with different credentials (y/N):");
-				final String answer = System.console().readLine();
+				final String answer = context.ask("Retry database connection with different credentials (y/N):");
 				if (!"y".equalsIgnoreCase(answer)) {
 					return false;
 				}
 			} else {
 				final String user = args.get("user");
+				final String question;
 				if (user != null) {
-					System.out.print("Database username (" + user + "): ");
+					question = "Database username (" + user + "): ";
 				} else {
-					System.out.print("Database username: ");
+					question = "Database username: ";
 				}
-				final String value = System.console().readLine();
+				final String value = context.ask(question);
 				if (value.length() > 0) {
 					args.put("user", value);
 				} else if (user == null) {
-					System.out.println("Username not provided");
+					context.error("Username not provided");
 					return false;
 				}
 			}
-			System.out.print("Database password: ");
-			final char[] pass = System.console().readPassword();
+			final char[] pass = context.askSecret("Database password: ");
 			args.put("password", new String(pass));
 			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") +1));
 			for(final Map.Entry<String, String> kv : args.entrySet()) {
 				newCs.append(kv.getKey()).append("=").append(kv.getValue());
 				newCs.append("&");
 			}
-			parameters.put(InputParameter.CONNECTION_STRING, newCs.toString());
-			return testConnection(parameters);
+			context.put(InputParameter.CONNECTION_STRING, newCs.toString());
+			return testConnection(context);
 		}
 		return true;
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
+	public boolean check(final Context context) {
+		if (!context.contains(InputParameter.CONNECTION_STRING)) {
 			return true;
 		}
-		final String value = parameters.get(InputParameter.CONNECTION_STRING);
+		final String value = context.get(InputParameter.CONNECTION_STRING);
 		if (value == null || !value.contains("/") || !value.contains("?")) {
-			System.out.println("Invalid connection string defined. An example: localhost:5433/DbRevenj?user=postgres&password=password");
+			context.error("Invalid connection string defined. An example: localhost:5433/DbRevenj?user=postgres&password=password");
 			System.exit(0);
 		}
 		try {
 			Class.forName("org.postgresql.Driver");
 		} catch (ClassNotFoundException ex) {
-			System.out.println("Error loading Postgres driver.");
+			context.error("Error loading Postgres driver.");
 			System.exit(0);
 		}
-		return testConnection(parameters);
+		return testConnection(context);
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

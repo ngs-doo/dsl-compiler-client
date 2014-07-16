@@ -2,22 +2,20 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-import java.io.Console;
 import java.io.File;
-import java.util.Map;
 
 public enum ApplyMigration implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.APPLY_MIGRATION)) {
-			if (!parameters.containsKey(InputParameter.CONNECTION_STRING)) {
-				System.out.println("Connection string is required to apply migration script");
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.APPLY_MIGRATION)) {
+			if (!context.contains(InputParameter.CONNECTION_STRING)) {
+				context.error("Connection string is required to apply migration script");
 				System.exit(0);
 			}
-			if (!parameters.containsKey(InputParameter.MIGRATION)) {
-				parameters.put(InputParameter.MIGRATION, null);
+			if (!context.contains(InputParameter.MIGRATION)) {
+				context.put(InputParameter.MIGRATION, null);
 			}
 		}
 		return true;
@@ -28,32 +26,33 @@ public enum ApplyMigration implements CompileParameter {
 
 	private static boolean hasDestructive(final String[] descriptions) {
 		for (int i = 1; i < descriptions.length; i += 2) {
-			if (descriptions[i].startsWith("--REMOVE:")) {
+			final String desc = descriptions[i];
+			if (desc.startsWith("--REMOVE:") || desc.startsWith("--UNKNOWN:")) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private static void explainMigrations(final String[] descriptions) {
+	private static void explainMigrations(final String[] descriptions, final Context context) {
 		for (int i = 2; i < descriptions.length; i += 2) {
-			System.out.println(descriptions[i]);
+			context.log(descriptions[i]);
 		}
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.APPLY_MIGRATION)) {
-			final File file = Migration.getMigrationFile();
+	public void run(final Context context) {
+		if (context.contains(InputParameter.APPLY_MIGRATION)) {
+			final File file = Migration.getMigrationFile(context);
 			final Either<String> trySql = Utils.readFile(file);
 			if (!trySql.isSuccess()) {
-				System.out.println("Error reading sql migration file.");
-				System.out.println(trySql.whyNot());
+				context.error("Error reading sql migration file.");
+				context.error(trySql.whyNot());
 				System.exit(0);
 			}
 			final String sql = trySql.get();
 			if (sql.length() == 0) {
-				System.out.println("Nothing to apply.");
+				context.log("Nothing to apply.");
 				return;
 			}
 			final int start = sql.indexOf(DESCRIPTION_START);
@@ -61,30 +60,29 @@ public enum ApplyMigration implements CompileParameter {
 			if (end > start) {
 				final String[] descriptions = sql.substring(start + DESCRIPTION_START.length(), end).split("\n");
 				if (descriptions.length > 2) {
-					explainMigrations(descriptions);
+					explainMigrations(descriptions, context);
 					if (hasDestructive(descriptions)) {
-						System.out.println();
-						System.out.println("Destructive migration detected.");
-						if (parameters.containsKey(InputParameter.FORCE_MIGRATION)) {
-							System.out.println("Applying destructive migration due to force option.");
+						context.log();
+						context.log("Destructive migration detected.");
+						if (context.contains(InputParameter.FORCE_MIGRATION)) {
+							context.log("Applying destructive migration due to force option.");
 						} else {
-							if (!Prompt.canUsePrompt()) {
-								System.out.println("Use force option to apply database migration.");
+							if (!context.canInteract()) {
+								context.error("Use force option to apply database migration.");
 								System.exit(0);
 							}
-							System.out.print("Apply migration (y/N):");
-							final String input = System.console().readLine();
+							final String input = context.ask("Apply migration (y/N):");
 							if (!"y".equalsIgnoreCase(input)) {
-								System.out.println("Migration canceled.");
+								context.error("Migration canceled.");
 								System.exit(0);
 							}
 						}
 					}
 				}
-				System.out.println("Applying migration...");
-				DbConnection.execute(parameters, sql);
+				context.log("Applying migration...");
+				DbConnection.execute(context, sql);
 			} else {
-				System.out.println("Migration description missing from SQL migration.");
+				context.error("Migration description missing from SQL migration.");
 				System.exit(0);
 			}
 		}

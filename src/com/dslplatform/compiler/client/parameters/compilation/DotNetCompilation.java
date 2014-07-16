@@ -1,23 +1,22 @@
 package com.dslplatform.compiler.client.parameters.compilation;
 
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.parameters.DotNet;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Map;
 
-public class DotNetCompilation {
+class DotNetCompilation {
 
-	public static Either<String> compile(
+	static Either<String> compile(
 			final String[] references,
 			final File libraries,
 			final File source,
 			final File output,
-			final Map<InputParameter, String> parameters) {
-		final Either<String> tryCompiler = DotNet.findCompiler(parameters);
+			final Context context) {
+		final Either<String> tryCompiler = DotNet.findCompiler(context);
 		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
@@ -42,7 +41,7 @@ public class DotNetCompilation {
 		}
 		command.append(escapeChar).append("lib:\"").append(libraries.getAbsolutePath()).append("\" ");
 		command.append(escapeChar).append("recurse:\"").append(source.getAbsolutePath()).append(separatorChar).append("*.cs\" ");
-		System.out.println("Compiling Revenj library...");
+		context.log("Compiling Revenj library...");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(command.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());

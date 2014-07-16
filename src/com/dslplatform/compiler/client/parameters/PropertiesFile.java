@@ -1,38 +1,32 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public enum PropertiesFile implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
-		if (parameters.containsKey(InputParameter.PROPERTIES)) {
-			final String value = parameters.get(InputParameter.PROPERTIES);
+	public boolean check(final Context context) {
+		if (context.contains(InputParameter.PROPERTIES)) {
+			final String value = context.get(InputParameter.PROPERTIES);
 			if (value == null || value.length() == 0) {
-				System.out.println("Incorrectly defined .properties file");
+				context.error("Incorrectly defined .properties file");
 				return false;
 			}
 			final File file = new File(value);
 			if (!file.exists()) {
-				System.out.println("Can't find specified properties file: " + file.getAbsolutePath());
+				context.error("Can't find specified properties file: " + file.getAbsolutePath());
 				return false;
 			}
 			final Either<String> content = Utils.readFile(file);
 			if (!content.isSuccess()) {
-				System.out.println("Error reading specified properties file: " + file.getAbsolutePath());
+				context.error("Error reading specified properties file: " + file.getAbsolutePath());
 				return false;
 			}
-			final Map<InputParameter, String> options = new HashMap<InputParameter, String>();
 			final List<String> errors = new ArrayList<String>();
 			for (final String row : content.get().split("\n")) {
 				final String line = row.trim();
@@ -48,32 +42,23 @@ public enum PropertiesFile implements CompileParameter {
 					if (eq == -1 && cp.usage != null) {
 						errors.add("Expecting " + cp.usage + " after = for " + line);
 					} else {
-						options.put(cp, name.length() + 1 == line.length() ? null : line.substring(eq + 1));
+						context.put(cp, name.length() + 1 == line.length() ? null : line.substring(eq + 1));
 					}
 				}
 			}
 			if (errors.size() > 0) {
-				System.out.println("Errors found in properties file: " + file.getAbsolutePath());
+				context.error("Errors found in properties file: " + file.getAbsolutePath());
 				for (final String err : errors) {
-					System.out.println(err);
+					context.error(err);
 				}
 				return false;
-			}
-			if (options.size() == 0) {
-				System.out.println("Properties file defined, but no arguments detected: " + file.getAbsolutePath());
-				return false;
-			}
-			for(final Map.Entry<InputParameter, String> kv : options.entrySet()) {
-				if (!parameters.containsKey(kv.getKey())) {
-					parameters.put(kv.getKey(), kv.getValue());
-				}
 			}
 		}
 		return true;
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override

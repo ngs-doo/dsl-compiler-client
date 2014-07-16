@@ -3,9 +3,7 @@ package com.dslplatform.compiler.client;
 import com.dslplatform.compiler.client.parameters.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public enum InputParameter {
 	HELP("help", "command", Help.INSTANCE),
@@ -29,8 +27,7 @@ public enum InputParameter {
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
-	JAVA("java", "path", JavaPath.INSTANCE),
-	REVENJ("revenj", "path", RevenjPath.INSTANCE);
+	JAVA("java", "path", JavaPath.INSTANCE);
 
 	public final String alias;
 	public final String usage;
@@ -51,10 +48,9 @@ public enum InputParameter {
 		return null;
 	}
 
-	public static Map<InputParameter, String> parse(String[] args) {
-		final Map<InputParameter, String> options = new HashMap<InputParameter, String>();
+	public static void parse(final String[] args, final Context context) {
 		if (args.length == 1 && ("/?".equals(args[0]) || "-?".equals(args[0]))) {
-			showHelpAndExit(true);
+			showHelpAndExit(context, true);
 		}
 		final List<String> errors = new ArrayList<String>();
 		for (final String a : args) {
@@ -71,27 +67,26 @@ public enum InputParameter {
 				if (eq == -1 && cp.usage != null) {
 					errors.add("Expecting " + cp.usage + " after = for " + a);
 				} else {
-					options.put(cp, name.length() + 1 == a.length() ? null : a.substring(eq + 1));
+					context.put(cp, name.length() + 1 == a.length() ? null : a.substring(eq + 1));
 				}
 			}
 		}
-		if (options.size() == 0 || errors.size() > 0) {
+		if (errors.size() > 0) {
 			for (final String err : errors) {
-				System.out.println(err);
+				context.error(err);
 			}
-			showHelpAndExit(options.size() == 0);
+			showHelpAndExit(context, args.length == errors.size());
 		}
-		return options;
 	}
 
-	private static void showHelpAndExit(final boolean headers) {
+	private static void showHelpAndExit(final Context context, final boolean headers) {
 		if (headers) {
-			System.out.println("DSL Platform command line client.");
-			System.out.println("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
+			context.log("DSL Platform command line client.");
+			context.log("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
 		}
-		System.out.println();
-		System.out.println();
-		System.out.println("Command parameters:");
+		context.log();
+		context.log();
+		context.log("Command parameters:");
 		int max = 0;
 		for (final InputParameter ip : InputParameter.values()) {
 			if (ip.parameter.getShortDescription() == null) {
@@ -110,19 +105,24 @@ public enum InputParameter {
 			if (ip.parameter.getShortDescription() == null) {
 				continue;
 			}
-			System.out.print(" -" + ip.alias);
+			final StringBuilder sb = new StringBuilder();
+			sb.append(" -").append(ip.alias);
 			int len = max - ip.alias.length();
 			if (ip.usage != null) {
-				System.out.print("=" + ip.usage);
+				sb.append("=").append(ip.usage);
 				len -= ip.usage.length() + 1;
 			}
 			for (; len >= 0; len--) {
-				System.out.print(' ');
+				sb.append(' ');
 			}
-			System.out.println(ip.parameter.getShortDescription());
+			sb.append(ip.parameter.getShortDescription());
+			context.log(sb.toString());
 		}
-		System.out.println();
-		System.out.println("Example usage: -target=java_client,revenj -db=localhost/Database?user=postgres");
+		context.log();
+		context.log("Example usages:");
+		context.log("	-target=java_client,revenj -db=localhost/Database?user=postgres");
+		context.log("	/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
+		context.log("	/properties=development.props /download");
 		System.exit(0);
 	}
 }

@@ -16,7 +16,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.util.Map;
 
 public class DslServer {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/";
@@ -58,7 +57,7 @@ public class DslServer {
 
 	private static Either<HttpsURLConnection> setupConnection(
 			final String address,
-			final Map<InputParameter, String> parameters,
+			final Context context,
 			final boolean sendJson,
 			final boolean getJson) {
 		final HttpsURLConnection conn;
@@ -69,13 +68,13 @@ public class DslServer {
 			return Either.fail(ex.getMessage());
 		}
 		conn.setSSLSocketFactory(SSL_SOCKET_FACTORY);
-		final Either<String> username = Username.getOrLoad(parameters);
+		final Either<String> username = Username.getOrLoad(context);
 		if (!username.isSuccess()) {
 			return Either.fail(username.whyNot());
 		}
-		final String password = Password.getOrLoad(parameters);
+		final String password = Password.getOrLoad(context);
 		final BASE64Encoder encoder = new BASE64Encoder();
-		conn.setConnectTimeout(30000);
+		conn.setConnectTimeout(10000);
 		conn.setReadTimeout(60000);
 		try {
 			final String base64Login = encoder.encode((username.get() + ":" + password).getBytes("UTF-8"));
@@ -94,35 +93,36 @@ public class DslServer {
 
 	private static boolean tryRestart(
 			final HttpsURLConnection conn,
-			final Map<InputParameter, String> parameters) throws IOException {
-		System.out.println("Authorization failed.");
-		System.out.println(readResponseError(conn));
-		if (!Prompt.canUsePrompt()) {
+			final Context context) throws IOException {
+		context.error("Authorization failed.");
+		context.error(readResponseError(conn));
+		if (!context.canInteract()) {
 			System.exit(0);
 		}
-		System.out.print("Retry (y/N): ");
-		final String value = System.console().readLine();
+		final String value = context.ask("Retry (y/N):");
 		if (!"y".equalsIgnoreCase(value)) {
 			System.exit(0);
 		}
-		System.out.println("Retrying...");
-		Username.retryInput(parameters);
-		Password.retryInput(parameters);
+		context.log("Retrying...");
+		Username.retryInput(context);
+		Password.retryInput(context);
 		return true;
 	}
 
-	public static Either<String> get(final String address, final Map<InputParameter, String> parameters) {
-		Either<HttpsURLConnection> tryConn = setupConnection(address, parameters, false, true);
+	public static Either<String> get(final String address, final Context context) {
+		Either<HttpsURLConnection> tryConn = setupConnection(address, context, false, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
 		}
 		HttpsURLConnection conn = tryConn.get();
 		try {
 			return Either.success(Utils.read(conn.getInputStream()));
+		} catch (UnknownHostException ex) {
+			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down: " + ex.getMessage());
 		} catch (Exception ex) {
 			try {
-				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
-					return get(address, parameters);
+				if (conn.getResponseCode() == 403 && tryRestart(conn, context)) {
+					return get(address, context);
 				}
 				if (conn.getErrorStream() != null) {
 					return Either.fail(readResponseError(conn));
@@ -134,8 +134,8 @@ public class DslServer {
 		}
 	}
 
-	public static Either<String> put(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
-		return send(address, "PUT", parameters, json.toString());
+	public static Either<String> put(final String address, final Context context, JsonValue json) {
+		return send(address, "PUT", context, json.toString());
 	}
 
 	/*public static Either<String> post(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
@@ -145,9 +145,9 @@ public class DslServer {
 	private static Either<String> send(
 			final String address,
 			final String method,
-			final Map<InputParameter, String> parameters,
+			final Context context,
 			final String argument) {
-		Either<HttpsURLConnection> tryConn = setupConnection(address, parameters, true, true);
+		Either<HttpsURLConnection> tryConn = setupConnection(address, context, true, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
 		}
@@ -163,8 +163,8 @@ public class DslServer {
 			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down: " + ex.getMessage());
 		} catch (Exception ex) {
 			try {
-				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
-					return send(address, method, parameters, argument);
+				if (conn.getResponseCode() == 403 && tryRestart(conn, context)) {
+					return send(address, method, context, argument);
 				}
 				if (conn.getErrorStream() != null) {
 					return Either.fail(readResponseError(conn));

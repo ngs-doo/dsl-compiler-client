@@ -1,44 +1,41 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
-
-import java.util.Map;
 
 public enum Password implements CompileParameter {
 	INSTANCE;
 
-	public static void retryInput(final Map<InputParameter, String> parameters) {
-		System.out.print("DSL Platform password: ");
-		char[] pass = System.console().readPassword();
+	public static void retryInput(final Context context) {
+		char[] pass = context.askSecret("DSL Platform password:");
 		if (pass.length == 0) {
 			return;
 		}
-		parameters.put(InputParameter.PASSWORD, new String(pass));
+		context.put(InputParameter.PASSWORD, new String(pass));
 	}
 
-	public static String getOrLoad(final Map<InputParameter, String> parameters) {
-		String value = parameters.get(InputParameter.PASSWORD);
+	public static String getOrLoad(final Context context) {
+		String value = context.get(InputParameter.PASSWORD);
 		if (value == null) {
-			if(!Prompt.canUsePrompt()) {
-				System.out.println("Password missing. Specify password as argument.");
+			if(!context.canInteract()) {
+				context.error("Password missing. Specify password as argument.");
 				System.exit(0);
 			}
-			System.out.print("DSL Platform password: ");
-			char[] pass = System.console().readPassword();
+			char[] pass = context.askSecret("DSL Platform password:");
 			value = new String(pass);
-			parameters.put(InputParameter.PASSWORD, value);
+			context.put(InputParameter.PASSWORD, value);
 		}
 		return value;
 	}
 
 	@Override
-	public boolean check(final Map<InputParameter, String> parameters) {
+	public boolean check(final Context context) {
 		return true;
 	}
 
 	@Override
-	public void run(final Map<InputParameter, String> parameters) {
+	public void run(final Context context) {
 	}
 
 	@Override
