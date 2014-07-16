@@ -8,12 +8,16 @@ import java.io.FilenameFilter;
 import java.util.Map;
 
 public class CompileJavaClient implements CompileAction {
+
 	@Override
-	public void compile(final File path, final Map<InputParameter, String> parameters) {
+	public boolean check(final Map<InputParameter, String> parameters) {
 		final File depsRoot = Dependencies.getDependenciesRoot(parameters);
 		final File javaDeps = new File(depsRoot.getAbsolutePath() + "/java_client");
 		if (!javaDeps.exists()) {
-			javaDeps.mkdirs();
+			if(!javaDeps.mkdirs()) {
+				System.out.println("Failed to create java dependency folder: " + javaDeps.getAbsolutePath());
+				System.exit(0);
+			}
 		}
 		final File[] found = javaDeps.listFiles(new FilenameFilter() {
 			@Override
@@ -30,5 +34,10 @@ public class CompileJavaClient implements CompileAction {
 				System.exit(0);
 			}
 		}
+		return true;
+	}
+
+	@Override
+	public void compile(final File path, final Map<InputParameter, String> parameters) {
 	}
 }

@@ -59,19 +59,27 @@ public enum Targets implements CompileParameter {
 			listOptions();
 			return false;
 		}
-		for (final String t : targets) {
+		final Option[] options = new Option[targets.length];
+		for (int i = 0; i < targets.length; i++) {
+			final String t = targets[i];
 			final Option o = Option.from(t);
 			if (o == null) {
 				System.out.println("Unknown target: " + t);
 				listOptions();
 				return false;
 			}
+			options[i] = o;
 		}
 		final Map<String, String> dsls = DslPath.getCurrentDsl(parameters);
 		if (dsls.size() == 0) {
 			System.out.println("Can't compile DSL to targets since no DSL was provided.");
 			System.out.println("Please check your DSL folder: " + parameters.get(InputParameter.DSL));
 			return false;
+		}
+		for(final Option o : options) {
+			if (!o.action.check(parameters)) {
+				return false;
+			}
 		}
 		return true;
 	}

@@ -26,6 +26,7 @@ public enum InputParameter {
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	NO_PROMPT("no-prompt", null, Prompt.INSTANCE),
+	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	REVENJ("revenj", "path", RevenjPath.INSTANCE);
 
 	public final String alias;
@@ -49,6 +50,9 @@ public enum InputParameter {
 
 	public static Map<InputParameter, String> parse(String[] args) {
 		final Map<InputParameter, String> options = new HashMap<InputParameter, String>();
+		if (args.length == 1 && ("/?".equals(args[0]) || "-?".equals(args[0]))) {
+			showHelpAndExit(true);
+		}
 		final List<String> errors = new ArrayList<String>();
 		for (final String a : args) {
 			if (a.charAt(0) != '-' && a.charAt(0) != '/') {

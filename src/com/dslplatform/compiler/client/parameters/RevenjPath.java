@@ -44,7 +44,7 @@ public enum RevenjPath implements CompileParameter { //TODO: overwries revenj ta
 
 	@Override
 	public String getShortDescription() {
-		return "Path to Revenj dlls. When compiling Mono server, Revenj dependencies are required";
+		return "Path to Revenj dlls. When compiling Mono/.NET server, Revenj dependencies are required";
 	}
 
 	@Override

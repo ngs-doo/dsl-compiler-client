@@ -8,6 +8,8 @@ public class Main {
 		for (final InputParameter ip : InputParameter.values()) {
 			if (!ip.parameter.check(options)) {
 				if (ip.parameter.getDetailedDescription() != null) {
+					System.out.println();
+					System.out.println();
 					System.out.println(ip.parameter.getDetailedDescription());
 				}
 				System.exit(0);
