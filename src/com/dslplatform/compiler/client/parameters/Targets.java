@@ -7,27 +7,36 @@ import com.dslplatform.compiler.client.parameters.compilation.CompileJavaClient;
 import com.dslplatform.compiler.client.parameters.compilation.CompileRevenj;
 
 import java.io.*;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public enum Targets implements CompileParameter {
 	INSTANCE;
 
 	public static enum Option {
-		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient()),
-		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj()),
-		PHP("php", "PHP client", "PHP", null),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", null);
+		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient(), true),
+		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
+		PHP("php", "PHP client", "PHP", null, true),
+		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", null, true);
 
 		private final String value;
 		private final String description;
 		private final String platformName;
 		private final CompileAction action;
+		private final boolean convertToPath;
 
-		Option(final String value, final String description, final String platformName, final CompileAction action) {
+		Option(
+				final String value,
+				final String description,
+				final String platformName,
+				final CompileAction action,
+				final boolean convertToPath) {
 			this.value = value;
 			this.description = description;
 			this.platformName = platformName;
 			this.action = action;
+			this.convertToPath = convertToPath;
 		}
 
 		private static Option from(final String value) {
@@ -115,9 +124,18 @@ public enum Targets implements CompileParameter {
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
 		final String temp = TempPath.getTempPath().getAbsolutePath();
+		final Set<String> escapeNames = new HashSet<String>();
+		for (final Option t : targets) {
+			if (t.convertToPath) {
+				escapeNames.add(t.platformName);
+			}
+		}
 		try {
 			for (final String name : files.names()) {
-				final File file = new File(temp + "/" + name);
+				final String nameOnly = name.substring(0, name.lastIndexOf('.'));
+				final File file = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")))
+					? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
+					: new File(temp, name);
 				final File parentPath = file.getParentFile();
 				if (!parentPath.exists()) {
 					if (!parentPath.mkdirs()) {
@@ -138,7 +156,7 @@ public enum Targets implements CompileParameter {
 		}
 		for (final Option t : targets) {
 			if (t.action != null) {
-				t.action.compile(new File(temp + "/" + t.platformName), parameters);
+				t.action.compile(new File(temp, t.platformName), parameters);
 			}
 		}
 	}

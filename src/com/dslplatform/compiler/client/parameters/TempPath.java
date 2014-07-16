@@ -23,11 +23,12 @@ public enum TempPath implements CompileParameter {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
 				if (!deletePath(f)) {
+					System.out.println("Error cleaning up temporary directory. Failed to delete: " + f.getAbsolutePath());
 					return false;
 				}
 			}
 			if (!f.delete()) {
-				System.out.println("Error cleaning up temporary path. Failed to delete: " + f.getAbsolutePath());
+				System.out.println("Error cleaning up temporary file. Failed to delete: " + f.getAbsolutePath());
 				return false;
 			}
 		}
@@ -48,7 +49,9 @@ public enum TempPath implements CompileParameter {
 				return false;
 			}
 			if (path.exists()) {
-				deletePath(path);
+				if(!deletePath(path)) {
+					return false;
+				}
 			} else if (!path.mkdir()) {
 				System.out.println("Error creating temporary path in: " + path.getAbsolutePath());
 				return false;
@@ -94,7 +97,7 @@ public enum TempPath implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return "Temporary path where sources provided by DSL Platform will be stored.\n" +
+		return "Files downloaded from DSL Platform will be stored to temporary path.\n" +
 				"When unspecified /DSL-Platform folder in system default temporary path will be used.";
 	}
 }

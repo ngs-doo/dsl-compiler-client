@@ -9,7 +9,7 @@ import java.util.*;
 public enum Diff implements CompileParameter {
 	INSTANCE;
 
-	public static void compareDsls(final Map<InputParameter, String> parameters) {
+	private static void compareDsls(final Map<InputParameter, String> parameters) {
 		final Map<String, String> currentDsl = DslPath.getCurrentDsl(parameters);
 		final Map<String, String> previousDsl = DbConnection.getDatabaseDsl(parameters);
 
@@ -31,6 +31,7 @@ public enum Diff implements CompileParameter {
 		final Set<String> sharedFiles = new HashSet<String>(currentDsl.keySet());
 		sharedFiles.retainAll(previousDsl.keySet());
 		diff_match_patch diff = new diff_match_patch();
+		boolean hasChanges = false;
 		for (final String name : sharedFiles) {
 			String current = currentDsl.get(name);
 			String previous = previousDsl.get(name);
@@ -40,8 +41,9 @@ public enum Diff implements CompileParameter {
 			LinkedList<diff_match_patch.Diff> changes = diff.diff_main(previous, current);
 			System.out.println("Changed file: " + name);
 			System.out.println("----------------------------------------------");
-			final int totalDifs = changes.size();
+			final int totalDiffs = changes.size();
 			int cur = 0;
+			hasChanges = hasChanges || totalDiffs > 0;
 			for (final diff_match_patch.Diff aDiff : changes) {
 				cur++;
 				final String text = aDiff.text;
@@ -58,16 +60,18 @@ public enum Diff implements CompileParameter {
 						break;
 					case EQUAL:
 						String[] lines = text.split("\n");
-						if (cur < totalDifs) {
+						if (cur < totalDiffs) {
 							if (lines.length <= 10) {
 								System.out.print(text);
 							} else {
 								int width = 0;
-								for (int i = 0; i < 5; i++) {
-									width += lines[i].length() + 1;
+								if (cur > 1) {
+									for (int i = 0; i < 5; i++) {
+										width += lines[i].length() + 1;
+									}
+									System.out.print(text.substring(0, width));
+									width = 0;
 								}
-								System.out.print(text.substring(0, width));
-								width = 0;
 								for (int i = Math.max(5, lines.length - 5); i < lines.length; i++) {
 									width += lines[i].length() + 1;
 								}
@@ -90,6 +94,9 @@ public enum Diff implements CompileParameter {
 				}
 			}
 			System.out.println();
+		}
+		if(currentFiles.size() == 0 && previousFiles.size() == 0 && !hasChanges) {
+			System.out.println("No changes found in DSL");
 		}
 	}
 
@@ -119,6 +126,7 @@ public enum Diff implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		return "Provide diff on changed DSL files. For fast confirmation of changes done before creating new library models or SQL migrations.\n" +
-				"Diff requires read-only access to -NGS- schema in Postgres database where previously applied DSL is stored.\n";
+				"Diff requires read-only access to -NGS- schema in Postgres database where previously applied DSL is stored.\n" +
+				"To disable diff confirmation, use no prompt parameter.";
 	}
 }

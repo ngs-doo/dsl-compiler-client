@@ -9,6 +9,7 @@ import java.util.Map;
 
 public enum InputParameter {
 	HELP("help", "command", Help.INSTANCE),
+	PROPERTIES("properties", "file", PropertiesFile.INSTANCE),
 	USERNAME("u", "username", Username.INSTANCE),
 	PASSWORD("p", "password", Password.INSTANCE),
 	DSL("dsl", "path", DslPath.INSTANCE),
@@ -18,6 +19,7 @@ public enum InputParameter {
 	NAMESPACE("namespace", "value", Namespace.INSTANCE),
 	SETTINGS("settings", "options", Settings.INSTANCE),
 	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),
+	NO_PROMPT("no-prompt", null, Prompt.INSTANCE),
 	TEMP("temp", "path", TempPath.INSTANCE),
 	PARSE("parse", null, Parse.INSTANCE),
 	DIFF("diff", null, Diff.INSTANCE),
@@ -25,8 +27,9 @@ public enum InputParameter {
 	MIGRATION("migration", null, Migration.INSTANCE),
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
-	NO_PROMPT("no-prompt", null, Prompt.INSTANCE),
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
+	MAVEN("maven", "path", Maven.INSTANCE),
+	JAVA("java", "path", JavaPath.INSTANCE),
 	REVENJ("revenj", "path", RevenjPath.INSTANCE);
 
 	public final String alias;

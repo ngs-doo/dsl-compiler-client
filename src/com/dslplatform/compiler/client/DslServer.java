@@ -11,18 +11,16 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.Map;
 
 public class DslServer {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/";
-
-	private static final SSLSocketFactory sslSocketFactory;
+	private static final SSLSocketFactory SSL_SOCKET_FACTORY;
 
 	private static SSLSocketFactory createSSLSocketFactory() throws Exception {
 		final KeyStore truststore = KeyStore.getInstance("jks");
@@ -36,7 +34,7 @@ public class DslServer {
 
 	static {
 		try {
-			sslSocketFactory = createSSLSocketFactory();
+			SSL_SOCKET_FACTORY = createSSLSocketFactory();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -44,17 +42,12 @@ public class DslServer {
 
 	private static String readResponseError(final HttpsURLConnection conn) throws IOException {
 		if (conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
-			try {
-				synchronized (sslSocketFactory) {
-					final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-					final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-					final Document doc = dBuilder.parse(conn.getErrorStream());
-					final String error = doc.getDocumentElement().getTextContent();
-					return error != null ? error : "UNKNOWN ERROR";
-				}
-			} catch (Exception ex) {
-				return "INTERNAL ERROR: Error reading xml response";
+			final Either<Document> xml = Utils.readXml(conn.getErrorStream());
+			if (!xml.isSuccess()) {
+				return "INTERNAL ERROR: Error reading xml response\n" + xml.whyNot();
 			}
+			final String error = xml.get().getDocumentElement().getTextContent();
+			return error != null ? error : "UNKNOWN ERROR";
 		}
 		final String result = Utils.read(conn.getErrorStream());
 		if ("application/json".equals(conn.getContentType()) && result.length() > 0) {
@@ -75,7 +68,7 @@ public class DslServer {
 		} catch (Exception ex) {
 			return Either.fail(ex.getMessage());
 		}
-		conn.setSSLSocketFactory(sslSocketFactory);
+		conn.setSSLSocketFactory(SSL_SOCKET_FACTORY);
 		final Either<String> username = Username.getOrLoad(parameters);
 		if (!username.isSuccess()) {
 			return Either.fail(username.whyNot());
@@ -166,6 +159,8 @@ public class DslServer {
 			os.write(argument.getBytes("UTF-8"));
 			os.close();
 			return Either.success(Utils.read(conn.getInputStream()));
+		} catch (UnknownHostException ex) {
+			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down: " + ex.getMessage());
 		} catch (Exception ex) {
 			try {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, parameters)) {
@@ -179,5 +174,12 @@ public class DslServer {
 			}
 			return Either.fail(ex.getMessage());
 		}
+	}
+
+	public static void downloadAndUnpack(final String file, final File path) throws IOException {
+		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
+		final HttpsURLConnection conn = (HttpsURLConnection)server.openConnection();
+		conn.setSSLSocketFactory(DslServer.SSL_SOCKET_FACTORY);
+		Utils.unpackZip(path, conn.getInputStream());
 	}
 }

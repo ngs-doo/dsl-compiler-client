@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client.parameters.compilation;
 
+import com.dslplatform.compiler.client.DslServer;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.Utils;
@@ -8,7 +9,6 @@ import com.dslplatform.compiler.client.parameters.Prompt;
 import com.dslplatform.compiler.client.parameters.TempPath;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.Console;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
@@ -39,7 +39,7 @@ public class CompileRevenj implements CompileAction {
 					System.out.println("Download option not enabled. Enable download option, change dependencies path or place Revenj files in specified folder.");
 					return false;
 				}
-				System.out.println("Do you wish to download latest Revenj version from the Internet (y/N):");
+				System.out.print("Do you wish to download latest Revenj version from the Internet (y/N):");
 				final String answer = System.console().readLine();
 				if (!"y".equalsIgnoreCase(answer)) {
 					System.exit(0);
@@ -63,16 +63,20 @@ public class CompileRevenj implements CompileAction {
 			} catch (Exception ex) {
 				System.out.println("Unable to download Revenj from Github.");
 				System.out.println(ex.getMessage());
-				if (!Prompt.canUsePrompt()) {
-					System.exit(0);
+				final String answer;
+				if (!parameters.containsKey(InputParameter.DOWNLOAD)) {
+					if (!Prompt.canUsePrompt()) {
+						System.exit(0);
+					}
+					System.out.print("Try alternative download from DSL Platform (y/N):");
+					answer = System.console().readLine();
+				} else {
+					answer = "y";
 				}
-				System.out.print("Retry download from DSL Platform (y/N):");
-				final String answer = System.console().readLine();
 				if ("y".equalsIgnoreCase(answer)) {
 					try {
 						System.out.println("Downloading Revenj from DSL Platform...");
-						final URL server = new URL("https://compiler.dsl-platform.com:8443/platform/download/server.zip");
-						Utils.unpackZip(revenjDeps, server.openConnection().getInputStream());
+						DslServer.downloadAndUnpack("server", revenjDeps);
 					} catch (Exception ex2) {
 						System.out.println("Unable to download Revenj from DSL Platform.");
 						System.out.println(ex.getMessage());
@@ -90,6 +94,7 @@ public class CompileRevenj implements CompileAction {
 	public void compile(final File path, final Map<InputParameter, String> parameters) {
 		final File depsRoot = Dependencies.getDependenciesRoot(parameters);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
+		final File model = new File("./GeneratedModel.dll");
 		final Either<String> compilation =
 				DotNetCompilation.compile(
 						new String[]{
@@ -105,11 +110,18 @@ public class CompileRevenj implements CompileAction {
 								"System.Runtime.Serialization.dll"},
 						revenjDeps,
 						new File(TempPath.getTempPath(), "CSharpServer"),
-						new File("./GeneratedModel.dll"),
+						model,
 						parameters);
 		if (!compilation.isSuccess()) {
 			System.out.println("Error during Revenj library compilation.");
 			System.out.println(compilation.whyNot());
+			System.exit(0);
+		}
+		if (model.exists()) {
+			System.out.println("Compiled Revenj library to: " + model.getAbsolutePath());
+		} else {
+			System.out.println("Can't seem to find compiled Revenj library: " + model.getAbsolutePath());
+			System.out.println(compilation.get());
 			System.exit(0);
 		}
 	}
