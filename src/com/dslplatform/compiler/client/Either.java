@@ -2,9 +2,9 @@ package com.dslplatform.compiler.client;
 
 public class Either<T> {
 	private final T value;
-	private final String error;
+	private final Exception error;
 
-	private Either(T value, String error) {
+	private Either(final T value, final Exception error) {
 		this.value = value;
 		this.error = error;
 	}
@@ -17,15 +17,23 @@ public class Either<T> {
 		return value;
 	}
 
-	public String whyNot() {
+	public Exception whyNot() {
 		return error;
 	}
 
-	public static <S> Either<S> success(S value) {
+	public static <S> Either<S> success(final S value) {
 		return new Either<S>(value, null);
 	}
 
-	public static <F> Either<F> fail(String error) {
+	public static <F> Either<F> fail(final String error) {
+		return new Either<F>(null, new Exception(error));
+	}
+
+	public static <F> Either<F> fail(final Exception error) {
 		return new Either<F>(null, error);
+	}
+
+	public static <F> Either<F> fail(final String description, final Exception error) {
+		return new Either<F>(null, new Exception(description, error));
 	}
 }

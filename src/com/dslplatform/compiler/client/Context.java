@@ -40,7 +40,7 @@ public class Context {
 		return (T) cache.get(name);
 	}
 
-	public void log(final String... values) {
+	public void show(final String... values) {
 		if (values.length == 0) {
 			System.out.println();
 		} else {
@@ -64,6 +64,7 @@ public class Context {
 
 	public String ask(final String question) {
 		System.out.print(question);
+		System.out.print(" ");
 		return System.console().readLine();
 	}
 

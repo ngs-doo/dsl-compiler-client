@@ -4,8 +4,6 @@ import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
 
-import java.util.Map;
-
 public enum Settings implements CompileParameter {
 	INSTANCE;
 
@@ -50,9 +48,9 @@ public enum Settings implements CompileParameter {
 
 	private static void listOptions(final Context context) {
 		for (final Option o : Option.values()) {
-			context.log(o.value + " - " + o.description);
+			context.show(o.value + " - " + o.description);
 		}
-		context.log("Example usage: -settings=active-record,no-jackson");
+		context.show("Example usage: -settings=active-record,no-jackson");
 	}
 
 	@Override

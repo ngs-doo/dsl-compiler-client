@@ -16,7 +16,7 @@ public enum Migration implements CompileParameter {
 		if (context.contains(InputParameter.MIGRATION)) {
 			if (!context.contains(InputParameter.CONNECTION_STRING)) {
 				context.error("Connection string is required to create a migration script");
-				System.exit(0);
+				return false;
 			}
 			if (context.contains(InputParameter.SQL)) {
 				final String value = context.get(InputParameter.SQL);
@@ -40,7 +40,7 @@ public enum Migration implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Context context) {
+	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.MIGRATION)) {
 			final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
 			final Map.Entry<Map<String, String>, String> previousDslAndVersion = DbConnection.getDatabaseDslAndVersion(context);
@@ -53,7 +53,7 @@ public enum Migration implements CompileParameter {
 			if (!response.isSuccess()) {
 				context.error("Error creating SQL migration:");
 				context.error(response.whyNot());
-				System.exit(0);
+				throw new ExitException();
 			}
 			final String value = context.get(InputParameter.SQL);
 			final File path;
@@ -64,7 +64,7 @@ public enum Migration implements CompileParameter {
 			}
 			if (!path.exists()) {
 				context.error("Error accessing SQL path (" + path.getAbsolutePath() + ").");
-				System.exit(0);
+				throw new ExitException();
 			}
 			final String script = response.get().startsWith("\"") && response.get().endsWith("\"")
 					? JsonValue.readFrom(response.get()).asString()
@@ -75,7 +75,7 @@ public enum Migration implements CompileParameter {
 			} catch (IOException e) {
 				context.error("Error saving migration script to " + file.getAbsolutePath());
 				context.error(e);
-				System.exit(0);
+				throw new ExitException();
 			}
 			context.cache(MIGRATION_FILE_NAME, file);
 		}

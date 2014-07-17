@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,29 +18,18 @@ public enum TempPath implements CompileParameter {
 		return context.load(CACHE_NAME);
 	}
 
-	private static boolean deletePath(final File path, final Context context) {
-		for (final String fn : path.list()) {
-			final File f = new File(path, fn);
-			if (f.isDirectory()) {
-				if (!deletePath(f, context)) {
-					context.error("Error cleaning up temporary directory. Failed to delete: " + f.getAbsolutePath());
-					return false;
-				}
-			}
-			if (!f.delete()) {
-				context.error("Error cleaning up temporary file. Failed to delete: " + f.getAbsolutePath());
-				return false;
-			}
-		}
-		return true;
-	}
-
 	private static boolean prepareSystemTempPath(final Context context) {
 		try {
-			final String projectLocation = TempPath.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			final String projectName = projectLocation.lastIndexOf('/') < projectLocation.length() - 1
-					? projectLocation.substring(projectLocation.lastIndexOf('/') + 1)
-					: projectLocation.substring(projectLocation.substring(0, projectLocation.length() - 2).lastIndexOf('/') + 1, projectLocation.length() - 1);
+			final String projectLocation = System.getProperty("user.dir");
+			final File parentFolder = new File(projectLocation).getParentFile();
+			if (parentFolder == null) {
+				context.error("Unable to detect parent folder. Current path: " + projectLocation);
+				return false;
+			}
+			final char pathSeparator = Utils.isWindows() ? '\\' : '/';
+			final String projectName = projectLocation.lastIndexOf(pathSeparator) < projectLocation.length() - 1
+					? projectLocation.substring(projectLocation.lastIndexOf(pathSeparator) + 1)
+					: projectLocation.substring(projectLocation.substring(0, projectLocation.length() - 2).lastIndexOf(pathSeparator) + 1, projectLocation.length() - 1);
 			final String rnd = UUID.randomUUID().toString();
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform/" + projectName);
@@ -48,9 +38,7 @@ public enum TempPath implements CompileParameter {
 				return false;
 			}
 			if (path.exists()) {
-				if(!deletePath(path, context)) {
-					return false;
-				}
+				Utils.deletePath(path);
 			} else if (!path.mkdir()) {
 				context.error("Error creating temporary path in: " + path.getAbsolutePath());
 				return false;
@@ -58,7 +46,7 @@ public enum TempPath implements CompileParameter {
 			context.cache(CACHE_NAME, path);
 			return true;
 		} catch (IOException e) {
-			context.error("Error preparing system temporary path");
+			context.error("Error preparing system temporary path.");
 			context.error(e);
 			return false;
 		}

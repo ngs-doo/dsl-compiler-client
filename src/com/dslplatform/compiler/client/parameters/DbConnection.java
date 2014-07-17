@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.sql.*;
@@ -14,7 +15,7 @@ public enum DbConnection implements CompileParameter {
 		return element.replace("\\\"", "\"").replace("\\\\", "\\");
 	}
 
-	private static Map<String, String> convertToMap(final String dsls, final Context context) {
+	private static Map<String, String> convertToMap(final String dsls, final Context context) throws ExitException {
 		final Map<String, String> tuples = new LinkedHashMap<String, String>();
 		if (dsls == null || dsls.length() == 0) {
 			return tuples;
@@ -22,14 +23,14 @@ public enum DbConnection implements CompileParameter {
 		final int endLength = dsls.length() - 1;
 		if (dsls.charAt(0) != '"' || dsls.charAt(endLength) != '"') {
 			context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
-			System.exit(0);
+			throw new ExitException();
 		}
 		final String[] pairs = dsls.substring(1, endLength).split("\", ?\"", -1);
 		for (final String pair : pairs) {
 			final String[] kv = pair.split("\"=>\"", -1);
 			if (kv.length != 2) {
 				context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
-				System.exit(0);
+				throw new ExitException();
 			}
 			tuples.put(unescape(kv[0]), unescape(kv[1]));
 		}
@@ -38,11 +39,11 @@ public enum DbConnection implements CompileParameter {
 
 	private static final String CACHE_NAME = "database_dsl_cache";
 
-	public static Map<String, String> getDatabaseDsl(final Context context) {
+	public static Map<String, String> getDatabaseDsl(final Context context) throws ExitException {
 		return getDatabaseDslAndVersion(context).getKey();
 	}
 
-	public static Map.Entry<Map<String, String>, String> getDatabaseDslAndVersion(final Context context) {
+	public static Map.Entry<Map<String, String>, String> getDatabaseDslAndVersion(final Context context) throws ExitException {
 		final Map.Entry<Map<String, String>, String> cache = context.load(CACHE_NAME);
 		if (cache != null) {
 			return cache;
@@ -51,15 +52,15 @@ public enum DbConnection implements CompileParameter {
 		final Map.Entry<Map<String, String>, String> emptyResult
 				= new AbstractMap.SimpleEntry<Map<String, String>, String>(new HashMap<String, String>(), "");
 		final String connectionString = "jdbc:postgresql://" + value;
-		Connection conn = null;
-		Statement stmt = null;
+		Connection conn;
+		Statement stmt;
 		try {
 			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
 			context.error(e);
-			System.exit(0);
+			throw new ExitException();
 		}
 		try {
 			final ResultSet migrationExist =
@@ -77,7 +78,7 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error checking for migration table in -NGS- schema");
 			context.error(ex);
-			System.exit(0);
+			throw new ExitException();
 		}
 		try {
 			final ResultSet lastMigration =
@@ -103,24 +104,24 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error loading previous DSL from migration table in -NGS- schema");
 			context.error(ex);
-			System.exit(0);
+			throw new ExitException();
 		}
 		context.cache(CACHE_NAME, emptyResult);
 		return emptyResult;
 	}
 
-	public static void execute(final Context context, final String sql) {
+	public static void execute(final Context context, final String sql) throws ExitException {
 		final String value = context.get(InputParameter.CONNECTION_STRING);
 		final String connectionString = "jdbc:postgresql://" + value;
-		Connection conn = null;
-		Statement stmt = null;
+		Connection conn;
+		Statement stmt;
 		try {
 			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
 			context.error(e);
-			System.exit(0);
+			throw new ExitException();
 		}
 		try {
 			stmt.execute(sql);
@@ -129,7 +130,7 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error executing sql script");
 			context.error(ex);
-			System.exit(0);
+			throw new ExitException();
 		}
 	}
 
@@ -161,20 +162,20 @@ public enum DbConnection implements CompileParameter {
 			if (!context.canInteract()) {
 				//TODO: Postgres error messages are localized. Investigate error code
 				if ("The server requested password-based authentication, but no password was provided.".equals(e.getMessage())) {
-					context.log();
-					context.log("Since console is not available, password must be sent as argument.");
-					context.log("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
+					context.show();
+					context.show("Since console is not available, password must be sent as argument.");
+					context.show("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
 				}
 				else if (e.getMessage() != null && e.getMessage().startsWith("FATAL: password authentication failed for user")) {
-					context.log();
-					context.log("Please provide correct password to access Postgres database.");
+					context.show();
+					context.show("Please provide correct password to access Postgres database.");
 				}
 				return false;
 			}
 			if (args == null) {
-				context.log();
-				context.log("Invalid connection string provided: " + connectionString);
-				context.log("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
+				context.show();
+				context.show("Invalid connection string provided: " + connectionString);
+				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
 			if (args.get("password") != null) {
@@ -212,20 +213,20 @@ public enum DbConnection implements CompileParameter {
 	}
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (!context.contains(InputParameter.CONNECTION_STRING)) {
 			return true;
 		}
 		final String value = context.get(InputParameter.CONNECTION_STRING);
 		if (value == null || !value.contains("/") || !value.contains("?")) {
 			context.error("Invalid connection string defined. An example: localhost:5433/DbRevenj?user=postgres&password=password");
-			System.exit(0);
+			throw new ExitException();
 		}
 		try {
 			Class.forName("org.postgresql.Driver");
 		} catch (ClassNotFoundException ex) {
 			context.error("Error loading Postgres driver.");
-			System.exit(0);
+			throw new ExitException();
 		}
 		return testConnection(context);
 	}

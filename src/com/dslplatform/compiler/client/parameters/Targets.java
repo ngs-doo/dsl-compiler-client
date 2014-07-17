@@ -2,9 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.json.JsonObject;
-import com.dslplatform.compiler.client.parameters.compilation.CompileAction;
-import com.dslplatform.compiler.client.parameters.compilation.CompileJavaClient;
-import com.dslplatform.compiler.client.parameters.compilation.CompileRevenj;
+import com.dslplatform.compiler.client.parameters.build.*;
 
 import java.io.*;
 import java.util.HashSet;
@@ -17,20 +15,20 @@ public enum Targets implements CompileParameter {
 	public static enum Option {
 		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient(), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
-		PHP("php", "PHP client", "PHP", null, true),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", null, true);
+		PHP("php", "PHP client", "PHP", new PreparePhp(), true),
+		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false);
 
 		private final String value;
 		private final String description;
 		private final String platformName;
-		private final CompileAction action;
+		private final BuildAction action;
 		private final boolean convertToPath;
 
 		Option(
 				final String value,
 				final String description,
 				final String platformName,
-				final CompileAction action,
+				final BuildAction action,
 				final boolean convertToPath) {
 			this.value = value;
 			this.description = description;
@@ -51,13 +49,13 @@ public enum Targets implements CompileParameter {
 
 	private static void listOptions(final Context context) {
 		for (final Option o : Option.values()) {
-			context.log(o.value + " - " + o.description);
+			context.show(o.value + " - " + o.description);
 		}
-		context.log("Example usage: -target=java_client,revenj");
+		context.show("Example usage: -target=java_client,revenj");
 	}
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (!context.contains(InputParameter.TARGET)) {
 			return true;
 		}
@@ -100,7 +98,7 @@ public enum Targets implements CompileParameter {
 	}
 
 	@Override
-	public void run(final Context context) {
+	public void run(final Context context) throws ExitException {
 		//TODO: process custom targets
 		if (!context.contains(InputParameter.TARGET)) {
 			return;
@@ -127,7 +125,7 @@ public enum Targets implements CompileParameter {
 		if (!response.isSuccess()) {
 			context.error("Error compiling DSL to specified target.");
 			context.error(response.whyNot());
-			System.exit(0);
+			throw new ExitException();
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
 		final String temp = TempPath.getTempPath(context).getAbsolutePath();
@@ -147,23 +145,23 @@ public enum Targets implements CompileParameter {
 				if (!parentPath.exists()) {
 					if (!parentPath.mkdirs()) {
 						context.error("Failed creating path for target file: " + parentPath.getAbsolutePath());
-						System.exit(0);
+						throw new ExitException();
 					}
 				}
 				if (!file.createNewFile()) {
 					context.error("Failed creating target file: " + file.getAbsolutePath());
-					System.exit(0);
+					throw new ExitException();
 				}
 				Utils.saveFile(file, files.get(name).asString());
 			}
 		} catch (IOException e) {
 			context.error("Can't create temporary target file. Compilation results can't be saved locally.");
 			context.error(e);
-			System.exit(0);
+			throw new ExitException();
 		}
 		for (final Option t : targets) {
 			if (t.action != null) {
-				t.action.compile(new File(temp, t.platformName), context);
+				t.action.build(new File(temp, t.platformName), context);
 			}
 		}
 	}

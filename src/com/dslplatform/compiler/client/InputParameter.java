@@ -27,7 +27,8 @@ public enum InputParameter {
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
-	JAVA("java", "path", JavaPath.INSTANCE);
+	JAVA("java", "path", JavaPath.INSTANCE),
+	SCALA("scala", "path", ScalaPath.INSTANCE);
 
 	public final String alias;
 	public final String usage;
@@ -48,9 +49,10 @@ public enum InputParameter {
 		return null;
 	}
 
-	public static void parse(final String[] args, final Context context) {
+	public static boolean parse(final String[] args, final Context context) {
 		if (args.length == 1 && ("/?".equals(args[0]) || "-?".equals(args[0]))) {
 			showHelpAndExit(context, true);
+			return false;
 		}
 		final List<String> errors = new ArrayList<String>();
 		for (final String a : args) {
@@ -76,17 +78,19 @@ public enum InputParameter {
 				context.error(err);
 			}
 			showHelpAndExit(context, args.length == errors.size());
+			return false;
 		}
+		return true;
 	}
 
 	private static void showHelpAndExit(final Context context, final boolean headers) {
 		if (headers) {
-			context.log("DSL Platform command line client.");
-			context.log("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
+			context.show("DSL Platform command line client.");
+			context.show("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
 		}
-		context.log();
-		context.log();
-		context.log("Command parameters:");
+		context.show();
+		context.show();
+		context.show("Command parameters:");
 		int max = 0;
 		for (final InputParameter ip : InputParameter.values()) {
 			if (ip.parameter.getShortDescription() == null) {
@@ -116,13 +120,12 @@ public enum InputParameter {
 				sb.append(' ');
 			}
 			sb.append(ip.parameter.getShortDescription());
-			context.log(sb.toString());
+			context.show(sb.toString());
 		}
-		context.log();
-		context.log("Example usages:");
-		context.log("	-target=java_client,revenj -db=localhost/Database?user=postgres");
-		context.log("	/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
-		context.log("	/properties=development.props /download");
-		System.exit(0);
+		context.show();
+		context.show("Example usages:");
+		context.show("	-target=java_client,revenj -db=localhost/Database?user=postgres");
+		context.show("	/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
+		context.show("	/properties=development.props /download");
 	}
 }

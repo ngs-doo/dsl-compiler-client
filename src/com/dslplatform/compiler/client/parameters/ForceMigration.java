@@ -12,7 +12,7 @@ public enum ForceMigration implements CompileParameter {
 		if (context.contains(InputParameter.FORCE_MIGRATION)) {
 			if (!context.contains(InputParameter.APPLY_MIGRATION)) {
 				context.error("Force migration can only be used with the apply migration option");
-				System.exit(0);
+				return false;
 			}
 		}
 		return true;

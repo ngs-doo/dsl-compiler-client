@@ -2,9 +2,11 @@ package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.json.JsonObject;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
 import java.util.LinkedList;
@@ -30,8 +32,8 @@ public class Utils {
 		try {
 			final String content = read(new FileInputStream(file));
 			return Either.success(content);
-		} catch (Exception ex) {
-			return Either.fail(ex.getMessage());
+		} catch (IOException ex) {
+			return Either.fail(ex);
 		}
 	}
 
@@ -99,20 +101,12 @@ public class Utils {
 			final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			return Either.success(dBuilder.parse(stream));
-		} catch (Exception ex) {
-			return Either.fail(ex.getMessage());
-		}
-	}
-
-	public static boolean testCommand(final String command, final String contains) {
-		try {
-			final Process compilation = Runtime.getRuntime().exec(command);
-			final String result = compilation.getInputStream() != null ? Utils.read(compilation.getInputStream()) : "";
-			final String error = compilation.getErrorStream() != null ? Utils.read(compilation.getErrorStream()) : "";
-			compilation.waitFor();
-			return error.contains(contains) || result.contains(contains);
-		} catch (Exception ex) {
-			return false;
+		} catch (IOException ex) {
+			return Either.fail(ex);
+		} catch (ParserConfigurationException ex) {
+			return Either.fail(ex);
+		} catch (SAXException ex) {
+			return Either.fail(ex);
 		}
 	}
 
@@ -133,19 +127,28 @@ public class Utils {
 	private static class ConsumeStream extends Thread {
 		private final BufferedReader reader;
 		private final StringBuilder output = new StringBuilder();
-		private Exception exception;
+		private IOException exception;
 
-		public ConsumeStream(final InputStream stream) {
-			if (stream != null) {
-				this.reader = new BufferedReader(new InputStreamReader(stream));
-			} else {
-				this.reader = null;
+		private ConsumeStream(final InputStream stream) {
+			this.reader = new BufferedReader(new InputStreamReader(stream));
+		}
+
+		private ConsumeStream() {
+			this.reader = null;
+		}
+
+		public static ConsumeStream start(final InputStream stream) {
+			if (stream == null) {
+				return new ConsumeStream();
 			}
+			final ConsumeStream cs = new ConsumeStream(stream);
+			cs.start();
+			return cs;
 		}
 
 		@Override
 		public void run() {
-			if (reader == null) {
+			if(reader == null) {
 				return;
 			}
 			final char[] buffer = new char[8192];
@@ -155,29 +158,55 @@ public class Utils {
 					output.append(buffer, 0, len);
 				}
 				reader.close();
-			} catch (Exception ex) {
+			} catch (IOException ex) {
 				exception = ex;
 			}
+		}
+	}
+
+	public static boolean testCommand(final String command, final String contains) {
+		try {
+			final Process compilation = Runtime.getRuntime().exec(command);
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream());
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream());
+			compilation.waitFor();
+			return error.output.toString().contains(contains) || result.output.toString().contains(contains);
+		} catch (IOException ex) {
+			return false;
+		} catch (InterruptedException ex) {
+			return false;
 		}
 	}
 
 	public static Either<CommandResult> runCommand(final String command, final File path) {
 		try {
 			final Process compilation = Runtime.getRuntime().exec(command, null, path);
-			final ConsumeStream result = new ConsumeStream(compilation.getInputStream());
-			final ConsumeStream error = new ConsumeStream(compilation.getErrorStream());
-			result.start();
-			error.start();
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream());
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream());
 			compilation.waitFor();
 			if (result.exception != null) {
-				return Either.fail(result.exception.getMessage());
+				return Either.fail(result.exception);
 			}
 			if (error.exception != null) {
-				return Either.fail(error.exception.getMessage());
+				return Either.fail(error.exception);
 			}
 			return Either.success(new CommandResult(result.output.toString(), error.output.toString()));
-		} catch (Exception ex) {
-			return Either.fail(ex.getMessage());
+		} catch (IOException ex) {
+			return Either.fail(ex);
+		} catch (InterruptedException ex) {
+			return Either.fail(ex);
+		}
+	}
+
+	public static void deletePath(final File path) throws IOException {
+		for (final String fn : path.list()) {
+			final File f = new File(path, fn);
+			if (f.isDirectory()) {
+				deletePath(f);
+			}
+			if (!f.delete()) {
+				throw new IOException("Error cleaning up temporary resource. Failed to delete: " + f.getAbsolutePath());
+			}
 		}
 	}
 }

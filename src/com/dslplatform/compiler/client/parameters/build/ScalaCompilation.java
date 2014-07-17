@@ -1,16 +1,16 @@
-package com.dslplatform.compiler.client.parameters.compilation;
+package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.Utils;
-import com.dslplatform.compiler.client.parameters.JavaPath;
+import com.dslplatform.compiler.client.parameters.ScalaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.LinkedList;
 import java.util.List;
 
-class JavaCompilation {
+class ScalaCompilation {
 
 	private static List<File> findNonEmptyDirsFiles(final File path) {
 		final List<File> foundFiles = new LinkedList<File>();
@@ -26,7 +26,7 @@ class JavaCompilation {
 				if (f.listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String name) {
-						return name.endsWith(".java");
+						return name.endsWith(".scala");
 					}
 				}).length > 0) {
 					foundFiles.add(f);
@@ -40,8 +40,8 @@ class JavaCompilation {
 			final File source,
 			final File output,
 			final Context context) {
-		final Either<String> tryCompiler = JavaPath.findCompiler(context);
-		final Either<String> tryArchive = JavaPath.findArchive(context);
+		final Either<String> tryCompiler = ScalaPath.findCompiler(context);
+		final Either<String> tryArchive = ScalaPath.findArchive(context);
 		if(!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
@@ -52,27 +52,27 @@ class JavaCompilation {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
 		}
 		if (!classOut.mkdirs()) {
-			return Either.fail("Error creating temporary folder for Java class files: " + classOut.getAbsolutePath());
+			return Either.fail("Error creating temporary folder for Scala class files: " + classOut.getAbsolutePath());
 		}
 		final int len = source.getAbsolutePath().length() + 1;
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final List<File> javaDirs = findNonEmptyDirsFiles(source);
 
-		final StringBuilder javacCommand = new StringBuilder(javac);
-		javacCommand.append(" -encoding UTF8 ");
+		final StringBuilder scalacCommand = new StringBuilder(javac);
+		scalacCommand.append(" -encoding UTF8 ");
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		javacCommand.append("-d locally-compiled -cp .");
+		scalacCommand.append("-d locally-compiled -cp .");
 		for(final File j : externalJars) {
-			javacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
+			scalacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
 		}
 		for(final File f : javaDirs) {
-			javacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.java");
+			scalacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.scala");
 		}
 
 		final StringBuilder jarCommand = new StringBuilder(jar);
@@ -81,8 +81,8 @@ class JavaCompilation {
 			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
 		}
 
-		context.log("Running javac for " + output.getName() + " ...");
-		final Either<Utils.CommandResult> execCompile = Utils.runCommand(javacCommand.toString(), source);
+		context.show("Running scalac for " + output.getName() + " ...");
+		final Either<Utils.CommandResult> execCompile = Utils.runCommand(scalacCommand.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());
 		}
@@ -103,7 +103,7 @@ class JavaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		context.log("Running jar for " + output.getName() + " ...");
+		context.show("Running jar for " + output.getName() + " ...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
 		if (!execArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());

@@ -1,14 +1,11 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.*;
 
 public enum Username implements CompileParameter {
 	INSTANCE;
 
-	public static void retryInput(final Context context) {
+	public static void retryInput(final Context context) throws ExitException {
 		String value = context.get(InputParameter.USERNAME);
 		final String question;
 		if (value != null && value.length() > 0) {
@@ -20,13 +17,13 @@ public enum Username implements CompileParameter {
 		if (value.length() == 0) {
 			if (context.get(InputParameter.USERNAME) == null) {
 				context.error("Username not provided");
-				System.exit(0);
+				throw new ExitException();
 			}
 			return;
 		}
 		if (value.contains(":")) {
 			context.error("Invalid char (:) found in username");
-			System.exit(0);
+			throw new ExitException();
 		}
 		context.put(InputParameter.USERNAME, value);
 	}

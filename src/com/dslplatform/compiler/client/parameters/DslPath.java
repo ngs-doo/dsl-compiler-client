@@ -1,13 +1,11 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.*;
 
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +15,7 @@ public enum DslPath implements CompileParameter {
 
 	private static final String CACHE_NAME = "current_dsl_cache";
 
-	public static Map<String, String> getCurrentDsl(final Context context) {
+	public static Map<String, String> getCurrentDsl(final Context context) throws ExitException {
 		final Map<String, String> cache = context.load(CACHE_NAME);
 		if (cache != null) {
 			return cache;
@@ -26,7 +24,7 @@ public enum DslPath implements CompileParameter {
 		if (value == null) {
 			if (!(new File("./dsl").exists())) {
 				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exists");
-				System.exit(0);
+				throw new ExitException();
 			}
 			context.put(InputParameter.DSL, value = "./dsl");
 		}
@@ -37,7 +35,7 @@ public enum DslPath implements CompileParameter {
 		for (final File file : dslFiles) {
 			if (!file.canRead()) {
 				context.error("Can't read DSL file: " + file.getName());
-				System.exit(0);
+				throw new ExitException();
 			}
 			try {
 				final byte[] bytes = new byte[(int) file.length()];
@@ -46,10 +44,10 @@ public enum DslPath implements CompileParameter {
 				dis.close();
 				final String relativeName = file.getAbsolutePath().substring(pathLen);
 				dslMap.put(relativeName, new String(bytes, "UTF-8"));
-			} catch (Exception ex) {
+			} catch (IOException ex) {
 				context.error("Error reading DSL file: " + file.getName());
 				context.error(ex);
-				System.exit(0);
+				throw new ExitException();
 			}
 		}
 		context.cache(CACHE_NAME, dslMap);

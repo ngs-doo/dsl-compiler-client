@@ -9,27 +9,27 @@ public enum Parse implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (context.contains(InputParameter.PARSE)) {
 			final Map<String, String> dslMap = DslPath.getCurrentDsl(context);
 			if (dslMap.size() == 0) {
 				context.error("DSL files not found in: " + context.get(InputParameter.DSL) + ". At least one DSL file required.");
-				System.exit(0);
+				return false;
 			}
 		}
 		return true;
 	}
 
 	@Override
-	public void run(final Context context) {
+	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.PARSE)) {
 			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
 			final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
 			if (result.isSuccess()) {
-				context.log("Parse successful.");
+				context.show("Parse successful.");
 			} else {
 				context.error(result.whyNot());
-				System.exit(0);
+				throw new ExitException();
 			}
 		}
 	}

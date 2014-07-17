@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 
 public enum Password implements CompileParameter {
@@ -15,12 +16,12 @@ public enum Password implements CompileParameter {
 		context.put(InputParameter.PASSWORD, new String(pass));
 	}
 
-	public static String getOrLoad(final Context context) {
+	public static String getOrLoad(final Context context) throws ExitException {
 		String value = context.get(InputParameter.PASSWORD);
 		if (value == null) {
 			if(!context.canInteract()) {
 				context.error("Password missing. Specify password as argument.");
-				System.exit(0);
+				throw new ExitException();
 			}
 			char[] pass = context.askSecret("DSL Platform password:");
 			value = new String(pass);

@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.diff.diff_match_patch;
 
@@ -10,24 +11,24 @@ import java.util.*;
 public enum Diff implements CompileParameter {
 	INSTANCE;
 
-	private static void compareDsls(final Context context) {
+	private static void compareDsls(final Context context) throws ExitException {
 		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
 		final Map<String, String> previousDsl = DbConnection.getDatabaseDsl(context);
 
 		final Set<String> currentFiles = new HashSet<String>(currentDsl.keySet());
 		currentFiles.removeAll(previousDsl.keySet());
 		for (final String name : currentFiles) {
-			context.log("New file: " + name + ". Total lines: " + currentDsl.get(name).split("\n").length);
+			context.show("New DSL file: " + name + ". Total lines: " + currentDsl.get(name).split("\n").length);
 			//TODO: options which control whether to show content
-			//context.log("----------------------------------------------");
-			//context.log(currentDsl.get(name));
+			//context.show("----------------------------------------------");
+			//context.show(currentDsl.get(name));
 		}
 		final Set<String> previousFiles = new HashSet<String>(previousDsl.keySet());
 		previousFiles.removeAll(currentDsl.keySet());
 		for (final String name : previousFiles) {
-			context.log("Removed file: " + name + ". Total lines: " + previousDsl.get(name).split("\n").length);
-			//context.log("----------------------------------------------");
-			//context.log(previousDsl.get(name));
+			context.show("Removed DSL file: " + name + ". Total lines: " + previousDsl.get(name).split("\n").length);
+			//context.show("----------------------------------------------");
+			//context.show(previousDsl.get(name));
 		}
 		final Set<String> sharedFiles = new HashSet<String>(currentDsl.keySet());
 		sharedFiles.retainAll(previousDsl.keySet());
@@ -40,8 +41,8 @@ public enum Diff implements CompileParameter {
 				continue;
 			}
 			LinkedList<diff_match_patch.Diff> changes = diff.diff_main(previous, current);
-			context.log("Changed file: " + name);
-			context.log("----------------------------------------------");
+			context.show("Changed DSL file: " + name);
+			context.show("----------------------------------------------");
 			final int totalDiffs = changes.size();
 			int cur = 0;
 			hasChanges = hasChanges || totalDiffs > 0;
@@ -89,27 +90,27 @@ public enum Diff implements CompileParameter {
 						break;
 				}
 			}
-			context.log(sb.toString());
-			context.log();
+			context.show(sb.toString());
+			context.show();
 		}
 		if(currentFiles.size() == 0 && previousFiles.size() == 0 && !hasChanges) {
-			context.log("No changes found in DSL");
+			context.show("No changes found in DSL");
 		}
 	}
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (context.contains(InputParameter.DIFF)) {
 			if (!context.contains(InputParameter.CONNECTION_STRING)) {
 				context.error("Connection string is required to perform a diff operation");
-				System.exit(0);
+				throw new ExitException();
 			}
 		}
 		return true;
 	}
 
 	@Override
-	public void run(final Context context) {
+	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.DIFF)) {
 			compareDsls(context);
 		}

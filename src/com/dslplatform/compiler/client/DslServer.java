@@ -2,7 +2,6 @@ package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.json.JsonValue;
 import com.dslplatform.compiler.client.parameters.Password;
-import com.dslplatform.compiler.client.parameters.Prompt;
 import com.dslplatform.compiler.client.parameters.Username;
 import org.w3c.dom.Document;
 import sun.misc.BASE64Encoder;
@@ -35,7 +34,7 @@ public class DslServer {
 		try {
 			SSL_SOCKET_FACTORY = createSSLSocketFactory();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new ExceptionInInitializerError(e);
 		}
 	}
 
@@ -43,7 +42,7 @@ public class DslServer {
 		if (conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
 			final Either<Document> xml = Utils.readXml(conn.getErrorStream());
 			if (!xml.isSuccess()) {
-				return "INTERNAL ERROR: Error reading xml response\n" + xml.whyNot();
+				return "INTERNAL ERROR: Error reading xml response\n" + xml.whyNot().getMessage();
 			}
 			final String error = xml.get().getDocumentElement().getTextContent();
 			return error != null ? error : "UNKNOWN ERROR";
@@ -59,13 +58,13 @@ public class DslServer {
 			final String address,
 			final Context context,
 			final boolean sendJson,
-			final boolean getJson) {
+			final boolean getJson) throws ExitException {
 		final HttpsURLConnection conn;
 		try {
 			final URL url = new URL(REMOTE_URL + address);
 			conn = (HttpsURLConnection) url.openConnection();
-		} catch (Exception ex) {
-			return Either.fail(ex.getMessage());
+		} catch (IOException ex) {
+			return Either.fail(ex);
 		}
 		conn.setSSLSocketFactory(SSL_SOCKET_FACTORY);
 		final Either<String> username = Username.getOrLoad(context);
@@ -80,7 +79,7 @@ public class DslServer {
 			final String base64Login = encoder.encode((username.get() + ":" + password).getBytes("UTF-8"));
 			conn.addRequestProperty("Authorization", "Basic " + base64Login);
 		} catch (UnsupportedEncodingException ex) {
-			return Either.fail(ex.getMessage());
+			return Either.fail(ex);
 		}
 		if (sendJson) {
 			conn.addRequestProperty("Content-type", "application/json");
@@ -93,23 +92,23 @@ public class DslServer {
 
 	private static boolean tryRestart(
 			final HttpsURLConnection conn,
-			final Context context) throws IOException {
+			final Context context) throws IOException, ExitException {
 		context.error("Authorization failed.");
 		context.error(readResponseError(conn));
 		if (!context.canInteract()) {
-			System.exit(0);
+			throw new ExitException();
 		}
 		final String value = context.ask("Retry (y/N):");
 		if (!"y".equalsIgnoreCase(value)) {
-			System.exit(0);
+			throw new ExitException();
 		}
-		context.log("Retrying...");
+		context.show("Retrying...");
 		Username.retryInput(context);
 		Password.retryInput(context);
 		return true;
 	}
 
-	public static Either<String> get(final String address, final Context context) {
+	public static Either<String> get(final String address, final Context context) throws ExitException {
 		Either<HttpsURLConnection> tryConn = setupConnection(address, context, false, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
@@ -118,8 +117,8 @@ public class DslServer {
 		try {
 			return Either.success(Utils.read(conn.getInputStream()));
 		} catch (UnknownHostException ex) {
-			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down: " + ex.getMessage());
-		} catch (Exception ex) {
+			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down.", ex);
+		} catch (IOException ex) {
 			try {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, context)) {
 					return get(address, context);
@@ -127,14 +126,14 @@ public class DslServer {
 				if (conn.getErrorStream() != null) {
 					return Either.fail(readResponseError(conn));
 				}
-			} catch (Exception e) {
-				return Either.fail(e.getMessage());
+			} catch (IOException e) {
+				return Either.fail(e);
 			}
-			return Either.fail(ex.getMessage());
+			return Either.fail(ex);
 		}
 	}
 
-	public static Either<String> put(final String address, final Context context, JsonValue json) {
+	public static Either<String> put(final String address, final Context context, JsonValue json) throws ExitException {
 		return send(address, "PUT", context, json.toString());
 	}
 
@@ -146,7 +145,7 @@ public class DslServer {
 			final String address,
 			final String method,
 			final Context context,
-			final String argument) {
+			final String argument) throws ExitException {
 		Either<HttpsURLConnection> tryConn = setupConnection(address, context, true, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
@@ -160,8 +159,8 @@ public class DslServer {
 			os.close();
 			return Either.success(Utils.read(conn.getInputStream()));
 		} catch (UnknownHostException ex) {
-			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down: " + ex.getMessage());
-		} catch (Exception ex) {
+			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down.", ex);
+		} catch (IOException ex) {
 			try {
 				if (conn.getResponseCode() == 403 && tryRestart(conn, context)) {
 					return send(address, method, context, argument);
@@ -169,10 +168,10 @@ public class DslServer {
 				if (conn.getErrorStream() != null) {
 					return Either.fail(readResponseError(conn));
 				}
-			} catch (Exception e) {
-				return Either.fail(e.getMessage());
+			} catch (IOException e) {
+				return Either.fail(e);
 			}
-			return Either.fail(ex.getMessage());
+			return Either.fail(ex);
 		}
 	}
 

@@ -8,11 +8,11 @@ public enum ApplyMigration implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (context.contains(InputParameter.APPLY_MIGRATION)) {
 			if (!context.contains(InputParameter.CONNECTION_STRING)) {
 				context.error("Connection string is required to apply migration script");
-				System.exit(0);
+				throw new ExitException();
 			}
 			if (!context.contains(InputParameter.MIGRATION)) {
 				context.put(InputParameter.MIGRATION, null);
@@ -36,23 +36,23 @@ public enum ApplyMigration implements CompileParameter {
 
 	private static void explainMigrations(final String[] descriptions, final Context context) {
 		for (int i = 2; i < descriptions.length; i += 2) {
-			context.log(descriptions[i]);
+			context.show(descriptions[i]);
 		}
 	}
 
 	@Override
-	public void run(final Context context) {
+	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.APPLY_MIGRATION)) {
 			final File file = Migration.getMigrationFile(context);
 			final Either<String> trySql = Utils.readFile(file);
 			if (!trySql.isSuccess()) {
 				context.error("Error reading sql migration file.");
 				context.error(trySql.whyNot());
-				System.exit(0);
+				throw new ExitException();
 			}
 			final String sql = trySql.get();
 			if (sql.length() == 0) {
-				context.log("Nothing to apply.");
+				context.show("Nothing to apply.");
 				return;
 			}
 			final int start = sql.indexOf(DESCRIPTION_START);
@@ -62,28 +62,28 @@ public enum ApplyMigration implements CompileParameter {
 				if (descriptions.length > 2) {
 					explainMigrations(descriptions, context);
 					if (hasDestructive(descriptions)) {
-						context.log();
-						context.log("Destructive migration detected.");
+						context.show();
+						context.show("Destructive migration detected.");
 						if (context.contains(InputParameter.FORCE_MIGRATION)) {
-							context.log("Applying destructive migration due to force option.");
+							context.show("Applying destructive migration due to force option.");
 						} else {
 							if (!context.canInteract()) {
 								context.error("Use force option to apply database migration.");
-								System.exit(0);
+								throw new ExitException();
 							}
 							final String input = context.ask("Apply migration (y/N):");
 							if (!"y".equalsIgnoreCase(input)) {
 								context.error("Migration canceled.");
-								System.exit(0);
+								throw new ExitException();
 							}
 						}
 					}
 				}
-				context.log("Applying migration...");
+				context.show("Applying migration...");
 				DbConnection.execute(context, sql);
 			} else {
 				context.error("Migration description missing from SQL migration.");
-				System.exit(0);
+				throw new ExitException();
 			}
 		}
 	}

@@ -1,18 +1,18 @@
-package com.dslplatform.compiler.client.parameters.compilation;
+package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
-import com.dslplatform.compiler.client.parameters.TempPath;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URL;
 
-public class CompileRevenj implements CompileAction {
+public class CompileRevenj implements BuildAction {
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
 		if (!revenjDeps.exists()) {
@@ -36,11 +36,11 @@ public class CompileRevenj implements CompileAction {
 				}
 				final String answer = context.ask("Do you wish to download latest Revenj version from the Internet (y/N):");
 				if (!"y".equalsIgnoreCase(answer)) {
-					System.exit(0);
+					throw new ExitException();
 				}
 			}
 			try {
-				context.log("Downloading Revenj from Github...");
+				context.show("Downloading Revenj from Github...");
 				final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
 				final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
 				conn.setInstanceFollowRedirects(false);
@@ -54,13 +54,13 @@ public class CompileRevenj implements CompileAction {
 				final String tag = redirect.substring(redirect.lastIndexOf('/') + 1);
 				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
 				Utils.unpackZip(revenjDeps, httpServer.openConnection().getInputStream());
-			} catch (Exception ex) {
+			} catch (IOException ex) {
 				context.error("Unable to download Revenj from Github.");
 				context.error(ex);
 				final String answer;
 				if (!context.contains(InputParameter.DOWNLOAD)) {
 					if (!context.canInteract()) {
-						System.exit(0);
+						throw new ExitException();
 					}
 					answer = context.ask("Try alternative download from DSL Platform (y/N):");
 				} else {
@@ -68,54 +68,51 @@ public class CompileRevenj implements CompileAction {
 				}
 				if ("y".equalsIgnoreCase(answer)) {
 					try {
-						context.log("Downloading Revenj from DSL Platform...");
+						context.show("Downloading Revenj from DSL Platform...");
 						DslServer.downloadAndUnpack("server", revenjDeps);
-					} catch (Exception ex2) {
+					} catch (IOException ex2) {
 						context.error("Unable to download Revenj from DSL Platform.");
 						context.error(ex);
 						return false;
 					}
 				} else {
-					System.exit(0);
+					throw new ExitException();
 				}
 			}
 		}
 		return true;
 	}
 
+	private static final String[] DEPENDENCIES = {
+			"System.dll",
+			"System.Core.dll",
+			"System.Dynamic.dll",
+			"System.ComponentModel.Composition.dll",
+			"System.Configuration.dll",
+			"System.Data.dll",
+			"System.Drawing.dll",
+			"System.Xml.dll",
+			"System.Xml.Linq.dll",
+			"System.Runtime.Serialization.dll"
+	};
+
 	@Override
-	public void compile(final File path, final Context context) {
+	public void build(final File sources, final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
 		final File model = new File("./GeneratedModel.dll");
-		final Either<String> compilation =
-				DotNetCompilation.compile(
-						new String[]{
-								"System.dll",
-								"System.Core.dll",
-								"System.Dynamic.dll",
-								"System.ComponentModel.Composition.dll",
-								"System.Configuration.dll",
-								"System.Data.dll",
-								"System.Drawing.dll",
-								"System.Xml.dll",
-								"System.Xml.Linq.dll",
-								"System.Runtime.Serialization.dll"},
-						revenjDeps,
-						new File(TempPath.getTempPath(context), "CSharpServer"),
-						model,
-						context);
+		final Either<String> compilation = DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj library compilation.");
 			context.error(compilation.whyNot());
-			System.exit(0);
+			throw new ExitException();
 		}
 		if (model.exists()) {
-			context.log("Compiled Revenj library to: " + model.getAbsolutePath());
+			context.show("Compiled Revenj library to: " + model.getAbsolutePath());
 		} else {
 			context.error("Can't seem to find compiled Revenj library: " + model.getAbsolutePath());
-			context.log(compilation.get());
-			System.exit(0);
+			context.show(compilation.get());
+			throw new ExitException();
 		}
 	}
 }
