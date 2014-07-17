@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.*;
 
 import java.io.File;
+import java.util.List;
 
 public enum JavaPath implements CompileParameter {
 	INSTANCE;
@@ -12,23 +13,60 @@ public enum JavaPath implements CompileParameter {
 			final File javac = new File(context.get(InputParameter.JAVA), "javac");
 			return Either.success(javac.getAbsolutePath());
 		} else {
-			if (Utils.testCommand("javac -help", "Usage: javac")) {
+			final String envJH = System.getenv("JAVA_HOME");
+			final String envJDH = System.getenv("JDK_HOME");
+			if (Utils.testCommand("javac", "Usage: javac")) {
 				return Either.success("javac");
+			} else if (envJH != null && Utils.testCommand(envJH + "/bin/javac", "Usage: javac")) {
+				return Either.success(envJH + "/bin/javac");
+			} else if (envJDH != null && Utils.testCommand(envJDH + "/bin/javac", "Usage: javac")) {
+				return Either.success(envJDH + "/bin/javac");
 			}
 			return Either.fail("Unable to find Java compiler. Add it to path or specify java compile option.");
 		}
 	}
 
-	public static Either<String> findArchive(final Context context) {
+	public static Either<Utils.CommandResult> makeArchive(
+			final Context context,
+			final File source,
+			final File classOut,
+			final File output,
+			final List<File> classPaths) {
+		final String jar;
 		if (context.contains(InputParameter.JAVA)) {
-			final File javac = new File(context.get(InputParameter.JAVA), "jar");
-			return Either.success(javac.getAbsolutePath());
+			final File jarFile = new File(context.get(InputParameter.JAVA), "jar");
+			jar = jarFile.getAbsolutePath();
 		} else {
-			if (Utils.testCommand("jar -help", "Usage: jar")) {
-				return Either.success("jar");
+			final String envJH = System.getenv("JAVA_HOME");
+			final String envJDH = System.getenv("JDK_HOME");
+			if (!Utils.testCommand("jar", "Usage: jar")) {
+				jar = "jar";
+			} else if (envJH != null && Utils.testCommand(envJH + "/bin/jar", "Usage: jar")) {
+				jar = envJH + "/bin/jar";
+			} else if (envJDH != null && Utils.testCommand(envJDH + "/bin/jar", "Usage: jar")) {
+				jar = envJDH + "/bin/jar";
 			}
-			return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
+			else {
+				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
+			}
 		}
+		final int len = source.getAbsolutePath().length() + 1;
+		final char separatorChar = Utils.isWindows() ? '\\' : '/';
+		final StringBuilder jarCommand = new StringBuilder(jar);
+		jarCommand.append(" cf \"").append(output.getAbsolutePath()).append("\"");
+		for(final File f : classPaths) {
+			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
+		}
+		context.show("Running jar for " + output.getName() + " ...");
+		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
+		if (!execArchive.isSuccess()) {
+			return Either.fail(execArchive.whyNot());
+		}
+		final Utils.CommandResult archiving = execArchive.get();
+		if (archiving.error.length() > 0) {
+			return Either.fail(archiving.error);
+		}
+		return Either.success(execArchive.get());
 	}
 
 	@Override
@@ -38,11 +76,13 @@ public enum JavaPath implements CompileParameter {
 			final File javac = new File(path, "javac");
 			if (!Utils.testCommand(javac.getAbsolutePath(), "Usage: javac")) {
 				context.error("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");
+				context.error("Trying to use: " + javac.getAbsolutePath());
 				return false;
 			}
 			final File jar = new File(path, "jar");
 			if (!Utils.testCommand(jar.getAbsolutePath(), "Usage: jar")) {
 				context.error("java parameter is set, but Java archive tool not found/doesn't work. Please check specified java parameter.");
+				context.error("Trying to use: " + jar.getAbsolutePath());
 				return false;
 			}
 		}
@@ -62,7 +102,9 @@ public enum JavaPath implements CompileParameter {
 	public String getDetailedDescription() {
 		return "To compile Java libraries Java compiler is required.\n" +
 				"If javac is not available in path, custom path can be used to specify it.\n" +
-				"jar is required to package compiled .class files into .jar" +
+				"jar is required to package compiled .class files into .jar\n" +
+				"\n" +
+				"JDK_HOME and JAVA_HOME environment variables will be checked for Java tools.\n" +
 				"\n" +
 				"Example:\n" +
 				"	/var/user/java-8\n" +

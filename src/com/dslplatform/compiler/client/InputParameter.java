@@ -64,12 +64,21 @@ public enum InputParameter {
 			final String name = a.substring(0, eq != -1 ? eq : a.length()).substring(1);
 			final InputParameter cp = InputParameter.from(name);
 			if (cp == null) {
-				errors.add("Unknown parameter: " + name);
+				if (Targets.Option.from(name) != null) {
+					context.put(name, eq == -1 ? null : a.substring(eq + 1));
+				} else if (Settings.Option.from(name) != null) {
+					if (eq != -1) {
+						errors.add("Settings parameter detected, but settings don't support arguments. Parameter: " + name);
+					}
+					context.put(name, null);
+				} else {
+					errors.add("Unknown parameter: " + name);
+				}
 			} else {
 				if (eq == -1 && cp.usage != null) {
 					errors.add("Expecting " + cp.usage + " after = for " + a);
 				} else {
-					context.put(cp, name.length() + 1 == a.length() ? null : a.substring(eq + 1));
+					context.put(cp, eq == -1 ? null : a.substring(eq + 1));
 				}
 			}
 		}

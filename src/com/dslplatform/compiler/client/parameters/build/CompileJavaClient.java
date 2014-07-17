@@ -2,135 +2,52 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
-import com.dslplatform.compiler.client.parameters.Maven;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import com.dslplatform.compiler.client.parameters.Download;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.net.URL;
 
 public class CompileJavaClient implements BuildAction {
 
+	private final String name;
+	private final String zip;
+	private final String library;
+	private final String maven;
+	private final String jar;
+
+	public CompileJavaClient(
+			final String name,
+			final String zip,
+			final String library,
+			final String maven,
+			final String jar) {
+		this.name = name;
+		this.zip = zip;
+		this.library = library;
+		this.maven = maven;
+		this.jar = jar;
+	}
+
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File javaDeps = new File(depsRoot.getAbsolutePath() + "/java_client");
-		if (!javaDeps.exists()) {
-			if (!javaDeps.mkdirs()) {
-				context.error("Failed to create Java client dependency folder: " + javaDeps.getAbsolutePath());
-				return false;
-			}
-		}
-		final File[] found = javaDeps.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".jar");
-			}
-		});
-		if (found.length == 0) {
-			context.error("Java client not found in: " + javaDeps.getAbsolutePath());
-			if (!context.contains(InputParameter.DOWNLOAD)) {
-				if (!context.canInteract()) {
-					context.error("Download option not enabled. Enable download option, change dependencies path or place Java client files in specified folder.");
-					return false;
-				}
-				final String answer = context.ask("Do you wish to download latest Java client version from the Internet (y/N):");
-				if (!"y".equalsIgnoreCase(answer)) {
-					throw new ExitException();
-				}
-			}
-			final Either<String> tryMaven = Maven.findMaven(context);
-			if (!tryMaven.isSuccess()) {
-				return downloadZip(javaDeps, context);
-			}
-			context.show("Downloading Java client from Sonatype...");
-			try {
-				//TODO: change after jar unification
-				final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/com/dslplatform/dsl-client-core/maven-metadata.xml");
-				final Either<Document> doc = Utils.readXml(maven.openConnection().getInputStream());
-				if (!doc.isSuccess()) {
-					context.error("Error downloading library info from Sonatype.");
-					context.error(doc.whyNot());
-					return false;
-				}
-				final Element root = doc.get().getDocumentElement();
-				final Element versioning = (Element) root.getElementsByTagName("versioning").item(0);
-				final String version = versioning.getElementsByTagName("release").item(0).getTextContent();
-				final String sharedUrl = "https://oss.sonatype.org/content/repositories/releases/com/dslplatform/dsl-client-";
-				final URL pomUrl = new URL(sharedUrl + "http-apache/" + version + "/dsl-client-http-apache-" + version + ".pom");
-				final File pomFile = new File(javaDeps, "dsl-client-http-apache-" + version + ".pom");
-				Utils.downloadFile(pomFile, pomUrl);
-				final URL jarUrl = new URL(sharedUrl + "http-apache/" + version + "/dsl-client-http-apache-" + version + ".jar");
-				Utils.downloadFile(new File(javaDeps, "dsl-client-http-apache-" + version + ".jar"), jarUrl);
-				final String mvnCmd = tryMaven.get() + " dependency:copy-dependencies " +
-						"\"-DoutputDirectory=" + javaDeps.getAbsolutePath() + "\" \"-f=" + pomFile.getAbsolutePath() + "\"";
-				context.show("Compiling Java client library...");
-				final Either<Utils.CommandResult> gatherDeps = Utils.runCommand(mvnCmd, pomFile.getParentFile());
-				if (!gatherDeps.isSuccess()) {
-					context.error("Error gathering dependencies with Maven.");
-					context.error(gatherDeps.whyNot());
-					return promptForAlternative(javaDeps, context);
-				}
-				final String result = gatherDeps.get().output + gatherDeps.get().error;
-				if (!result.contains("BUILD SUCCESSFUL")) {
-					context.error("Maven error during dependency download.");
-					context.error(result);
-					return promptForAlternative(javaDeps, context);
-				}
-			} catch (IOException ex) {
-				context.error("Unable to download Java client from Sonatype.");
-				context.error(ex);
-				return promptForAlternative(javaDeps, context);
-			}
-		}
-		return true;
-	}
-
-	private static boolean promptForAlternative(final File javaDeps, final Context context) throws ExitException {
-		final String answer;
-		if (!context.contains(InputParameter.DOWNLOAD)) {
-			if (!context.canInteract()) {
-				throw new ExitException();
-			}
-			answer = context.ask("Try alternative download from DSL Platform (y/N):");
-		} else {
-			answer = "y";
-		}
-		if (!"y".equalsIgnoreCase(answer)) {
-			throw new ExitException();
-		}
-		return downloadZip(javaDeps, context);
-	}
-
-	private static boolean downloadZip(final File javaDeps, final Context context) {
-		try {
-			context.show("Downloading Java client from DSL Platform...");
-			DslServer.downloadAndUnpack("java-client", javaDeps);
-		} catch (IOException ex) {
-			context.error("Error downloading jar dependencies from DSL Platform.");
-			context.error(ex);
-			return false;
-		}
-		return true;
+		return Download.checkJars(context, name, zip, library, maven);
 	}
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File javaDeps = new File(depsRoot.getAbsolutePath() + "/java_client");
-		final File model = new File("./generated-model.jar");
+		final File javaDeps = new File(depsRoot.getAbsolutePath(), library);
+		final String customJar = context.get(library);
+		final File model = new File(customJar != null ? customJar : jar);
 		final Either<String> compilation = JavaCompilation.compile(javaDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
-			context.error("Error during Java client library compilation.");
+			context.error("Error during " + name + " library compilation.");
 			context.error(compilation.whyNot());
 			throw new ExitException();
 		}
 		if (model.exists()) {
-			context.show("Compiled Java client library to: " + model.getAbsolutePath());
+			context.show("Compiled " + name + " library to: " + model.getAbsolutePath());
 		} else {
-			context.error("Can't seem to find compiled Java client library: " + model.getAbsolutePath());
+			context.error("Can't seem to find compiled " + name + " library: " + model.getAbsolutePath());
 			context.show(compilation.get());
 			throw new ExitException();
 		}

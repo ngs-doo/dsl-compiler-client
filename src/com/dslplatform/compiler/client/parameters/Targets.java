@@ -5,15 +5,14 @@ import com.dslplatform.compiler.client.json.JsonObject;
 import com.dslplatform.compiler.client.parameters.build.*;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public enum Targets implements CompileParameter {
 	INSTANCE;
 
 	public static enum Option {
-		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient(), true),
+		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-http-apache", "./generated-model-java.jar"), true),
+		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-http-android", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
 		PHP("php", "PHP client", "PHP", new PreparePhp(), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false);
@@ -37,7 +36,7 @@ public enum Targets implements CompileParameter {
 			this.convertToPath = convertToPath;
 		}
 
-		private static Option from(final String value) {
+		public static Option from(final String value) {
 			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
@@ -51,37 +50,47 @@ public enum Targets implements CompileParameter {
 		for (final Option o : Option.values()) {
 			context.show(o.value + " - " + o.description);
 		}
-		context.show("Example usage: -target=java_client,revenj");
+		context.show("Example usages:");
+		context.show("	-target=java_client,revenj");
+		context.show("	-java_client -revenj=./model/SeverModel.dll");
 	}
+
+	private static final String CACHE_NAME = "target_option_cache";
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (!context.contains(InputParameter.TARGET)) {
-			return true;
-		}
-		final String value = context.get(InputParameter.TARGET);
-		final String[] targets = value != null ? value.split(",") : new String[0];
-		if (targets.length == 0) {
-			context.error("Targets not provided. Available targets: ");
-			listOptions(context);
-			return false;
-		}
-		final Option[] options = new Option[targets.length];
-		for (int i = 0; i < targets.length; i++) {
-			final String t = targets[i];
-			final String name;
-			if (t.contains("=")) {
-				name = t.substring(0, t.indexOf('='));
-			} else {
-				name = t;
-			}
-			final Option o = Option.from(name);
-			if (o == null) {
-				context.error("Unknown target: " + t);
+		final List<String> targets = new ArrayList<String>();
+		if (context.contains(InputParameter.TARGET)) {
+			final String value = context.get(InputParameter.TARGET);
+			if (value == null || value.length() == 0) {
+				context.error("Targets not provided. Available targets: ");
 				listOptions(context);
 				return false;
 			}
-			options[i] = o;
+			Collections.addAll(targets, value.split(","));
+		}
+		for(final Option o : Option.values()) {
+			if (context.contains(o.value) && !targets.contains(o.value)) {
+				targets.add(o.value);
+			}
+		}
+		if(targets.size() == 0) {
+			if (context.contains(InputParameter.TARGET)) {
+				context.error("Targets not provided. Available targets: ");
+				listOptions(context);
+				return false;
+			}
+			return true;
+		}
+		final List<Option> options = new ArrayList<Option>(targets.size());
+		for(final String name : targets) {
+			final Option o = Option.from(name);
+			if (o == null) {
+				context.error("Unknown target: " + name);
+				listOptions(context);
+				return false;
+			}
+			options.add(o);
 		}
 		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		if (dsls.size() == 0) {
@@ -94,21 +103,19 @@ public enum Targets implements CompileParameter {
 				return false;
 			}
 		}
+		context.cache(CACHE_NAME, options);
 		return true;
 	}
 
 	@Override
 	public void run(final Context context) throws ExitException {
-		//TODO: process custom targets
-		if (!context.contains(InputParameter.TARGET)) {
+		final List<Option> targets = context.load(CACHE_NAME);
+		if (targets == null) {
 			return;
 		}
-		final String[] targetsInputs = context.get(InputParameter.TARGET).split(",");
-		final Option[] targets = new Option[targetsInputs.length];
 		final StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < targets.length; i++) {
-			targets[i] = Option.from(targetsInputs[i]);
-			sb.append(targets[i].platformName);
+		for(final Option t : targets) {
+			sb.append(t.platformName);
 			sb.append(',');
 		}
 		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
@@ -117,7 +124,7 @@ public enum Targets implements CompileParameter {
 		if (context.contains(InputParameter.NAMESPACE)) {
 			url.append("&namespace=").append(context.get(InputParameter.NAMESPACE));
 		}
-		final String settings = Settings.parseAndConvert(context.get(InputParameter.SETTINGS));
+		final String settings = Settings.parseAndConvert(context);
 		if (settings.length() > 0) {
 			url.append("&options=").append(settings);
 		}

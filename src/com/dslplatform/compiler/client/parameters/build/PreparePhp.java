@@ -11,7 +11,8 @@ public class PreparePhp implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File target = new File("Generated-PHP");
+		final String customFolder = context.get("php");
+		final File target = new File(customFolder != null ? customFolder : "Generated-PHP");
 		if (target.exists() && target.isDirectory()) {
 			try {
 				Utils.deletePath(target);

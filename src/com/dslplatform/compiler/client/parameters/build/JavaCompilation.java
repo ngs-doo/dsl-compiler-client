@@ -40,13 +40,18 @@ class JavaCompilation {
 			final File source,
 			final File output,
 			final Context context) {
+		if (output.exists() && !output.isDirectory()) {
+			if (!output.delete()) {
+				return Either.fail("Failed to remove previous Java model: " + output.getAbsolutePath());
+			}
+		} else if (output.exists() && output.isDirectory()) {
+			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
+		}
 		final Either<String> tryCompiler = JavaPath.findCompiler(context);
-		final Either<String> tryArchive = JavaPath.findArchive(context);
-		if(!tryCompiler.isSuccess()) {
+		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String javac = tryCompiler.get();
-		final String jar = tryArchive.get();
 		final File classOut = new File(source, "locally-compiled");
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
@@ -68,17 +73,11 @@ class JavaCompilation {
 			}
 		});
 		javacCommand.append("-d locally-compiled -cp .");
-		for(final File j : externalJars) {
+		for (final File j : externalJars) {
 			javacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
 		}
-		for(final File f : javaDirs) {
+		for (final File f : javaDirs) {
 			javacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.java");
-		}
-
-		final StringBuilder jarCommand = new StringBuilder(jar);
-		jarCommand.append(" cf \"").append(output.getAbsolutePath()).append("\"");
-		for(final File f : javaDirs) {
-			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
 		}
 
 		context.show("Running javac for " + output.getName() + " ...");
@@ -103,14 +102,10 @@ class JavaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		context.show("Running jar for " + output.getName() + " ...");
-		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
-		if (!execArchive.isSuccess()) {
+		final Either<Utils.CommandResult> tryArchive =
+				JavaPath.makeArchive(context, source, classOut, output, javaDirs);
+		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
-		}
-		final Utils.CommandResult archiving = execArchive.get();
-		if (archiving.error.length() > 0) {
-			return Either.fail(archiving.error);
 		}
 		return Either.success(compilation.output);
 	}

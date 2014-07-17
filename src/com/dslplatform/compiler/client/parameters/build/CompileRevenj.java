@@ -32,7 +32,7 @@ public class CompileRevenj implements BuildAction {
 			if (!context.contains(InputParameter.DOWNLOAD)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place Revenj files in specified folder.");
-					return false;
+					throw new ExitException();
 				}
 				final String answer = context.ask("Do you wish to download latest Revenj version from the Internet (y/N):");
 				if (!"y".equalsIgnoreCase(answer)) {
@@ -100,7 +100,8 @@ public class CompileRevenj implements BuildAction {
 	public void build(final File sources, final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
 		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
-		final File model = new File("./GeneratedModel.dll");
+		final String customDll = context.get("revenj");
+		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		final Either<String> compilation = DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj library compilation.");

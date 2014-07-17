@@ -4,22 +4,12 @@ import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.InputParameter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public enum Settings implements CompileParameter {
 	INSTANCE;
-
-	public static String parseAndConvert(final String settings) {
-		final String[] inputs = settings != null ? settings.split(",") : new String[0];
-		final StringBuilder sb = new StringBuilder();
-		for (String i : inputs) {
-			Option s = Option.from(i);
-			sb.append(s.platformName);
-			sb.append(',');
-		}
-		if (sb.length() > 0) {
-			sb.setLength(sb.length() - 1);
-		}
-		return sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "";
-	}
 
 	public static enum Option {
 		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "with-active-record"),
@@ -36,7 +26,7 @@ public enum Settings implements CompileParameter {
 			this.platformName = platformName;
 		}
 
-		private static Option from(final String value) {
+		public static Option from(final String value) {
 			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
@@ -46,25 +36,66 @@ public enum Settings implements CompileParameter {
 		}
 	}
 
+	private static final String CACHE_NAME = "settings_option_cache";
+
+	public static String parseAndConvert(final Context context) {
+		final List<Option> settings = context.load(CACHE_NAME);
+		if(settings == null) {
+			return "";
+		}
+		final StringBuilder sb = new StringBuilder();
+		for (final Option o : settings) {
+			sb.append(o.platformName);
+			sb.append(',');
+		}
+		return sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "";
+	}
+
 	private static void listOptions(final Context context) {
 		for (final Option o : Option.values()) {
 			context.show(o.value + " - " + o.description);
 		}
-		context.show("Example usage: -settings=active-record,no-jackson");
+		context.show("Example usages:");
+		context.show("		-settings=active-record,no-jackson");
+		context.show("		-active-record -no-jackson -manual-json");
 	}
 
 	@Override
 	public boolean check(final Context context) {
-		final String value = context.get(InputParameter.SETTINGS);
-		final String[] settings = value != null ? value.split(",") : new String[0];
-		for (final String s : settings) {
-			final Option o = Option.from(s);
-			if (o == null) {
-				context.error("Unknown setting: " + s);
+		final List<String> settings = new ArrayList<String>();
+		if (context.contains(InputParameter.SETTINGS)) {
+			final String value = context.get(InputParameter.SETTINGS);
+			if (value == null || value.length() == 0) {
+				context.error("Settings not provided. Available settings: ");
 				listOptions(context);
 				return false;
 			}
+			Collections.addAll(settings, value.split(","));
 		}
+		for(final Option o : Option.values()) {
+			if (context.contains(o.value) && !settings.contains(o.value)) {
+				settings.add(o.value);
+			}
+		}
+		if(settings.size() == 0) {
+			if (context.contains(InputParameter.SETTINGS)) {
+				context.error("Settings not provided. Available settings: ");
+				listOptions(context);
+				return false;
+			}
+			return true;
+		}
+		final List<Option> options = new ArrayList<Option>(settings.size());
+		for(final String name : settings) {
+			final Option o = Option.from(name);
+			if (o == null) {
+				context.error("Unknown setting: " + name);
+				listOptions(context);
+				return false;
+			}
+			options.add(o);
+		}
+		context.cache(CACHE_NAME, options);
 		return true;
 	}
 

@@ -16,6 +16,13 @@ class DotNetCompilation {
 			final File source,
 			final File output,
 			final Context context) {
+		if (output.exists() && !output.isDirectory()) {
+			if (!output.delete()) {
+				return Either.fail("Failed to remove previous .NET model: " + output.getAbsolutePath());
+			}
+		} else if (output.exists() && output.isDirectory()) {
+			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
+		}
 		final Either<String> tryCompiler = DotNet.findCompiler(context);
 		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());

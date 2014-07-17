@@ -2,11 +2,14 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.parameters.JavaPath;
 import com.dslplatform.compiler.client.parameters.ScalaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,13 +43,18 @@ class ScalaCompilation {
 			final File source,
 			final File output,
 			final Context context) {
+		if (output.exists() && !output.isDirectory()) {
+			if (!output.delete()) {
+				return Either.fail("Failed to remove previous Scala model: " + output.getAbsolutePath());
+			}
+		} else if (output.exists() && output.isDirectory()) {
+			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
+		}
 		final Either<String> tryCompiler = ScalaPath.findCompiler(context);
-		final Either<String> tryArchive = ScalaPath.findArchive(context);
-		if(!tryCompiler.isSuccess()) {
+		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String javac = tryCompiler.get();
-		final String jar = tryArchive.get();
 		final File classOut = new File(source, "locally-compiled");
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
@@ -57,7 +65,7 @@ class ScalaCompilation {
 		final int len = source.getAbsolutePath().length() + 1;
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final List<File> javaDirs = findNonEmptyDirsFiles(source);
+		final List<File> scalaDirs = findNonEmptyDirsFiles(source);
 
 		final StringBuilder scalacCommand = new StringBuilder(javac);
 		scalacCommand.append(" -encoding UTF8 ");
@@ -68,17 +76,11 @@ class ScalaCompilation {
 			}
 		});
 		scalacCommand.append("-d locally-compiled -cp .");
-		for(final File j : externalJars) {
+		for (final File j : externalJars) {
 			scalacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
 		}
-		for(final File f : javaDirs) {
+		for (final File f : scalaDirs) {
 			scalacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.scala");
-		}
-
-		final StringBuilder jarCommand = new StringBuilder(jar);
-		jarCommand.append(" cf \"").append(output.getAbsolutePath()).append("\"");
-		for(final File f : javaDirs) {
-			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
 		}
 
 		context.show("Running scalac for " + output.getName() + " ...");
@@ -103,14 +105,10 @@ class ScalaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		context.show("Running jar for " + output.getName() + " ...");
-		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
-		if (!execArchive.isSuccess()) {
+		final Either<Utils.CommandResult> tryArchive =
+				JavaPath.makeArchive(context, source, classOut, output, scalaDirs);
+		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
-		}
-		final Utils.CommandResult archiving = execArchive.get();
-		if (archiving.error.length() > 0) {
-			return Either.fail(archiving.error);
 		}
 		return Either.success(compilation.output);
 	}
