@@ -50,6 +50,13 @@ public class Context {
 		}
 	}
 
+	public void start(final String value) {
+		System.out.print(value);
+		System.out.println("...");
+		//TODO: implement thread start and ticks...
+		//tick
+	}
+
 	public void error(final String value) {
 		System.out.println(value);
 	}

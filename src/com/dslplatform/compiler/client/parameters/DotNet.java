@@ -12,17 +12,17 @@ public enum DotNet implements CompileParameter {
 			final boolean isWindows = Utils.isWindows();
 			final boolean is32Bit = System.getProperty("os.arch").equals("x86");
 			if (isWindows) {
-				if (Utils.testCommand("csc.exe", ".NET Framework")) {
+				if (Utils.testCommand(context, "csc.exe", ".NET Framework")) {
 					return Either.success("csc.exe");
 				}
 				final String framework = is32Bit ? "Framework" : "Framework64";
 				final String msDotNet4 = System.getenv("WINDIR") + "\\Microsoft.NET\\" + framework + "\\v4.0.30319\\csc.exe";
-				if (Utils.testCommand(msDotNet4, ".NET Framework")) {
+				if (Utils.testCommand(context, msDotNet4, ".NET Framework")) {
 					return Either.success(msDotNet4);
 				}
 				return Either.fail("Unable to find csc.exe (.NET C# compiler). Add it to path or specify dotnet compile option.");
 			}
-			if (Utils.testCommand("dmcs", "Mono")) {
+			if (Utils.testCommand(context, "dmcs", "Mono")) {
 				return Either.success("dmcs");
 			}
 			return Either.fail("Unable to find dmcs (Mono C# compiler). Add it to path or specify dotnet compile option.");
@@ -35,8 +35,8 @@ public enum DotNet implements CompileParameter {
 			final String compiler = context.get(InputParameter.DOTNET);
 			final boolean isWindows = Utils.isWindows();
 			//TODO: should we even ask for Mono on Windows?
-			if (isWindows && !Utils.testCommand(compiler, ".NET Framework") && !Utils.testCommand(compiler, "Mono")
-					|| !isWindows && !Utils.testCommand(compiler, "Mono")) {
+			if (isWindows && !Utils.testCommand(context, compiler, ".NET Framework") && !Utils.testCommand(context, compiler, "Mono")
+					|| !isWindows && !Utils.testCommand(context, compiler, "Mono")) {
 				context.error("dotnet parameter is set, but .NET/Mono compiler not found/doesn't work. Please check specified dotnet parameter.");
 				return false;
 			}

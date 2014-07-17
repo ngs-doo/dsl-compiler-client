@@ -2,16 +2,9 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
-import com.dslplatform.compiler.client.parameters.DotNet;
 import com.dslplatform.compiler.client.parameters.Download;
-import com.dslplatform.compiler.client.parameters.Maven;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.net.URL;
 
 public class CompileScalaClient implements BuildAction {
 

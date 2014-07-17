@@ -24,6 +24,7 @@ public enum Parse implements CompileParameter {
 	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.PARSE)) {
 			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
+			context.start("Validating DSL");
 			final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
 			if (result.isSuccess()) {
 				context.show("Parse successful.");

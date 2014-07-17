@@ -10,14 +10,14 @@ public enum Maven implements CompileParameter {
 			return Either.success(context.get(InputParameter.MAVEN));
 		}
 		final String env = System.getenv("M2");
-		if (env != null && Utils.testCommand(env + " --version", "Apache Maven")) {
+		if (env != null && Utils.testCommand(context, env + " --version", "Apache Maven")) {
 			return Either.success(env);
 		}
 		if (env != null && Utils.isWindows() && !env.toLowerCase().endsWith(".bat")
-				&& Utils.testCommand(env + ".bat" + " --version", "Apache Maven")) {
+				&& Utils.testCommand(context, env + ".bat" + " --version", "Apache Maven")) {
 			return Either.success(env + ".bat");
 		}
-		if (Utils.testCommand("mvn --version", "Apache Maven")) {
+		if (Utils.testCommand(context, "mvn --version", "Apache Maven")) {
 			return Either.success("mvn");
 		}
 		return Either.fail("Unable to find mvn. Add it to path or specify maven compile option.");
@@ -27,7 +27,7 @@ public enum Maven implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(InputParameter.MAVEN)) {
 			final String mvn = context.get(InputParameter.MAVEN);
-			if (!Utils.testCommand(mvn + " --version", "Apache Maven")) {
+			if (!Utils.testCommand(context, mvn + " --version", "Apache Maven")) {
 				context.error("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
 				return false;
 			}

@@ -48,7 +48,7 @@ class DotNetCompilation {
 		}
 		command.append(escapeChar).append("lib:\"").append(libraries.getAbsolutePath()).append("\" ");
 		command.append(escapeChar).append("recurse:\"").append(source.getAbsolutePath()).append(separatorChar).append("*.cs\" ");
-		context.show("Compiling Revenj library...");
+		context.start("Compiling Revenj library");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(command.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());

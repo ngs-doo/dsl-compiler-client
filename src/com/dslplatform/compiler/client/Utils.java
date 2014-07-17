@@ -164,7 +164,7 @@ public class Utils {
 		}
 	}
 
-	public static boolean testCommand(final String command, final String contains) {
+	public static boolean testCommand(final Context context, final String command, final String contains) {
 		try {
 			final Process compilation = Runtime.getRuntime().exec(command);
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream());
@@ -172,8 +172,10 @@ public class Utils {
 			compilation.waitFor();
 			return error.output.toString().contains(contains) || result.output.toString().contains(contains);
 		} catch (IOException ex) {
+			context.error(ex);
 			return false;
 		} catch (InterruptedException ex) {
+			context.error(ex);
 			return false;
 		}
 	}

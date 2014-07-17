@@ -15,11 +15,11 @@ public enum JavaPath implements CompileParameter {
 		} else {
 			final String envJH = System.getenv("JAVA_HOME");
 			final String envJDH = System.getenv("JDK_HOME");
-			if (Utils.testCommand("javac", "Usage: javac")) {
+			if (Utils.testCommand(context, "javac", "Usage: javac")) {
 				return Either.success("javac");
-			} else if (envJH != null && Utils.testCommand(envJH + "/bin/javac", "Usage: javac")) {
+			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/javac", "Usage: javac")) {
 				return Either.success(envJH + "/bin/javac");
-			} else if (envJDH != null && Utils.testCommand(envJDH + "/bin/javac", "Usage: javac")) {
+			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/javac", "Usage: javac")) {
 				return Either.success(envJDH + "/bin/javac");
 			}
 			return Either.fail("Unable to find Java compiler. Add it to path or specify java compile option.");
@@ -39,11 +39,11 @@ public enum JavaPath implements CompileParameter {
 		} else {
 			final String envJH = System.getenv("JAVA_HOME");
 			final String envJDH = System.getenv("JDK_HOME");
-			if (!Utils.testCommand("jar", "Usage: jar")) {
+			if (!Utils.testCommand(context, "jar", "Usage: jar")) {
 				jar = "jar";
-			} else if (envJH != null && Utils.testCommand(envJH + "/bin/jar", "Usage: jar")) {
+			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
 				jar = envJH + "/bin/jar";
-			} else if (envJDH != null && Utils.testCommand(envJDH + "/bin/jar", "Usage: jar")) {
+			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
 				jar = envJDH + "/bin/jar";
 			}
 			else {
@@ -57,7 +57,7 @@ public enum JavaPath implements CompileParameter {
 		for(final File f : classPaths) {
 			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
 		}
-		context.show("Running jar for " + output.getName() + " ...");
+		context.start("Running jar for " + output.getName() + " ");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
 		if (!execArchive.isSuccess()) {
 			return Either.fail(execArchive.whyNot());
@@ -74,13 +74,13 @@ public enum JavaPath implements CompileParameter {
 		if (context.contains(InputParameter.JAVA)) {
 			final String path = context.get(InputParameter.JAVA);
 			final File javac = new File(path, "javac");
-			if (!Utils.testCommand(javac.getAbsolutePath(), "Usage: javac")) {
+			if (!Utils.testCommand(context, javac.getAbsolutePath(), "Usage: javac")) {
 				context.error("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");
 				context.error("Trying to use: " + javac.getAbsolutePath());
 				return false;
 			}
 			final File jar = new File(path, "jar");
-			if (!Utils.testCommand(jar.getAbsolutePath(), "Usage: jar")) {
+			if (!Utils.testCommand(context, jar.getAbsolutePath(), "Usage: jar")) {
 				context.error("java parameter is set, but Java archive tool not found/doesn't work. Please check specified java parameter.");
 				context.error("Trying to use: " + jar.getAbsolutePath());
 				return false;

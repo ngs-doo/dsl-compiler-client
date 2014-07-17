@@ -2,14 +2,12 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.parameters.JavaPath;
 import com.dslplatform.compiler.client.parameters.ScalaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -83,7 +81,7 @@ class ScalaCompilation {
 			scalacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.scala");
 		}
 
-		context.show("Running scalac for " + output.getName() + " ...");
+		context.start("Running scalac for " + output.getName() + " ");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(scalacCommand.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());

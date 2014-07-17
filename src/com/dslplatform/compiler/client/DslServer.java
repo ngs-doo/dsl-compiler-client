@@ -108,38 +108,9 @@ public class DslServer {
 		return true;
 	}
 
-	public static Either<String> get(final String address, final Context context) throws ExitException {
-		Either<HttpsURLConnection> tryConn = setupConnection(address, context, false, true);
-		if (!tryConn.isSuccess()) {
-			return Either.fail(tryConn.whyNot());
-		}
-		HttpsURLConnection conn = tryConn.get();
-		try {
-			return Either.success(Utils.read(conn.getInputStream()));
-		} catch (UnknownHostException ex) {
-			return Either.fail("Error connecting to compiler.dsl-platform.com\nCheck if Internet connection is down.", ex);
-		} catch (IOException ex) {
-			try {
-				if (conn.getResponseCode() == 403 && tryRestart(conn, context)) {
-					return get(address, context);
-				}
-				if (conn.getErrorStream() != null) {
-					return Either.fail(readResponseError(conn));
-				}
-			} catch (IOException e) {
-				return Either.fail(e);
-			}
-			return Either.fail(ex);
-		}
-	}
-
 	public static Either<String> put(final String address, final Context context, JsonValue json) throws ExitException {
 		return send(address, "PUT", context, json.toString());
 	}
-
-	/*public static Either<String> post(final String address, final Map<InputParameter, String> parameters, JsonValue json) {
-		return send(address, "POST", parameters, json.toString());
-	}*/
 
 	private static Either<String> send(
 			final String address,

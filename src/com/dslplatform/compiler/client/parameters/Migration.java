@@ -49,6 +49,7 @@ public enum Migration implements CompileParameter {
 					new JsonObject()
 							.add("Old", Utils.toJson(previousDslAndVersion.getKey()))
 							.add("New", Utils.toJson(currentDsl));
+			context.start("Downloading SQL migration");
 			final Either<String> response = DslServer.put(url, context, arg);
 			if (!response.isSuccess()) {
 				context.error("Error creating SQL migration:");

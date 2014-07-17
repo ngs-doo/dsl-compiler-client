@@ -12,14 +12,14 @@ public enum ScalaPath implements CompileParameter {
 			final File scalac = new File(context.get(InputParameter.SCALA), "scalac");
 			return Either.success(scalac.getAbsolutePath());
 		} else {
-			if (Utils.testCommand("scalac", "Usage: scalac")) {
+			if (Utils.testCommand(context, "scalac", "Usage: scalac")) {
 				return Either.success("scalac");
 			}
 			final String envSH = System.getenv("SCALA_HOME");
-			if (envSH != null && Utils.testCommand(envSH + "/bin/scalac", "Usage: scalac")) {
+			if (envSH != null && Utils.testCommand(context, envSH + "/bin/scalac", "Usage: scalac")) {
 				return Either.success(envSH + "/bin/scalac");
 			}
-			if(Utils.isWindows() && envSH != null && Utils.testCommand(envSH + "/bin/scalac.bat", "Usage: scalac")) {
+			if(Utils.isWindows() && envSH != null && Utils.testCommand(context, envSH + "/bin/scalac.bat", "Usage: scalac")) {
 				return Either.success(envSH + "/bin/scalac");
 			}
 			return Either.fail("Unable to find Scala compiler. Add it to path or specify scala compile option.");
@@ -31,7 +31,7 @@ public enum ScalaPath implements CompileParameter {
 		if (context.contains(InputParameter.SCALA)) {
 			final String path = context.get(InputParameter.SCALA);
 			final File scalac = new File(path, "scalac");
-			if (!Utils.testCommand(scalac.getAbsolutePath(), "Usage: scalac")) {
+			if (!Utils.testCommand(context, scalac.getAbsolutePath(), "Usage: scalac")) {
 				context.error("scala parameter is set, but Scala compiler not found/doesn't work. Please check specified scala parameter.");
 				context.error("Trying to use: " + scalac.getAbsolutePath());
 				return false;

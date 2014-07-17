@@ -80,7 +80,7 @@ class JavaCompilation {
 			javacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.java");
 		}
 
-		context.show("Running javac for " + output.getName() + " ...");
+		context.start("Running javac for " + output.getName() + " ");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(javacCommand.toString(), source);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());

@@ -128,6 +128,7 @@ public enum Targets implements CompileParameter {
 		if (settings.length() > 0) {
 			url.append("&options=").append(settings);
 		}
+		context.start("Compiling DSL");
 		final Either<String> response = DslServer.put(url.toString(), context, Utils.toJson(dsls));
 		if (!response.isSuccess()) {
 			context.error("Error compiling DSL to specified target.");

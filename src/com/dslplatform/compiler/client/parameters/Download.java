@@ -105,7 +105,7 @@ public enum Download implements CompileParameter {
 				Utils.downloadFile(new File(dependencies, library + "-" + version + ".jar"), jarUrl);
 				final String mvnCmd = tryMaven.get() + " dependency:copy-dependencies " +
 						"\"-DoutputDirectory=" + dependencies.getAbsolutePath() + "\" \"-f=" + pomFile.getAbsolutePath() + "\"";
-				context.show("Compiling " + name + " library...");
+				context.start("Downloading " + name + " library dependencies with Maven");
 				final Either<Utils.CommandResult> gatherDeps = Utils.runCommand(mvnCmd, pomFile.getParentFile());
 				if (!gatherDeps.isSuccess()) {
 					context.error("Error gathering dependencies with Maven.");
