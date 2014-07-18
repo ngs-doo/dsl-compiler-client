@@ -8,33 +8,10 @@ import com.dslplatform.compiler.client.parameters.ScalaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 class ScalaCompilation {
-
-	private static List<File> findNonEmptyDirsFiles(final File path) {
-		final List<File> foundFiles = new LinkedList<File>();
-		findNonEmptyDirsFiles(path, foundFiles);
-		return foundFiles;
-	}
-
-	private static void findNonEmptyDirsFiles(final File path, final List<File> foundFiles) {
-		for (final String fn : path.list()) {
-			final File f = new File(path, fn);
-			if (f.isDirectory()) {
-				findNonEmptyDirsFiles(f, foundFiles);
-				if (f.listFiles(new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return name.endsWith(".scala");
-					}
-				}).length > 0) {
-					foundFiles.add(f);
-				}
-			}
-		}
-	}
 
 	static Either<String> compile(
 			final File libraries,
@@ -52,7 +29,7 @@ class ScalaCompilation {
 		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
-		final String javac = tryCompiler.get();
+		final String scalac = tryCompiler.get();
 		final File classOut = new File(source, "locally-compiled");
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
@@ -60,29 +37,33 @@ class ScalaCompilation {
 		if (!classOut.mkdirs()) {
 			return Either.fail("Error creating temporary folder for Scala class files: " + classOut.getAbsolutePath());
 		}
-		final int len = source.getAbsolutePath().length() + 1;
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
-		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final List<File> scalaDirs = findNonEmptyDirsFiles(source);
-
-		final StringBuilder scalacCommand = new StringBuilder(javac);
-		scalacCommand.append(" -encoding UTF8 ");
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		scalacCommand.append("-d locally-compiled -cp .");
-		for (final File j : externalJars) {
-			scalacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
-		}
-		for (final File f : scalaDirs) {
-			scalacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.scala");
+		if (externalJars.length == 0) {
+			return Either.fail("Unable to find dependencies in: " + libraries.getAbsolutePath());
 		}
 
-		context.start("Running scalac for " + output.getName() + " ");
-		final Either<Utils.CommandResult> execCompile = Utils.runCommand(scalacCommand.toString(), source);
+		final List<String> scalacArguments = new ArrayList<String>();
+		scalacArguments.add("-encoding");
+		scalacArguments.add("UTF8");
+		scalacArguments.add("-optimise");
+		scalacArguments.add("-d");
+		scalacArguments.add("locally-compiled");
+		scalacArguments.add("-classpath");
+		final StringBuilder classPath = new StringBuilder(".");
+		for (final File j : externalJars) {
+			classPath.append(classpathSeparator).append(j.getAbsolutePath());
+		}
+		scalacArguments.add("\"" + classPath.toString() + "\"");
+		scalacArguments.add("*.scala");
+
+		context.show("Running scalac for " + output.getName());
+		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, scalac, source, scalacArguments);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());
 		}
@@ -103,8 +84,7 @@ class ScalaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		final Either<Utils.CommandResult> tryArchive =
-				JavaPath.makeArchive(context, source, classOut, output, scalaDirs);
+		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, source, classOut, output);
 		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
 		}

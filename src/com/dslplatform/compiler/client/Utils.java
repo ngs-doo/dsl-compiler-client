@@ -9,9 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -68,17 +66,21 @@ public class Utils {
 		}
 	}
 
-	public static void unpackZip(final File path, final InputStream stream) throws IOException {
+	public static void unpackZip(final Context context, final File path, final InputStream stream) throws IOException {
 		final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(stream));
 		ZipEntry entry;
 		final byte[] buffer = new byte[8192];
+		long size;
 		while ((entry = zip.getNextEntry()) != null) {
+			size = 0;
 			final File file = new File(path.getAbsolutePath() + "/" + entry.getName());
 			final FileOutputStream fos = new FileOutputStream(file);
 			int len;
 			while ((len = zip.read(buffer)) != -1) {
 				fos.write(buffer, 0, len);
+				size += len;
 			}
+			context.log("Unpacked: " + entry.getName() + ". Size: " + (size / 1024) + "kB");
 			zip.closeEntry();
 		}
 		zip.close();
@@ -111,7 +113,7 @@ public class Utils {
 	}
 
 	public static boolean isWindows() {
-		return System.getProperty("os.name").contains("Windows");
+		return System.getProperty("os.name").toLowerCase().contains("windows");
 	}
 
 	public static class CommandResult {
@@ -126,29 +128,32 @@ public class Utils {
 
 	private static class ConsumeStream extends Thread {
 		private final BufferedReader reader;
+		private final Context context;
 		private final StringBuilder output = new StringBuilder();
 		private IOException exception;
 
-		private ConsumeStream(final InputStream stream) {
+		private ConsumeStream(final InputStream stream, final Context context) {
 			this.reader = new BufferedReader(new InputStreamReader(stream));
+			this.context = context;
 		}
 
 		private ConsumeStream() {
 			this.reader = null;
+			this.context = null;
 		}
 
-		public static ConsumeStream start(final InputStream stream) {
+		public static ConsumeStream start(final InputStream stream, final Context context) {
 			if (stream == null) {
 				return new ConsumeStream();
 			}
-			final ConsumeStream cs = new ConsumeStream(stream);
+			final ConsumeStream cs = new ConsumeStream(stream, context);
 			cs.start();
 			return cs;
 		}
 
 		@Override
 		public void run() {
-			if(reader == null) {
+			if (reader == null) {
 				return;
 			}
 			final char[] buffer = new char[8192];
@@ -156,6 +161,9 @@ public class Utils {
 			try {
 				while ((len = reader.read(buffer)) != -1) {
 					output.append(buffer, 0, len);
+					if (context != null) {
+						context.log(buffer, len);
+					}
 				}
 				reader.close();
 			} catch (IOException ex) {
@@ -164,27 +172,38 @@ public class Utils {
 		}
 	}
 
-	public static boolean testCommand(final Context context, final String command, final String contains) {
+	public static boolean testCommand(final Context context, final String command, final String contains, final String... arguments) {
 		try {
-			final Process compilation = Runtime.getRuntime().exec(command);
-			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream());
-			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream());
+			final List<String> commandAndArgs = new ArrayList<String>();
+			commandAndArgs.add(command);
+			Collections.addAll(commandAndArgs, arguments);
+			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			final Process compilation = pb.start();
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null);
 			compilation.waitFor();
 			return error.output.toString().contains(contains) || result.output.toString().contains(contains);
 		} catch (IOException ex) {
-			context.error(ex);
+			context.log(ex.getMessage());
 			return false;
 		} catch (InterruptedException ex) {
-			context.error(ex);
+			context.log(ex.getMessage());
 			return false;
 		}
 	}
 
-	public static Either<CommandResult> runCommand(final String command, final File path) {
+	public static Either<CommandResult> runCommand(final Context context, final String command, final File path, final List<String> arguments) {
 		try {
-			final Process compilation = Runtime.getRuntime().exec(command, null, path);
-			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream());
-			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream());
+			final List<String> commandAndArgs = new ArrayList<String>();
+			commandAndArgs.add(command);
+			commandAndArgs.addAll(arguments);
+			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			if (path != null) {
+				pb.directory(path);
+			}
+			final Process compilation = pb.start();
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context);
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context);
 			compilation.waitFor();
 			if (result.exception != null) {
 				return Either.fail(result.exception);
@@ -208,6 +227,29 @@ public class Utils {
 			}
 			if (!f.delete()) {
 				throw new IOException("Error cleaning up temporary resource. Failed to delete: " + f.getAbsolutePath());
+			}
+		}
+	}
+
+	public static List<File> findNonEmptyDirs(final File path, final String extension) {
+		final List<File> foundDirs = new LinkedList<File>();
+		findNonEmptyDirs(path, foundDirs, extension);
+		return foundDirs;
+	}
+
+	private static void findNonEmptyDirs(final File path, final List<File> foundFiles, final String extension) {
+		if (path.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(extension);
+			}
+		}).length > 0) {
+			foundFiles.add(path);
+		}
+		for (final String fn : path.list()) {
+			final File f = new File(path, fn);
+			if (f.isDirectory()) {
+				findNonEmptyDirs(f, foundFiles, extension);
 			}
 		}
 	}

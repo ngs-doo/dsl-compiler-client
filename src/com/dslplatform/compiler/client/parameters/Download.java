@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 public enum Download implements CompileParameter {
 	INSTANCE;
@@ -19,7 +20,7 @@ public enum Download implements CompileParameter {
 			final String zip) {
 		try {
 			context.show("Downloading " + name + " from DSL Platform...");
-			DslServer.downloadAndUnpack(zip, dependencies);
+			DslServer.downloadAndUnpack(context, zip, dependencies);
 		} catch (IOException ex) {
 			context.error("Error downloading dependencies from DSL Platform.");
 			context.error(ex);
@@ -55,7 +56,7 @@ public enum Download implements CompileParameter {
 			final String client,
 			final String library) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File dependencies = new File(depsRoot.getAbsolutePath(),  client);
+		final File dependencies = new File(depsRoot.getAbsolutePath(), client);
 		if (!dependencies.exists()) {
 			if (!dependencies.mkdirs()) {
 				context.error("Failed to create " + name + " dependency folder: " + dependencies.getAbsolutePath());
@@ -103,10 +104,16 @@ public enum Download implements CompileParameter {
 				Utils.downloadFile(pomFile, pomUrl);
 				final URL jarUrl = new URL(sharedUrl + ".jar");
 				Utils.downloadFile(new File(dependencies, library + "-" + version + ".jar"), jarUrl);
-				final String mvnCmd = tryMaven.get() + " dependency:copy-dependencies " +
-						"\"-DoutputDirectory=" + dependencies.getAbsolutePath() + "\" \"-f=" + pomFile.getAbsolutePath() + "\"";
-				context.start("Downloading " + name + " library dependencies with Maven");
-				final Either<Utils.CommandResult> gatherDeps = Utils.runCommand(mvnCmd, pomFile.getParentFile());
+				context.show("Downloading " + name + " library dependencies with Maven...");
+				final Either<Utils.CommandResult> gatherDeps =
+						Utils.runCommand(
+								context,
+								tryMaven.get(),
+								pomFile.getParentFile(),
+								Arrays.asList(
+										"dependency:copy-dependencies",
+										"\"-DoutputDirectory=" + dependencies.getAbsolutePath() + "\"",
+										"\"-f=" + pomFile.getAbsolutePath() + "\""));
 				if (!gatherDeps.isSuccess()) {
 					context.error("Error gathering dependencies with Maven.");
 					context.error(gatherDeps.whyNot());

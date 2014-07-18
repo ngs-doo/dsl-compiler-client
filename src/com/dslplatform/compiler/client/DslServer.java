@@ -146,10 +146,11 @@ public class DslServer {
 		}
 	}
 
-	public static void downloadAndUnpack(final String file, final File path) throws IOException {
+	public static void downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
 		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
+		context.log("Downloading " + file + ".zip ...");
 		final HttpsURLConnection conn = (HttpsURLConnection)server.openConnection();
 		conn.setSSLSocketFactory(DslServer.SSL_SOCKET_FACTORY);
-		Utils.unpackZip(path, conn.getInputStream());
+		Utils.unpackZip(context, path, conn.getInputStream());
 	}
 }

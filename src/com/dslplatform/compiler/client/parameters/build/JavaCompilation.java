@@ -7,33 +7,11 @@ import com.dslplatform.compiler.client.parameters.JavaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 class JavaCompilation {
-
-	private static List<File> findNonEmptyDirsFiles(final File path) {
-		final List<File> foundFiles = new LinkedList<File>();
-		findNonEmptyDirsFiles(path, foundFiles);
-		return foundFiles;
-	}
-
-	private static void findNonEmptyDirsFiles(final File path, final List<File> foundFiles) {
-		for (final String fn : path.list()) {
-			final File f = new File(path, fn);
-			if (f.isDirectory()) {
-				findNonEmptyDirsFiles(f, foundFiles);
-				if (f.listFiles(new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return name.endsWith(".java");
-					}
-				}).length > 0) {
-					foundFiles.add(f);
-				}
-			}
-		}
-	}
 
 	static Either<String> compile(
 			final File libraries,
@@ -62,26 +40,36 @@ class JavaCompilation {
 		final int len = source.getAbsolutePath().length() + 1;
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final List<File> javaDirs = findNonEmptyDirsFiles(source);
-
-		final StringBuilder javacCommand = new StringBuilder(javac);
-		javacCommand.append(" -encoding UTF8 ");
+		final List<File> javaDirs = Utils.findNonEmptyDirs(source, ".java");
+		if(javaDirs.size() == 0) {
+			return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
+		}
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		javacCommand.append("-d locally-compiled -cp .");
-		for (final File j : externalJars) {
-			javacCommand.append(classpathSeparator).append("\"").append(j.getAbsolutePath()).append("\"");
-		}
-		for (final File f : javaDirs) {
-			javacCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.java");
+		if (externalJars.length == 0) {
+			return Either.fail("Unable to find dependencies in: " + libraries.getAbsolutePath());
 		}
 
-		context.start("Running javac for " + output.getName() + " ");
-		final Either<Utils.CommandResult> execCompile = Utils.runCommand(javacCommand.toString(), source);
+		final List<String> javacArguments = new ArrayList<String>();
+		javacArguments.add("-encoding");
+		javacArguments.add("UTF8");
+		javacArguments.add("-d");
+		javacArguments.add("locally-compiled");
+		javacArguments.add("-cp");
+		final StringBuilder classPath = new StringBuilder(".");
+		for (final File j : externalJars) {
+			classPath.append(classpathSeparator).append(j.getAbsolutePath());
+		}
+		javacArguments.add("\"" + classPath.toString() + "\"");
+		for (final File f : javaDirs) {
+			javacArguments.add(f.getAbsolutePath().substring(len) +  separatorChar + "*.java");
+		}
+		context.show("Running javac for " + output.getName() + " ...");
+		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, javac, source, javacArguments);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());
 		}
@@ -102,8 +90,7 @@ class JavaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		final Either<Utils.CommandResult> tryArchive =
-				JavaPath.makeArchive(context, source, classOut, output, javaDirs);
+		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, source, classOut, output);
 		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
 		}

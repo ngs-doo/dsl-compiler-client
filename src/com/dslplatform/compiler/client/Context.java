@@ -7,7 +7,16 @@ public class Context {
 	private final Map<String, String> parameters = new HashMap<String, String>();
 	private final Map<String, Object> cache = new HashMap<String, Object>();
 
+	private boolean withLog;
+	private boolean noPrompt;
+
 	public void put(final InputParameter parameter, final String value) {
+		if(parameter.equals(InputParameter.NO_PROMPT)) {
+			noPrompt = true;
+		}
+		else if(parameter.equals(InputParameter.LOG)) {
+			withLog = true;
+		}
 		parameters.put(parameter.alias, value);
 	}
 
@@ -40,7 +49,7 @@ public class Context {
 		return (T) cache.get(name);
 	}
 
-	public void show(final String... values) {
+	private static synchronized void write(final String... values) {
 		if (values.length == 0) {
 			System.out.println();
 		} else {
@@ -48,36 +57,47 @@ public class Context {
 				System.out.println(v);
 			}
 		}
+		System.out.flush();
 	}
 
-	public void start(final String value) {
-		System.out.print(value);
-		System.out.println("...");
-		//TODO: implement thread start and ticks...
-		//tick
+	public void show(final String... values) {
+		write(values);
+	}
+
+	public void log(final String value) {
+		if (!withLog) {
+			return;
+		}
+		write(value);
+	}
+
+	public void log(final char[] value, final int len) {
+		if (!withLog) {
+			return;
+		}
+		write(new String(value, 0, len));
 	}
 
 	public void error(final String value) {
-		System.out.println(value);
+		write(value);
 	}
 
 	public void error(final Exception ex) {
-		System.out.println(ex.getMessage());
+		//TODO full message output with log
+		write(ex.getMessage());
 	}
 
 	public boolean canInteract() {
-		return System.console() != null && !parameters.containsKey(InputParameter.NO_PROMPT.alias);
+		return System.console() != null && !noPrompt;
 	}
 
 	public String ask(final String question) {
-		System.out.print(question);
-		System.out.print(" ");
+		write(question + " ");
 		return System.console().readLine();
 	}
 
 	public char[] askSecret(final String question) {
-		System.out.print(question);
-		System.out.print(" ");
+		write(question + " ");
 		return System.console().readPassword();
 	}
 }

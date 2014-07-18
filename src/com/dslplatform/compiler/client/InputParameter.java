@@ -17,7 +17,7 @@ public enum InputParameter {
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
 	JAVA("java", "path", JavaPath.INSTANCE),
-	SCALA("scala", "path", ScalaPath.INSTANCE),
+	SCALAC("scala", "file", ScalaPath.INSTANCE),
 	NAMESPACE("namespace", "value", Namespace.INSTANCE),
 	SETTINGS("settings", "options", Settings.INSTANCE),
 	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),
@@ -28,7 +28,8 @@ public enum InputParameter {
 	TARGET("target", "options", Targets.INSTANCE),
 	MIGRATION("migration", null, Migration.INSTANCE),
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
-	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE);
+	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
+	LOG("log", null, LogOutput.INSTANCE);
 
 	public final String alias;
 	public final String usage;

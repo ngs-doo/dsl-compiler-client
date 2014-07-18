@@ -53,7 +53,7 @@ public class CompileRevenj implements BuildAction {
 				final String redirect = conn.getHeaderField("Location");
 				final String tag = redirect.substring(redirect.lastIndexOf('/') + 1);
 				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
-				Utils.unpackZip(revenjDeps, httpServer.openConnection().getInputStream());
+				Utils.unpackZip(context, revenjDeps, httpServer.openConnection().getInputStream());
 			} catch (IOException ex) {
 				context.error("Unable to download Revenj from Github.");
 				context.error(ex);
@@ -69,7 +69,7 @@ public class CompileRevenj implements BuildAction {
 				if ("y".equalsIgnoreCase(answer)) {
 					try {
 						context.show("Downloading Revenj from DSL Platform...");
-						DslServer.downloadAndUnpack("server", revenjDeps);
+						DslServer.downloadAndUnpack(context, "server", revenjDeps);
 					} catch (IOException ex2) {
 						context.error("Unable to download Revenj from DSL Platform.");
 						context.error(ex);

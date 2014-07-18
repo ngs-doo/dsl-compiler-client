@@ -7,6 +7,8 @@ import com.dslplatform.compiler.client.parameters.DotNet;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
 
 class DotNetCompilation {
 
@@ -36,20 +38,20 @@ class DotNetCompilation {
 		});
 		final char escapeChar = Utils.isWindows() ? '/' : '-';
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final StringBuilder command = new StringBuilder(compiler);
-		command.append(" ").append(escapeChar).append("target:library ");
-		command.append(escapeChar).append("optimize+ ");
-		command.append(escapeChar).append("out:\"").append(output.getAbsoluteFile()).append("\" ");
+		final List<String> arguments = new ArrayList<String>();
+		arguments.add(escapeChar + "target:library");
+		arguments.add(escapeChar + "optimize+");
+		arguments.add(escapeChar + "out:\"" + output.getAbsolutePath() + "\"");
 		for(final String r : references) {
-			command.append(escapeChar).append("r:\"").append(r).append("\" ");
+			arguments.add(escapeChar + "r:\"" + r + "\"");
 		}
 		for(final String d : dependencies) {
-			command.append(escapeChar).append("r:\"").append(d).append("\" ");
+			arguments.add(escapeChar + "r:\"" + d + "\"");
 		}
-		command.append(escapeChar).append("lib:\"").append(libraries.getAbsolutePath()).append("\" ");
-		command.append(escapeChar).append("recurse:\"").append(source.getAbsolutePath()).append(separatorChar).append("*.cs\" ");
-		context.start("Compiling Revenj library");
-		final Either<Utils.CommandResult> execCompile = Utils.runCommand(command.toString(), source);
+		arguments.add(escapeChar + "lib:\"" + libraries.getAbsolutePath() + "\"");
+		arguments.add(escapeChar + "recurse:\"" + source.getAbsolutePath() + separatorChar + "*.cs\"");
+		context.show("Compiling Revenj library ...");
+		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, compiler, source, arguments);
 		if (!execCompile.isSuccess()) {
 			return Either.fail(execCompile.whyNot());
 		}

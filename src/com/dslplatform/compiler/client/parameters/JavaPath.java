@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public enum JavaPath implements CompileParameter {
@@ -30,8 +31,7 @@ public enum JavaPath implements CompileParameter {
 			final Context context,
 			final File source,
 			final File classOut,
-			final File output,
-			final List<File> classPaths) {
+			final File output) {
 		final String jar;
 		if (context.contains(InputParameter.JAVA)) {
 			final File jarFile = new File(context.get(InputParameter.JAVA), "jar");
@@ -45,20 +45,22 @@ public enum JavaPath implements CompileParameter {
 				jar = envJH + "/bin/jar";
 			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
 				jar = envJDH + "/bin/jar";
-			}
-			else {
+			} else {
 				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
 			}
 		}
-		final int len = source.getAbsolutePath().length() + 1;
+		final int len = classOut.getAbsolutePath().length() + 1;
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final StringBuilder jarCommand = new StringBuilder(jar);
-		jarCommand.append(" cf \"").append(output.getAbsolutePath()).append("\"");
-		for(final File f : classPaths) {
-			jarCommand.append(" ").append(f.getAbsolutePath().substring(len)).append(separatorChar).append("*.class");
+		final List<String> jarArguments = new ArrayList<String>();
+		jarArguments.add("cf");
+		jarArguments.add("\"" + output.getAbsolutePath() + "\"");
+
+		final List<File> classDirs = Utils.findNonEmptyDirs(classOut, ".class");
+		for (final File f : classDirs) {
+			jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.class");
 		}
-		context.start("Running jar for " + output.getName() + " ");
-		final Either<Utils.CommandResult> execArchive = Utils.runCommand(jarCommand.toString(), classOut);
+		context.show("Running jar for " + output.getName() + "...");
+		final Either<Utils.CommandResult> execArchive = Utils.runCommand(context, jar, classOut, jarArguments);
 		if (!execArchive.isSuccess()) {
 			return Either.fail(execArchive.whyNot());
 		}

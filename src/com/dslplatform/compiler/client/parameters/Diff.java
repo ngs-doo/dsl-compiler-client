@@ -19,16 +19,15 @@ public enum Diff implements CompileParameter {
 		currentFiles.removeAll(previousDsl.keySet());
 		for (final String name : currentFiles) {
 			context.show("New DSL file: " + name + ". Total lines: " + currentDsl.get(name).split("\n").length);
-			//TODO: options which control whether to show content
-			//context.show("----------------------------------------------");
-			//context.show(currentDsl.get(name));
+			context.log("----------------------------------------------");
+			context.log(currentDsl.get(name));
 		}
 		final Set<String> previousFiles = new HashSet<String>(previousDsl.keySet());
 		previousFiles.removeAll(currentDsl.keySet());
 		for (final String name : previousFiles) {
 			context.show("Removed DSL file: " + name + ". Total lines: " + previousDsl.get(name).split("\n").length);
-			//context.show("----------------------------------------------");
-			//context.show(previousDsl.get(name));
+			context.log("----------------------------------------------");
+			context.log(previousDsl.get(name));
 		}
 		final Set<String> sharedFiles = new HashSet<String>(currentDsl.keySet());
 		sharedFiles.retainAll(previousDsl.keySet());

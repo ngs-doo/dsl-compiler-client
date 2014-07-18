@@ -12,9 +12,9 @@ public enum Targets implements CompileParameter {
 
 	public static enum Option {
 		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-http-apache", "./generated-model-java.jar"), true),
-		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-http-android", "./generated-model-android.jar"), true),
+		//ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-http-android", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
-		PHP("php", "PHP client", "PHP", new PreparePhp(), true),
+		PHP("php", "PHP client", "Php", new PreparePhp(), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false);
 
 		private final String value;
@@ -128,7 +128,7 @@ public enum Targets implements CompileParameter {
 		if (settings.length() > 0) {
 			url.append("&options=").append(settings);
 		}
-		context.start("Compiling DSL");
+		context.show("Compiling DSL...");
 		final Either<String> response = DslServer.put(url.toString(), context, Utils.toJson(dsls));
 		if (!response.isSuccess()) {
 			context.error("Error compiling DSL to specified target.");
