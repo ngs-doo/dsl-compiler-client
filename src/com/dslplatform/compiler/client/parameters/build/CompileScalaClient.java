@@ -19,7 +19,7 @@ public class CompileScalaClient implements BuildAction {
 		final File scalaDeps = new File(depsRoot.getAbsolutePath(), "scala_client");
 		final String customJar = context.get("scala_client");
 		final File model = new File(customJar != null ? customJar : "./generated-model-scala.jar");
-		final Either<String> compilation = ScalaCompilation.compile(scalaDeps, sources, model, context);
+		final Either<String> compilation = ScalaCompilation.compile("scala_client", scalaDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Scala client library compilation.");
 			context.error(compilation.whyNot());
@@ -29,7 +29,7 @@ public class CompileScalaClient implements BuildAction {
 			context.show("Compiled Scala client library to: " + model.getAbsolutePath());
 		} else {
 			context.error("Can't seem to find compiled Scala client library: " + model.getAbsolutePath());
-			context.show(compilation.get());
+			context.log(compilation.get());
 			throw new ExitException();
 		}
 	}

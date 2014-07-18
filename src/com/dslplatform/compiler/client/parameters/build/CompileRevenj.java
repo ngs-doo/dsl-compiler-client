@@ -14,7 +14,7 @@ public class CompileRevenj implements BuildAction {
 	@Override
 	public boolean check(final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
+		final File revenjDeps = new File(depsRoot, "revenj");
 		if (!revenjDeps.exists()) {
 			if (!revenjDeps.mkdirs()) {
 				context.error("Failed to create Revenj dependencies folder: " + revenjDeps.getAbsolutePath());
@@ -99,9 +99,10 @@ public class CompileRevenj implements BuildAction {
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
 		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File revenjDeps = new File(depsRoot.getAbsolutePath() + "/revenj");
+		final File revenjDeps = new File(depsRoot, "revenj");
 		final String customDll = context.get("revenj");
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
+		context.show("Compiling Revenj library...");
 		final Either<String> compilation = DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj library compilation.");
@@ -112,7 +113,7 @@ public class CompileRevenj implements BuildAction {
 			context.show("Compiled Revenj library to: " + model.getAbsolutePath());
 		} else {
 			context.error("Can't seem to find compiled Revenj library: " + model.getAbsolutePath());
-			context.show(compilation.get());
+			context.log(compilation.get());
 			throw new ExitException();
 		}
 	}

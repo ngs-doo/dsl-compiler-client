@@ -17,7 +17,7 @@ public enum InputParameter {
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
 	JAVA("java", "path", JavaPath.INSTANCE),
-	SCALAC("scala", "file", ScalaPath.INSTANCE),
+	SCALAC("scalac", "file", ScalaPath.INSTANCE),
 	NAMESPACE("namespace", "value", Namespace.INSTANCE),
 	SETTINGS("settings", "options", Settings.INSTANCE),
 	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),

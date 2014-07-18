@@ -49,42 +49,48 @@ public class Context {
 		return (T) cache.get(name);
 	}
 
-	private static synchronized void write(final String... values) {
+	private static synchronized void write(final boolean newLine, final String... values) {
 		if (values.length == 0) {
 			System.out.println();
 		} else {
-			for (final String v : values) {
-				System.out.println(v);
+			if (newLine) {
+				for (final String v : values) {
+					System.out.println(v);
+				}
+			} else {
+				for (final String v : values) {
+					System.out.print(v);
+				}
 			}
 		}
 		System.out.flush();
 	}
 
 	public void show(final String... values) {
-		write(values);
+		write(true, values);
 	}
 
 	public void log(final String value) {
 		if (!withLog) {
 			return;
 		}
-		write(value);
+		write(true, value);
 	}
 
 	public void log(final char[] value, final int len) {
 		if (!withLog) {
 			return;
 		}
-		write(new String(value, 0, len));
+		write(false, new String(value, 0, len));
 	}
 
 	public void error(final String value) {
-		write(value);
+		write(true, value);
 	}
 
 	public void error(final Exception ex) {
 		//TODO full message output with log
-		write(ex.getMessage());
+		write(true, ex.getMessage());
 	}
 
 	public boolean canInteract() {
@@ -92,12 +98,12 @@ public class Context {
 	}
 
 	public String ask(final String question) {
-		write(question + " ");
+		write(false, question + " ");
 		return System.console().readLine();
 	}
 
 	public char[] askSecret(final String question) {
-		write(question + " ");
+		write(false, question + " ");
 		return System.console().readPassword();
 	}
 }

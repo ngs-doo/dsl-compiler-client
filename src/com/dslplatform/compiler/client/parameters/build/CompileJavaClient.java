@@ -38,7 +38,7 @@ public class CompileJavaClient implements BuildAction {
 		final File javaDeps = new File(depsRoot.getAbsolutePath(), library);
 		final String customJar = context.get(library);
 		final File model = new File(customJar != null ? customJar : jar);
-		final Either<String> compilation = JavaCompilation.compile(javaDeps, sources, model, context);
+		final Either<String> compilation = JavaCompilation.compile(library, javaDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during " + name + " library compilation.");
 			context.error(compilation.whyNot());
@@ -48,7 +48,7 @@ public class CompileJavaClient implements BuildAction {
 			context.show("Compiled " + name + " library to: " + model.getAbsolutePath());
 		} else {
 			context.error("Can't seem to find compiled " + name + " library: " + model.getAbsolutePath());
-			context.show(compilation.get());
+			context.log(compilation.get());
 			throw new ExitException();
 		}
 	}

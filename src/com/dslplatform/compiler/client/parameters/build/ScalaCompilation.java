@@ -15,6 +15,7 @@ import java.util.List;
 class ScalaCompilation {
 
 	static Either<String> compile(
+			final String name,
 			final File libraries,
 			final File source,
 			final File output,
@@ -31,7 +32,7 @@ class ScalaCompilation {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String scalac = tryCompiler.get();
-		final File classOut = new File(source, "locally-compiled");
+		final File classOut = new File(source, name);
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
 		}
@@ -41,7 +42,7 @@ class ScalaCompilation {
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
-			public boolean accept(File dir, String name) {
+			public boolean accept(final File dir, final String name) {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
@@ -54,7 +55,7 @@ class ScalaCompilation {
 		scalacArguments.add("UTF8");
 		scalacArguments.add("-optimise");
 		scalacArguments.add("-d");
-		scalacArguments.add("locally-compiled");
+		scalacArguments.add(name);
 		scalacArguments.add("-classpath");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {
@@ -66,7 +67,7 @@ class ScalaCompilation {
 		} else {
 			final String[] files = source.list(new FilenameFilter() {
 				@Override
-				public boolean accept(File dir, String name) {
+				public boolean accept(final File dir, final String name) {
 					return name.endsWith(".scala");
 				}
 			});

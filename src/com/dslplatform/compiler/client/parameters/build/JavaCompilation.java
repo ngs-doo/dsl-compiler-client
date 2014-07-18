@@ -14,6 +14,7 @@ import java.util.List;
 class JavaCompilation {
 
 	static Either<String> compile(
+			final String name,
 			final File libraries,
 			final File source,
 			final File output,
@@ -30,7 +31,7 @@ class JavaCompilation {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String javac = tryCompiler.get();
-		final File classOut = new File(source, "locally-compiled");
+		final File classOut = new File(source, name);
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
 		}
@@ -42,7 +43,7 @@ class JavaCompilation {
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
-			public boolean accept(File dir, String name) {
+			public boolean accept(final File dir, final String name) {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
@@ -54,7 +55,7 @@ class JavaCompilation {
 		javacArguments.add("-encoding");
 		javacArguments.add("UTF8");
 		javacArguments.add("-d");
-		javacArguments.add("locally-compiled");
+		javacArguments.add(name);
 		javacArguments.add("-cp");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {

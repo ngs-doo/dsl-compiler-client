@@ -62,6 +62,7 @@ public class DslServer {
 		final HttpsURLConnection conn;
 		try {
 			final URL url = new URL(REMOTE_URL + address);
+			context.log("Calling: " + url.toString());
 			conn = (HttpsURLConnection) url.openConnection();
 		} catch (IOException ex) {
 			return Either.fail(ex);

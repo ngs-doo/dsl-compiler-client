@@ -10,10 +10,25 @@ import java.util.*;
 public enum Targets implements CompileParameter {
 	INSTANCE;
 
+	private final static String[] DOTNET_CLIENT_DEPENDENCIES = {
+			"System.dll",
+			"System.Core.dll",
+			"System.Dynamic.dll",
+			"System.ComponentModel.Composition.dll",
+			"System.Configuration.dll",
+			"System.Data.dll",
+			"System.Drawing.dll",
+			"System.Xml.dll",
+			"System.Xml.Linq.dll",
+			"System.Runtime.Serialization.dll"
+	};
+
 	public static enum Option {
 		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-http-apache", "./generated-model-java.jar"), true),
-		//ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-http-android", "./generated-model-android.jar"), true),
+		ANDORID("android", "Android", "Java", new CompileJavaClient("Android", "android", "android", "dsl-client-http-android", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
+		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES), false),
+		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0]), false),
 		PHP("php", "PHP client", "Php", new PreparePhp(), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false);
 
@@ -69,12 +84,12 @@ public enum Targets implements CompileParameter {
 			}
 			Collections.addAll(targets, value.split(","));
 		}
-		for(final Option o : Option.values()) {
+		for (final Option o : Option.values()) {
 			if (context.contains(o.value) && !targets.contains(o.value)) {
 				targets.add(o.value);
 			}
 		}
-		if(targets.size() == 0) {
+		if (targets.size() == 0) {
 			if (context.contains(InputParameter.TARGET)) {
 				context.error("Targets not provided. Available targets: ");
 				listOptions(context);
@@ -83,7 +98,7 @@ public enum Targets implements CompileParameter {
 			return true;
 		}
 		final List<Option> options = new ArrayList<Option>(targets.size());
-		for(final String name : targets) {
+		for (final String name : targets) {
 			final Option o = Option.from(name);
 			if (o == null) {
 				context.error("Unknown target: " + name);
@@ -98,7 +113,7 @@ public enum Targets implements CompileParameter {
 			context.error("Please check your DSL folder: " + context.get(InputParameter.DSL));
 			return false;
 		}
-		for(final Option o : options) {
+		for (final Option o : options) {
 			if (!o.action.check(context)) {
 				return false;
 			}
@@ -114,9 +129,13 @@ public enum Targets implements CompileParameter {
 			return;
 		}
 		final StringBuilder sb = new StringBuilder();
-		for(final Option t : targets) {
-			sb.append(t.platformName);
-			sb.append(',');
+		final Set<String> addedTargets = new HashSet<String>();
+		for (final Option t : targets) {
+			if (!addedTargets.contains(t.platformName)) {
+				sb.append(t.platformName);
+				sb.append(',');
+				addedTargets.add(t.platformName);
+			}
 		}
 		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		final StringBuilder url = new StringBuilder("Platform.svc/unmanaged/source?targets=");
@@ -147,8 +166,8 @@ public enum Targets implements CompileParameter {
 			for (final String name : files.names()) {
 				final String nameOnly = name.substring(0, name.lastIndexOf('.'));
 				final File file = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")))
-					? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
-					: new File(temp, name);
+						? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
+						: new File(temp, name);
 				final File parentPath = file.getParentFile();
 				if (!parentPath.exists()) {
 					if (!parentPath.mkdirs()) {
