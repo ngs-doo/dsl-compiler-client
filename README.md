@@ -42,6 +42,7 @@ Choose a language and a compatible open source library to write Android/.NET/PHP
  * [Revenj.NET](https://github.com/ngs-doo/revenj)
  * [DSL Java client](https://github.com/ngs-doo/dsl-client-java)
  * [DSL PHP client](https://github.com/ngs-doo/dsl-client-php)
+ * [DSL Scala client](https://github.com/ngs-doo/dsl-client-scala)
 
 ###How to use
 
