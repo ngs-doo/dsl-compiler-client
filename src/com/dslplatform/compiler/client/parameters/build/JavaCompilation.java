@@ -8,7 +8,7 @@ import com.dslplatform.compiler.client.parameters.JavaPath;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 
 class JavaCompilation {
@@ -40,10 +40,6 @@ class JavaCompilation {
 		final int len = source.getAbsolutePath().length() + 1;
 		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final List<File> javaDirs = Utils.findNonEmptyDirs(source, ".java");
-		if(javaDirs.size() == 0) {
-			return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
-		}
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -64,9 +60,20 @@ class JavaCompilation {
 		for (final File j : externalJars) {
 			classPath.append(classpathSeparator).append(j.getAbsolutePath());
 		}
-		javacArguments.add("\"" + classPath.toString() + "\"");
-		for (final File f : javaDirs) {
-			javacArguments.add(f.getAbsolutePath().substring(len) +  separatorChar + "*.java");
+		javacArguments.add(classPath.toString());
+		if(Utils.isWindows()) {
+			final List<File> javaDirs = Utils.findNonEmptyDirs(source, ".java");
+			if(javaDirs.size() == 0) {
+				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
+			}
+			for (final File f : javaDirs) {
+				javacArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.java");
+			}
+		} else {
+			final List<File> javaFiles = Utils.findFiles(source, Arrays.asList(".java"));
+			for (final File f : javaFiles) {
+				javacArguments.add(f.getAbsolutePath().substring(len));
+			}
 		}
 		context.show("Running javac for " + output.getName() + " ...");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, javac, source, javacArguments);

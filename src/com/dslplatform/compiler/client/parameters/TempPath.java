@@ -39,7 +39,7 @@ public enum TempPath implements CompileParameter {
 			}
 			if (path.exists()) {
 				Utils.deletePath(path);
-			} else if (!path.mkdir()) {
+			} else if (!path.mkdirs()) {
 				context.error("Error creating temporary path in: " + path.getAbsolutePath());
 				return false;
 			}

@@ -37,19 +37,18 @@ class DotNetCompilation {
 			}
 		});
 		final char escapeChar = Utils.isWindows() ? '/' : '-';
-		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add(escapeChar + "target:library");
 		arguments.add(escapeChar + "optimize+");
-		arguments.add(escapeChar + "out:\"" + output.getAbsolutePath() + "\"");
+		arguments.add(escapeChar + "out:" + output.getAbsolutePath());
 		for(final String r : references) {
-			arguments.add(escapeChar + "r:\"" + r + "\"");
+			arguments.add(escapeChar + "r:" + r);
 		}
 		for(final String d : dependencies) {
-			arguments.add(escapeChar + "r:\"" + d + "\"");
+			arguments.add(escapeChar + "r:" + d);
 		}
-		arguments.add(escapeChar + "lib:\"" + libraries.getAbsolutePath() + "\"");
-		arguments.add(escapeChar + "recurse:\"" + source.getAbsolutePath() + separatorChar + "*.cs\"");
+		arguments.add(escapeChar + "lib:" + libraries.getAbsolutePath());
+		arguments.add(escapeChar + "recurse:*.cs");
 		context.show("Compiling Revenj library ...");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, compiler, source, arguments);
 		if (!execCompile.isSuccess()) {

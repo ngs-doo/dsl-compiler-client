@@ -2,6 +2,8 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
+import java.util.Arrays;
+
 public enum DotNet implements CompileParameter {
 	INSTANCE;
 
@@ -12,17 +14,17 @@ public enum DotNet implements CompileParameter {
 			final boolean isWindows = Utils.isWindows();
 			final boolean is32Bit = System.getProperty("os.arch").equals("x86");
 			if (isWindows) {
-				if (Utils.testCommand(context, "csc.exe", ".NET Framework")) {
+				if (Utils.testCommand(context, "csc.exe", "Microsoft")) {
 					return Either.success("csc.exe");
 				}
 				final String framework = is32Bit ? "Framework" : "Framework64";
 				final String msDotNet4 = System.getenv("WINDIR") + "\\Microsoft.NET\\" + framework + "\\v4.0.30319\\csc.exe";
-				if (Utils.testCommand(context, msDotNet4, ".NET Framework")) {
+				if (Utils.testCommand(context, msDotNet4, "Microsoft")) {
 					return Either.success(msDotNet4);
 				}
 				return Either.fail("Unable to find csc.exe (.NET C# compiler). Add it to path or specify dotnet compile option.");
 			}
-			if (Utils.testCommand(context, "dmcs", "Mono", "--version")) {
+			if (Utils.testCommand(context, "dmcs", "Mono", Arrays.asList("--version"))) {
 				return Either.success("dmcs");
 			}
 			return Either.fail("Unable to find dmcs (Mono C# compiler). Add it to path or specify dotnet compile option.");

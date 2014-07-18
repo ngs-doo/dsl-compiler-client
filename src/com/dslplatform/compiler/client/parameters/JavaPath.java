@@ -4,6 +4,7 @@ import com.dslplatform.compiler.client.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public enum JavaPath implements CompileParameter {
@@ -53,11 +54,18 @@ public enum JavaPath implements CompileParameter {
 		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final List<String> jarArguments = new ArrayList<String>();
 		jarArguments.add("cf");
-		jarArguments.add("\"" + output.getAbsolutePath() + "\"");
+		jarArguments.add(output.getAbsolutePath());
 
-		final List<File> classDirs = Utils.findNonEmptyDirs(classOut, ".class");
-		for (final File f : classDirs) {
-			jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.class");
+		if(Utils.isWindows()) {
+			final List<File> classDirs = Utils.findNonEmptyDirs(classOut, ".class");
+			for (final File f : classDirs) {
+				jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.class");
+			}
+		} else {
+			final List<File> classFiles = Utils.findFiles(classOut, Arrays.asList(".class"));
+			for (final File f : classFiles) {
+				jarArguments.add(f.getAbsolutePath().substring(len));
+			}
 		}
 		context.show("Running jar for " + output.getName() + "...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(context, jar, classOut, jarArguments);

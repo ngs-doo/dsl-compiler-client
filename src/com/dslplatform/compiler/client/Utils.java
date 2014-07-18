@@ -49,19 +49,24 @@ public class Utils {
 		return json;
 	}
 
-	public static List<File> findDslFiles(final File path) {
+	public static List<File> findFiles(final File path, final List<String> extensions) {
 		final List<File> foundFiles = new LinkedList<File>();
-		findDslFiles(path, foundFiles);
+		findFiles(path, foundFiles, extensions);
 		return foundFiles;
 	}
 
-	private static void findDslFiles(final File path, final List<File> foundFiles) {
+	private static void findFiles(final File path, final List<File> foundFiles, final List<String> extensions) {
 		for (final String fn : path.list()) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
-				findDslFiles(f, foundFiles);
-			} else if (f.getName().endsWith(".dsl") || f.getName().endsWith(".ddd")) {
-				foundFiles.add(f);
+				findFiles(f, foundFiles, extensions);
+			} else {
+				for (final String e : extensions) {
+					if (f.getName().endsWith(e)) {
+						foundFiles.add(f);
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -172,11 +177,15 @@ public class Utils {
 		}
 	}
 
-	public static boolean testCommand(final Context context, final String command, final String contains, final String... arguments) {
+	public static boolean testCommand(final Context context, final String command, final String contains) {
+		return testCommand(context, command, contains, new ArrayList<String>());
+	}
+
+	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments) {
 		try {
 			final List<String> commandAndArgs = new ArrayList<String>();
 			commandAndArgs.add(command);
-			Collections.addAll(commandAndArgs, arguments);
+			commandAndArgs.addAll(arguments);
 			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);

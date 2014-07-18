@@ -83,7 +83,7 @@ public enum InputParameter {
 				}
 			}
 		}
-		if (errors.size() > 0) {
+		if (args.length == 0 || errors.size() > 0) {
 			for (final String err : errors) {
 				context.error(err);
 			}

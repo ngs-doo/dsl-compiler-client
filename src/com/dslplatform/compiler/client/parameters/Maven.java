@@ -2,6 +2,8 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
+import java.util.Arrays;
+
 public enum Maven implements CompileParameter {
 	INSTANCE;
 
@@ -10,14 +12,14 @@ public enum Maven implements CompileParameter {
 			return Either.success(context.get(InputParameter.MAVEN));
 		}
 		final String env = System.getenv("M2");
-		if (env != null && Utils.testCommand(context, env, "Apache Maven", "--version")) {
+		if (env != null && Utils.testCommand(context, env, "Apache Maven", Arrays.asList("--version"))) {
 			return Either.success(env);
 		}
 		if (env != null && Utils.isWindows() && !env.toLowerCase().endsWith(".bat")
-				&& Utils.testCommand(context, env + ".bat", "Apache Maven", "--version")) {
+				&& Utils.testCommand(context, env + ".bat", "Apache Maven", Arrays.asList("--version"))) {
 			return Either.success(env + ".bat");
 		}
-		if (Utils.testCommand(context, "mvn", "Apache Maven", "--version")) {
+		if (Utils.testCommand(context, "mvn", "Apache Maven", Arrays.asList("--version"))) {
 			return Either.success("mvn");
 		}
 		return Either.fail("Unable to find mvn. Add it to path or specify maven compile option.");
@@ -27,7 +29,7 @@ public enum Maven implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(InputParameter.MAVEN)) {
 			final String mvn = context.get(InputParameter.MAVEN);
-			if (!Utils.testCommand(context, mvn, "Apache Maven", "--version")) {
+			if (!Utils.testCommand(context, mvn, "Apache Maven", Arrays.asList("--version"))) {
 				context.error("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
 				return false;
 			}

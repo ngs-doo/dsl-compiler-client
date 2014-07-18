@@ -9,6 +9,7 @@ import com.dslplatform.compiler.client.parameters.ScalaPath;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class ScalaCompilation {
@@ -59,8 +60,18 @@ class ScalaCompilation {
 		for (final File j : externalJars) {
 			classPath.append(classpathSeparator).append(j.getAbsolutePath());
 		}
-		scalacArguments.add("\"" + classPath.toString() + "\"");
-		scalacArguments.add("*.scala");
+		scalacArguments.add(classPath.toString());
+		if (Utils.isWindows()) {
+			scalacArguments.add("*.scala");
+		} else {
+			final String[] files = source.list(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.endsWith(".scala");
+				}
+			});
+			Collections.addAll(scalacArguments, files);
+		}
 
 		context.show("Running scalac for " + output.getName());
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, scalac, source, scalacArguments);
