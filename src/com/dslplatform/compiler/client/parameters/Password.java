@@ -20,7 +20,7 @@ public enum Password implements CompileParameter {
 		String value = context.get(InputParameter.PASSWORD);
 		if (value == null) {
 			if(!context.canInteract()) {
-				context.error("Password missing. Specify password as argument.");
+				context.error("DSL Platform password missing. Specify password as argument.");
 				throw new ExitException();
 			}
 			char[] pass = context.askSecret("DSL Platform password:");

@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.io.File;
@@ -10,17 +11,30 @@ public enum SqlPath implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public boolean check(final Context context) {
+	public boolean check(final Context context) throws ExitException {
 		if (context.contains(InputParameter.SQL)) {
 			final String value = context.get(InputParameter.SQL);
 			if (value != null && value.length() > 0) {
 				final File sqlPath = new File(value);
 				if (!sqlPath.exists()) {
 					context.error("SQL path provided (" + sqlPath.getAbsolutePath() + ") but doesn't exists.");
-					context.error("Specify existing path or remove parameter to use temporary folder.");
+					if (!context.canInteract()) {
+						context.error("Specify existing path or remove parameter to use temporary folder.");
+						return false;
+					} else {
+						final String answer = context.ask("Create directory for SQL scripts (" + sqlPath.getAbsolutePath() + ") (y/N):");
+						if (!"y".equalsIgnoreCase(answer)) {
+							throw new ExitException();
+						}
+						if (!sqlPath.mkdirs()) {
+							context.error("Failed to create SQL folder.");
+							throw new ExitException();
+						}
+					}
+				} else if (!sqlPath.isDirectory()) {
+					context.error("SQL path provided (" + sqlPath.getAbsolutePath() + ") but it's not a directory.");
 					return false;
 				}
-
 			}
 		}
 		return true;

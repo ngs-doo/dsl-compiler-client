@@ -1,5 +1,7 @@
 package com.dslplatform.compiler.client;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,17 +73,15 @@ public class Context {
 	}
 
 	public void log(final String value) {
-		if (!withLog) {
-			return;
+		if (withLog) {
+			write(true, value);
 		}
-		write(true, value);
 	}
 
 	public void log(final char[] value, final int len) {
-		if (!withLog) {
-			return;
+		if (withLog) {
+			write(false, new String(value, 0, len));
 		}
-		write(false, new String(value, 0, len));
 	}
 
 	public void error(final String value) {
@@ -89,8 +89,12 @@ public class Context {
 	}
 
 	public void error(final Exception ex) {
-		//TODO full message output with log
 		write(true, ex.getMessage());
+		if(withLog) {
+			final StringWriter sw = new StringWriter();
+			ex.printStackTrace(new PrintWriter(sw));
+			write(true, sw.toString());
+		}
 	}
 
 	public boolean canInteract() {

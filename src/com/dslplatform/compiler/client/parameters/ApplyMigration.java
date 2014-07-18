@@ -7,6 +7,16 @@ import java.io.File;
 public enum ApplyMigration implements CompileParameter {
 	INSTANCE;
 
+	private static boolean hasDestructive(final String[] descriptions) {
+		for (int i = 1; i < descriptions.length; i += 2) {
+			final String desc = descriptions[i];
+			if (desc.startsWith("--REMOVE:") || desc.startsWith("--UNKNOWN:")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public boolean check(final Context context) throws ExitException {
 		if (context.contains(InputParameter.APPLY_MIGRATION)) {
@@ -19,25 +29,6 @@ public enum ApplyMigration implements CompileParameter {
 			}
 		}
 		return true;
-	}
-
-	private final static String DESCRIPTION_START = "/*MIGRATION_DESCRIPTION";
-	private final static String DESCRIPTION_END = "MIGRATION_DESCRIPTION*/";
-
-	private static boolean hasDestructive(final String[] descriptions) {
-		for (int i = 1; i < descriptions.length; i += 2) {
-			final String desc = descriptions[i];
-			if (desc.startsWith("--REMOVE:") || desc.startsWith("--UNKNOWN:")) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static void explainMigrations(final String[] descriptions, final Context context) {
-		for (int i = 2; i < descriptions.length; i += 2) {
-			context.show(descriptions[i]);
-		}
 	}
 
 	@Override
@@ -59,35 +50,35 @@ public enum ApplyMigration implements CompileParameter {
 				context.show("Nothing to apply.");
 				return;
 			}
-			final int start = sql.indexOf(DESCRIPTION_START);
-			final int end = sql.indexOf(DESCRIPTION_END);
-			if (end > start) {
-				final String[] descriptions = sql.substring(start + DESCRIPTION_START.length(), end).split("\n");
-				if (descriptions.length > 2) {
-					explainMigrations(descriptions, context);
-					if (hasDestructive(descriptions)) {
-						context.show();
-						context.show("Destructive migration detected.");
-						if (context.contains(InputParameter.FORCE_MIGRATION)) {
-							context.show("Applying destructive migration due to force option.");
-						} else {
-							if (!context.canInteract()) {
-								context.error("Use force option to apply database migration.");
-								throw new ExitException();
-							}
-							final String input = context.ask("Apply migration (y/N):");
-							if (!"y".equalsIgnoreCase(input)) {
-								context.error("Migration canceled.");
-								throw new ExitException();
-							}
+			final String[] descriptions = Migration.extractDescriptions(sql);
+			if (descriptions.length > 2) {
+				for (int i = 2; i < descriptions.length; i += 2) {
+					context.show(descriptions[i]);
+				}
+				if (hasDestructive(descriptions)) {
+					context.show();
+					context.show("Destructive migration detected.");
+					if (context.contains(InputParameter.FORCE_MIGRATION)) {
+						context.show("Applying destructive migration due to force option.");
+					} else {
+						if (!context.canInteract()) {
+							context.error("Use force option to apply database migration.");
+							throw new ExitException();
+						}
+						final String input = context.ask("Apply migration (y/N):");
+						if (!"y".equalsIgnoreCase(input)) {
+							context.error("Migration canceled.");
+							throw new ExitException();
 						}
 					}
 				}
-				context.show("Applying migration...");
-				DbConnection.execute(context, sql);
+			}
+			context.show("Applying migration...");
+			DbConnection.execute(context, sql);
+			if (file.renameTo(new File(file.getParentFile(), "applied-" + file.getName()))) {
+				context.show("Database migrated and script renamed to: applied-" + file.getName());
 			} else {
-				context.error("Migration description missing from SQL migration.");
-				throw new ExitException();
+				context.show("Database migrated, but unable to rename script: " + file.getName());
 			}
 		}
 	}

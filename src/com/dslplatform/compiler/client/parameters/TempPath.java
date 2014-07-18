@@ -24,6 +24,7 @@ public enum TempPath implements CompileParameter {
 			final File parentFolder = new File(projectLocation).getParentFile();
 			if (parentFolder == null) {
 				context.error("Unable to detect parent folder. Current path: " + projectLocation);
+				context.error("Current folder name will be used as project name. Please change location to some folder");
 				return false;
 			}
 			final char pathSeparator = Utils.isWindows() ? '\\' : '/';

@@ -78,6 +78,7 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error checking for migration table in -NGS- schema");
 			context.error(ex);
+			cleanup(conn, context);
 			throw new ExitException();
 		}
 		try {
@@ -104,6 +105,7 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error loading previous DSL from migration table in -NGS- schema");
 			context.error(ex);
+			cleanup(conn, context);
 			throw new ExitException();
 		}
 		context.cache(CACHE_NAME, emptyResult);
@@ -130,7 +132,17 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException ex) {
 			context.error("Error executing sql script");
 			context.error(ex);
+			cleanup(conn, context);
 			throw new ExitException();
+		}
+	}
+
+	private static void cleanup(final Connection conn, final Context context) {
+		try {
+			conn.close();
+		} catch (SQLException ex2) {
+			context.error("Error cleaning up connection.");
+			context.error(ex2);
 		}
 	}
 
@@ -199,14 +211,13 @@ public enum DbConnection implements CompileParameter {
 					context.show("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
 				} else if (dbDoesntExists) {
 					context.show();
-					context.error("Database not found. Since interaction is not available and force option is not enabled, existing database must be used.");
+					context.error("Database not found. Since interaction is not available and both force and apply option are not enabled, existing database must be used.");
 				} else if (dbWrongPassword) {
 					context.show();
 					context.error("Please provide correct password to access Postgres database.");
 				}
-				return false;
-			}
-			else if (dbDoesntExists) {
+				throw new ExitException();
+			} else if (dbDoesntExists) {
 				context.show();
 				context.error("Database not found. Since force option is not enabled, existing database must be used.");
 				return false;

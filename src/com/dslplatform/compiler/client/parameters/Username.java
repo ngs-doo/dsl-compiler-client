@@ -32,7 +32,7 @@ public enum Username implements CompileParameter {
 		String value = context.get(InputParameter.USERNAME);
 		if (value == null || value.length() == 0) {
 			if (!context.canInteract()) {
-				return Either.fail("Username missing. Specify username as argument.");
+				return Either.fail("DSL Platform username missing. Specify username as argument.");
 			}
 			value = context.ask("DSL Platform username:");
 			context.put(InputParameter.USERNAME, value);

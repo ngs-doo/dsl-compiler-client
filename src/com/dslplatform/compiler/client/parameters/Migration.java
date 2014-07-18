@@ -11,6 +11,24 @@ import java.util.*;
 public enum Migration implements CompileParameter {
 	INSTANCE;
 
+	private final static String DESCRIPTION_START = "/*MIGRATION_DESCRIPTION";
+	private final static String DESCRIPTION_END = "MIGRATION_DESCRIPTION*/";
+
+	private static final String MIGRATION_FILE_NAME = "migration_file";
+
+	public static File getMigrationFile(final Context context) {
+		return context.load(MIGRATION_FILE_NAME);
+	}
+
+	public static String[] extractDescriptions(final String sql) throws ExitException {
+		final int start = sql.indexOf(DESCRIPTION_START);
+		final int end = sql.indexOf(DESCRIPTION_END);
+		if (end > start) {
+			return sql.substring(start + DESCRIPTION_START.length(), end).split("\n");
+		}
+		return new String[0];
+	}
+
 	@Override
 	public boolean check(final Context context) {
 		if (context.contains(InputParameter.MIGRATION)) {
@@ -31,12 +49,6 @@ public enum Migration implements CompileParameter {
 			}
 		}
 		return true;
-	}
-
-	private static final String MIGRATION_FILE_NAME = "migration_file";
-
-	public static File getMigrationFile(final Context context) {
-		return context.load(MIGRATION_FILE_NAME);
 	}
 
 	@Override
@@ -78,13 +90,22 @@ public enum Migration implements CompileParameter {
 				context.error(e);
 				throw new ExitException();
 			}
+			context.show("Migration saved to " + file.getAbsolutePath());
+			if (script.length() > 0) {
+				final String[] descriptions = extractDescriptions(script);
+				for (int i = 1; i < descriptions.length; i++) {
+					context.log(descriptions[i]);
+				}
+			} else {
+				context.show("No database changes detected.");
+			}
 			context.cache(MIGRATION_FILE_NAME, file);
 		}
 	}
 
 	@Override
 	public String getShortDescription() {
-		return "Create SQL migration from previous DSL to current one";
+		return "Create SQL migration from previous DSL to the current one";
 	}
 
 	@Override

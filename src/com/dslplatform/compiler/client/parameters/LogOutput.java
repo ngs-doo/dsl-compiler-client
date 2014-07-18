@@ -2,9 +2,6 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.InputParameter;
-
-import java.io.File;
 
 public enum LogOutput implements CompileParameter {
 	INSTANCE;
