@@ -44,6 +44,10 @@ public enum ApplyMigration implements CompileParameter {
 	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.APPLY_MIGRATION)) {
 			final File file = Migration.getMigrationFile(context);
+			if (file == null) {
+				context.error("Can't find SQL migration file. Unable to apply database migration.");
+				throw new ExitException();
+			}
 			final Either<String> trySql = Utils.readFile(file);
 			if (!trySql.isSuccess()) {
 				context.error("Error reading sql migration file.");

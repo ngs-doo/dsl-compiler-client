@@ -48,6 +48,7 @@ class DotNetCompilation {
 			arguments.add(escapeChar + "r:" + d);
 		}
 		arguments.add(escapeChar + "lib:" + libraries.getAbsolutePath());
+		arguments.add(escapeChar + "warn:0");
 		arguments.add(escapeChar + "recurse:*.cs");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, compiler, source, arguments);
 		if (!execCompile.isSuccess()) {

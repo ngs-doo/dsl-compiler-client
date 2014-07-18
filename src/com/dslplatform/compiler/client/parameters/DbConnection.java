@@ -147,7 +147,7 @@ public enum DbConnection implements CompileParameter {
 		return map;
 	}
 
-	private static boolean testConnection(final Context context) {
+	private static boolean testConnection(final Context context) throws ExitException {
 		final String connectionString = context.get(InputParameter.CONNECTION_STRING);
 		try {
 			final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + connectionString);
@@ -158,18 +158,57 @@ public enum DbConnection implements CompileParameter {
 		} catch (SQLException e) {
 			context.error("Error connecting to the database.");
 			context.error(e);
+			final boolean dbDoesntExists = "3D000".equals(e.getSQLState());
+			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
+			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());
 			final Map<String, String> args = parse(connectionString);
-			if (!context.canInteract()) {
-				//TODO: Postgres error messages are localized. Investigate error code
-				if ("The server requested password-based authentication, but no password was provided.".equals(e.getMessage())) {
+			if (dbDoesntExists && context.contains(InputParameter.FORCE_MIGRATION)
+					&& args.containsKey("user") && args.containsKey("password")) {
+				final int sl = connectionString.indexOf("/");
+				final String dbName = connectionString.substring(sl + 1, connectionString.indexOf("?"));
+				if (!context.canInteract()) {
+					context.show("Trying to create new database " + dbName + " due to force option");
+				} else {
+					final String answer = context.ask("Create a new database " + dbName + " (y/N):");
+					if (!"y".equalsIgnoreCase(answer)) {
+						throw new ExitException();
+					}
+				}
+				try {
+					final StringBuilder newCs = new StringBuilder(connectionString.substring(0, sl + 1));
+					newCs.append("postgres?");
+					for (final Map.Entry<String, String> kv : args.entrySet()) {
+						newCs.append(kv.getKey()).append("=").append(kv.getValue());
+						newCs.append("&");
+					}
+					final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + newCs.toString());
+					final Statement stmt = conn.createStatement();
+					stmt.execute("CREATE DATABASE \"" + dbName + "\"");
+					stmt.close();
+					conn.close();
+				} catch (SQLException ex) {
+					context.error("Error creating new database: " + dbName);
+					context.error(ex);
+					return false;
+				}
+				return true;
+			} else if (!context.canInteract()) {
+				if (dbMissingPassword) {
 					context.show();
-					context.show("Since console is not available, password must be sent as argument.");
+					context.error("Password not sent. Since interaction is not not available, password must be sent as argument.");
 					context.show("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
-				}
-				else if (e.getMessage() != null && e.getMessage().startsWith("FATAL: password authentication failed for user")) {
+				} else if (dbDoesntExists) {
 					context.show();
-					context.show("Please provide correct password to access Postgres database.");
+					context.error("Database not found. Since interaction is not not available and force option is not enabled, existing database must be used.");
+				} else if (dbWrongPassword) {
+					context.show();
+					context.error("Please provide correct password to access Postgres database.");
 				}
+				return false;
+			}
+			else if (dbDoesntExists) {
+				context.show();
+				context.error("Database not found. Since force option is not enabled, existing database must be used.");
 				return false;
 			}
 			if (args == null) {
@@ -196,13 +235,13 @@ public enum DbConnection implements CompileParameter {
 					args.put("user", value);
 				} else if (user == null) {
 					context.error("Username not provided");
-					return false;
+					throw new ExitException();
 				}
 			}
 			final char[] pass = context.askSecret("Database password: ");
 			args.put("password", new String(pass));
-			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") +1));
-			for(final Map.Entry<String, String> kv : args.entrySet()) {
+			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") + 1));
+			for (final Map.Entry<String, String> kv : args.entrySet()) {
 				newCs.append(kv.getKey()).append("=").append(kv.getValue());
 				newCs.append("&");
 			}

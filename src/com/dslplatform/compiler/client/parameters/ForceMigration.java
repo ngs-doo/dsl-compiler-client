@@ -30,6 +30,8 @@ public enum ForceMigration implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		return "If destructive database migration is detected (one which can't be reverted, such as dropping of a column, table or schema),\n" +
-				"special confirmation is required for automatic application of database changes with the apply command.";
+				"special confirmation is required for automatic application of database changes with the apply command.\n" +
+				"\n" +
+				"This option can also be used to create a new database if one doesn't exist.";
 	}
 }

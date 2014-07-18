@@ -26,9 +26,9 @@ public enum InputParameter {
 	PARSE("parse", null, Parse.INSTANCE),
 	DIFF("diff", null, Diff.INSTANCE),
 	TARGET("target", "options", Targets.INSTANCE),
+	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	MIGRATION("migration", null, Migration.INSTANCE),
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
-	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	LOG("log", null, LogOutput.INSTANCE);
 
 	public final String alias;
