@@ -1,9 +1,9 @@
 ## Command line tool for interaction with DSL Platform
 
-DSL Platform is compiler from Domain Specification Language to various target languages, such as Java, C#, Scala.
+DSL Platform is compiler from Domain Specification Language to various target languages, such as Java, C#, Scala, PHP.
 It also supports automated database migrations for Postgres and Oracle.
 
-It's premise is to use Invasive software composition to write better software. By focusing on rich modeling supported on top of Object-relational databases development can be improved by automating creation and maintainence of various boilerplate found in today software development.
+It's premise is to use Invasive software composition to write better software. By focusing on rich modeling supported on top of Object-relational databases development can be improved by automating creation and maintenance of various boilerplate found in today software development.
 
 ###How it works
 
@@ -29,7 +29,7 @@ which gives you DTO like above for free, but also gives you various improvements
 
 While taking model outside of your code doesn't look very important, when you start making changes to your model, you'll benefit from letting the compiler do all the boring work and preparing migrations to support such changes.
 
-###Gettings started
+###Getting started
 
 Create an account on [dsl-platform](https://dsl-platform.com/). This allows you to use free online compiler.
 
@@ -46,7 +46,7 @@ Choose a language and a compatible open source library to write Android/.NET/PHP
 
 ###How to use
 
-Download dsl-clc.jar to your project folder and run it with java.
+Download [dsl-clc.jar](https://bitbucket.org/zapov/dsl-compiler-client/downloads/dsl-clc.jar) to your project folder and run it with java.
 
     java -jar dsl-clc.jar
 
@@ -54,7 +54,7 @@ This will display all available options of the tool and examples on how to use i
 
 ###Compiled libraries
 
-This tool is used to produce a compiled library which you can use to implment custom behavior and business logic. While you can use generated code instead of compiled library, this behavior is highly discuraged since it leads to broken development once you start modifying generated code.
+This tool is used to produce a compiled library which you can use to implement custom behavior and business logic. While you can use generated code instead of compiled library, this behavior is highly discouraged since it leads to broken development once you start modifying generated code.
 
 ###Usage examples
 
@@ -88,7 +88,7 @@ Displaying a diff between model previously applied to the database and current o
 
     java -jar dsl-clc.jar -diff -db=localhost/MyProject?user=user&password=password -dsl=modeling/dsl
 
-Disabling prompt and forcing destructive migrations for nighlty builds
+Disabling prompt and forcing destructive migrations for nightly builds
 
     java -jar dsl-clc.jar -db=localhost/Project?user=user&password=password -no-prompt -migration -apply -force
 

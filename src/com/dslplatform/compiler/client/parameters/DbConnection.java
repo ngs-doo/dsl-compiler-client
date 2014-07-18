@@ -162,7 +162,7 @@ public enum DbConnection implements CompileParameter {
 			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
 			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());
 			final Map<String, String> args = parse(connectionString);
-			if (dbDoesntExists && context.contains(InputParameter.FORCE_MIGRATION)
+			if (dbDoesntExists && context.contains(InputParameter.FORCE_MIGRATION) && context.contains(InputParameter.APPLY_MIGRATION)
 					&& args.containsKey("user") && args.containsKey("password")) {
 				final int sl = connectionString.indexOf("/");
 				final String dbName = connectionString.substring(sl + 1, connectionString.indexOf("?"));
@@ -195,11 +195,11 @@ public enum DbConnection implements CompileParameter {
 			} else if (!context.canInteract()) {
 				if (dbMissingPassword) {
 					context.show();
-					context.error("Password not sent. Since interaction is not not available, password must be sent as argument.");
+					context.error("Password not sent. Since interaction is not available, password must be sent as argument.");
 					context.show("Example connection string: my.server.com:5432/MyDatabase?user=user&password=password");
 				} else if (dbDoesntExists) {
 					context.show();
-					context.error("Database not found. Since interaction is not not available and force option is not enabled, existing database must be used.");
+					context.error("Database not found. Since interaction is not available and force option is not enabled, existing database must be used.");
 				} else if (dbWrongPassword) {
 					context.show();
 					context.error("Please provide correct password to access Postgres database.");
