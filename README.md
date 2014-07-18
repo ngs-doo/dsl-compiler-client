@@ -65,10 +65,15 @@ Creating PHP source from DSL located in ./model folder
 
     java -jar dsl-clc.jar -target=php -dsl=model
 
+Compiling Java client library and specifying output jar name
+
+    java -jar dsl-clc.jar -java_client=./model.jar
+
 Compiling Java client library, .NET server library and applying database migration using properties file *compile-options.props* with the content
 
     u=account@dsl-platform.com
-    target=java_client,revenj
+    java_client=./play/model.jar
+    revenj=./revenj/ServerModel.dll
     dsl=C:/Models/MyApp
     db=localhost/DB?user=postgres
     migration
