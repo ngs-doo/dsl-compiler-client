@@ -22,7 +22,7 @@ public enum DotNet implements CompileParameter {
 				}
 				return Either.fail("Unable to find csc.exe (.NET C# compiler). Add it to path or specify dotnet compile option.");
 			}
-			if (Utils.testCommand(context, "dmcs", "Mono")) {
+			if (Utils.testCommand(context, "dmcs", "Mono", "--version")) {
 				return Either.success("dmcs");
 			}
 			return Either.fail("Unable to find dmcs (Mono C# compiler). Add it to path or specify dotnet compile option.");
