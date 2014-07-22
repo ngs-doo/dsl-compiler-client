@@ -65,7 +65,7 @@ Choose a language and a compatible open source library to write Android/.NET/PHP
 
 ###How to use
 
-Download [dsl-clc.jar](https://bitbucket.org/zapov/dsl-compiler-client/downloads/dsl-clc.jar) to your project folder and run it with java.
+Download dsl-clc.jar to your project folder and run it with java.
 
     java -jar dsl-clc.jar
 

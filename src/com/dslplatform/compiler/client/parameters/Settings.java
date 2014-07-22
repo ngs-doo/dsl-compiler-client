@@ -1,14 +1,12 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public enum Settings implements CompileParameter {
+public enum Settings implements CompileParameter, ParameterParser {
 	INSTANCE;
 
 	public static enum Option {
@@ -26,7 +24,7 @@ public enum Settings implements CompileParameter {
 			this.platformName = platformName;
 		}
 
-		public static Option from(final String value) {
+		private static Option from(final String value) {
 			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
@@ -58,6 +56,18 @@ public enum Settings implements CompileParameter {
 		context.show("Example usages:");
 		context.show("		-settings=active-record,no-jackson");
 		context.show("		-active-record -no-jackson -manual-json");
+	}
+
+	@Override
+	public Either<Boolean> tryParse(final String name, final String value, final Context context) {
+		if (Option.from(name) != null) {
+			if (value != null && value.length() > 0) {
+				return Either.fail("Settings parameter detected, but settings don't support arguments. Parameter: " + name);
+			}
+			context.put(name, null);
+			return Either.success(true);
+		}
+		return Either.success(false);
 	}
 
 	@Override

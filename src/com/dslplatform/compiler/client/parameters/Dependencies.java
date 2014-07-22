@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 
 import java.io.File;
@@ -9,9 +10,21 @@ import java.io.File;
 public enum Dependencies implements CompileParameter {
 	INSTANCE;
 
-	public static File getDependenciesRoot(final Context context) {
-		final String depsParam = context.get(InputParameter.DEPENDENCIES);
-		return new File(depsParam != null ? depsParam : "./");
+	public static File getDependencies(final Context context, final String name, final String library) throws ExitException {
+		final File dependencies;
+		if (context.contains("dependency:" + library)) {
+			dependencies = new File(context.get("dependency:" + library));
+		} else {
+			final String depsParam = context.get(InputParameter.DEPENDENCIES);
+			dependencies = new File(depsParam != null ? depsParam : "./", library);
+		}
+		if (!dependencies.exists()) {
+			if (!dependencies.mkdirs()) {
+				context.error("Failed to create " + name + " dependency folder: " + dependencies.getAbsolutePath());
+				throw new ExitException();
+			}
+		}
+		return dependencies;
 	}
 
 	@Override

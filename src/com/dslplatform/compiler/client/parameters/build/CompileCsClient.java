@@ -33,14 +33,7 @@ public class CompileCsClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File libDeps = new File(depsRoot, library);
-		if (!libDeps.exists()) {
-			if (!libDeps.mkdirs()) {
-				context.error("Failed to create " + name + " dependencies folder: " + libDeps.getAbsolutePath());
-				return false;
-			}
-		}
+		final File libDeps = Dependencies.getDependencies(context, name, library);
 		final File[] found = libDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -73,8 +66,7 @@ public class CompileCsClient implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File libDeps = new File(depsRoot, library);
+		final File libDeps = Dependencies.getDependencies(context, name, library);
 		final String customDll = context.get(library);
 		final File model = new File(customDll != null ? customDll : dll);
 		context.show("Compiling " + name + " library...");

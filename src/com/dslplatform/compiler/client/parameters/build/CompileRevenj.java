@@ -13,14 +13,7 @@ public class CompileRevenj implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File revenjDeps = new File(depsRoot, "revenj");
-		if (!revenjDeps.exists()) {
-			if (!revenjDeps.mkdirs()) {
-				context.error("Failed to create Revenj dependencies folder: " + revenjDeps.getAbsolutePath());
-				return false;
-			}
-		}
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj", "revenj");
 		final File[] found = revenjDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -98,8 +91,7 @@ public class CompileRevenj implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File revenjDeps = new File(depsRoot, "revenj");
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj", "revenj");
 		final String customDll = context.get("revenj");
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		context.show("Compiling Revenj library...");

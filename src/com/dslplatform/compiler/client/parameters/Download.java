@@ -55,14 +55,7 @@ public enum Download implements CompileParameter {
 			final String zip,
 			final String client,
 			final String library) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File dependencies = new File(depsRoot.getAbsolutePath(), client);
-		if (!dependencies.exists()) {
-			if (!dependencies.mkdirs()) {
-				context.error("Failed to create " + name + " dependency folder: " + dependencies.getAbsolutePath());
-				return false;
-			}
-		}
+		final File dependencies = Dependencies.getDependencies(context, name, client);
 		final File[] found = dependencies.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {

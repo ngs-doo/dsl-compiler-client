@@ -34,11 +34,10 @@ public class CompileJavaClient implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File depsRoot = Dependencies.getDependenciesRoot(context);
-		final File javaDeps = new File(depsRoot.getAbsolutePath(), library);
+		final File libDeps = Dependencies.getDependencies(context, name, library);
 		final String customJar = context.get(library);
 		final File model = new File(customJar != null ? customJar : jar);
-		final Either<String> compilation = JavaCompilation.compile(library, javaDeps, sources, model, context);
+		final Either<String> compilation = JavaCompilation.compile(library, libDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during " + name + " library compilation.");
 			context.error(compilation.whyNot());

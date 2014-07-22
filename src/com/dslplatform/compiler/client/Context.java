@@ -23,7 +23,7 @@ public class Context {
 	}
 
 	public void put(final String parameter, final String value) {
-		parameters.put(parameter, value);
+		parameters.put(parameter.toLowerCase(), value);
 	}
 
 	public boolean contains(final InputParameter parameter) {
@@ -39,7 +39,7 @@ public class Context {
 	}
 
 	public String get(final String parameter) {
-		return parameters.get(parameter);
+		return parameters.get(parameter.toLowerCase());
 	}
 
 	public void cache(final String name, final Object value) {

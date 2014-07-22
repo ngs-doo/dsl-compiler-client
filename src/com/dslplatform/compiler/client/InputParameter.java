@@ -55,6 +55,12 @@ public enum InputParameter {
 			showHelpAndExit(context, true);
 			return false;
 		}
+		final List<ParameterParser> customParsers = new ArrayList<ParameterParser>();
+		for (final InputParameter ip : InputParameter.values()) {
+			if (ip.parameter instanceof ParameterParser) {
+				customParsers.add((ParameterParser) ip.parameter);
+			}
+		}
 		final List<String> errors = new ArrayList<String>();
 		for (final String a : args) {
 			if (a.charAt(0) != '-' && a.charAt(0) != '/') {
@@ -63,23 +69,29 @@ public enum InputParameter {
 			}
 			final int eq = a.indexOf('=');
 			final String name = a.substring(0, eq != -1 ? eq : a.length()).substring(1);
+			final String value = eq == -1 ? null : a.substring(eq + 1);
 			final InputParameter cp = InputParameter.from(name);
 			if (cp == null) {
-				if (Targets.Option.from(name) != null) {
-					context.put(name, eq == -1 ? null : a.substring(eq + 1));
-				} else if (Settings.Option.from(name) != null) {
-					if (eq != -1) {
-						errors.add("Settings parameter detected, but settings don't support arguments. Parameter: " + name);
+				boolean matched = false;
+				for (final ParameterParser parser : customParsers) {
+					final Either<Boolean> tryParse = parser.tryParse(name, value, context);
+					if (!tryParse.isSuccess()) {
+						errors.add(tryParse.whyNot().getMessage());
+						matched = true;
+						break;
+					} else if (tryParse.get()) {
+						matched = true;
+						break;
 					}
-					context.put(name, null);
-				} else {
+				}
+				if (!matched) {
 					errors.add("Unknown parameter: " + name);
 				}
 			} else {
 				if (eq == -1 && cp.usage != null) {
 					errors.add("Expecting " + cp.usage + " after = for " + a);
 				} else {
-					context.put(cp, eq == -1 ? null : a.substring(eq + 1));
+					context.put(cp, value);
 				}
 			}
 		}

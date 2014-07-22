@@ -7,7 +7,7 @@ import com.dslplatform.compiler.client.parameters.build.*;
 import java.io.*;
 import java.util.*;
 
-public enum Targets implements CompileParameter {
+public enum Targets implements CompileParameter, ParameterParser {
 	INSTANCE;
 
 	private final static String[] DOTNET_CLIENT_DEPENDENCIES = {
@@ -51,7 +51,7 @@ public enum Targets implements CompileParameter {
 			this.convertToPath = convertToPath;
 		}
 
-		public static Option from(final String value) {
+		private static Option from(final String value) {
 			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
@@ -71,6 +71,29 @@ public enum Targets implements CompileParameter {
 	}
 
 	private static final String CACHE_NAME = "target_option_cache";
+
+	@Override
+	public Either<Boolean> tryParse(final String name, final String value, final Context context) {
+		if (Option.from(name) != null) {
+			context.put(name, value == null || value.length() == 0 ? null : value);
+			return Either.success(true);
+		} else {
+			for (final Option o : Option.values()) {
+				if (("dependencies:" + o.value).equalsIgnoreCase(name) || ("dependency:" + o.value).equalsIgnoreCase(name)) {
+					if (value == null || value.length() == 0) {
+						return Either.fail("Target dependency parameter detected, but it's missing path as argument. Parameter: " + name);
+					}
+					final File path = new File(value);
+					if (path.exists() && !path.isDirectory()) {
+						return Either.fail("Target dependency path found, but it's not a directory. Parameter: " + name);
+					}
+					context.put("dependency:" + o.value, value);
+					return Either.success(true);
+				}
+			}
+		}
+		return Either.success(false);
+	}
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
@@ -203,6 +226,7 @@ public enum Targets implements CompileParameter {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n\n");
 		sb.append("Custom output name can be specified with as java_client=/home/model.jar,revenj=/home/revenj.dll\n\n");
+		sb.append("Custom dependency path can be specified as dependencies:java_client=/home/java_libs\n\n");
 		sb.append("This option specifies which target sources are available.\n");
 		sb.append("---------------------------------------------------------\n");
 		for (final Option o : Option.values()) {
