@@ -3,12 +3,9 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.URL;
-import java.util.List;
 
 public class CompileCsClient implements BuildAction {
 

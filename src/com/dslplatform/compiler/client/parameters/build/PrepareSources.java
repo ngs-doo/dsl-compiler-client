@@ -5,19 +5,30 @@ import com.dslplatform.compiler.client.*;
 import java.io.File;
 import java.io.IOException;
 
-public class PreparePhp implements BuildAction {
+public class PrepareSources implements BuildAction {
 
-	private static final String CACHE_NAME = "php_target_folder";
+	private final String targetName;
+	private final String targetId;
+	private final String targetFolder;
+
+	public PrepareSources(
+			final String targetName,
+			final String targetId,
+			final String targetFolder) {
+		this.targetName = targetName;
+		this.targetId = targetId;
+		this.targetFolder = targetFolder;
+	}
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final String customFolder = context.get("php");
-		final File target = new File(customFolder != null ? customFolder : "Generated-PHP");
+		final String customFolder = context.get(targetId);
+		final File target = new File(customFolder != null ? customFolder : targetFolder);
 		if (target.exists() && target.isDirectory()) {
 			try {
 				Utils.deletePath(target);
 			} catch (IOException ex) {
-				context.error("Failed to clean PHP target folder: " + target.getAbsolutePath());
+				context.error("Failed to clean " + targetName + " target folder: " + target.getAbsolutePath());
 				context.error(ex);
 				throw new ExitException();
 			}
@@ -25,26 +36,27 @@ public class PreparePhp implements BuildAction {
 			context.error("Expecting to find folder. Found file at: " + target.getAbsolutePath());
 			throw new ExitException();
 		} else if (!target.mkdirs()) {
-			context.error("Failed to create PHP target folder: " + target.getAbsolutePath());
+			context.error("Failed to create " + targetName + " target folder: " + target.getAbsolutePath());
 			throw new ExitException();
 		}
-		context.cache(CACHE_NAME, target);
+		context.cache(targetId, target);
 		return true;
 	}
 
-	private static void copyFolder(final File sources, final File target, final Context context) throws ExitException {
+	private void copyFolder(final File sources, final File target, final Context context) throws ExitException {
 		for (final String fn : sources.list()) {
 			final File sf = new File(sources, fn);
 			final File tf = new File(target, fn);
 			if (sf.isDirectory()) {
 				if (!tf.mkdirs()) {
-					context.error("Failed to create target PHP folder: " + tf.getAbsolutePath());
+					context.error("Failed to create target " + targetName + " folder: " + tf.getAbsolutePath());
 					throw new ExitException();
 				}
+				copyFolder(sf, tf, context);
 			} else {
 				final Either<String> content = Utils.readFile(sf);
 				if (!content.isSuccess()) {
-					context.error("Error reading source PHP file: " + sf.getAbsolutePath());
+					context.error("Error reading source " + targetName + " file: " + sf.getAbsolutePath());
 					throw new ExitException();
 				}
 				try {
@@ -59,7 +71,7 @@ public class PreparePhp implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File target = context.load(CACHE_NAME);
+		final File target = context.load(targetId);
 		copyFolder(sources, target, context);
 	}
 }

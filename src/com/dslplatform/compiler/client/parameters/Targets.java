@@ -29,8 +29,10 @@ public enum Targets implements CompileParameter, ParameterParser {
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0]), false),
-		PHP("php", "PHP client", "Php", new PreparePhp(), true),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false);
+		PHP("php", "PHP client", "Php", new PrepareSources("PHP", "php", "Generated-PHP"), true),
+		//PHP_UI("php_ui", "PHP UI client", "PhpUI", new PrepareSources("PHP UI", "php_ui", "Generated-PHP-UI"), true),
+		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false),
+		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
 		private final String value;
 		private final String description;
@@ -187,7 +189,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		}
 		try {
 			for (final String name : files.names()) {
-				final String nameOnly = name.substring(0, name.lastIndexOf('.'));
+				final String nameOnly = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
 				final File file = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")))
 						? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
 						: new File(temp, name);
@@ -225,8 +227,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 	public String getDetailedDescription() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n\n");
-		sb.append("Custom output name can be specified with as java_client=/home/model.jar,revenj=/home/revenj.dll\n\n");
-		sb.append("Custom dependency path can be specified as dependencies:java_client=/home/java_libs\n\n");
+		sb.append("Custom output name can be specified with as -java_client=/home/model.jar,revenj=/home/revenj.dll\n\n");
+		sb.append("Custom dependency path can be specified as -dependencies:java_client=/home/java_libs\n\n");
 		sb.append("This option specifies which target sources are available.\n");
 		sb.append("---------------------------------------------------------\n");
 		for (final Option o : Option.values()) {

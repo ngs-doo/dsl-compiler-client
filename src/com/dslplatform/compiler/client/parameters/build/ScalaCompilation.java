@@ -32,7 +32,7 @@ class ScalaCompilation {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String scalac = tryCompiler.get();
-		final File classOut = new File(source, name);
+		final File classOut = new File(source, "compile-" + name);
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
 		}
@@ -54,8 +54,9 @@ class ScalaCompilation {
 		scalacArguments.add("-encoding");
 		scalacArguments.add("UTF8");
 		scalacArguments.add("-optimise");
+		scalacArguments.add("-nowarn");
 		scalacArguments.add("-d");
-		scalacArguments.add(name);
+		scalacArguments.add("compile-" + name);
 		scalacArguments.add("-classpath");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {

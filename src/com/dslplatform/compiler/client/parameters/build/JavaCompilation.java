@@ -31,7 +31,7 @@ class JavaCompilation {
 			return Either.fail(tryCompiler.whyNot());
 		}
 		final String javac = tryCompiler.get();
-		final File classOut = new File(source, name);
+		final File classOut = new File(source, "compile-" + name);
 		if (classOut.exists() && !classOut.delete()) {
 			return Either.fail("Can't remove folder with compiled files: " + classOut.getAbsolutePath());
 		}
@@ -55,7 +55,7 @@ class JavaCompilation {
 		javacArguments.add("-encoding");
 		javacArguments.add("UTF8");
 		javacArguments.add("-d");
-		javacArguments.add(name);
+		javacArguments.add("compile-" + name);
 		javacArguments.add("-cp");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {
