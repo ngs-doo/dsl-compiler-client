@@ -10,9 +10,12 @@ public enum Settings implements CompileParameter, ParameterParser {
 	INSTANCE;
 
 	public static enum Option {
-		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "with-active-record"),
+		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "active-record"),
 		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),
-		MANUAL_JSON("manual-json", "JSON without external library", "manual-json");
+		JAVA_BEANS("java-beans", "Add Java Beans support", "java-beans"),
+		MANUAL_JSON("manual-json", "JSON without external library", "manual-json"),
+        NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
+        DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
 
 		private final String value;
 		private final String description;
