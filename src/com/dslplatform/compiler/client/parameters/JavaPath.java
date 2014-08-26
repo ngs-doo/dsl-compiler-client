@@ -50,23 +50,10 @@ public enum JavaPath implements CompileParameter {
 				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
 			}
 		}
-		final int len = classOut.getAbsolutePath().length() + 1;
-		final char separatorChar = Utils.isWindows() ? '\\' : '/';
-		final List<String> jarArguments = new ArrayList<String>();
-		jarArguments.add("cf");
-		jarArguments.add(output.getAbsolutePath());
 
-		if(Utils.isWindows()) {
-			final List<File> classDirs = Utils.findNonEmptyDirs(classOut, ".class");
-			for (final File f : classDirs) {
-				jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.class");
-			}
-		} else {
-			final List<File> classFiles = Utils.findFiles(classOut, Arrays.asList(".class"));
-			for (final File f : classFiles) {
-				jarArguments.add(f.getAbsolutePath().substring(len));
-			}
-		}
+        /* make library jar */
+		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
+
 		context.show("Running jar for " + output.getName() + "...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(context, jar, classOut, jarArguments);
 		if (!execArchive.isSuccess()) {
@@ -76,7 +63,51 @@ public enum JavaPath implements CompileParameter {
 		if (archiving.error.length() > 0) {
 			return Either.fail(archiving.error);
 		}
+
+		if (context.contains(InputParameter.INCLUDE_SOURCES)) {
+			/* make sources jar */
+			final String outputSourcePath = output.getAbsolutePath();
+			final int outputSourceNameLen = output.getAbsolutePath().lastIndexOf(".");
+			final File outputSourcesJar = new File(outputSourcePath.substring(0, outputSourceNameLen) + "-sources.jar");
+
+			final List<String> jarSourceArguments = makeJarArguments(source, "java", outputSourcesJar);
+
+			context.show("Running jar for sources " + outputSourcesJar.getName() + "...");
+			final Either<Utils.CommandResult> execSourceArchive = Utils.runCommand(context, jar, source, jarSourceArguments);
+			if (!execSourceArchive.isSuccess()) {
+				return Either.fail(execSourceArchive.whyNot());
+			}
+			final Utils.CommandResult archivingSource = execSourceArchive.get();
+			if (archivingSource.error.length() > 0) {
+				return Either.fail(archivingSource.error);
+			}
+		}
+
 		return Either.success(execArchive.get());
+	}
+
+	private static List<String> makeJarArguments(
+			final File source,
+			final String type,
+			final File output) {
+		final List<String> jarArguments = new ArrayList<String>();
+		jarArguments.add("cf");
+		jarArguments.add(output.getAbsolutePath());
+
+		final char separatorChar = Utils.isWindows() ? '\\' : '/';
+		final int len = source.getAbsolutePath().length() + 1;
+		if (Utils.isWindows()) {
+			final List<File> classDirs = Utils.findNonEmptyDirs(source, "." + type);
+			for (final File f : classDirs) {
+				jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*." + type);
+			}
+		} else {
+			final List<File> classFiles = Utils.findFiles(source, Arrays.asList("." + type));
+			for (final File f : classFiles) {
+				jarArguments.add(f.getAbsolutePath().substring(len));
+			}
+		}
+		return jarArguments;
 	}
 
 	@Override

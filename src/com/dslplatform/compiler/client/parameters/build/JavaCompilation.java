@@ -62,9 +62,9 @@ class JavaCompilation {
 			classPath.append(classpathSeparator).append(j.getAbsolutePath());
 		}
 		javacArguments.add(classPath.toString());
-		if(Utils.isWindows()) {
+		if (Utils.isWindows()) {
 			final List<File> javaDirs = Utils.findNonEmptyDirs(source, ".java");
-			if(javaDirs.size() == 0) {
+			if (javaDirs.size() == 0) {
 				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
 			}
 			for (final File f : javaDirs) {
