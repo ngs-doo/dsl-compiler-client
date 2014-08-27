@@ -13,6 +13,7 @@ public enum InputParameter {
 	DSL("dsl", "path", DslPath.INSTANCE),
 	SQL("sql", "path", SqlPath.INSTANCE),
 	DOWNLOAD("download", null, Download.INSTANCE),
+	INCLUDE_SOURCES("include-sources", null, IncludeSources.INSTANCE),
 	DEPENDENCIES("dependencies", "path", Dependencies.INSTANCE),
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
