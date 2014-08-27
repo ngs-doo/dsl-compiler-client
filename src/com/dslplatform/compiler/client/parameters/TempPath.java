@@ -1,9 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.InputParameter;
-import com.dslplatform.compiler.client.Utils;
+import com.dslplatform.compiler.client.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +50,18 @@ public enum TempPath implements CompileParameter {
 		}
 	}
 
+	private static boolean prepareCustomPath(final Context context, final File path) {
+		try {
+			Utils.deletePath(path);
+			context.cache(CACHE_NAME, path);
+			return true;
+		} catch (IOException e) {
+			context.error("Error preparing custom temporary path.");
+			context.error(e);
+			return false;
+		}
+	}
+
 	@Override
 	public boolean check(final Context context) {
 		if (context.contains(InputParameter.TEMP)) {
@@ -66,6 +75,19 @@ public enum TempPath implements CompileParameter {
 				if (!path.isDirectory()) {
 					context.error("Temporary path provided, but it's not a directory: " + value);
 					return false;
+				}
+				if (path.listFiles().length > 1) {
+					context.error("Temporary path contains files.");
+					if (!context.canInteract()) {
+						context.error("Please manage the path you have assigned as temporary.");
+						return false;
+					}
+					final String delete = context.ask("Delete them? (y/N):");
+					if (!"y".equalsIgnoreCase(delete)) {
+						return false;
+					} else {
+						return prepareCustomPath(context, path);
+					}
 				}
 				context.cache(CACHE_NAME, path);
 				return true;
