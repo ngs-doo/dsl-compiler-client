@@ -14,7 +14,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),
 		JAVA_BEANS("java-beans", "Add Java Beans support", "java-beans"),
 		MANUAL_JSON("manual-json", "JSON without external library", "manual-json"),
-        NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
+		NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
+		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server", "multi-tenancy"),
         DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
 
 		private final String value;
