@@ -34,6 +34,7 @@ public enum Help implements CompileParameter {
 				context.show();
 				context.show(input.parameter.getDetailedDescription());
 			}
+			throw new ExitException();
 		}
 		return true;
 	}
