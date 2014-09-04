@@ -30,7 +30,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0]), false),
 		PHP("php", "PHP client", "Php", new PrepareSources("PHP", "php", "Generated-PHP"), true),
-		//PHP_UI("php_ui", "PHP UI client", "PhpUI", new PrepareSources("PHP UI", "php_ui", "Generated-PHP-UI"), true),
+		PHP_UI("php_ui", "PHP UI client", "PhpUI", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false),
 		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
