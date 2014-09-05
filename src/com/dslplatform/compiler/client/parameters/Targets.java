@@ -100,6 +100,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 	@Override
 	public boolean check(final Context context) throws ExitException {
 		final List<String> targets = new ArrayList<String>();
+		final Set<String> distinctTargets = new HashSet<String>();
 		if (context.contains(InputParameter.TARGET)) {
 			final String value = context.get(InputParameter.TARGET);
 			if (value == null || value.length() == 0) {
@@ -107,11 +108,17 @@ public enum Targets implements CompileParameter, ParameterParser {
 				listOptions(context);
 				return false;
 			}
-			Collections.addAll(targets, value.split(","));
+			for (final String t : value.split(",")) {
+				if (distinctTargets.add(t.toLowerCase())) {
+					targets.add(t);
+				}
+			}
 		}
 		for (final Option o : Option.values()) {
-			if (context.contains(o.value) && !targets.contains(o.value)) {
+			final String lc = o.value.toLowerCase();
+			if (context.contains(o.value) && !distinctTargets.contains(lc)) {
 				targets.add(o.value);
+				distinctTargets.add(lc);
 			}
 		}
 		if (targets.size() == 0) {
