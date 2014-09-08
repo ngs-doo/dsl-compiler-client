@@ -25,7 +25,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 
 	public static enum Option {
 		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
-		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "java-client", "android", "dsl-client-java", "./generated-model-android.jar"), true),
+		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0]), false),
