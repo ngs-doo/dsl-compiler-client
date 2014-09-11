@@ -113,7 +113,7 @@ public enum Download implements CompileParameter {
 					return promptForAlternative(dependencies, context, name, zip);
 				}
 				final String result = gatherDeps.get().output + gatherDeps.get().error;
-				if (!result.contains("BUILD SUCCESSFUL")) {
+				if (!result.contains("BUILD SUCCESS")) {
 					context.error("Maven error during dependency download.");
 					context.show(result);
 					return promptForAlternative(dependencies, context, name, zip);
