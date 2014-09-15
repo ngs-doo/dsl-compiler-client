@@ -174,6 +174,12 @@ public enum DbConnection implements CompileParameter {
 			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
 			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());
 			final Map<String, String> args = parse(connectionString);
+			if (args == null) {
+				context.show();
+				context.show("Invalid connection string provided: " + connectionString);
+				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
+				return false;
+			}
 			if (dbDoesntExists && context.contains(InputParameter.FORCE_MIGRATION) && context.contains(InputParameter.APPLY_MIGRATION)
 					&& args.containsKey("user") && args.containsKey("password")) {
 				final int sl = connectionString.indexOf("/");
@@ -220,12 +226,6 @@ public enum DbConnection implements CompileParameter {
 			} else if (dbDoesntExists) {
 				context.show();
 				context.error("Database not found. Since force option is not enabled, existing database must be used.");
-				return false;
-			}
-			if (args == null) {
-				context.show();
-				context.show("Invalid connection string provided: " + connectionString);
-				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
 			if (args.get("password") != null) {
