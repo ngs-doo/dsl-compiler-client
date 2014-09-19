@@ -7,36 +7,12 @@ import org.w3c.dom.Document;
 import sun.misc.BASE64Encoder;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.*;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.security.KeyStore;
-import java.security.SecureRandom;
 
 public class DslServer {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/";
-	private static final SSLSocketFactory SSL_SOCKET_FACTORY;
-
-	private static SSLSocketFactory createSSLSocketFactory() throws Exception {
-		final KeyStore truststore = KeyStore.getInstance("jks");
-		truststore.load(DslServer.class.getResourceAsStream("/startssl-ca.jks"), "startssl-ca".toCharArray());
-		final TrustManagerFactory tMF = TrustManagerFactory.getInstance("PKIX");
-		tMF.init(truststore);
-		final SSLContext sslContext = SSLContext.getInstance("TLS");
-		sslContext.init(null, tMF.getTrustManagers(), new SecureRandom());
-		return sslContext.getSocketFactory();
-	}
-
-	static {
-		try {
-			SSL_SOCKET_FACTORY = createSSLSocketFactory();
-		} catch (Exception e) {
-			throw new ExceptionInInitializerError(e);
-		}
-	}
 
 	private static String readResponseError(final HttpsURLConnection conn) throws IOException {
 		if (conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
@@ -67,7 +43,6 @@ public class DslServer {
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}
-		conn.setSSLSocketFactory(SSL_SOCKET_FACTORY);
 		final Either<String> username = Username.getOrLoad(context);
 		if (!username.isSuccess()) {
 			return Either.fail(username.whyNot());
@@ -151,7 +126,6 @@ public class DslServer {
 		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
 		context.log("Downloading " + file + ".zip ...");
 		final HttpsURLConnection conn = (HttpsURLConnection)server.openConnection();
-		conn.setSSLSocketFactory(DslServer.SSL_SOCKET_FACTORY);
 		Utils.unpackZip(context, path, conn.getInputStream());
 	}
 }
