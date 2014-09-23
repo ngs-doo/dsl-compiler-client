@@ -63,44 +63,55 @@ class ScalaCompilation {
 			classPath.append(classpathSeparator).append(j.getAbsolutePath());
 		}
 		scalacArguments.add(classPath.toString());
-		if (Utils.isWindows()) {
-			scalacArguments.add("*.scala");
+		final String[] files = source.list(new FilenameFilter() {
+			@Override
+			public boolean accept(final File dir, final String name) {
+				return name.endsWith(".scala");
+			}
+		});
+		final String compilationOutput;
+		if (files.length != 0) {
+			if (Utils.isWindows()) {
+				scalacArguments.add("*.scala");
+			} else {
+				Collections.addAll(scalacArguments, files);
+			}
+
+			context.show("Running scalac for " + output.getName());
+			final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, scalac, source, scalacArguments);
+			if (!execCompile.isSuccess()) {
+				return Either.fail(execCompile.whyNot());
+			}
+			final Utils.CommandResult compilation = execCompile.get();
+			if (compilation.error.length() > 0) {
+				return Either.fail(compilation.error);
+			}
+			if (compilation.output.contains("error")) {
+				final StringBuilder sb = new StringBuilder();
+				for (final String e : compilation.output.split("\n")) {
+					if (e.contains("error")) {
+						sb.append(e).append("\n");
+					}
+				}
+				if (sb.length() > 0) {
+					return Either.fail(sb.toString());
+				}
+				return Either.fail(compilation.output);
+			}
+			compilationOutput = compilation.output;
+			final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, source, classOut, output);
+			if (!tryArchive.isSuccess()) {
+				return Either.fail(tryArchive.whyNot());
+			}
 		} else {
-			final String[] files = source.list(new FilenameFilter() {
-				@Override
-				public boolean accept(final File dir, final String name) {
-					return name.endsWith(".scala");
-				}
-			});
-			Collections.addAll(scalacArguments, files);
+			context.show("Making empty jar " + output.getName() + " since there is no source!");
+			final Either<Utils.CommandResult> tryArchive = JavaPath.makeEmptyArchive(context, classOut, output);
+			if (!tryArchive.isSuccess()) {
+				return Either.fail(tryArchive.whyNot());
+			}
+			compilationOutput = "Nothing to compile!";
 		}
 
-		context.show("Running scalac for " + output.getName());
-		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, scalac, source, scalacArguments);
-		if (!execCompile.isSuccess()) {
-			return Either.fail(execCompile.whyNot());
-		}
-		final Utils.CommandResult compilation = execCompile.get();
-		if (compilation.error.length() > 0) {
-			return Either.fail(compilation.error);
-		}
-		if (compilation.output.contains("error")) {
-			final StringBuilder sb = new StringBuilder();
-			for (final String e : compilation.output.split("\n")) {
-				if (e.contains("error")) {
-					sb.append(e).append("\n");
-				}
-			}
-			if (sb.length() > 0) {
-				return Either.fail(sb.toString());
-			}
-			return Either.fail(compilation.output);
-		}
-
-		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, source, classOut, output);
-		if (!tryArchive.isSuccess()) {
-			return Either.fail(tryArchive.whyNot());
-		}
-		return Either.success(compilation.output);
+		return Either.success(compilationOutput);
 	}
 }
