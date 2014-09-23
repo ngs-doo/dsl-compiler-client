@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,23 +34,10 @@ public enum JavaPath implements CompileParameter {
 			final File source,
 			final File classOut,
 			final File output) {
-		final String jar;
-		if (context.contains(InputParameter.JAVA)) {
-			final File jarFile = new File(context.get(InputParameter.JAVA), "jar");
-			jar = jarFile.getAbsolutePath();
-		} else {
-			final String envJH = System.getenv("JAVA_HOME");
-			final String envJDH = System.getenv("JDK_HOME");
-			if (Utils.testCommand(context, "jar", "Usage: jar")) {
-				jar = "jar";
-			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
-				jar = envJH + "/bin/jar";
-			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
-				jar = envJDH + "/bin/jar";
-			} else {
-				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
-			}
-		}
+		final Either<String> tryJar = getJarCommand(context);
+		if (!tryJar.isSuccess())
+			return Either.fail(tryJar.whyNot());
+		final String jar = tryJar.get();
 
         /* make library jar */
 		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
@@ -86,6 +74,47 @@ public enum JavaPath implements CompileParameter {
 		return Either.success(execArchive.get());
 	}
 
+	public static Either<Utils.CommandResult> makeEmptyArchive(Context context, final File classOut, File output) {
+		/* write mock MANIFEST.MF */
+		final Either<String> tryJar = getJarCommand(context);
+		if (!tryJar.isSuccess())
+			return Either.fail(tryJar.whyNot());
+		final String jar = tryJar.get();
+
+		final String manifestName = "MANIFEST.MF";
+		try {
+			final File mockManifest = new File(classOut, manifestName);
+			Utils.saveFile(mockManifest, "Manifest-Version: 1.0");
+		} catch (IOException e) {
+			context.error("Can't create mock MANIFEST.MF.");
+			return Either.fail(e);
+		}
+
+		final List<String> jarArguments = new ArrayList<String>();
+		jarArguments.add("cfm");
+		jarArguments.add(output.getAbsolutePath());
+		jarArguments.add(manifestName);
+		return Utils.runCommand(context, jar, classOut, jarArguments);
+	}
+
+	private static Either<String> getJarCommand(final Context context) {
+		if (context.contains(InputParameter.JAVA)) {
+			final File jarFile = new File(context.get(InputParameter.JAVA), "jar");
+			return Either.success(jarFile.getAbsolutePath());
+		} else {
+			final String envJH = System.getenv("JAVA_HOME");
+			final String envJDH = System.getenv("JDK_HOME");
+			if (Utils.testCommand(context, "jar", "Usage: jar")) {
+				return Either.success("jar");
+			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
+				return  Either.success(envJH + "/bin/jar");
+			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
+				return Either.success(envJDH + "/bin/jar");
+			} else {
+				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
+			}
+		}
+	}
 	private static List<String> makeJarArguments(
 			final File source,
 			final String type,

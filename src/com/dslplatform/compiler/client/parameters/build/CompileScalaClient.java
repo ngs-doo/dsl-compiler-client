@@ -10,7 +10,7 @@ public class CompileScalaClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		return Download.checkJars(context, "Scala client", "scala-client", "scala_client", "dsl-client-scala-http_2.10");
+		return Download.checkJars(context, "Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10");
 	}
 
 	@Override
