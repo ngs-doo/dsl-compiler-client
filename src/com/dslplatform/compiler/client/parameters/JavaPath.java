@@ -40,7 +40,7 @@ public enum JavaPath implements CompileParameter {
 		} else {
 			final String envJH = System.getenv("JAVA_HOME");
 			final String envJDH = System.getenv("JDK_HOME");
-			if (!Utils.testCommand(context, "jar", "Usage: jar")) {
+			if (Utils.testCommand(context, "jar", "Usage: jar")) {
 				jar = "jar";
 			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
 				jar = envJH + "/bin/jar";
