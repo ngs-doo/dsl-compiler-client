@@ -109,7 +109,7 @@ public enum InputParameter {
 
 	private static void showHelpAndExit(final Context context, final boolean headers) {
 		if (headers) {
-			context.show("DSL Platform command line client.");
+			context.show("DSL Platform - Command-Line Client (" + Main.getVersion() + ")");
 			context.show("This tool allows you to compile provided DSL to various languages such as Java, Scala, PHP, C#, etc... or create a SQL migration between two DSL models.");
 		}
 		context.show();
@@ -148,8 +148,8 @@ public enum InputParameter {
 		}
 		context.show();
 		context.show("Example usages:");
-		context.show("	-target=java_client,revenj -db=localhost/Database?user=postgres");
-		context.show("	/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
-		context.show("	/properties=development.props /download");
+		context.show("\t-target=java_client,revenj -db=localhost/Database?user=postgres");
+		context.show("\t/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
+		context.show("\t/properties=development.props /download");
 	}
 }
