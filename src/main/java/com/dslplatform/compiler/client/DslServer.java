@@ -4,9 +4,9 @@ import com.dslplatform.compiler.client.json.JsonValue;
 import com.dslplatform.compiler.client.parameters.Password;
 import com.dslplatform.compiler.client.parameters.Username;
 import org.w3c.dom.Document;
-import sun.misc.BASE64Encoder;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -48,11 +48,10 @@ public class DslServer {
 			return Either.fail(username.whyNot());
 		}
 		final String password = Password.getOrLoad(context);
-		final BASE64Encoder encoder = new BASE64Encoder();
 		conn.setConnectTimeout(10000);
 		conn.setReadTimeout(60000);
 		try {
-			final String base64Login = encoder.encode((username.get() + ":" + password).getBytes("UTF-8"));
+			final String base64Login = DatatypeConverter.printBase64Binary((username.get() + ":" + password).getBytes("UTF-8"));
 			conn.addRequestProperty("Authorization", "Basic " + base64Login);
 		} catch (UnsupportedEncodingException ex) {
 			return Either.fail(ex);
