@@ -5,6 +5,7 @@ import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
 import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.diff.diff_match_patch;
+import org.fusesource.jansi.Ansi;
 
 import java.util.*;
 
@@ -46,15 +47,24 @@ public enum Diff implements CompileParameter {
 			int cur = 0;
 			hasChanges = hasChanges || totalDiffs > 0;
 			final StringBuilder sb = new StringBuilder();
+			final boolean inColor = !context.contains(InputParameter.NO_COLORS);
 			for (final diff_match_patch.Diff aDiff : changes) {
 				cur++;
 				final String text = aDiff.text;
 				switch (aDiff.operation) {
 					case INSERT:
-						sb.append("[+ ").append(text).append("]");
+						if (inColor) {
+							sb.append(Context.inColor(Ansi.Color.GREEN, text));
+						} else {
+							sb.append("[+ ").append(text).append(']');
+						}
 						break;
 					case DELETE:
-						sb.append("[- ").append(text).append("]");
+						if (inColor) {
+							sb.append(Context.inColor(Ansi.Color.RED, text));
+						} else {
+							sb.append("[- ").append(text).append(']');
+						}
 						break;
 					case EQUAL:
 						String[] lines = text.split("\n");
@@ -92,7 +102,7 @@ public enum Diff implements CompileParameter {
 			context.show(sb.toString());
 			context.show();
 		}
-		if(currentFiles.size() == 0 && previousFiles.size() == 0 && !hasChanges) {
+		if (currentFiles.size() == 0 && previousFiles.size() == 0 && !hasChanges) {
 			context.show("No changes found in DSL");
 		}
 	}

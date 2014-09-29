@@ -1,5 +1,10 @@
 package com.dslplatform.compiler.client;
 
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Color;
+import org.fusesource.jansi.AnsiConsole;
+
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -9,15 +14,20 @@ public class Context {
 	private final Map<String, String> parameters = new HashMap<String, String>();
 	private final Map<String, Object> cache = new HashMap<String, Object>();
 
+	private PrintStream console = AnsiConsole.out();
+
 	private boolean withLog;
 	private boolean noPrompt;
+	private boolean withColor = true;
 
 	public void put(final InputParameter parameter, final String value) {
-		if(parameter.equals(InputParameter.NO_PROMPT)) {
+		if (parameter.equals(InputParameter.NO_PROMPT)) {
 			noPrompt = true;
-		}
-		else if(parameter.equals(InputParameter.LOG)) {
+		} else if (parameter.equals(InputParameter.LOG)) {
 			withLog = true;
+		} else if (parameter.equals(InputParameter.NO_COLORS)) {
+			withColor = false;
+			console = System.out;
 		}
 		parameters.put(parameter.alias, value);
 	}
@@ -51,49 +61,54 @@ public class Context {
 		return (T) cache.get(name);
 	}
 
-	private static synchronized void write(final boolean newLine, final String... values) {
+	private static synchronized void write(final PrintStream console, final boolean newLine, final String... values) {
 		if (values.length == 0) {
-			System.out.println();
+			console.println();
 		} else {
 			if (newLine) {
 				for (final String v : values) {
-					System.out.println(v);
+					console.println(v);
 				}
 			} else {
 				for (final String v : values) {
-					System.out.print(v);
+					console.print(v);
 				}
 			}
 		}
-		System.out.flush();
+		console.flush();
 	}
 
 	public void show(final String... values) {
-		write(true, values);
+		write(console, true, values);
+	}
+
+	public static String inColor(final Ansi.Color color, final String message) {
+		return Ansi.ansi().fg(color).a(message).reset().toString();
 	}
 
 	public void log(final String value) {
 		if (withLog) {
-			write(true, value);
+			write(console, true, withColor ? inColor(Color.YELLOW, value) : value);
 		}
 	}
 
 	public void log(final char[] value, final int len) {
 		if (withLog) {
-			write(false, new String(value, 0, len));
+			final String msg =  new String(value, 0, len);
+			write(console, false, withColor ? inColor(Color.YELLOW, msg) : msg);
 		}
 	}
 
 	public void error(final String value) {
-		write(true, value);
+		write(console, true, withColor ? inColor(Color.RED, value) : value);
 	}
 
 	public void error(final Exception ex) {
-		write(true, ex.getMessage());
-		if(withLog) {
+		error(ex.getMessage());
+		if (withLog) {
 			final StringWriter sw = new StringWriter();
 			ex.printStackTrace(new PrintWriter(sw));
-			write(true, sw.toString());
+			error(sw.toString());
 		}
 	}
 
@@ -102,12 +117,20 @@ public class Context {
 	}
 
 	public String ask(final String question) {
-		write(false, question + " ");
+		if (withColor) {
+			write(console, false, Ansi.ansi().fgBright(Ansi.Color.WHITE).bold().a(question + " ").boldOff().reset().toString());
+		} else {
+			write(console, false, question + " ");
+		}
 		return System.console().readLine();
 	}
 
 	public char[] askSecret(final String question) {
-		write(false, question + " ");
+		if (withColor) {
+			write(console, false, Ansi.ansi().fgBright(Ansi.Color.CYAN).bold().a(question + " ").boldOff().reset().toString());
+		} else {
+			write(console, false, question + " ");
+		}
 		return System.console().readPassword();
 	}
 }

@@ -30,6 +30,7 @@ public enum InputParameter {
 	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
 	MIGRATION("migration", null, Migration.INSTANCE),
 	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
+	NO_COLORS("no-colors", null, DisableColors.INSTANCE),
 	LOG("log", null, LogOutput.INSTANCE);
 
 	public final String alias;

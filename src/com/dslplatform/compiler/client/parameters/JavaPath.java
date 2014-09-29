@@ -39,7 +39,6 @@ public enum JavaPath implements CompileParameter {
 			return Either.fail(tryJar.whyNot());
 		final String jar = tryJar.get();
 
-        /* make library jar */
 		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
 
 		context.show("Running jar for " + output.getName() + "...");
@@ -53,7 +52,6 @@ public enum JavaPath implements CompileParameter {
 		}
 
 		if (context.contains(InputParameter.INCLUDE_SOURCES)) {
-			/* make sources jar */
 			final String outputSourcePath = output.getAbsolutePath();
 			final int outputSourceNameLen = output.getAbsolutePath().lastIndexOf(".");
 			final File outputSourcesJar = new File(outputSourcePath.substring(0, outputSourceNameLen) + "-sources.jar");
@@ -75,7 +73,6 @@ public enum JavaPath implements CompileParameter {
 	}
 
 	public static Either<Utils.CommandResult> makeEmptyArchive(Context context, final File classOut, File output) {
-		/* write mock MANIFEST.MF */
 		final Either<String> tryJar = getJarCommand(context);
 		if (!tryJar.isSuccess())
 			return Either.fail(tryJar.whyNot());

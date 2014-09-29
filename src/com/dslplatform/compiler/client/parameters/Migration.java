@@ -55,11 +55,13 @@ public enum Migration implements CompileParameter {
 	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.MIGRATION)) {
 			final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
-			final Map.Entry<Map<String, String>, String> previousDslAndVersion = DbConnection.getDatabaseDslAndVersion(context);
-			final String url = "Platform.svc/unmanaged/postgres-migration?version=" + previousDslAndVersion.getValue();
+			final DbConnection.DatabaseInfo dbInfo = DbConnection.getDatabaseDslAndVersion(context);
+			final String url =
+					"Platform.svc/unmanaged/postgres-migration?version="+ dbInfo.compilerVersion
+							+ "&postgres=" + dbInfo.postgresVersion;
 			final JsonObject arg =
 					new JsonObject()
-							.add("Old", Utils.toJson(previousDslAndVersion.getKey()))
+							.add("Old", Utils.toJson(dbInfo.dsl))
 							.add("New", Utils.toJson(currentDsl));
 			context.show("Downloading SQL migration...");
 			final Either<String> response = DslServer.put(url, context, arg);

@@ -40,28 +40,59 @@ public enum DbConnection implements CompileParameter {
 	private static final String CACHE_NAME = "database_dsl_cache";
 
 	public static Map<String, String> getDatabaseDsl(final Context context) throws ExitException {
-		return getDatabaseDslAndVersion(context).getKey();
+		return getDatabaseDslAndVersion(context).dsl;
 	}
 
-	public static Map.Entry<Map<String, String>, String> getDatabaseDslAndVersion(final Context context) throws ExitException {
-		final Map.Entry<Map<String, String>, String> cache = context.load(CACHE_NAME);
+	private static String extractPostgresVersion(final String version, final Context context) {
+		final String[] parts = version.split(",");
+		if (parts.length < 2) {
+			context.log("Suspicious Postgres version found. Expecting: PostgreSQL version, compiled by");
+		}
+		final String[] info = parts[0].split(" ");
+		if (info.length != 2) {
+			context.error("Unable to detect postgres version. Found version info: " + version);
+			return "";
+		}
+		return info[1];
+	}
+
+	public static class DatabaseInfo {
+		public final String compilerVersion;
+		public final String postgresVersion;
+		public final Map<String, String> dsl;
+		public DatabaseInfo(final String compiler, final String postgres, final Map<String, String> dsl) {
+			this.compilerVersion = compiler;
+			this.postgresVersion = postgres;
+			this.dsl = dsl;
+		}
+	}
+
+	public static DatabaseInfo getDatabaseDslAndVersion(final Context context) throws ExitException {
+		final DatabaseInfo cache = context.load(CACHE_NAME);
 		if (cache != null) {
 			return cache;
 		}
 		final String value = context.get(InputParameter.CONNECTION_STRING);
-		final Map.Entry<Map<String, String>, String> emptyResult
-				= new AbstractMap.SimpleEntry<Map<String, String>, String>(new HashMap<String, String>(), "");
 		final String connectionString = "jdbc:postgresql://" + value;
 		Connection conn;
 		Statement stmt;
+		final String postgres;
 		try {
 			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
+			final ResultSet pgVersion = stmt.executeQuery("SELECT version()");
+			if (pgVersion.next()) {
+				postgres = extractPostgresVersion(pgVersion.getString(1), context);
+			} else {
+				postgres = "";
+			}
+			pgVersion.close();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
 			context.error(e);
 			throw new ExitException();
 		}
+		final DatabaseInfo emptyResult = new DatabaseInfo("", postgres, new HashMap<String, String>());
 		try {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
@@ -85,20 +116,19 @@ public enum DbConnection implements CompileParameter {
 			final ResultSet lastMigration =
 					stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
 			final String lastDsl;
-			final String version;
+			final String compiler;
 			if (lastMigration.next()) {
 				lastDsl = lastMigration.getString(1);
-				version = lastMigration.getString(2);
+				compiler = lastMigration.getString(2);
 			} else {
-				lastDsl = version = "";
+				lastDsl = compiler = "";
 			}
 			lastMigration.close();
 			stmt.close();
 			conn.close();
 			if (lastDsl.length() > 0) {
 				final Map<String, String> dslMap = convertToMap(lastDsl, context);
-				final Map.Entry<Map<String, String>, String> result =
-						new AbstractMap.SimpleEntry<Map<String, String>, String>(dslMap, version);
+				final DatabaseInfo result = new DatabaseInfo(compiler, postgres, dslMap);
 				context.cache(CACHE_NAME, result);
 				return result;
 			}
@@ -176,7 +206,7 @@ public enum DbConnection implements CompileParameter {
 			final Map<String, String> args = parse(connectionString);
 			if (args == null) {
 				context.show();
-				context.show("Invalid connection string provided: " + connectionString);
+				context.error("Invalid connection string provided: " + connectionString);
 				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
