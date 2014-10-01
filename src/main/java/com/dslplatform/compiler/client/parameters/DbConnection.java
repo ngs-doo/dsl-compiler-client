@@ -44,16 +44,12 @@ public enum DbConnection implements CompileParameter {
 	}
 
 	private static String extractPostgresVersion(final String version, final Context context) {
-		final String[] parts = version.split(",");
+		final String[] parts = version.replace(",", " ").split(" ");
 		if (parts.length < 2) {
-			context.log("Suspicious Postgres version found. Expecting: PostgreSQL version, compiled by");
-		}
-		final String[] info = parts[0].split(" ");
-		if (info.length != 2) {
 			context.error("Unable to detect postgres version. Found version info: " + version);
 			return "";
 		}
-		return info[1];
+		return parts[1];
 	}
 
 	public static class DatabaseInfo {
