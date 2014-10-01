@@ -7,6 +7,7 @@ import com.dslplatform.compiler.client.InputParameter;
 
 import java.sql.*;
 import java.util.*;
+import java.util.regex.*;
 
 public enum DbConnection implements CompileParameter {
 	INSTANCE;
@@ -43,13 +44,13 @@ public enum DbConnection implements CompileParameter {
 		return getDatabaseDslAndVersion(context).dsl;
 	}
 
-	private static String extractPostgresVersion(final String version, final Context context) {
-		final String[] parts = version.replace(",", " ").split(" ");
-		if (parts.length < 2) {
+	static String extractPostgresVersion(final String version, final Context context) {
+		final Matcher matcher = Pattern.compile("^\\w+\\s+(\\d+\\.\\d+)").matcher(version);
+		if (!matcher.find()) {
 			context.error("Unable to detect postgres version. Found version info: " + version);
 			return "";
 		}
-		return parts[1];
+		return matcher.group(1);
 	}
 
 	public static class DatabaseInfo {
