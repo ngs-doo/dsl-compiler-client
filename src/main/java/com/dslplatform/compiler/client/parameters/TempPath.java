@@ -24,10 +24,9 @@ public enum TempPath implements CompileParameter {
 				context.error("Current folder name will be used as project name. Please change location to some folder");
 				return false;
 			}
-			final char pathSeparator = Utils.isWindows() ? '\\' : '/';
-			final String projectName = projectLocation.lastIndexOf(pathSeparator) < projectLocation.length() - 1
-					? projectLocation.substring(projectLocation.lastIndexOf(pathSeparator) + 1)
-					: projectLocation.substring(projectLocation.substring(0, projectLocation.length() - 2).lastIndexOf(pathSeparator) + 1, projectLocation.length() - 1);
+			final String projectName = projectLocation.lastIndexOf(File.separatorChar) < projectLocation.length() - 1
+					? projectLocation.substring(projectLocation.lastIndexOf(File.separatorChar) + 1)
+					: projectLocation.substring(projectLocation.substring(0, projectLocation.length() - 2).lastIndexOf(File.separatorChar) + 1, projectLocation.length() - 1);
 			final String rnd = UUID.randomUUID().toString();
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File path = new File(temp.getParentFile().getAbsolutePath() + "/DSL-Platform/" + projectName);

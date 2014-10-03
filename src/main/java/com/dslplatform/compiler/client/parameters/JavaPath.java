@@ -120,12 +120,11 @@ public enum JavaPath implements CompileParameter {
 		jarArguments.add("cf");
 		jarArguments.add(output.getAbsolutePath());
 
-		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final int len = source.getAbsolutePath().length() + 1;
 		if (Utils.isWindows()) {
 			final List<File> classDirs = Utils.findNonEmptyDirs(source, "." + type);
 			for (final File f : classDirs) {
-				jarArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*." + type);
+				jarArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*." + type);
 			}
 		} else {
 			final List<File> classFiles = Utils.findFiles(source, Arrays.asList("." + type));

@@ -22,6 +22,9 @@ public enum Maven implements CompileParameter {
 		if (Utils.testCommand(context, "mvn", "Apache Maven", Arrays.asList("--version"))) {
 			return Either.success("mvn");
 		}
+		if (Utils.isWindows() && Utils.testCommand(context, "mvn.bat", "Apache Maven", Arrays.asList("--version"))) {
+			return Either.success("mvn.bat");
+		}
 		return Either.fail("Unable to find mvn. Add it to path or specify maven compile option.");
 	}
 

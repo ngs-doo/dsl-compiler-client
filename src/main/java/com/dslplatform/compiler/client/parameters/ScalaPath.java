@@ -22,7 +22,10 @@ public enum ScalaPath implements CompileParameter {
 			if(Utils.isWindows() && envSH != null && Utils.testCommand(context, envSH + "/bin/scalac.bat", "Usage: scalac")) {
 				return Either.success(envSH + "/bin/scalac.bat");
 			}
-			return Either.fail("Unable to find Scala compiler. Add it to path or specify scala compile option.");
+			if (Utils.isWindows() && Utils.testCommand(context, "scalac.bat", "Usage: scalac")) {
+				return Either.success("scalac.bat");
+			}
+			return Either.fail("Unable to find the Scala compiler. Add it to path or specify scala compile option.");
 		}
 	}
 

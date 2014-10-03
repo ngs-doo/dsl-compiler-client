@@ -39,8 +39,6 @@ class JavaCompilation {
 			return Either.fail("Error creating temporary folder for Java class files: " + classOut.getAbsolutePath());
 		}
 		final int len = source.getAbsolutePath().length() + 1;
-		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
-		final char separatorChar = Utils.isWindows() ? '\\' : '/';
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(final File dir, final String name) {
@@ -59,7 +57,7 @@ class JavaCompilation {
 		javacArguments.add("-cp");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {
-			classPath.append(classpathSeparator).append(j.getAbsolutePath());
+			classPath.append(File.pathSeparatorChar).append(j.getAbsolutePath());
 		}
 		javacArguments.add(classPath.toString());
 		if (Utils.isWindows()) {
@@ -68,7 +66,7 @@ class JavaCompilation {
 				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
 			}
 			for (final File f : javaDirs) {
-				javacArguments.add(f.getAbsolutePath().substring(len) + separatorChar + "*.java");
+				javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
 			}
 		} else {
 			final List<File> javaFiles = Utils.findFiles(source, Arrays.asList(".java"));

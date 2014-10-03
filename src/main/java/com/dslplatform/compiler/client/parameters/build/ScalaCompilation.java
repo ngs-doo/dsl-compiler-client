@@ -39,7 +39,6 @@ class ScalaCompilation {
 		if (!classOut.mkdirs()) {
 			return Either.fail("Error creating temporary folder for Scala class files: " + classOut.getAbsolutePath());
 		}
-		final char classpathSeparator = Utils.isWindows() ? ';' : ':';
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(final File dir, final String name) {
@@ -60,7 +59,7 @@ class ScalaCompilation {
 		scalacArguments.add("-classpath");
 		final StringBuilder classPath = new StringBuilder(".");
 		for (final File j : externalJars) {
-			classPath.append(classpathSeparator).append(j.getAbsolutePath());
+			classPath.append(File.pathSeparatorChar).append(j.getAbsolutePath());
 		}
 		scalacArguments.add(classPath.toString());
 		final String[] files = source.list(new FilenameFilter() {
