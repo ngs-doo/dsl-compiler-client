@@ -48,7 +48,7 @@ public enum PropertiesFile implements CompileParameter {
 					for (final ParameterParser parser : customParsers) {
 						final Either<Boolean> tryParse = parser.tryParse(name, value, context);
 						if (!tryParse.isSuccess()) {
-							errors.add(tryParse.whyNot().getMessage());
+							errors.add(tryParse.explainError());
 							matched = true;
 							break;
 						} else if (tryParse.get()) {

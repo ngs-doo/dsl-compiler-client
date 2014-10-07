@@ -21,6 +21,8 @@ public class Either<T> {
 		return error;
 	}
 
+	public String explainError() { return error.getMessage(); }
+
 	public static <S> Either<S> success(final S value) {
 		return new Either<S>(value, null);
 	}

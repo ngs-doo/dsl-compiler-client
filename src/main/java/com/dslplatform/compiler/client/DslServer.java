@@ -5,20 +5,20 @@ import com.dslplatform.compiler.client.parameters.Password;
 import com.dslplatform.compiler.client.parameters.Username;
 import org.w3c.dom.Document;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
 
 public class DslServer {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/";
 
-	private static String readResponseError(final HttpsURLConnection conn) throws IOException {
+	private static String readResponseError(final HttpURLConnection conn) throws IOException {
 		if (conn.getContentType() != null && conn.getContentType().startsWith("application/xml")) {
 			final Either<Document> xml = Utils.readXml(conn.getErrorStream());
 			if (!xml.isSuccess()) {
-				return "INTERNAL ERROR: Error reading xml response\n" + xml.whyNot().getMessage();
+				return "INTERNAL ERROR: Error reading xml response\n" + xml.explainError();
 			}
 			final String error = xml.get().getDocumentElement().getTextContent();
 			return error != null ? error : "UNKNOWN ERROR";
@@ -30,16 +30,16 @@ public class DslServer {
 		return result;
 	}
 
-	private static Either<HttpsURLConnection> setupConnection(
+	private static Either<HttpURLConnection> setupConnection(
 			final String address,
 			final Context context,
 			final boolean sendJson,
 			final boolean getJson) throws ExitException {
-		final HttpsURLConnection conn;
+		final HttpURLConnection conn;
 		try {
 			final URL url = new URL(REMOTE_URL + address);
 			context.log("Calling: " + url.toString());
-			conn = (HttpsURLConnection) url.openConnection();
+			conn = (HttpURLConnection) url.openConnection();
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}
@@ -66,7 +66,7 @@ public class DslServer {
 	}
 
 	private static boolean tryRestart(
-			final HttpsURLConnection conn,
+			final HttpURLConnection conn,
 			final Context context) throws IOException, ExitException {
 		context.error("Authorization failed.");
 		context.error(readResponseError(conn));
@@ -92,11 +92,11 @@ public class DslServer {
 			final String method,
 			final Context context,
 			final String argument) throws ExitException {
-		Either<HttpsURLConnection> tryConn = setupConnection(address, context, true, true);
+		Either<HttpURLConnection> tryConn = setupConnection(address, context, true, true);
 		if (!tryConn.isSuccess()) {
 			return Either.fail(tryConn.whyNot());
 		}
-		HttpsURLConnection conn = tryConn.get();
+		HttpURLConnection conn = tryConn.get();
 		try {
 			conn.setDoOutput(true);
 			conn.setRequestMethod(method);
@@ -124,7 +124,7 @@ public class DslServer {
 	public static void downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
 		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
 		context.log("Downloading " + file + ".zip ...");
-		final HttpsURLConnection conn = (HttpsURLConnection)server.openConnection();
+		final HttpURLConnection conn = (HttpURLConnection)server.openConnection();
 		Utils.unpackZip(context, path, conn.getInputStream());
 	}
 }
