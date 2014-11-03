@@ -93,7 +93,7 @@ public enum ApplyMigration implements CompileParameter {
 		return "DSL Platform will compare previously applied DSL with the current one and provide a migration SQL script.\n" +
 				"When apply option is enabled, SQL script will be applied to the database directly.\n" +
 				"This helps with the workflow during early development, so that developer doesn't need to inspect the script,\n" +
-				"connect to the database and apply it on it.\n" +
+				"connect to the database and apply the script manually.\n" +
 				"\n" +
 				"Ownership of the database or superuser is required for the apply migration to work.";
 	}

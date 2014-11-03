@@ -325,10 +325,10 @@ public enum DbConnection implements CompileParameter {
 				"\n" +
 				"Example connection strings:\n" +
 				"\n" +
-				"	localhost/Database?user=postgres\n" +
-				"	server:5432/DB?user=migration&password=secret&ssl=true\n" +
+				"\tlocalhost/Database?user=postgres\n" +
+				"\tserver:5432/DB?user=migration&password=secret&ssl=true\n" +
 				"\n" +
-				"More info about connection strings can be found on PostgreSQL JDBC site: http://jdbc.postgresql.org/documentation/80/connect.html\n" +
+				"More info about connection strings can be found on PostgreSQL JDBC site: http://jdbc.postgresql.org/documentation/93/connect.html\n" +
 				"Connection string is defined without the jdbc:postgresql:// part";
 	}
 }

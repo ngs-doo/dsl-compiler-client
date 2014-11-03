@@ -19,14 +19,9 @@ public enum TempPath implements CompileParameter {
 		try {
 			final String projectLocation = System.getProperty("user.dir");
 			final File parentFolder = new File(projectLocation).getParentFile();
-			if (parentFolder == null) {
-				context.error("Unable to detect parent folder. Current path: " + projectLocation);
-				context.error("Current folder name will be used as project name. Please change location to some folder");
-				return false;
-			}
-			final String projectName = projectLocation.lastIndexOf(File.separatorChar) < projectLocation.length() - 1
-					? projectLocation.substring(projectLocation.lastIndexOf(File.separatorChar) + 1)
-					: projectLocation.substring(projectLocation.substring(0, projectLocation.length() - 2).lastIndexOf(File.separatorChar) + 1, projectLocation.length() - 1);
+			final String projectName = parentFolder == null
+				? "root"
+				: parentFolder.getName();
 			final String rnd = UUID.randomUUID().toString();
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File dslPlatformPath = new File(temp.getParentFile().getAbsolutePath(), "DSL-Platform");
