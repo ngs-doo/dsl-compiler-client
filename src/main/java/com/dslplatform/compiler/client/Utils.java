@@ -28,7 +28,9 @@ public class Utils {
 
 	public static Either<String> readFile(final File file) {
 		try {
-			final String content = read(new FileInputStream(file));
+			FileInputStream stream = new FileInputStream(file);
+			final String content = read(stream);
+			stream.close();
 			return Either.success(content);
 		} catch (IOException ex) {
 			return Either.fail(ex);
@@ -36,9 +38,11 @@ public class Utils {
 	}
 
 	public static void saveFile(final File file, final String content) throws IOException {
-		final Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+		FileOutputStream fos = new FileOutputStream(file);
+		final Writer writer = new OutputStreamWriter(fos, "UTF-8");
 		writer.write(content);
 		writer.close();
+		fos.close();
 	}
 
 	public static JsonObject toJson(final Map<String, String> map) {
@@ -75,16 +79,16 @@ public class Utils {
 		final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(stream));
 		ZipEntry entry;
 		final byte[] buffer = new byte[8192];
-		long size;
 		while ((entry = zip.getNextEntry()) != null) {
-			size = 0;
-			final File file = new File(path.getAbsolutePath() + "/" + entry.getName());
+			long size = 0;
+			final File file = new File(path.getAbsolutePath(), entry.getName());
 			final FileOutputStream fos = new FileOutputStream(file);
 			int len;
 			while ((len = zip.read(buffer)) != -1) {
 				fos.write(buffer, 0, len);
 				size += len;
 			}
+			fos.close();
 			context.log("Unpacked: " + entry.getName() + ". Size: " + (size / 1024) + "kB");
 			zip.closeEntry();
 		}
@@ -229,14 +233,24 @@ public class Utils {
 	}
 
 	public static void deletePath(final File path) throws IOException {
-		for (final String fn : path.list()) {
-			final File f = new File(path, fn);
-			if (f.isDirectory()) {
-				deletePath(f);
+		deletePathAndRetry(path, 3);
+	}
+
+	private static void deletePathAndRetry(final File path, final int retry) throws IOException {
+		try {
+			for (final String fn : path.list()) {
+				final File f = new File(path, fn);
+				if (f.isDirectory()) {
+					deletePath(f);
+				}
+				if (!f.delete()) {
+					throw new IOException("Error cleaning up temporary resource. Failed to delete: " + f.getAbsolutePath());
+				}
 			}
-			if (!f.delete()) {
-				throw new IOException("Error cleaning up temporary resource. Failed to delete: " + f.getAbsolutePath());
-			}
+		} catch (IOException io) {
+			if (retry > 0) {
+				deletePathAndRetry(path, retry - 1);
+			} else throw io;
 		}
 	}
 

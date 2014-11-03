@@ -84,7 +84,7 @@ public enum Migration implements CompileParameter {
 			final String script = response.get().startsWith("\"") && response.get().endsWith("\"")
 					? JsonValue.readFrom(response.get()).asString()
 					: response.get();
-			final File file = new File(path.getAbsolutePath() + "/sql-migration-" + (new Date().getTime()) + ".sql");
+			final File file = new File(path.getAbsolutePath(), "sql-migration-" + (new Date().getTime()) + ".sql");
 			try {
 				Utils.saveFile(file, script);
 			} catch (IOException e) {
