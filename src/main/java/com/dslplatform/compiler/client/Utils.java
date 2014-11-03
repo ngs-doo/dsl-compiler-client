@@ -75,36 +75,60 @@ public class Utils {
 		}
 	}
 
-	public static void unpackZip(final Context context, final File path, final InputStream stream) throws IOException {
-		final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(stream));
-		ZipEntry entry;
-		final byte[] buffer = new byte[8192];
-		while ((entry = zip.getNextEntry()) != null) {
-			long size = 0;
-			final File file = new File(path.getAbsolutePath(), entry.getName());
-			final FileOutputStream fos = new FileOutputStream(file);
-			int len;
-			while ((len = zip.read(buffer)) != -1) {
-				fos.write(buffer, 0, len);
-				size += len;
+	public static void unpackZip(final Context context, final File path, final URL remoteUrl) throws IOException {
+		unpackZip(context, path, remoteUrl, 3);
+	}
+
+	private static void unpackZip(final Context context, final File path, final URL remoteUrl, final int retry) throws IOException {
+		try {
+			InputStream response = remoteUrl.openConnection().getInputStream();
+			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));
+			ZipEntry entry;
+			final byte[] buffer = new byte[8192];
+			while ((entry = zip.getNextEntry()) != null) {
+				long size = 0;
+				final File file = new File(path.getAbsolutePath(), entry.getName());
+				final FileOutputStream fos = new FileOutputStream(file);
+				int len;
+				while ((len = zip.read(buffer)) != -1) {
+					fos.write(buffer, 0, len);
+					size += len;
+				}
+				fos.close();
+				context.log("Unpacked: " + entry.getName() + ". Size: " + (size / 1024) + "kB");
+				zip.closeEntry();
 			}
-			fos.close();
-			context.log("Unpacked: " + entry.getName() + ". Size: " + (size / 1024) + "kB");
-			zip.closeEntry();
+			zip.close();
+		} catch (IOException io) {
+			context.error(io);
+			if (retry > 0) {
+				context.log("Retrying download... from " + remoteUrl);
+				unpackZip(context, path, remoteUrl, retry - 1);
+			} else throw io;
 		}
-		zip.close();
 	}
 
 	public static void downloadFile(final File file, final URL url) throws IOException {
-		final byte[] buffer = new byte[8192];
+		downloadFileAndRetry(file, url, 3);
+	}
+
+	private static void downloadFileAndRetry(final File file, final URL url, final int retry) throws IOException {
 		final FileOutputStream fos = new FileOutputStream(file);
-		final InputStream stream = new BufferedInputStream(url.openConnection().getInputStream());
-		int len;
-		while ((len = stream.read(buffer)) != -1) {
-			fos.write(buffer, 0, len);
+		try {
+			final byte[] buffer = new byte[8192];
+			final InputStream stream = new BufferedInputStream(url.openConnection().getInputStream());
+			int len;
+			while ((len = stream.read(buffer)) != -1) {
+				fos.write(buffer, 0, len);
+			}
+			stream.close();
+		} catch (IOException io) {
+			if (retry > 0) {
+				downloadFileAndRetry(file, url, retry - 1);
+			} else throw io;
+		} finally {
+			fos.close();
 		}
-		stream.close();
-		fos.close();
 	}
 
 	public static synchronized Either<Document> readXml(final InputStream stream) {

@@ -17,7 +17,8 @@ class DotNetCompilation {
 			final File libraries,
 			final File source,
 			final File output,
-			final Context context) {
+			final Context context,
+			final boolean force32Bit) {
 		if (output.exists() && !output.isDirectory()) {
 			if (!output.delete()) {
 				return Either.fail("Failed to remove previous .NET model: " + output.getAbsolutePath());
@@ -25,7 +26,7 @@ class DotNetCompilation {
 		} else if (output.exists() && output.isDirectory()) {
 			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
 		}
-		final Either<String> tryCompiler = DotNet.findCompiler(context);
+		final Either<String> tryCompiler = force32Bit ? DotNet.findCompiler(context, true) : DotNet.findCompiler(context);
 		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
 		}
@@ -40,11 +41,14 @@ class DotNetCompilation {
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add(escapeChar + "target:library");
 		arguments.add(escapeChar + "optimize+");
+		if (force32Bit) {
+			arguments.add(escapeChar + "platform:x86");
+		}
 		arguments.add(escapeChar + "out:" + output.getAbsolutePath());
-		for(final String r : references) {
+		for (final String r : references) {
 			arguments.add(escapeChar + "r:" + r);
 		}
-		for(final String d : dependencies) {
+		for (final String d : dependencies) {
 			arguments.add(escapeChar + "r:" + d);
 		}
 		arguments.add(escapeChar + "lib:" + libraries.getAbsolutePath());

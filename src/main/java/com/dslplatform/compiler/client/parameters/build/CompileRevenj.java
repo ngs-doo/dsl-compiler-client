@@ -46,7 +46,7 @@ public class CompileRevenj implements BuildAction {
 				final String redirect = conn.getHeaderField("Location");
 				final String tag = redirect.substring(redirect.lastIndexOf('/') + 1);
 				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
-				Utils.unpackZip(context, revenjDeps, httpServer.openConnection().getInputStream());
+				Utils.unpackZip(context, revenjDeps, httpServer);
 			} catch (IOException ex) {
 				context.error("Unable to download Revenj from Github.");
 				context.error(ex);
@@ -95,7 +95,8 @@ public class CompileRevenj implements BuildAction {
 		final String customDll = context.get("revenj");
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		context.show("Compiling Revenj library...");
-		final Either<String> compilation = DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context);
+		final Either<String> compilation =
+				DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context, false);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj library compilation.");
 			context.error(compilation.whyNot());

@@ -23,12 +23,31 @@ public enum Targets implements CompileParameter, ParameterParser {
 			"System.Runtime.Serialization.dll"
 	};
 
+	private final static String[] DOTNET_WPF_DEPENDENCIES = {
+			"System.dll",
+			"System.Core.dll",
+			"System.Dynamic.dll",
+			"System.ComponentModel.Composition.dll",
+			"System.Configuration.dll",
+			"System.Data.dll",
+			"System.Drawing.dll",
+			"System.Xml.dll",
+			"System.Xml.Linq.dll",
+			"System.Runtime.Serialization.dll",
+			"Microsoft.CSharp.dll",
+			"System.Xaml.dll",
+			"gac/PresentationFramework",
+			"gac/WindowsBase",
+			"gac/PresentationCore"
+	};
+
 	public static enum Option {
 		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
-		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES), false),
-		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0]), false),
+		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
+		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
+		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
 		PHP("php", "PHP client", "Php", new PrepareSources("PHP", "php", "Generated-PHP"), true),
 		PHP_UI("php_ui", "PHP UI client", "PhpUI", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false),

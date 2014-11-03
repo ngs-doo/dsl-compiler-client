@@ -124,7 +124,6 @@ public class DslServer {
 	public static void downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
 		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
 		context.log("Downloading " + file + ".zip ...");
-		final HttpURLConnection conn = (HttpURLConnection)server.openConnection();
-		Utils.unpackZip(context, path, conn.getInputStream());
+		Utils.unpackZip(context, path, server);
 	}
 }

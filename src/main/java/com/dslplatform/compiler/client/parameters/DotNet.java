@@ -8,11 +8,15 @@ public enum DotNet implements CompileParameter {
 	INSTANCE;
 
 	public static Either<String> findCompiler(final Context context) {
+		final boolean is32Bit = System.getProperty("os.arch").equals("x86");
+		return findCompiler(context, is32Bit);
+	}
+
+	public static Either<String> findCompiler(final Context context, final boolean is32Bit) {
 		if (context.contains(InputParameter.DOTNET)) {
 			return Either.success(context.get(InputParameter.DOTNET));
 		} else {
 			final boolean isWindows = Utils.isWindows();
-			final boolean is32Bit = System.getProperty("os.arch").equals("x86");
 			if (isWindows) {
 				if (Utils.testCommand(context, "csc.exe", "Microsoft")) {
 					return Either.success("csc.exe");
