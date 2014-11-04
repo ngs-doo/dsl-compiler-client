@@ -71,7 +71,7 @@ public enum TempPath implements CompileParameter {
 					context.error("Temporary path provided, but it's not a directory: " + value);
 					return false;
 				}
-				if (path.listFiles().length > 1) {
+				if (path.listFiles().length > 0) {
 					context.error("Temporary path contains files.");
 					if (!context.canInteract()) {
 						context.error("Please manage the path you have assigned as temporary.");
