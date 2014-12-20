@@ -219,6 +219,8 @@ public class Utils {
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
 			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null);
 			compilation.waitFor();
+			result.join();
+			error.join();
 			return error.output.toString().contains(contains) || result.output.toString().contains(contains);
 		} catch (IOException ex) {
 			context.log(ex.getMessage());
@@ -242,6 +244,8 @@ public class Utils {
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context);
 			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context);
 			compilation.waitFor();
+			result.join();
+			error.join();
 			if (result.exception != null) {
 				return Either.fail(result.exception);
 			}
