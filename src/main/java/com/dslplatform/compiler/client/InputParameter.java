@@ -54,7 +54,7 @@ public enum InputParameter {
 	}
 
 	public static boolean parse(final String[] args, final Context context) {
-		if (args.length == 1 && ("/?".equals(args[0]) || "-?".equals(args[0]))) {
+		if (args.length == 1 && ("/?".equals(args[0]) || "-?".equals(args[0]) || "?".equals(args[0]))) {
 			showHelpAndExit(context, true);
 			return false;
 		}
@@ -65,13 +65,10 @@ public enum InputParameter {
 			}
 		}
 		final List<String> errors = new ArrayList<String>();
-		for (final String a : args) {
-			if (a.charAt(0) != '-' && a.charAt(0) != '/') {
-				errors.add("Invalid parameter: " + a + ". Expecting - or / at the beginning.");
-				continue;
-			}
+		for (String a : args) {
+			if (a.startsWith("-") || a.startsWith("/")) a = a.substring(1);
 			final int eq = a.indexOf('=');
-			final String name = a.substring(0, eq != -1 ? eq : a.length()).substring(1);
+			final String name = a.substring(0, eq != -1 ? eq : a.length());
 			final String value = eq == -1 ? null : a.substring(eq + 1);
 			final InputParameter cp = InputParameter.from(name);
 			if (cp == null) {

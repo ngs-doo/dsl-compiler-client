@@ -44,13 +44,13 @@ There are also a lot more modeling concepts which go beyond basic persistence fe
 
 The biggest benefit shows when you start changing your model and DSL compiler gives you not only the new dll/jar, 
 but also a SQL migration file which tries to preserve data if possible. 
-SQL migration is created by the compiler analyzing differences between models, so you don't need to write manual migration scripts.
+SQL migration is created by the compiler analysing differences between models, so you don't need to write manual migration scripts.
 
 DSL compiler acts as a developer in your team which does all the boring work you would need to do, while providing high quality and high performance parts of the system.
 
 ###Getting started
 
-Create an account on [dsl-platform](https://dsl-platform.com/). This allows you to use the free online compiler.
+Browse [dsl-platform](https://dsl-platform.com/) to get a feeling of supported DSL constructs. Compiler comes with a free offline version, but it requires Mono/.NET on the system.
 
 Think about your domain - DSL is designed to get out of the way while modeling. Write some DSL which captures everything you need from it.
 
@@ -80,15 +80,19 @@ While you can use generated code instead of compiled library, this behavior is h
 
 Compiling Java client library from DSL located in ./dsl folder
 
-    java -jar dsl-clc.jar -target=java_client
+    java -jar dsl-clc.jar target=java_client
+
+Compiling Java client library from DSL located in ./dsl folder using an offline compiler (you will need Mono or .NET to use offline compiler)
+
+    java -jar dsl-clc.jar target=java_client compiler
 
 Creating PHP source from DSL located in ./model folder
 
-    java -jar dsl-clc.jar -target=php -dsl=model
+    java -jar dsl-clc.jar target=php dsl=model
 
 Compiling Java client library and specifying output jar name
 
-    java -jar dsl-clc.jar -java_client=./model.jar
+    java -jar dsl-clc.jar java_client=./model.jar
 
 Compiling Java client library, .NET server library and applying database migration using properties file *compile-options.props* with the content
 
@@ -102,22 +106,22 @@ Compiling Java client library, .NET server library and applying database migrati
 
 and
 
-    java -jar dsl-clc.jar -properties=compile-options.props
+    java -jar dsl-clc.jar properties=compile-options.props
 
 Displaying a diff between model previously applied to the database and current one
 
-    java -jar dsl-clc.jar -diff -db=localhost/MyProject?user=user -dsl=modeling/dsl
+    java -jar dsl-clc.jar diff db=localhost/MyProject?user=user dsl=modeling/dsl
 
 Disabling prompt and forcing destructive migrations for nightly builds
 
-    java -jar dsl-clc.jar "-db=localhost/Project?user=user&password=password" -no-prompt -migration -apply -force
+    java -jar dsl-clc.jar "db=localhost/Project?user=user&password=password" no-prompt migration apply force
 
 Checking if current DSL is a valid one
 
-    java -jar dsl-clc.jar -parse -u=my-account@dsl-platform
+    java -jar dsl-clc.jar parse u=my-account@dsl-platform
 
-Saving SQL migration to specific folder
+Saving SQL migration to specific folder with a specific compiler version
 
-    java -jar dsl-clc.jar /migration /sql=sql-upgrade-scripts -db=localhost/Project?user=postgres
+    java -jar dsl-clc.jar migration sql=sql-upgrade-scripts db=localhost/Project?user=postgres compiler=/usr/dsl-compiler-v1.0/dsl-compiler.exe
 
  
