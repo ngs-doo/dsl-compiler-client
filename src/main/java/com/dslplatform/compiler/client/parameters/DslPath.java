@@ -14,13 +14,28 @@ import java.util.Map;
 public enum DslPath implements CompileParameter {
 	INSTANCE;
 
-	private static final String CACHE_NAME = "current_dsl_cache";
+	private static final String CACHE_MAP_NAME = "current_dsl_map_cache";
+	private static final String CACHE_FILE_NAME = "current_dsl_file_cache";
 
 	public static Map<String, String> getCurrentDsl(final Context context) throws ExitException {
-		final Map<String, String> cache = context.load(CACHE_NAME);
+		final Map<String, String> cache = context.load(CACHE_MAP_NAME);
 		if (cache != null) {
 			return cache;
 		}
+		findDsls(context);
+		return context.load(CACHE_MAP_NAME);
+	}
+
+	public static List<File> getDslPaths(final Context context) throws ExitException {
+		final List<File> cache = context.load(CACHE_FILE_NAME);
+		if (cache != null) {
+			return cache;
+		}
+		findDsls(context);
+		return context.load(CACHE_FILE_NAME);
+	}
+
+	private static void findDsls(final Context context) throws ExitException {
 		String value = context.get(InputParameter.DSL);
 		if (value == null) {
 			if (!(new File("./dsl").exists())) {
@@ -40,7 +55,7 @@ public enum DslPath implements CompileParameter {
 			}
 			try {
 				final byte[] bytes = new byte[(int) file.length()];
-				DataInputStream dis = new DataInputStream(new FileInputStream(file));
+				final DataInputStream dis = new DataInputStream(new FileInputStream(file));
 				dis.readFully(bytes);
 				dis.close();
 				final String relativeName = file.getAbsolutePath().substring(pathLen);
@@ -51,8 +66,8 @@ public enum DslPath implements CompileParameter {
 				throw new ExitException();
 			}
 		}
-		context.cache(CACHE_NAME, dslMap);
-		return dslMap;
+		context.cache(CACHE_MAP_NAME, dslMap);
+		context.cache(CACHE_FILE_NAME, dslFiles);
 	}
 
 	@Override

@@ -42,20 +42,21 @@ public enum Targets implements CompileParameter, ParameterParser {
 	};
 
 	public static enum Option {
-		JAVA_CLIENT("java_client", "Java client", "Java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
-		ANDORID("android", "Android", "Android", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
-		REVENJ("revenj", "Revenj .NET server", "CSharpServer", new CompileRevenj(), false),
-		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
-		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
-		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
-		PHP("php", "PHP client", "Php", new PrepareSources("PHP", "php", "Generated-PHP"), true),
-		PHP_UI("php_ui", "PHP UI client", "PhpUI", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", new CompileScalaClient(), false),
-		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
+		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
+		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
+		REVENJ("revenj", "Revenj .NET server", "CSharpServer", ".cs", new CompileRevenj(), false),
+		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
+		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
+		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
+		PHP("php", "PHP client", "Php", ".php", new PrepareSources("PHP", "php", "Generated-PHP"), true),
+		PHP_UI("php_ui", "PHP UI client", "PhpUI", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
+		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient(), false),
+		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
 		private final String value;
 		private final String description;
 		private final String platformName;
+		private final String extension;
 		private final BuildAction action;
 		private final boolean convertToPath;
 
@@ -63,11 +64,13 @@ public enum Targets implements CompileParameter, ParameterParser {
 				final String value,
 				final String description,
 				final String platformName,
+				final String extension,
 				final BuildAction action,
 				final boolean convertToPath) {
 			this.value = value;
 			this.description = description;
 			this.platformName = platformName;
+			this.extension = extension;
 			this.action = action;
 			this.convertToPath = convertToPath;
 		}
@@ -179,6 +182,68 @@ public enum Targets implements CompileParameter, ParameterParser {
 		if (targets == null) {
 			return;
 		}
+		if (context.contains(InputParameter.COMPILER)) {
+			compileOffline(context, targets);
+		} else {
+			compileOnline(context, targets);
+		}
+	}
+
+	private void compileOffline(Context context, List<Option> targets) throws ExitException {
+		final List<File> dsls = DslPath.getDslPaths(context);
+		final List<Settings.Option> settings = Settings.get(context);
+		final String temp = TempPath.getTempPath(context).getAbsolutePath();
+		final File compiler = new File(context.get(InputParameter.COMPILER));
+		for (final Option t : targets) {
+			Map<String, String> files =
+					DslCompiler.compile(
+							context,
+							compiler,
+							t.value,
+							settings,
+							context.get(InputParameter.NAMESPACE),
+							dsls);
+			try {
+				for (final Map.Entry<String, String> kv : files.entrySet()) {
+					final String fullName = t.value + "/" + kv.getKey() + t.extension;
+					saveFile(context, temp, t.convertToPath, fullName, kv.getValue());
+				}
+			} catch (IOException e) {
+				context.error("Can't create temporary target file. Compilation results can't be saved locally.");
+				context.error(e);
+				throw new ExitException();
+			}
+			if (t.action != null) {
+				t.action.build(new File(temp, t.value), context);
+			}
+		}
+	}
+
+	private static void saveFile(
+			final Context context,
+			final String temp,
+			final boolean escapeName,
+			final String name,
+			final String content) throws ExitException, IOException {
+		final String nameOnly = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
+		final File file = escapeName
+				? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
+				: new File(temp, name);
+		final File parentPath = file.getParentFile();
+		if (!parentPath.exists()) {
+			if (!parentPath.mkdirs()) {
+				context.error("Failed creating path for target file: " + parentPath.getAbsolutePath());
+				throw new ExitException();
+			}
+		}
+		if (!file.createNewFile()) {
+			context.error("Failed creating target file: " + file.getAbsolutePath());
+			throw new ExitException();
+		}
+		Utils.saveFile(file, content);
+	}
+
+	private void compileOnline(Context context, List<Option> targets) throws ExitException {
 		final StringBuilder sb = new StringBuilder();
 		final Set<String> addedTargets = new HashSet<String>();
 		for (final Option t : targets) {
@@ -198,7 +263,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		if (settings.length() > 0) {
 			url.append("&options=").append(settings);
 		}
-		context.show("Compiling DSL...");
+		context.show("Compiling DSL online...");
 		final Either<String> response = DslServer.put(url.toString(), context, Utils.toJson(dsls));
 		if (!response.isSuccess()) {
 			context.error("Error compiling DSL to specified target.");
@@ -215,22 +280,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 		}
 		try {
 			for (final String name : files.names()) {
-				final String nameOnly = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
-				final File file = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")))
-						? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
-						: new File(temp, name);
-				final File parentPath = file.getParentFile();
-				if (!parentPath.exists()) {
-					if (!parentPath.mkdirs()) {
-						context.error("Failed creating path for target file: " + parentPath.getAbsolutePath());
-						throw new ExitException();
-					}
-				}
-				if (!file.createNewFile()) {
-					context.error("Failed creating target file: " + file.getAbsolutePath());
-					throw new ExitException();
-				}
-				Utils.saveFile(file, files.get(name).asString());
+				final boolean escapeName = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")));
+				saveFile(context, temp, escapeName, name, files.get(name).asString());
 			}
 		} catch (IOException e) {
 			context.error("Can't create temporary target file. Compilation results can't be saved locally.");

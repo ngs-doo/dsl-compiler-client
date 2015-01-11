@@ -16,7 +16,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 		MANUAL_JSON("manual-json", "JSON without external library", "manual-json"),
 		NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
 		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server", "multi-tenancy"),
-        DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
+		LEGACY("legacy", "Legacy methods", "legacy"),
+		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
 
 		private final String value;
 		private final String description;
@@ -36,10 +37,18 @@ public enum Settings implements CompileParameter, ParameterParser {
 			}
 			return null;
 		}
+
+		@Override
+		public String toString() {
+			return value;
+		}
 	}
 
 	private static final String CACHE_NAME = "settings_option_cache";
 
+	public static List<Option> get(final Context context) {
+		return context.load(CACHE_NAME);
+	}
 	public static String parseAndConvert(final Context context) {
 		final List<Option> settings = context.load(CACHE_NAME);
 		if(settings == null) {

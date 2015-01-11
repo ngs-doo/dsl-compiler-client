@@ -23,14 +23,25 @@ public enum Parse implements CompileParameter {
 	@Override
 	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.PARSE)) {
-			final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
-			context.show("Validating DSL...");
-			final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
-			if (result.isSuccess()) {
-				context.show("Parse successful.");
+			if (context.contains(InputParameter.COMPILER)) {
+				context.show("Validating DSL locally ...");
+				final Either<Boolean> result = DslCompiler.parse(context, DslPath.getDslPaths(context));
+				if (result.isSuccess()) {
+					context.show("Parse successful.");
+				} else {
+					context.error(result.whyNot());
+					throw new ExitException();
+				}
 			} else {
-				context.error(result.whyNot());
-				throw new ExitException();
+				final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
+				context.show("Validating DSL online...");
+				final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
+				if (result.isSuccess()) {
+					context.show("Parse successful.");
+				} else {
+					context.error(result.whyNot());
+					throw new ExitException();
+				}
 			}
 		}
 	}

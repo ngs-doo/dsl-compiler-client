@@ -54,22 +54,7 @@ public enum Migration implements CompileParameter {
 	@Override
 	public void run(final Context context) throws ExitException {
 		if (context.contains(InputParameter.MIGRATION)) {
-			final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
 			final DbConnection.DatabaseInfo dbInfo = DbConnection.getDatabaseDslAndVersion(context);
-			final String url =
-					"Platform.svc/unmanaged/postgres-migration?version="+ dbInfo.compilerVersion
-							+ "&postgres=" + dbInfo.postgresVersion;
-			final JsonObject arg =
-					new JsonObject()
-							.add("Old", Utils.toJson(dbInfo.dsl))
-							.add("New", Utils.toJson(currentDsl));
-			context.show("Downloading SQL migration...");
-			final Either<String> response = DslServer.put(url, context, arg);
-			if (!response.isSuccess()) {
-				context.error("Error creating SQL migration:");
-				context.error(response.whyNot());
-				throw new ExitException();
-			}
 			final String value = context.get(InputParameter.SQL);
 			final File path;
 			if (!context.contains(InputParameter.SQL) || value == null || value.length() == 0) {
@@ -81,18 +66,21 @@ public enum Migration implements CompileParameter {
 				context.error("Error accessing SQL path (" + path.getAbsolutePath() + ").");
 				throw new ExitException();
 			}
-			final String script = response.get().startsWith("\"") && response.get().endsWith("\"")
-					? JsonValue.readFrom(response.get()).asString()
-					: response.get();
-			final File file = new File(path.getAbsolutePath(), "sql-migration-" + (new Date().getTime()) + ".sql");
+			final String script;
+			if (context.contains(InputParameter.COMPILER)) {
+				script = offlineMigration(context, dbInfo);
+			} else {
+				script = onlineMigration(context, dbInfo);
+			}
+			final File sqlFile = new File(path.getAbsolutePath(), "sql-migration-" + (new Date().getTime()) + ".sql");
 			try {
-				Utils.saveFile(file, script);
+				Utils.saveFile(sqlFile, script);
 			} catch (IOException e) {
-				context.error("Error saving migration script to " + file.getAbsolutePath());
+				context.error("Error saving migration script to " + sqlFile.getAbsolutePath());
 				context.error(e);
 				throw new ExitException();
 			}
-			context.show("Migration saved to " + file.getAbsolutePath());
+			context.show("Migration saved to " + sqlFile.getAbsolutePath());
 			if (script.length() > 0) {
 				final String[] descriptions = extractDescriptions(script);
 				for (int i = 1; i < descriptions.length; i++) {
@@ -101,8 +89,41 @@ public enum Migration implements CompileParameter {
 			} else {
 				context.show("No database changes detected.");
 			}
-			context.cache(MIGRATION_FILE_NAME, file);
+			context.cache(MIGRATION_FILE_NAME, sqlFile);
 		}
+	}
+
+	private String onlineMigration(final Context context, final DbConnection.DatabaseInfo dbInfo) throws ExitException {
+		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
+		final String url =
+				"Platform.svc/unmanaged/postgres-migration?version=" + dbInfo.compilerVersion
+						+ "&postgres=" + dbInfo.postgresVersion;
+		final JsonObject arg =
+				new JsonObject()
+						.add("Old", Utils.toJson(dbInfo.dsl))
+						.add("New", Utils.toJson(currentDsl));
+		context.show("Downloading SQL migration...");
+		final Either<String> response = DslServer.put(url, context, arg);
+		if (!response.isSuccess()) {
+			context.error("Error creating online SQL migration:");
+			context.error(response.whyNot());
+			throw new ExitException();
+		}
+		return response.get().startsWith("\"") && response.get().endsWith("\"")
+				? JsonValue.readFrom(response.get()).asString()
+				: response.get();
+	}
+
+	private String offlineMigration(final Context context, final DbConnection.DatabaseInfo dbInfo) throws ExitException {
+		final List<File> currentDsl = DslPath.getDslPaths(context);
+		context.show("Creating SQL migration...");
+		final Either<String> migration = DslCompiler.migration(context, dbInfo.postgresVersion, currentDsl);
+		if (!migration.isSuccess()) {
+			context.error("Error creating local SQL migration:");
+			context.error(migration.whyNot());
+			throw new ExitException();
+		}
+		return migration.get();
 	}
 
 	@Override

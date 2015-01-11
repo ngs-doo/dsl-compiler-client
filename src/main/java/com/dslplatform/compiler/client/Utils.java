@@ -87,7 +87,7 @@ public class Utils {
 			final byte[] buffer = new byte[8192];
 			while ((entry = zip.getNextEntry()) != null) {
 				long size = 0;
-				final File file = new File(path.getAbsolutePath(), entry.getName());
+				final File file = new File(path, entry.getName());
 				final FileOutputStream fos = new FileOutputStream(file);
 				int len;
 				while ((len = zip.read(buffer)) != -1) {
@@ -152,10 +152,12 @@ public class Utils {
 	public static class CommandResult {
 		public final String output;
 		public final String error;
+		public final int exitCode;
 
-		public CommandResult(final String output, final String error) {
+		public CommandResult(final String output, final String error, final int exitCode) {
 			this.output = output;
 			this.error = error;
+			this.exitCode = exitCode;
 		}
 	}
 
@@ -252,7 +254,7 @@ public class Utils {
 			if (error.exception != null) {
 				return Either.fail(error.exception);
 			}
-			return Either.success(new CommandResult(result.output.toString(), error.output.toString()));
+			return Either.success(new CommandResult(result.output.toString(), error.output.toString(), compilation.exitValue()));
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		} catch (InterruptedException ex) {
