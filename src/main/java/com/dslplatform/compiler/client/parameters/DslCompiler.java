@@ -115,7 +115,6 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public static Either<Boolean> parse(final Context context, final List<File> dsls) throws ExitException {
 		final File compiler = new File(context.get(InputParameter.COMPILER));
 		final List<String> arguments = new ArrayList<String>();
-		arguments.add("parse");
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
