@@ -94,7 +94,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
 		} else {
-			Either<String> mono = DotNet.findCompiler(context);
+			Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);

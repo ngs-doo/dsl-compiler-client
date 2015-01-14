@@ -16,6 +16,7 @@ public enum InputParameter {
 	INCLUDE_SOURCES("include-sources", null, IncludeSources.INSTANCE),
 	DEPENDENCIES("dependencies", "path", Dependencies.INSTANCE),
 	DOTNET("dotnet", "path", DotNet.INSTANCE),
+	MONO("mono", "path", Mono.INSTANCE),
 	TEMP("temp", "path", TempPath.INSTANCE),
 	COMPILER("compiler", "path", DslCompiler.INSTANCE),
 	MAVEN("maven", "path", Maven.INSTANCE),
@@ -89,7 +90,16 @@ public enum InputParameter {
 				}
 			} else {
 				if (eq == -1 && cp.usage != null) {
-					errors.add("Expecting " + cp.usage + " after = for " + a);
+					if (cp.parameter instanceof ParameterParser) {
+						Either<Boolean> tryParse = ((ParameterParser) cp.parameter).tryParse(name, null, context);
+						if (tryParse.isSuccess() && tryParse.get()) {
+							context.put(cp, null);
+						} else {
+							errors.add("Expecting " + cp.usage + " after = for " + a);
+						}
+					} else {
+						errors.add("Expecting " + cp.usage + " after = for " + a);
+					}
 				} else {
 					context.put(cp, value);
 				}
