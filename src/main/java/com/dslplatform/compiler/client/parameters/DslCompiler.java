@@ -1,16 +1,28 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
+import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.DslServer;
+import com.dslplatform.compiler.client.Either;
+import com.dslplatform.compiler.client.ExitException;
+import com.dslplatform.compiler.client.InputParameter;
+import com.dslplatform.compiler.client.ParameterParser;
+import com.dslplatform.compiler.client.Utils;
 
 public enum DslCompiler implements CompileParameter, ParameterParser {
 	INSTANCE;
@@ -42,7 +54,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
 		} else {
-			Either<String> mono = DotNet.findCompiler(context);
+			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
@@ -72,7 +84,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				final Node value = item.getElementsByTagName("Value").item(0);
 				files.put(key.getTextContent(), value.getTextContent());
 			}
-		} catch (Exception ex) {
+		} catch (final Exception ex) {
 			context.error("Invalid xml found");
 			context.log(result.get().output);
 			throw new ExitException();
@@ -94,7 +106,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
 		} else {
-			Either<String> mono = Mono.findMono(context);
+			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
@@ -122,7 +134,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
 		} else {
-			Either<String> mono = DotNet.findCompiler(context);
+			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
@@ -192,7 +204,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			}
 			try {
 				DslServer.downloadAndUnpack(context, "dsl-compiler", rootPath);
-			} catch (IOException ex) {
+			} catch (final IOException ex) {
 				context.error("Error downloading compiler from https://dsl-platform.com");
 				context.error(ex);
 				throw new ExitException();
@@ -211,11 +223,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		return true;
 	}
 
-	private static boolean testCompiler(Context context, File path) throws ExitException {
+	private static boolean testCompiler(final Context context, final File path) throws ExitException {
 		if (Utils.isWindows()) {
 			return Utils.testCommand(context, path.getAbsolutePath(), "DSL Platform");
 		} else {
-			Either<String> mono = DotNet.findCompiler(context);
+			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				return Utils.testCommand(context, mono.get(), "DSL Platform", Arrays.asList(path.getAbsolutePath()));
 			} else {
