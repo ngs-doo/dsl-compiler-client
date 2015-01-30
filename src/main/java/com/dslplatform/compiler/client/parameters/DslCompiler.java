@@ -178,9 +178,8 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			if (!isEmpty) {
 				context.error("Specified compiler path not found: " + path.getAbsolutePath());
 			}
-			final File projectPath = TempPath.getTempPath(context);
-			final File rootPath = projectPath.getParentFile();
-			final File compiler = new File(rootPath, "dsl-compiler.exe");
+			final File tempPath = TempPath.getTempPath(context);
+			final File compiler = new File(tempPath, "dsl-compiler.exe");
 			if (compiler.exists() && testCompiler(context, compiler)) {
 				if (isEmpty) {
 					context.put(InputParameter.COMPILER, compiler.getAbsolutePath());
@@ -203,7 +202,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				} else throw new ExitException();
 			}
 			try {
-				DslServer.downloadAndUnpack(context, "dsl-compiler", rootPath);
+				DslServer.downloadAndUnpack(context, "dsl-compiler", tempPath);
 			} catch (final IOException ex) {
 				context.error("Error downloading compiler from https://dsl-platform.com");
 				context.error(ex);
