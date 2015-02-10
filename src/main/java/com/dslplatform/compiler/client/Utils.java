@@ -76,10 +76,15 @@ public class Utils {
 	}
 
 	public static void unpackZip(final Context context, final File path, final URL remoteUrl) throws IOException {
-		unpackZip(context, path, remoteUrl, 3);
+		unpackZip(context, path, remoteUrl, new ArrayList<File>(), 3);
 	}
 
-	private static void unpackZip(final Context context, final File path, final URL remoteUrl, final int retry) throws IOException {
+	private static void unpackZip(
+			final Context context,
+			final File path,
+			final URL remoteUrl,
+			final ArrayList<File> unpackedFiles,
+			final int retry) throws IOException {
 		try {
 			InputStream response = remoteUrl.openConnection().getInputStream();
 			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));
@@ -88,6 +93,7 @@ public class Utils {
 			while ((entry = zip.getNextEntry()) != null) {
 				long size = 0;
 				final File file = new File(path, entry.getName());
+				unpackedFiles.add(file);
 				final FileOutputStream fos = new FileOutputStream(file);
 				int len;
 				while ((len = zip.read(buffer)) != -1) {
@@ -101,9 +107,16 @@ public class Utils {
 			zip.close();
 		} catch (IOException io) {
 			context.error(io);
+			for (final File f : unpackedFiles) {
+				if (f.delete()) {
+					context.log("Cleaned up: " + f);
+				} else {
+					context.log("Failed to clean up: " + f);
+				}
+			}
 			if (retry > 0) {
 				context.log("Retrying download... from " + remoteUrl);
-				unpackZip(context, path, remoteUrl, retry - 1);
+				unpackZip(context, path, remoteUrl, new ArrayList<File>(), retry - 1);
 			} else throw io;
 		}
 	}
