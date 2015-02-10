@@ -192,7 +192,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 	private void compileOffline(Context context, List<Option> targets) throws ExitException {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<Settings.Option> settings = Settings.get(context);
-		final String temp = TempPath.getTempPath(context).getAbsolutePath();
+		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
 		final File compiler = new File(context.get(InputParameter.COMPILER));
 		for (final Option t : targets) {
 			Map<String, String> files =
@@ -271,7 +271,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 			throw new ExitException();
 		}
 		final JsonObject files = JsonObject.readFrom(response.get());
-		final String temp = TempPath.getTempPath(context).getAbsolutePath();
+		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
 		final Set<String> escapeNames = new HashSet<String>();
 		for (final Option t : targets) {
 			if (t.convertToPath) {

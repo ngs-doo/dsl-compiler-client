@@ -58,7 +58,7 @@ public enum Migration implements CompileParameter {
 			final String value = context.get(InputParameter.SQL);
 			final File path;
 			if (!context.contains(InputParameter.SQL) || value == null || value.length() == 0) {
-				path = TempPath.getTempPath(context);
+				path = TempPath.getTempProjectPath(context);
 			} else {
 				path = new File(value);
 			}

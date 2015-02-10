@@ -11,8 +11,13 @@ public enum TempPath implements CompileParameter {
 
 	private static final String CACHE_NAME = "temp_path_cache";
 
-	public static File getTempPath(final Context context) {
+	public static File getTempProjectPath(final Context context) {
 		return context.load(CACHE_NAME);
+	}
+
+	public static File getTempRootPath(final Context context) {
+		final File temp = context.load(CACHE_NAME);
+		return context.contains(InputParameter.TEMP) ? temp : temp.getParentFile();
 	}
 
 	private static boolean prepareSystemTempPath(final Context context) {
@@ -71,13 +76,14 @@ public enum TempPath implements CompileParameter {
 					context.error("Temporary path provided, but it's not a directory: " + value);
 					return false;
 				}
-				if (path.listFiles().length > 0) {
+				final File[] tempFiles = path.listFiles();
+				if (tempFiles != null && tempFiles.length > 0) {
 					context.error("Temporary path contains files.");
 					if (!context.canInteract()) {
 						context.error("Please manage the path you have assigned as temporary.");
 						return false;
 					}
-					final String delete = context.ask("Delete them? (y/N):");
+					final String delete = context.ask("Delete files in temporary path? (y/N):");
 					if (!"y".equalsIgnoreCase(delete)) {
 						return false;
 					} else {
