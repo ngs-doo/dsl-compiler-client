@@ -7,6 +7,11 @@ public enum DisableColors implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "no-colors"; }
+	@Override
+	public String getUsage() { return null; }
+
+	@Override
 	public boolean check(final Context context) {
 		return true;
 	}

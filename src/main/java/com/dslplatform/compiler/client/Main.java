@@ -12,18 +12,18 @@ public class Main {
 
 	public static boolean processContext(final Context context) {
 		try {
-			for (final InputParameter ip : InputParameter.values()) {
-				if (!ip.parameter.check(context)) {
-					if (ip.parameter.getDetailedDescription() != null) {
+			for (final CompileParameter cp : InputParameter.getPlugins()) {
+				if (!cp.check(context)) {
+					if (cp.getDetailedDescription() != null) {
 						context.show();
 						context.show();
-						context.show(ip.parameter.getDetailedDescription());
+						context.show(cp.getDetailedDescription());
 					}
 					return false;
 				}
 			}
-			for (final InputParameter ip : InputParameter.values()) {
-				ip.parameter.run(context);
+			for (final CompileParameter cp : InputParameter.getPlugins()) {
+				cp.run(context);
 			}
 			return true;
 		} catch (ExitException ex) {
@@ -33,7 +33,7 @@ public class Main {
 
 	private static final Properties versionInfo = new Properties();
 
-	private static final String getVersionInfo(final String section) {
+	private static String getVersionInfo(final String section) {
 		if (versionInfo.isEmpty()) {
 			try {
 				versionInfo.load(Main.class.getResourceAsStream("dsl-clc.properties"));

@@ -6,6 +6,11 @@ public enum IncludeSources implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "include-sources"; }
+	@Override
+	public String getUsage() { return null; }
+
+	@Override
 	public boolean check(final Context context) {
 		return true;
 	}

@@ -1,12 +1,9 @@
 package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.Utils;
 
 import java.io.File;
-import java.io.IOException;
 
 public class PreparePhpUI extends PrepareSources {
 

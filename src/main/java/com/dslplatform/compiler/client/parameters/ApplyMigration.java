@@ -7,6 +7,11 @@ import java.io.File;
 public enum ApplyMigration implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "apply"; }
+	@Override
+	public String getUsage() { return null; }
+
 	private static boolean hasDestructive(final String[] descriptions) {
 		for (int i = 1; i < descriptions.length; i += 2) {
 			final String desc = descriptions[i];
@@ -19,13 +24,13 @@ public enum ApplyMigration implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (context.contains(InputParameter.APPLY_MIGRATION)) {
-			if (!context.contains(InputParameter.CONNECTION_STRING)) {
+		if (context.contains(INSTANCE)) {
+			if (!context.contains(DbConnection.INSTANCE)) {
 				context.error("Connection string is required to apply migration script");
 				throw new ExitException();
 			}
-			if (!context.contains(InputParameter.MIGRATION)) {
-				context.put(InputParameter.MIGRATION, null);
+			if (!context.contains(INSTANCE)) {
+				context.put(INSTANCE, null);
 			}
 		}
 		return true;
@@ -33,7 +38,7 @@ public enum ApplyMigration implements CompileParameter {
 
 	@Override
 	public void run(final Context context) throws ExitException {
-		if (context.contains(InputParameter.APPLY_MIGRATION)) {
+		if (context.contains(INSTANCE)) {
 			final File file = Migration.getMigrationFile(context);
 			if (file == null) {
 				context.error("Can't find SQL migration file. Unable to apply database migration.");
@@ -58,7 +63,7 @@ public enum ApplyMigration implements CompileParameter {
 				if (hasDestructive(descriptions)) {
 					context.show();
 					context.show("Destructive migration detected.");
-					if (context.contains(InputParameter.FORCE_MIGRATION)) {
+					if (context.contains(ForceMigration.INSTANCE)) {
 						context.show("Applying destructive migration due to force option.");
 					} else {
 						if (!context.canInteract()) {

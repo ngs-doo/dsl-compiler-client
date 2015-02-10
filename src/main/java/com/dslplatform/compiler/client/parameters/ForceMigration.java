@@ -2,15 +2,19 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.InputParameter;
 
 public enum ForceMigration implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "force"; }
+	@Override
+	public String getUsage() { return null; }
+
+	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.FORCE_MIGRATION)) {
-			if (!context.contains(InputParameter.APPLY_MIGRATION)) {
+		if (context.contains(INSTANCE)) {
+			if (!context.contains(ApplyMigration.INSTANCE)) {
 				context.error("Force migration can only be used with the apply migration option");
 				return false;
 			}

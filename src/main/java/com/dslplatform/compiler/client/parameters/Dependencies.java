@@ -3,19 +3,23 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 
 import java.io.File;
 
 public enum Dependencies implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "dependencies"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	public static File getDependencies(final Context context, final String name, final String library) throws ExitException {
 		final File dependencies;
 		if (context.contains("dependency:" + library)) {
 			dependencies = new File(context.get("dependency:" + library));
 		} else {
-			final String depsParam = context.get(InputParameter.DEPENDENCIES);
+			final String depsParam = context.get(INSTANCE);
 			dependencies = new File(depsParam != null ? depsParam : "./", library);
 		}
 		if (!dependencies.exists()) {
@@ -29,7 +33,7 @@ public enum Dependencies implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		final String value = context.get(InputParameter.DEPENDENCIES);
+		final String value = context.get(INSTANCE);
 		if (value != null && value.length() > 0) {
 			final File dependenciesPath = new File(value);
 			if (!dependenciesPath.exists()) {

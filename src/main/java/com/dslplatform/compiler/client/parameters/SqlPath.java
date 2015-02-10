@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 
 import java.io.File;
 
@@ -11,9 +10,14 @@ public enum SqlPath implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "sql"; }
+	@Override
+	public String getUsage() { return "path"; }
+
+	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (context.contains(InputParameter.SQL)) {
-			final String value = context.get(InputParameter.SQL);
+		if (context.contains(INSTANCE)) {
+			final String value = context.get(INSTANCE);
 			if (value != null && value.length() > 0) {
 				final File sqlPath = new File(value);
 				if (!sqlPath.exists()) {

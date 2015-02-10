@@ -10,6 +10,11 @@ import java.util.*;
 public enum Targets implements CompileParameter, ParameterParser {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "target"; }
+	@Override
+	public String getUsage() { return "options"; }
+
 	private final static String[] DOTNET_CLIENT_DEPENDENCIES = {
 			"System.dll",
 			"System.Core.dll",
@@ -123,8 +128,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 	public boolean check(final Context context) throws ExitException {
 		final List<String> targets = new ArrayList<String>();
 		final Set<String> distinctTargets = new HashSet<String>();
-		if (context.contains(InputParameter.TARGET)) {
-			final String value = context.get(InputParameter.TARGET);
+		if (context.contains(INSTANCE)) {
+			final String value = context.get(INSTANCE);
 			if (value == null || value.length() == 0) {
 				context.error("Targets not provided. Available targets: ");
 				listOptions(context);
@@ -144,7 +149,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 			}
 		}
 		if (targets.size() == 0) {
-			if (context.contains(InputParameter.TARGET)) {
+			if (context.contains(INSTANCE)) {
 				context.error("Targets not provided. Available targets: ");
 				listOptions(context);
 				return false;
@@ -164,7 +169,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		if (dsls.size() == 0) {
 			context.error("Can't compile DSL to targets since no DSL was provided.");
-			context.error("Please check your DSL folder: " + context.get(InputParameter.DSL));
+			context.error("Please check your DSL folder: " + context.get(DslPath.INSTANCE));
 			return false;
 		}
 		for (final Option o : options) {
@@ -182,7 +187,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		if (targets == null) {
 			return;
 		}
-		if (context.contains(InputParameter.COMPILER)) {
+		if (context.contains(DslCompiler.INSTANCE)) {
 			compileOffline(context, targets);
 		} else {
 			compileOnline(context, targets);
@@ -193,7 +198,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<Settings.Option> settings = Settings.get(context);
 		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
-		final File compiler = new File(context.get(InputParameter.COMPILER));
+		final File compiler = new File(context.get(DslCompiler.INSTANCE));
 		for (final Option t : targets) {
 			Map<String, String> files =
 					DslCompiler.compile(
@@ -201,7 +206,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 							compiler,
 							t.value,
 							settings,
-							context.get(InputParameter.NAMESPACE),
+							context.get(Namespace.INSTANCE),
 							dsls);
 			try {
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
@@ -256,8 +261,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
 		final StringBuilder url = new StringBuilder("Platform.svc/unmanaged/source?targets=");
 		url.append(sb.substring(0, sb.length() - 1));
-		if (context.contains(InputParameter.NAMESPACE)) {
-			url.append("&namespace=").append(context.get(InputParameter.NAMESPACE));
+		if (context.contains(Namespace.INSTANCE)) {
+			url.append("&namespace=").append(context.get(Namespace.INSTANCE));
 		}
 		final String settings = Settings.parseAndConvert(context);
 		if (settings.length() > 0) {

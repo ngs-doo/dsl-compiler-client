@@ -7,9 +7,14 @@ import java.util.Arrays;
 public enum Mono implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "mono"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	public static Either<String> findMono(final Context context) {
-		if (context.contains(InputParameter.MONO)) {
-			return Either.success(context.get(InputParameter.MONO));
+		if (context.contains(INSTANCE)) {
+			return Either.success(context.get(INSTANCE));
 		} else {
 			if (Utils.testCommand(context, "mono", "Mono", Arrays.asList("--version"))) {
 				return Either.success("mono");
@@ -20,8 +25,8 @@ public enum Mono implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.MONO)) {
-			final String compiler = context.get(InputParameter.MONO);
+		if (context.contains(INSTANCE)) {
+			final String compiler = context.get(INSTANCE);
 			if (Utils.testCommand(context, compiler, "Mono", Arrays.asList("--version"))) {
 				context.error("mono parameter is set, but Mono not found/doesn't work. Please check specified mono parameter.");
 				return false;

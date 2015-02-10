@@ -20,12 +20,16 @@ import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.DslServer;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.ParameterParser;
 import com.dslplatform.compiler.client.Utils;
 
 public enum DslCompiler implements CompileParameter, ParameterParser {
 	INSTANCE;
+
+	@Override
+	public String getAlias() { return "compiler"; }
+	@Override
+	public String getUsage() { return "path"; }
 
 	private static Charset utf8 = Charset.forName("UTF-8");
 
@@ -50,6 +54,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
+		context.log("Compiling DSL to " + target + "...");
 		final Either<Utils.CommandResult> result;
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
@@ -96,12 +101,13 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final Context context,
 			final String version,
 			final List<File> dsls) throws ExitException {
-		final File compiler = new File(context.get(InputParameter.COMPILER));
+		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=postgres" + version);
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
+		context.log("Creating SQL migration...");
 		final Either<Utils.CommandResult> result;
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
@@ -125,11 +131,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	}
 
 	public static Either<Boolean> parse(final Context context, final List<File> dsls) throws ExitException {
-		final File compiler = new File(context.get(InputParameter.COMPILER));
+		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
+		context.log("Parsing DSL...");
 		final Either<Utils.CommandResult> result;
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
@@ -155,7 +162,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	@Override
 	public Either<Boolean> tryParse(final String name, final String value, final Context context) {
 		if ("compiler".equals(name)) {
-			context.put(InputParameter.COMPILER, value);
+			context.put(INSTANCE, value);
 			return Either.success(true);
 		} else {
 			return Either.success(false);
@@ -164,10 +171,10 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (!context.contains(InputParameter.COMPILER)) {
+		if (!context.contains(INSTANCE)) {
 			return true;
 		}
-		final String value = context.get(InputParameter.COMPILER);
+		final String value = context.get(INSTANCE);
 		final boolean isEmpty = value == null || value.length() == 0;
 		final File path = new File(isEmpty ? "dsl-compiler.exe" : value);
 		if (path.isDirectory()) {
@@ -182,7 +189,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final File compiler = new File(tempPath, "dsl-compiler.exe");
 			if (compiler.exists() && testCompiler(context, compiler)) {
 				if (isEmpty) {
-					context.put(InputParameter.COMPILER, compiler.getAbsolutePath());
+					context.put(INSTANCE, compiler.getAbsolutePath());
 					return true;
 				}
 				if (context.canInteract()) {
@@ -190,12 +197,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 							context.ask("Compiler found in default location: "
 								+ compiler.getAbsolutePath()  + ". Do you wish to use it? (y/N)");
 					if (answer.toLowerCase().equals("y")) {
-						context.put(InputParameter.COMPILER, compiler.getAbsolutePath());
+						context.put(INSTANCE, compiler.getAbsolutePath());
 						return true;
 					}
 				}
 			}
-			if (!context.contains(InputParameter.DOWNLOAD)) {
+			if (!context.contains(Download.INSTANCE)) {
 				if (context.canInteract()) {
 					final String answer = context.ask("Do you wish to download compiler from the Internet? (y/N)");
 					if (!answer.toLowerCase().equals("y")) throw new ExitException();
@@ -212,7 +219,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
 				throw new ExitException();
 			}
-			context.put(InputParameter.COMPILER, compiler.getAbsolutePath());
+			context.put(INSTANCE, compiler.getAbsolutePath());
 		} else {
 			if (!testCompiler(context, path)) {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());

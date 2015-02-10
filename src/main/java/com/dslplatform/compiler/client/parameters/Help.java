@@ -6,22 +6,27 @@ public enum Help implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "help"; }
+	@Override
+	public String getUsage() { return "command"; }
+
+	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (context.contains(InputParameter.HELP)) {
-			final String value = context.get(InputParameter.HELP);
-			final InputParameter input = InputParameter.from(value);
+		if (context.contains(INSTANCE)) {
+			final String value = context.get(INSTANCE);
+			final CompileParameter input = InputParameter.from(value);
 			if (input == null) {
 				context.error("Unknown command: " + value);
 				throw new ExitException();
 			}
-			final String help = input.parameter.getDetailedDescription();
+			final String help = input.getDetailedDescription();
 			if (help == null) {
 				context.error("Sorry, no detailed info about:" + value);
 			} else {
 				final int len;
-				if (input.parameter.getShortDescription() != null) {
-					len = value.length() + 2 + input.parameter.getShortDescription().length();
-					context.show(value + ": " + input.parameter.getShortDescription());
+				if (input.getShortDescription() != null) {
+					len = value.length() + 2 + input.getShortDescription().length();
+					context.show(value + ": " + input.getShortDescription());
 				} else {
 					len = value.length();
 					context.show(value);
@@ -32,7 +37,7 @@ public enum Help implements CompileParameter {
 				}
 				context.show(sb.toString());
 				context.show();
-				context.show(input.parameter.getDetailedDescription());
+				context.show(input.getDetailedDescription());
 			}
 			throw new ExitException();
 		}

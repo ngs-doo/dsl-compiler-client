@@ -14,6 +14,11 @@ import java.util.Map;
 public enum DslPath implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "dsl"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	private static final String CACHE_MAP_NAME = "current_dsl_map_cache";
 	private static final String CACHE_FILE_NAME = "current_dsl_file_cache";
 
@@ -36,13 +41,13 @@ public enum DslPath implements CompileParameter {
 	}
 
 	private static void findDsls(final Context context) throws ExitException {
-		String value = context.get(InputParameter.DSL);
+		String value = context.get(INSTANCE);
 		if (value == null) {
 			if (!(new File("./dsl").exists())) {
 				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exists");
 				throw new ExitException();
 			}
-			context.put(InputParameter.DSL, value = "./dsl");
+			context.put(INSTANCE, value = "./dsl");
 		}
 		final File dslPath = new File(value).getAbsoluteFile();
 		final List<File> dslFiles = Utils.findFiles(dslPath, Arrays.asList(".dsl", ".ddd"));
@@ -72,14 +77,14 @@ public enum DslPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		final String value = context.get(InputParameter.DSL);
+		final String value = context.get(INSTANCE);
 		if (value == null) {
 			final File dslPath = new File("./dsl");
 			if (!dslPath.exists()) {
 				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exists");
 				return false;
 			}
-			context.put(InputParameter.DSL, "./dsl");
+			context.put(INSTANCE, "./dsl");
 		} else {
 			final File dslPath = new File(value);
 			if (!dslPath.exists()) {

@@ -7,6 +7,11 @@ public enum LogOutput implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "log"; }
+	@Override
+	public String getUsage() { return null; }
+
+	@Override
 	public boolean check(final Context context) {
 		return true;
 	}

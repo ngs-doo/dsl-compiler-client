@@ -9,11 +9,16 @@ public enum Parse implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "parse"; }
+	@Override
+	public String getUsage() { return null; }
+
+	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (context.contains(InputParameter.PARSE)) {
+		if (context.contains(INSTANCE)) {
 			final Map<String, String> dslMap = DslPath.getCurrentDsl(context);
 			if (dslMap.size() == 0) {
-				context.error("DSL files not found in: " + context.get(InputParameter.DSL) + ". At least one DSL file required.");
+				context.error("DSL files not found in: " + context.get(DslPath.INSTANCE) + ". At least one DSL file required.");
 				return false;
 			}
 		}
@@ -22,8 +27,8 @@ public enum Parse implements CompileParameter {
 
 	@Override
 	public void run(final Context context) throws ExitException {
-		if (context.contains(InputParameter.PARSE)) {
-			if (context.contains(InputParameter.COMPILER)) {
+		if (context.contains(INSTANCE)) {
+			if (context.contains(DslCompiler.INSTANCE)) {
 				context.show("Validating DSL locally ...");
 				final Either<Boolean> result = DslCompiler.parse(context, DslPath.getDslPaths(context));
 				if (result.isSuccess()) {

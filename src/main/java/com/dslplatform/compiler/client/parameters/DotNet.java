@@ -7,14 +7,19 @@ import java.util.Arrays;
 public enum DotNet implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "dotnet"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	public static Either<String> findCompiler(final Context context) {
 		final boolean is32Bit = System.getProperty("os.arch").equals("x86");
 		return findCompiler(context, is32Bit);
 	}
 
 	public static Either<String> findCompiler(final Context context, final boolean is32Bit) {
-		if (context.contains(InputParameter.DOTNET)) {
-			return Either.success(context.get(InputParameter.DOTNET));
+		if (context.contains(INSTANCE)) {
+			return Either.success(context.get(INSTANCE));
 		} else {
 			final boolean isWindows = Utils.isWindows();
 			if (isWindows) {
@@ -37,8 +42,8 @@ public enum DotNet implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.DOTNET)) {
-			final String compiler = context.get(InputParameter.DOTNET);
+		if (context.contains(INSTANCE)) {
+			final String compiler = context.get(INSTANCE);
 			final boolean isWindows = Utils.isWindows();
 			//TODO: should we even ask for Mono on Windows?
 			if (isWindows && !Utils.testCommand(context, compiler, ".NET Framework") && !Utils.testCommand(context, compiler, "Mono")

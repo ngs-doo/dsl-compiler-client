@@ -10,9 +10,14 @@ public enum PropertiesFile implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "properties"; }
+	@Override
+	public String getUsage() { return "file"; }
+
+	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.PROPERTIES)) {
-			final String properties = context.get(InputParameter.PROPERTIES);
+		if (context.contains(INSTANCE)) {
+			final String properties = context.get(INSTANCE);
 			if (properties == null || properties.length() == 0) {
 				context.error("Incorrectly defined .properties file");
 				return false;
@@ -28,9 +33,9 @@ public enum PropertiesFile implements CompileParameter {
 				return false;
 			}
 			final List<ParameterParser> customParsers = new ArrayList<ParameterParser>();
-			for (final InputParameter ip : InputParameter.values()) {
-				if (ip.parameter instanceof ParameterParser) {
-					customParsers.add((ParameterParser) ip.parameter);
+			for (final CompileParameter cp : InputParameter.getPlugins()) {
+				if (cp instanceof ParameterParser) {
+					customParsers.add((ParameterParser) cp);
 				}
 			}
 			final List<String> errors = new ArrayList<String>();
@@ -42,7 +47,7 @@ public enum PropertiesFile implements CompileParameter {
 				final int eq = line.indexOf('=');
 				final String name = line.substring(0, eq != -1 ? eq : line.length());
 				final String value = eq == -1 ? null : line.substring(eq + 1);
-				final InputParameter cp = InputParameter.from(name);
+				final CompileParameter cp = InputParameter.from(name);
 				if (cp == null) {
 					boolean matched = false;
 					for (final ParameterParser parser : customParsers) {
@@ -60,8 +65,17 @@ public enum PropertiesFile implements CompileParameter {
 						errors.add("Unknown parameter: " + name);
 					}
 				} else {
-					if (eq == -1 && cp.usage != null) {
-						errors.add("Expecting " + cp.usage + " after = for " + line);
+					if (eq == -1 && cp.getUsage() != null) {
+						if (cp instanceof ParameterParser) {
+							Either<Boolean> tryParse = ((ParameterParser) cp).tryParse(name, null, context);
+							if (tryParse.isSuccess() && tryParse.get()) {
+								context.put(cp, null);
+							} else {
+								errors.add("Expecting " + cp.getUsage() + " after = for " + line);
+							}
+						} else {
+							errors.add("Expecting " + cp.getUsage() + " after = for " + line);
+						}
 					} else {
 						context.put(cp, value);
 					}

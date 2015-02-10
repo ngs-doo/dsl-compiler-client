@@ -1,5 +1,8 @@
 package com.dslplatform.compiler.client;
 
+import com.dslplatform.compiler.client.parameters.DisableColors;
+import com.dslplatform.compiler.client.parameters.LogOutput;
+import com.dslplatform.compiler.client.parameters.Prompt;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.fusesource.jansi.AnsiConsole;
@@ -20,32 +23,32 @@ public class Context {
 	private boolean noPrompt;
 	private boolean withColor = true;
 
-	public void put(final InputParameter parameter, final String value) {
-		if (parameter.equals(InputParameter.NO_PROMPT)) {
+	public void put(final CompileParameter parameter, final String value) {
+		if (parameter instanceof Prompt) {
 			noPrompt = true;
-		} else if (parameter.equals(InputParameter.LOG)) {
+		} else if (parameter instanceof LogOutput) {
 			withLog = true;
-		} else if (parameter.equals(InputParameter.NO_COLORS)) {
+		} else if (parameter instanceof DisableColors) {
 			withColor = false;
 			console = System.out;
 		}
-		parameters.put(parameter.alias, value);
+		parameters.put(parameter.getAlias(), value);
 	}
 
 	public void put(final String parameter, final String value) {
 		parameters.put(parameter.toLowerCase(), value);
 	}
 
-	public boolean contains(final InputParameter parameter) {
-		return parameters.containsKey(parameter.alias);
+	public boolean contains(final CompileParameter parameter) {
+		return parameters.containsKey(parameter.getAlias());
 	}
 
 	public boolean contains(final String parameter) {
 		return parameters.containsKey(parameter);
 	}
 
-	public String get(final InputParameter parameter) {
-		return parameters.get(parameter.alias);
+	public String get(final CompileParameter parameter) {
+		return parameters.get(parameter.getAlias());
 	}
 
 	public String get(final String parameter) {

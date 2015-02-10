@@ -3,21 +3,25 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 
 public enum Password implements CompileParameter {
 	INSTANCE;
+
+	@Override
+	public String getAlias() { return "p"; }
+	@Override
+	public String getUsage() { return "password"; }
 
 	public static void retryInput(final Context context) {
 		char[] pass = context.askSecret("DSL Platform password:");
 		if (pass.length == 0) {
 			return;
 		}
-		context.put(InputParameter.PASSWORD, new String(pass));
+		context.put(INSTANCE, new String(pass));
 	}
 
 	public static String getOrLoad(final Context context) throws ExitException {
-		String value = context.get(InputParameter.PASSWORD);
+		String value = context.get(INSTANCE);
 		if (value == null) {
 			if(!context.canInteract()) {
 				context.error("DSL Platform password missing. Specify password as argument.");
@@ -25,7 +29,7 @@ public enum Password implements CompileParameter {
 			}
 			char[] pass = context.askSecret("DSL Platform password:");
 			value = new String(pass);
-			context.put(InputParameter.PASSWORD, value);
+			context.put(INSTANCE, value);
 		}
 		return value;
 	}

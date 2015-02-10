@@ -11,6 +11,11 @@ import java.util.*;
 public enum Migration implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "migration"; }
+	@Override
+	public String getUsage() { return null; }
+
 	private final static String DESCRIPTION_START = "/*MIGRATION_DESCRIPTION";
 	private final static String DESCRIPTION_END = "MIGRATION_DESCRIPTION*/";
 
@@ -31,13 +36,13 @@ public enum Migration implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.MIGRATION)) {
-			if (!context.contains(InputParameter.CONNECTION_STRING)) {
+		if (context.contains(INSTANCE)) {
+			if (!context.contains(DbConnection.INSTANCE)) {
 				context.error("Connection string is required to create a migration script");
 				return false;
 			}
-			if (context.contains(InputParameter.SQL)) {
-				final String value = context.get(InputParameter.SQL);
+			if (context.contains(SqlPath.INSTANCE)) {
+				final String value = context.get(SqlPath.INSTANCE);
 				if (value == null || value.length() == 0) {
 					return true;
 				}
@@ -53,11 +58,11 @@ public enum Migration implements CompileParameter {
 
 	@Override
 	public void run(final Context context) throws ExitException {
-		if (context.contains(InputParameter.MIGRATION)) {
+		if (context.contains(Migration.INSTANCE)) {
 			final DbConnection.DatabaseInfo dbInfo = DbConnection.getDatabaseDslAndVersion(context);
-			final String value = context.get(InputParameter.SQL);
+			final String value = context.get(SqlPath.INSTANCE);
 			final File path;
-			if (!context.contains(InputParameter.SQL) || value == null || value.length() == 0) {
+			if (!context.contains(SqlPath.INSTANCE) || value == null || value.length() == 0) {
 				path = TempPath.getTempProjectPath(context);
 			} else {
 				path = new File(value);
@@ -67,7 +72,7 @@ public enum Migration implements CompileParameter {
 				throw new ExitException();
 			}
 			final String script;
-			if (context.contains(InputParameter.COMPILER)) {
+			if (context.contains(DslCompiler.INSTANCE)) {
 				script = offlineMigration(context, dbInfo);
 			} else {
 				script = onlineMigration(context, dbInfo);

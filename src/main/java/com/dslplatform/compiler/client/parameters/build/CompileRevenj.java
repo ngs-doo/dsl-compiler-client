@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
+import com.dslplatform.compiler.client.parameters.Download;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -22,7 +23,7 @@ public class CompileRevenj implements BuildAction {
 		});
 		if (found.length == 0) {
 			context.error("Revenj dependencies not found in: " + revenjDeps.getAbsolutePath());
-			if (!context.contains(InputParameter.DOWNLOAD)) {
+			if (!context.contains(Download.INSTANCE)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place Revenj files in specified folder.");
 					throw new ExitException();
@@ -51,7 +52,7 @@ public class CompileRevenj implements BuildAction {
 				context.error("Unable to download Revenj from Github.");
 				context.error(ex);
 				final String answer;
-				if (!context.contains(InputParameter.DOWNLOAD)) {
+				if (!context.contains(Download.INSTANCE)) {
 					if (!context.canInteract()) {
 						throw new ExitException();
 					}

@@ -1,53 +1,60 @@
 package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.parameters.*;
+import sun.misc.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public enum InputParameter {
-	HELP("help", "command", Help.INSTANCE),
-	PROPERTIES("properties", "file", PropertiesFile.INSTANCE),
-	USERNAME("u", "username", Username.INSTANCE),
-	PASSWORD("p", "password", Password.INSTANCE),
-	DSL("dsl", "path", DslPath.INSTANCE),
-	SQL("sql", "path", SqlPath.INSTANCE),
-	DOWNLOAD("download", null, Download.INSTANCE),
-	INCLUDE_SOURCES("include-sources", null, IncludeSources.INSTANCE),
-	DEPENDENCIES("dependencies", "path", Dependencies.INSTANCE),
-	DOTNET("dotnet", "path", DotNet.INSTANCE),
-	MONO("mono", "path", Mono.INSTANCE),
-	TEMP("temp", "path", TempPath.INSTANCE),
-	COMPILER("compiler", "path", DslCompiler.INSTANCE),
-	MAVEN("maven", "path", Maven.INSTANCE),
-	JAVA("java", "path", JavaPath.INSTANCE),
-	SCALAC("scalac", "file", ScalaPath.INSTANCE),
-	NAMESPACE("namespace", "value", Namespace.INSTANCE),
-	SETTINGS("settings", "options", Settings.INSTANCE),
-	CONNECTION_STRING("db", "connection_string", DbConnection.INSTANCE),
-	NO_PROMPT("no-prompt", null, Prompt.INSTANCE),
-	PARSE("parse", null, Parse.INSTANCE),
-	DIFF("diff", null, Diff.INSTANCE),
-	TARGET("target", "options", Targets.INSTANCE),
-	FORCE_MIGRATION("force", null, ForceMigration.INSTANCE),
-	MIGRATION("migration", null, Migration.INSTANCE),
-	APPLY_MIGRATION("apply", null, ApplyMigration.INSTANCE),
-	NO_COLORS("no-colors", null, DisableColors.INSTANCE),
-	LOG("log", null, LogOutput.INSTANCE);
+public class InputParameter {
+	private static CompileParameter[] DEFAULT_PARAMETERS = new CompileParameter[] {
+		Help.INSTANCE,
+		PropertiesFile.INSTANCE,
+		Username.INSTANCE,
+		Password.INSTANCE,
+		DslPath.INSTANCE,
+		SqlPath.INSTANCE,
+		Download.INSTANCE,
+		IncludeSources.INSTANCE,
+		Dependencies.INSTANCE,
+		DotNet.INSTANCE,
+		Mono.INSTANCE,
+		TempPath.INSTANCE,
+		DslCompiler.INSTANCE,
+		Maven.INSTANCE,
+		JavaPath.INSTANCE,
+		ScalaPath.INSTANCE,
+		Namespace.INSTANCE,
+		Settings.INSTANCE,
+		DbConnection.INSTANCE,
+		Prompt.INSTANCE,
+		Parse.INSTANCE,
+		Diff.INSTANCE,
+		Targets.INSTANCE,
+		ForceMigration.INSTANCE,
+		Migration.INSTANCE,
+		ApplyMigration.INSTANCE,
+		DisableColors.INSTANCE,
+		LogOutput.INSTANCE
+	};
 
-	public final String alias;
-	public final String usage;
-	public final CompileParameter parameter;
+	private static ArrayList<CompileParameter> allParameters;
 
-	InputParameter(final String alias, final String usage, final CompileParameter parameter) {
-		this.alias = alias;
-		this.usage = usage;
-		this.parameter = parameter;
+	static {
+		allParameters = new ArrayList<CompileParameter>(DEFAULT_PARAMETERS.length);
+		Collections.addAll(allParameters, DEFAULT_PARAMETERS);
+		ServiceLoader<CompileParameter> plugins = ServiceLoader.load(CompileParameter.class);
+		for (CompileParameter cp : plugins) {
+			allParameters.add(cp);
+		}
 	}
 
-	public static InputParameter from(final String value) {
-		for (final InputParameter cp : InputParameter.values()) {
-			if (cp.alias.equalsIgnoreCase(value)) {
+	public static List<CompileParameter> getPlugins() {
+		return allParameters;
+	}
+
+	public static CompileParameter from(final String value) {
+		for (final CompileParameter cp : allParameters) {
+			if (cp.getAlias().equalsIgnoreCase(value)) {
 				return cp;
 			}
 		}
@@ -60,9 +67,9 @@ public enum InputParameter {
 			return false;
 		}
 		final List<ParameterParser> customParsers = new ArrayList<ParameterParser>();
-		for (final InputParameter ip : InputParameter.values()) {
-			if (ip.parameter instanceof ParameterParser) {
-				customParsers.add((ParameterParser) ip.parameter);
+		for (final CompileParameter cp : allParameters) {
+			if (cp instanceof ParameterParser) {
+				customParsers.add((ParameterParser) cp);
 			}
 		}
 		final List<String> errors = new ArrayList<String>();
@@ -71,7 +78,7 @@ public enum InputParameter {
 			final int eq = a.indexOf('=');
 			final String name = a.substring(0, eq != -1 ? eq : a.length());
 			final String value = eq == -1 ? null : a.substring(eq + 1);
-			final InputParameter cp = InputParameter.from(name);
+			final CompileParameter cp = from(name);
 			if (cp == null) {
 				boolean matched = false;
 				for (final ParameterParser parser : customParsers) {
@@ -89,16 +96,16 @@ public enum InputParameter {
 					errors.add("Unknown parameter: " + name);
 				}
 			} else {
-				if (eq == -1 && cp.usage != null) {
-					if (cp.parameter instanceof ParameterParser) {
-						Either<Boolean> tryParse = ((ParameterParser) cp.parameter).tryParse(name, null, context);
+				if (eq == -1 && cp.getUsage() != null) {
+					if (cp instanceof ParameterParser) {
+						Either<Boolean> tryParse = ((ParameterParser) cp).tryParse(name, null, context);
 						if (tryParse.isSuccess() && tryParse.get()) {
 							context.put(cp, null);
 						} else {
-							errors.add("Expecting " + cp.usage + " after = for " + a);
+							errors.add("Expecting " + cp.getUsage() + " after = for " + a);
 						}
 					} else {
-						errors.add("Expecting " + cp.usage + " after = for " + a);
+						errors.add("Expecting " + cp.getUsage() + " after = for " + a);
 					}
 				} else {
 					context.put(cp, value);
@@ -124,34 +131,34 @@ public enum InputParameter {
 		context.show();
 		context.show("Command parameters:");
 		int max = 0;
-		for (final InputParameter ip : InputParameter.values()) {
-			if (ip.parameter.getShortDescription() == null) {
+		for (final CompileParameter cp : allParameters) {
+			if (cp.getShortDescription() == null) {
 				continue;
 			}
-			int width = ip.alias.length();
-			if (ip.usage != null) {
-				width += 1 + ip.usage.length();
+			int width = cp.getAlias().length();
+			if (cp.getUsage() != null) {
+				width += 1 + cp.getUsage().length();
 			}
 			if (max < width) {
 				max = width;
 			}
 		}
 		max += 2;
-		for (final InputParameter ip : InputParameter.values()) {
-			if (ip.parameter.getShortDescription() == null) {
+		for (final CompileParameter cp : allParameters) {
+			if (cp.getShortDescription() == null) {
 				continue;
 			}
 			final StringBuilder sb = new StringBuilder();
-			sb.append(" -").append(ip.alias);
-			int len = max - ip.alias.length();
-			if (ip.usage != null) {
-				sb.append("=").append(ip.usage);
-				len -= ip.usage.length() + 1;
+			sb.append(" -").append(cp.getAlias());
+			int len = max - cp.getAlias().length();
+			if (cp.getUsage() != null) {
+				sb.append("=").append(cp.getUsage());
+				len -= cp.getUsage().length() + 1;
 			}
 			for (; len >= 0; len--) {
 				sb.append(' ');
 			}
-			sb.append(ip.parameter.getShortDescription());
+			sb.append(cp.getShortDescription());
 			context.show(sb.toString());
 		}
 		context.show();

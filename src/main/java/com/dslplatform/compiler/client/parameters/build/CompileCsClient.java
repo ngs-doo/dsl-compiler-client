@@ -2,6 +2,7 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
+import com.dslplatform.compiler.client.parameters.Download;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -68,7 +69,7 @@ public class CompileCsClient implements BuildAction {
 		});
 		if (found.length == 0) {
 			context.error(name + " dependencies not found in: " + libDeps.getAbsolutePath());
-			if (!context.contains(InputParameter.DOWNLOAD)) {
+			if (!context.contains(Download.INSTANCE)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place " + name + " files in specified folder.");
 					throw new ExitException();

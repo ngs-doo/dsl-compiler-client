@@ -7,9 +7,14 @@ import java.io.File;
 public enum ScalaPath implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "scalac"; }
+	@Override
+	public String getUsage() { return "file"; }
+
 	public static Either<String> findCompiler(final Context context) {
-		if (context.contains(InputParameter.SCALAC)) {
-			final File scalac = new File(context.get(InputParameter.SCALAC));
+		if (context.contains(INSTANCE)) {
+			final File scalac = new File(context.get(INSTANCE));
 			return Either.success(scalac.getAbsolutePath());
 		} else {
 			if (Utils.testCommand(context, "scalac", "Usage: scalac")) {
@@ -31,8 +36,8 @@ public enum ScalaPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.SCALAC)) {
-			final String path = context.get(InputParameter.SCALAC);
+		if (context.contains(INSTANCE)) {
+			final String path = context.get(INSTANCE);
 			final File scalac = new File(path);
 			if (!Utils.testCommand(context, scalac.getAbsolutePath(), "Usage: scalac")) {
 				context.error("scalac parameter is set, but Scala compiler not found/doesn't work. Please check specified scalac parameter.");

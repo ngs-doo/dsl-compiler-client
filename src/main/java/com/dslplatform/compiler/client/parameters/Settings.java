@@ -9,6 +9,11 @@ import java.util.List;
 public enum Settings implements CompileParameter, ParameterParser {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "settings"; }
+	@Override
+	public String getUsage() { return "options"; }
+
 	public static enum Option {
 		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "active-record"),
 		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),
@@ -86,8 +91,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 	@Override
 	public boolean check(final Context context) {
 		final List<String> settings = new ArrayList<String>();
-		if (context.contains(InputParameter.SETTINGS)) {
-			final String value = context.get(InputParameter.SETTINGS);
+		if (context.contains(INSTANCE)) {
+			final String value = context.get(INSTANCE);
 			if (value == null || value.length() == 0) {
 				context.error("Settings not provided. Available settings: ");
 				listOptions(context);
@@ -101,7 +106,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 			}
 		}
 		if(settings.size() == 0) {
-			if (context.contains(InputParameter.SETTINGS)) {
+			if (context.contains(INSTANCE)) {
 				context.error("Settings not provided. Available settings: ");
 				listOptions(context);
 				return false;

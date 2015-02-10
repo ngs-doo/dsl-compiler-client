@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 
 import java.sql.*;
 import java.util.*;
@@ -11,6 +10,11 @@ import java.util.regex.*;
 
 public enum DbConnection implements CompileParameter {
 	INSTANCE;
+
+	@Override
+	public String getAlias() { return "db"; }
+	@Override
+	public String getUsage() { return "connection_string"; }
 
 	private static String unescape(final String element) {
 		return element.replace("\\\"", "\"").replace("\\\\", "\\");
@@ -69,7 +73,7 @@ public enum DbConnection implements CompileParameter {
 		if (cache != null) {
 			return cache;
 		}
-		final String value = context.get(InputParameter.CONNECTION_STRING);
+		final String value = context.get(INSTANCE);
 		final String connectionString = "jdbc:postgresql://" + value;
 		Connection conn;
 		Statement stmt;
@@ -140,7 +144,7 @@ public enum DbConnection implements CompileParameter {
 	}
 
 	public static void execute(final Context context, final String sql) throws ExitException {
-		final String value = context.get(InputParameter.CONNECTION_STRING);
+		final String value = context.get(INSTANCE);
 		final String connectionString = "jdbc:postgresql://" + value;
 		Connection conn;
 		Statement stmt;
@@ -187,7 +191,7 @@ public enum DbConnection implements CompileParameter {
 	}
 
 	private static boolean testConnection(final Context context) throws ExitException {
-		final String connectionString = context.get(InputParameter.CONNECTION_STRING);
+		final String connectionString = context.get(INSTANCE);
 		try {
 			final Connection conn = DriverManager.getConnection("jdbc:postgresql://" + connectionString);
 			final Statement stmt = conn.createStatement();
@@ -207,7 +211,7 @@ public enum DbConnection implements CompileParameter {
 				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
-			if (dbDoesntExists && context.contains(InputParameter.FORCE_MIGRATION) && context.contains(InputParameter.APPLY_MIGRATION)
+			if (dbDoesntExists && context.contains(ForceMigration.INSTANCE) && context.contains(ApplyMigration.INSTANCE)
 					&& args.containsKey("user") && args.containsKey("password")) {
 				final int sl = connectionString.indexOf("/");
 				final String dbName = connectionString.substring(sl + 1, connectionString.indexOf("?"));
@@ -283,7 +287,7 @@ public enum DbConnection implements CompileParameter {
 				newCs.append(kv.getKey()).append("=").append(kv.getValue());
 				newCs.append("&");
 			}
-			context.put(InputParameter.CONNECTION_STRING, newCs.toString());
+			context.put(INSTANCE, newCs.toString());
 			return testConnection(context);
 		}
 		return true;
@@ -291,10 +295,10 @@ public enum DbConnection implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (!context.contains(InputParameter.CONNECTION_STRING)) {
+		if (!context.contains(INSTANCE)) {
 			return true;
 		}
-		final String value = context.get(InputParameter.CONNECTION_STRING);
+		final String value = context.get(INSTANCE);
 		if (value == null || !value.contains("/") || !value.contains("?")) {
 			context.error("Invalid connection string defined. An example: localhost:5433/DbRevenj?user=postgres&password=password");
 			throw new ExitException();

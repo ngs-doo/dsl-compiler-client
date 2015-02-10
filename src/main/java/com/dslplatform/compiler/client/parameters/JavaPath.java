@@ -11,9 +11,14 @@ import java.util.List;
 public enum JavaPath implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "java"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	public static Either<String> findCompiler(final Context context) {
-		if (context.contains(InputParameter.JAVA)) {
-			final File javac = new File(context.get(InputParameter.JAVA), "javac");
+		if (context.contains(INSTANCE)) {
+			final File javac = new File(context.get(INSTANCE), "javac");
 			return Either.success(javac.getAbsolutePath());
 		} else {
 			final String envJH = System.getenv("JAVA_HOME");
@@ -51,7 +56,7 @@ public enum JavaPath implements CompileParameter {
 			return Either.fail(archiving.error);
 		}
 
-		if (context.contains(InputParameter.INCLUDE_SOURCES)) {
+		if (context.contains(IncludeSources.INSTANCE)) {
 			final String outputSourcePath = output.getAbsolutePath();
 			final int outputSourceNameLen = output.getAbsolutePath().lastIndexOf(".");
 			final File outputSourcesJar = new File(outputSourcePath.substring(0, outputSourceNameLen) + "-sources.jar");
@@ -95,8 +100,8 @@ public enum JavaPath implements CompileParameter {
 	}
 
 	private static Either<String> getJarCommand(final Context context) {
-		if (context.contains(InputParameter.JAVA)) {
-			final File jarFile = new File(context.get(InputParameter.JAVA), "jar");
+		if (context.contains(INSTANCE)) {
+			final File jarFile = new File(context.get(INSTANCE), "jar");
 			return Either.success(jarFile.getAbsolutePath());
 		} else {
 			final String envJH = System.getenv("JAVA_HOME");
@@ -137,8 +142,8 @@ public enum JavaPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.JAVA)) {
-			final String path = context.get(InputParameter.JAVA);
+		if (context.contains(INSTANCE)) {
+			final String path = context.get(INSTANCE);
 			final File javac = new File(path, "javac");
 			if (!Utils.testCommand(context, javac.getAbsolutePath(), "Usage: javac")) {
 				context.error("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");

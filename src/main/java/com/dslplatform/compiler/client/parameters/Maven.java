@@ -7,9 +7,14 @@ import java.util.Arrays;
 public enum Maven implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "maven"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	public static Either<String> findMaven(final Context context) {
-		if (context.contains(InputParameter.MAVEN)) {
-			return Either.success(context.get(InputParameter.MAVEN));
+		if (context.contains(INSTANCE)) {
+			return Either.success(context.get(INSTANCE));
 		}
 		final String env = System.getenv("M2");
 		if (env != null && Utils.testCommand(context, env, "Apache Maven", Arrays.asList("--version"))) {
@@ -30,8 +35,8 @@ public enum Maven implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.MAVEN)) {
-			final String mvn = context.get(InputParameter.MAVEN);
+		if (context.contains(INSTANCE)) {
+			final String mvn = context.get(INSTANCE);
 			if (!Utils.testCommand(context, mvn, "Apache Maven", Arrays.asList("--version"))) {
 				context.error("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
 				return false;

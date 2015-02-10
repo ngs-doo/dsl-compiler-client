@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.InputParameter;
 import com.dslplatform.compiler.client.diff.diff_match_patch;
 import org.fusesource.jansi.Ansi;
 
@@ -11,6 +10,11 @@ import java.util.*;
 
 public enum Diff implements CompileParameter {
 	INSTANCE;
+
+	@Override
+	public String getAlias() { return "diff"; }
+	@Override
+	public String getUsage() { return null; }
 
 	private static void compareDsls(final Context context) throws ExitException {
 		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
@@ -47,7 +51,7 @@ public enum Diff implements CompileParameter {
 			int cur = 0;
 			hasChanges = hasChanges || totalDiffs > 0;
 			final StringBuilder sb = new StringBuilder();
-			final boolean inColor = !context.contains(InputParameter.NO_COLORS);
+			final boolean inColor = !context.contains(DisableColors.INSTANCE);
 			for (final diff_match_patch.Diff aDiff : changes) {
 				cur++;
 				final String text = aDiff.text;
@@ -109,8 +113,8 @@ public enum Diff implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (context.contains(InputParameter.DIFF)) {
-			if (!context.contains(InputParameter.CONNECTION_STRING)) {
+		if (context.contains(INSTANCE)) {
+			if (!context.contains(DbConnection.INSTANCE)) {
 				context.error("Connection string is required to perform a diff operation");
 				throw new ExitException();
 			}
@@ -120,7 +124,7 @@ public enum Diff implements CompileParameter {
 
 	@Override
 	public void run(final Context context) throws ExitException {
-		if (context.contains(InputParameter.DIFF)) {
+		if (context.contains(INSTANCE)) {
 			compareDsls(context);
 		}
 	}

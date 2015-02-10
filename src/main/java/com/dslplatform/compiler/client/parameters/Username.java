@@ -5,8 +5,13 @@ import com.dslplatform.compiler.client.*;
 public enum Username implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "u"; }
+	@Override
+	public String getUsage() { return "username"; }
+
 	public static void retryInput(final Context context) throws ExitException {
-		String value = context.get(InputParameter.USERNAME);
+		String value = context.get(INSTANCE);
 		final String question;
 		if (value != null && value.length() > 0) {
 			question = "DSL Platform username (" + value + "):";
@@ -15,7 +20,7 @@ public enum Username implements CompileParameter {
 		}
 		value = context.ask(question);
 		if (value.length() == 0) {
-			if (context.get(InputParameter.USERNAME) == null) {
+			if (context.get(INSTANCE) == null) {
 				context.error("Username not provided");
 				throw new ExitException();
 			}
@@ -25,17 +30,17 @@ public enum Username implements CompileParameter {
 			context.error("Invalid char (:) found in username");
 			throw new ExitException();
 		}
-		context.put(InputParameter.USERNAME, value);
+		context.put(INSTANCE, value);
 	}
 
 	public static Either<String> getOrLoad(final Context context) {
-		String value = context.get(InputParameter.USERNAME);
+		String value = context.get(INSTANCE);
 		if (value == null || value.length() == 0) {
 			if (!context.canInteract()) {
 				return Either.fail("DSL Platform username missing. Specify username as argument.");
 			}
 			value = context.ask("DSL Platform username:");
-			context.put(InputParameter.USERNAME, value);
+			context.put(INSTANCE, value);
 		}
 		if (value.length() == 0) {
 			return Either.fail("Username not provided");
@@ -48,7 +53,7 @@ public enum Username implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (!context.contains(InputParameter.USERNAME)) {
+		if (!context.contains(INSTANCE)) {
 			return true;
 		}
 		final Either<String> value = getOrLoad(context);

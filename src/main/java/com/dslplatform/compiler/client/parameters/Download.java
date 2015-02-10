@@ -13,6 +13,11 @@ import java.util.Arrays;
 public enum Download implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "download"; }
+	@Override
+	public String getUsage() { return null; }
+
 	private static boolean downloadZip(
 			final File dependencies,
 			final Context context,
@@ -35,7 +40,7 @@ public enum Download implements CompileParameter {
 			final String name,
 			final String zip) throws ExitException {
 		final String answer;
-		if (!context.contains(InputParameter.DOWNLOAD)) {
+		if (!context.contains(INSTANCE)) {
 			if (!context.canInteract()) {
 				throw new ExitException();
 			}
@@ -64,7 +69,7 @@ public enum Download implements CompileParameter {
 		});
 		if (found.length == 0) {
 			context.error(name + " not found in: " + dependencies.getAbsolutePath());
-			if (!context.contains(InputParameter.DOWNLOAD)) {
+			if (!context.contains(INSTANCE)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place " + name + " files in specified folder.");
 					throw new ExitException();

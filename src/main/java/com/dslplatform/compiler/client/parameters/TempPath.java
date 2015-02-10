@@ -9,6 +9,11 @@ import java.util.*;
 public enum TempPath implements CompileParameter {
 	INSTANCE;
 
+	@Override
+	public String getAlias() { return "temp"; }
+	@Override
+	public String getUsage() { return "path"; }
+
 	private static final String CACHE_NAME = "temp_path_cache";
 
 	public static File getTempProjectPath(final Context context) {
@@ -17,7 +22,7 @@ public enum TempPath implements CompileParameter {
 
 	public static File getTempRootPath(final Context context) {
 		final File temp = context.load(CACHE_NAME);
-		return context.contains(InputParameter.TEMP) ? temp : temp.getParentFile();
+		return context.contains(INSTANCE) ? temp : temp.getParentFile();
 	}
 
 	private static boolean prepareSystemTempPath(final Context context) {
@@ -64,8 +69,8 @@ public enum TempPath implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(InputParameter.TEMP)) {
-			final String value = context.get(InputParameter.TEMP);
+		if (context.contains(INSTANCE)) {
+			final String value = context.get(INSTANCE);
 			if (value != null && value.length() > 0) {
 				final File path = new File(value);
 				if (!path.exists()) {

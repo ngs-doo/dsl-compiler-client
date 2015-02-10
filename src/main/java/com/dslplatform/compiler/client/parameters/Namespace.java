@@ -7,6 +7,11 @@ public enum Namespace implements CompileParameter {
 	INSTANCE;
 
 	@Override
+	public String getAlias() { return "namespace"; }
+	@Override
+	public String getUsage() { return "value"; }
+
+	@Override
 	public boolean check(final Context context) {
 		return true;
 	}
