@@ -6,8 +6,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum PropertiesFile implements CompileParameter {
-	INSTANCE;
+public class PropertiesFile implements CompileParameter {
+
+	private final List<CompileParameter> parameters;
+
+	public PropertiesFile(List<CompileParameter> parameters) {
+		this.parameters = parameters;
+	}
 
 	@Override
 	public String getAlias() { return "properties"; }
@@ -16,8 +21,8 @@ public enum PropertiesFile implements CompileParameter {
 
 	@Override
 	public boolean check(final Context context) {
-		if (context.contains(INSTANCE)) {
-			final String properties = context.get(INSTANCE);
+		if (context.contains(this)) {
+			final String properties = context.get(this);
 			if (properties == null || properties.length() == 0) {
 				context.error("Incorrectly defined .properties file");
 				return false;
@@ -33,7 +38,7 @@ public enum PropertiesFile implements CompileParameter {
 				return false;
 			}
 			final List<ParameterParser> customParsers = new ArrayList<ParameterParser>();
-			for (final CompileParameter cp : InputParameter.getPlugins()) {
+			for (final CompileParameter cp : parameters) {
 				if (cp instanceof ParameterParser) {
 					customParsers.add((ParameterParser) cp);
 				}
@@ -47,7 +52,7 @@ public enum PropertiesFile implements CompileParameter {
 				final int eq = line.indexOf('=');
 				final String name = line.substring(0, eq != -1 ? eq : line.length());
 				final String value = eq == -1 ? null : line.substring(eq + 1);
-				final CompileParameter cp = InputParameter.from(name);
+				final CompileParameter cp = from(name);
 				if (cp == null) {
 					boolean matched = false;
 					for (final ParameterParser parser : customParsers) {
@@ -90,6 +95,15 @@ public enum PropertiesFile implements CompileParameter {
 			}
 		}
 		return true;
+	}
+
+	private CompileParameter from(final String value) {
+		for (final CompileParameter cp : parameters) {
+			if (cp.getAlias().equalsIgnoreCase(value)) {
+				return cp;
+			}
+		}
+		return null;
 	}
 
 	@Override
