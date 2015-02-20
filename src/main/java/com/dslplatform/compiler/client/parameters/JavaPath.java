@@ -60,21 +60,39 @@ public enum JavaPath implements CompileParameter {
 			final String outputSourcePath = output.getAbsolutePath();
 			final int outputSourceNameLen = output.getAbsolutePath().lastIndexOf(".");
 			final File outputSourcesJar = new File(outputSourcePath.substring(0, outputSourceNameLen) + "-sources.jar");
-
-			final List<String> jarSourceArguments = makeJarArguments(source, "java", outputSourcesJar);
-
-			context.show("Running jar for sources " + outputSourcesJar.getName() + "...");
-			final Either<Utils.CommandResult> execSourceArchive = Utils.runCommand(context, jar, source, jarSourceArguments);
-			if (!execSourceArchive.isSuccess()) {
-				return Either.fail(execSourceArchive.whyNot());
-			}
-			final Utils.CommandResult archivingSource = execSourceArchive.get();
-			if (archivingSource.error.length() > 0) {
-				return Either.fail(archivingSource.error);
-			}
+			makeSourcesArchive(context, jar, source, outputSourcesJar);
 		}
 
 		return Either.success(execArchive.get());
+	}
+
+	public static Either<Utils.CommandResult> makeSourcesArchive(
+			final Context context,
+			final File source,
+			final File output) {
+		final Either<String> tryJar = getJarCommand(context);
+		if (!tryJar.isSuccess())
+			return Either.fail(tryJar.whyNot());
+		final String jar = tryJar.get();
+		return makeSourcesArchive(context, jar, source, output);
+	}
+
+	private static Either<Utils.CommandResult> makeSourcesArchive(
+			final Context context,
+			final String jar,
+			final File source,
+			final File output) {
+		final List<String> jarSourceArguments = makeJarArguments(source, "java", output);
+		context.show("Running jar for sources " + output.getName() + "...");
+		final Either<Utils.CommandResult> execSourceArchive = Utils.runCommand(context, jar, source, jarSourceArguments);
+		if (!execSourceArchive.isSuccess()) {
+			return Either.fail(execSourceArchive.whyNot());
+		}
+		final Utils.CommandResult archivingSource = execSourceArchive.get();
+		if (archivingSource.error.length() > 0) {
+			return Either.fail(archivingSource.error);
+		}
+		return Either.success(execSourceArchive.get());
 	}
 
 	public static Either<Utils.CommandResult> makeEmptyArchive(Context context, final File classOut, File output) {
