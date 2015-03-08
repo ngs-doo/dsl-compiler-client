@@ -228,8 +228,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 			final Context context,
 			final String temp,
 			final boolean escapeName,
-			final String name,
+			final String fileName,
 			final String content) throws ExitException, IOException {
+		final String name = fileName.replace(':', '_');
 		final String nameOnly = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
 		final File file = escapeName
 				? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
