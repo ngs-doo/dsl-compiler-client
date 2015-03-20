@@ -50,6 +50,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
 		REVENJ("revenj", "Revenj .NET server", "CSharpServer", ".cs", new CompileRevenj(), false),
+		DOTNET_COMMON("dotnet_common", ".NET common", "CSharp", ".cs", new CompileCsClient(".NET common", null, "dotnet_common", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
 		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
@@ -228,13 +229,13 @@ public enum Targets implements CompileParameter, ParameterParser {
 			final Context context,
 			final String temp,
 			final boolean escapeName,
-			final String fileName,
+			final String name,
 			final String content) throws ExitException, IOException {
-		final String name = fileName.replace(':', '_');
-		final String nameOnly = name.contains(".") ? name.substring(0, name.lastIndexOf('.')) : name;
+		final String cleanName = name.replace(':', '_');
+		final String nameOnly = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
 		final File file = escapeName
-				? new File(temp, nameOnly.replace(".", "/") + name.substring(nameOnly.length()))
-				: new File(temp, name);
+				? new File(temp, nameOnly.replace(".", "/") + cleanName.substring(nameOnly.length()))
+				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
 		if (!parentPath.exists()) {
 			if (!parentPath.mkdirs()) {
