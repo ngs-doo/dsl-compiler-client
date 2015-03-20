@@ -59,11 +59,11 @@ public enum Targets implements CompileParameter, ParameterParser {
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient(), false),
 		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
-		private final String value;
+		public final String value;
 		private final String description;
 		private final String platformName;
 		private final String extension;
-		private final BuildAction action;
+		private BuildAction action;
 		private final boolean convertToPath;
 
 		Option(
@@ -81,7 +81,15 @@ public enum Targets implements CompileParameter, ParameterParser {
 			this.convertToPath = convertToPath;
 		}
 
-		private static Option from(final String value) {
+		public BuildAction getAction() {
+			return action;
+		}
+
+		public void setAction(BuildAction action) {
+			this.action = action;
+		}
+
+		public static Option from(final String value) {
 			for (final Option o : Option.values()) {
 				if (o.value.equalsIgnoreCase(value)) {
 					return o;
@@ -100,7 +108,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		context.show("	-java_client -revenj=./model/SeverModel.dll");
 	}
 
-	private static final String CACHE_NAME = "target_option_cache";
+	public static final String CACHE_NAME = "target_option_cache";
 
 	@Override
 	public Either<Boolean> tryParse(final String name, final String value, final Context context) {
@@ -188,6 +196,10 @@ public enum Targets implements CompileParameter, ParameterParser {
 		if (targets == null) {
 			return;
 		}
+		compile(context, targets);
+	}
+
+	public void compile(Context context, List<Option> targets) throws ExitException {
 		if (context.contains(DslCompiler.INSTANCE)) {
 			compileOffline(context, targets);
 		} else {
