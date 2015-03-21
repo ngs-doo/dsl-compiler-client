@@ -36,7 +36,6 @@ public enum JavaPath implements CompileParameter {
 
 	public static Either<Utils.CommandResult> makeArchive(
 			final Context context,
-			final File source,
 			final File classOut,
 			final File output) {
 		final Either<String> tryJar = getJarCommand(context);
@@ -54,24 +53,6 @@ public enum JavaPath implements CompileParameter {
 		final Utils.CommandResult archiving = execArchive.get();
 		if (archiving.error.length() > 0) {
 			return Either.fail(archiving.error);
-		}
-
-		if (context.contains(IncludeSources.INSTANCE)) {
-			final String outputSourcePath = output.getAbsolutePath();
-			final int outputSourceNameLen = output.getAbsolutePath().lastIndexOf(".");
-			final File outputSourcesJar = new File(outputSourcePath.substring(0, outputSourceNameLen) + "-sources.jar");
-
-			final List<String> jarSourceArguments = makeJarArguments(source, "java", outputSourcesJar);
-
-			context.show("Running jar for sources " + outputSourcesJar.getName() + "...");
-			final Either<Utils.CommandResult> execSourceArchive = Utils.runCommand(context, jar, source, jarSourceArguments);
-			if (!execSourceArchive.isSuccess()) {
-				return Either.fail(execSourceArchive.whyNot());
-			}
-			final Utils.CommandResult archivingSource = execSourceArchive.get();
-			if (archivingSource.error.length() > 0) {
-				return Either.fail(archivingSource.error);
-			}
 		}
 
 		return Either.success(execArchive.get());

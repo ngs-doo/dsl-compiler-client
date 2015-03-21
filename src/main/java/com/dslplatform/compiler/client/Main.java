@@ -52,7 +52,6 @@ public class Main {
 			DslPath.INSTANCE,
 			SqlPath.INSTANCE,
 			Download.INSTANCE,
-			IncludeSources.INSTANCE,
 			Dependencies.INSTANCE,
 			DotNet.INSTANCE,
 			Mono.INSTANCE,

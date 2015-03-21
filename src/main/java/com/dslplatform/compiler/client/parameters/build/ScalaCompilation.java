@@ -98,7 +98,7 @@ class ScalaCompilation {
 				return Either.fail(compilation.output);
 			}
 			compilationOutput = compilation.output;
-			final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, source, classOut, output);
+			final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, classOut, output);
 			if (!tryArchive.isSuccess()) {
 				return Either.fail(tryArchive.whyNot());
 			}
