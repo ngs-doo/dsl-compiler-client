@@ -16,6 +16,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 
 	public static enum Option {
 		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "active-record"),
+		UTC("utc", "Timestamp should use UTC by default", "utc"),
 		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),
 		JAVA_BEANS("java-beans", "Add Java Beans support", "java-beans"),
 		MANUAL_JSON("manual-json", "JSON without external library", "manual-json"),
