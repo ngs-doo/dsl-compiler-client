@@ -3,7 +3,7 @@
 DSL Platform is a compiler from Domain Specification Language to various target languages, such as Java, C#, Scala, PHP.
 It also supports automated database migrations for Postgres and Oracle.
 
-It's premise is to use Invasive software composition to write better software. 
+It's premise is to use Invasive software composition to write better software.
 By focusing on rich modeling supported on top of Object-relational databases development can be improved by automating creation and maintenance of various boilerplate found in today software development.
 
 ###How DSL works
@@ -21,7 +21,7 @@ Domain is described using various modeling building blocks, for example:
       value Page {
         date? frozen;
         Category category;
-		string[] sentences;
+        string[] sentences;
         decimal(1) rating;
         Queue<string> notes;
       }
@@ -36,14 +36,14 @@ Domain is described using various modeling building blocks, for example:
         order by createdOn desc;
       }
     }
-	
-Which gives you a DTO/POCO/POJO/POPO/POSO... across different languages, 
-tables, types, views, functions specialized for supported ORDBMS, 
+
+Which gives you a DTO/POCO/POJO/POPO/POSO... across different languages,
+tables, types, views, functions specialized for supported ORDBMS,
 repositories, converters, serialization and various other boilerplate required by the supported frameworks.
 There are also a lot more modeling concepts which go beyond basic persistence features and cover reporting/customization/high performance aspects of the application.
 
-The biggest benefit shows when you start changing your model and DSL compiler gives you not only the new dll/jar, 
-but also a SQL migration file which tries to preserve data if possible. 
+The biggest benefit shows when you start changing your model and DSL compiler gives you not only the new dll/jar,
+but also a SQL migration file which tries to preserve data if possible.
 SQL migration is created by the compiler analysing differences between models, so you don't need to write manual migration scripts.
 
 DSL compiler acts as a developer in your team which does all the boring work you would need to do, while providing high quality and high performance parts of the system.
@@ -54,10 +54,10 @@ Browse [dsl-platform](https://dsl-platform.com/) to get a feeling of supported D
 
 Think about your domain - DSL is designed to get out of the way while modeling. Write some DSL which captures everything you need from it.
 
-Choose a language and a compatible open source library to write Android/.NET/PHP/Java applications on top of your model. 
+Choose a language and a compatible open source library to write Android/.NET/PHP/Java applications on top of your model.
 
 ###Supported libraries
- 
+
  * [Revenj.NET](https://github.com/ngs-doo/revenj)
  * [DSL Java/Android client](https://github.com/ngs-doo/dsl-client-java)
  * [DSL PHP client](https://github.com/ngs-doo/dsl-client-php)
@@ -73,7 +73,7 @@ This will display all available options of the tool and examples on how to use i
 
 ###Compiled libraries
 
-This tool is used to produce a compiled library which you can use to implement custom behavior and business logic. 
+This tool is used to produce a compiled library which you can use to implement custom behavior and business logic.
 While you can use generated code instead of compiled library, this behavior is highly discouraged since it leads to broken development once you start modifying generated code.
 
 ###Usage examples
@@ -123,5 +123,3 @@ Checking if current DSL is a valid one
 Saving SQL migration to specific folder with a specific compiler version
 
     java -jar dsl-clc.jar migration sql=sql-upgrade-scripts db=localhost/Project?user=postgres compiler=/usr/dsl-compiler-v1.0/dsl-compiler.exe
-
- 

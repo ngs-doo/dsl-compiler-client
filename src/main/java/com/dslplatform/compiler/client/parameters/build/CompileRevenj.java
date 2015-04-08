@@ -34,14 +34,14 @@ public class CompileRevenj implements BuildAction {
 				}
 			}
 			try {
-				context.show("Downloading Revenj from Github...");
+				context.show("Downloading Revenj from GitHub...");
 				final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
 				final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
 				conn.setInstanceFollowRedirects(false);
 				conn.setUseCaches(false);
 				conn.connect();
 				if (conn.getResponseCode() != 302) {
-					context.error("Error downloading Revenj from Github. Expecting redirect. Got: " + conn.getResponseCode());
+					context.error("Error downloading Revenj from GitHub. Expecting redirect. Got: " + conn.getResponseCode());
 					return false;
 				}
 				final String redirect = conn.getHeaderField("Location");
@@ -49,7 +49,7 @@ public class CompileRevenj implements BuildAction {
 				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
 				Utils.unpackZip(context, revenjDeps, httpServer);
 			} catch (IOException ex) {
-				context.error("Unable to download Revenj from Github.");
+				context.error("Unable to download Revenj from GitHub.");
 				context.error(ex);
 				final String answer;
 				if (!context.contains(Download.INSTANCE)) {
