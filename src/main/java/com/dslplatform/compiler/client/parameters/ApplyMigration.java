@@ -29,8 +29,8 @@ public enum ApplyMigration implements CompileParameter {
 				context.error("Connection string is required to apply migration script");
 				throw new ExitException();
 			}
-			if (!context.contains(INSTANCE)) {
-				context.put(INSTANCE, null);
+			if (!context.contains(Migration.INSTANCE)) {
+				context.put(Migration.INSTANCE, null);
 			}
 		}
 		return true;
