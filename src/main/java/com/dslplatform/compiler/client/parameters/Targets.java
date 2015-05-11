@@ -234,7 +234,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final String cleanName = name.replace(':', '_');
 		final String nameOnly = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
 		final File file = escapeName
-				? new File(temp, nameOnly.replace(".", "/") + cleanName.substring(nameOnly.length()))
+				? new File(temp, nameOnly.replace(".", "/").replace("\\", "/") + cleanName.substring(nameOnly.length()))
 				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
 		if (!parentPath.exists()) {
