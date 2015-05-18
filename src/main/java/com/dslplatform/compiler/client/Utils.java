@@ -38,7 +38,7 @@ public class Utils {
 	}
 
 	public static void saveFile(final File file, final String content) throws IOException {
-		FileOutputStream fos = new FileOutputStream(file);
+		final FileOutputStream fos = new FileOutputStream(file);
 		final Writer writer = new OutputStreamWriter(fos, "UTF-8");
 		writer.write(content);
 		writer.close();
@@ -86,7 +86,7 @@ public class Utils {
 			final ArrayList<File> unpackedFiles,
 			final int retry) throws IOException {
 		try {
-			InputStream response = remoteUrl.openConnection().getInputStream();
+			final InputStream response = remoteUrl.openConnection().getInputStream();
 			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));
 			ZipEntry entry;
 			final byte[] buffer = new byte[8192];

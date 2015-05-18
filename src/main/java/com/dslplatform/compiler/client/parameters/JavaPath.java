@@ -36,15 +36,16 @@ public enum JavaPath implements CompileParameter {
 		}
 	}
 
-	private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
+	private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
 
 	public static Either<Utils.CommandResult> makeArchive(
 			final Context context,
 			final File classOut,
 			final File output) {
 		final Either<String> tryJar = getJarCommand(context);
-		if (!tryJar.isSuccess())
+		if (!tryJar.isSuccess()) {
 			return Either.fail(tryJar.whyNot());
+		}
 		final String jar = tryJar.get();
 
 		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
@@ -56,7 +57,8 @@ public enum JavaPath implements CompileParameter {
 					: DATE_FORMAT.format(new Date());
 			Utils.saveFile(manifest, "Implementation-Version: " + version + "\n");
 		} catch (IOException e) {
-			context.error("Can't create MANIFEST.TXT.");
+			context.error("Can't create MANIFEST.MF.");
+			return Either.fail(e);
 		}
 
 		context.show("Running jar for " + output.getName() + "...");

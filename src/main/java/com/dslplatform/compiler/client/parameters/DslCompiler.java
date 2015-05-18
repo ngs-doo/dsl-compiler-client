@@ -23,11 +23,16 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "compiler"; }
-	@Override
-	public String getUsage() { return "path"; }
+	public String getAlias() {
+		return "compiler";
+	}
 
-	private static Charset utf8 = Charset.forName("UTF-8");
+	@Override
+	public String getUsage() {
+		return "path";
+	}
+
+	private final static Charset utf8 = Charset.forName("UTF-8");
 
 	public static Map<String, String> compile(
 			final Context context,
@@ -68,7 +73,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				throw new ExitException();
 			}
 		}
-		if(!result.isSuccess()) {
+		if (!result.isSuccess()) {
 			context.error(result.explainError());
 			throw new ExitException();
 		}
@@ -100,11 +105,26 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public static Either<String> migration(
 			final Context context,
 			final String version,
-			final List<File> dsls) throws ExitException {
+			final Map<String, String> previousDsls,
+			final List<File> currentDsls) throws ExitException {
 		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=postgres" + version);
-		for (final File f : dsls) {
+		if (previousDsls != null) {
+			final StringBuilder oldDsl = new StringBuilder();
+			for (final String v : previousDsls.values()) {
+				oldDsl.append(v);
+			}
+			final File previousDsl = new File(TempPath.getTempProjectPath(context), "old.dsl");
+			try {
+				Utils.saveFile(previousDsl, oldDsl.toString());
+			} catch (IOException ex) {
+				context.error("Unable to save old DSL version for comparison.");
+				return Either.fail(ex);
+			}
+			arguments.add("previous-dsl=" + previousDsl.getAbsolutePath());
+		}
+		for (final File f : currentDsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
 		context.log("Creating SQL migration...");
@@ -121,7 +141,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				throw new ExitException();
 			}
 		}
-		if(!result.isSuccess()) {
+		if (!result.isSuccess()) {
 			return Either.fail(result.whyNot());
 		}
 		if (result.get().exitCode != 0) {
@@ -150,7 +170,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				throw new ExitException();
 			}
 		}
-		if(!result.isSuccess()) {
+		if (!result.isSuccess()) {
 			return Either.fail(result.whyNot());
 		}
 		if (result.get().exitCode != 0) {
@@ -195,7 +215,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				if (context.canInteract()) {
 					final String answer =
 							context.ask("Compiler found in default location: "
-								+ compiler.getAbsolutePath()  + ". Do you wish to use it? (y/N)");
+									+ compiler.getAbsolutePath() + ". Do you wish to use it? (y/N)");
 					if (answer.toLowerCase().equals("y")) {
 						context.put(INSTANCE, compiler.getAbsolutePath());
 						return true;

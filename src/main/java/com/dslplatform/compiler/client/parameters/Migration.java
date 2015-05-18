@@ -122,7 +122,7 @@ public enum Migration implements CompileParameter {
 	private String offlineMigration(final Context context, final DbConnection.DatabaseInfo dbInfo) throws ExitException {
 		final List<File> currentDsl = DslPath.getDslPaths(context);
 		context.show("Creating SQL migration...");
-		final Either<String> migration = DslCompiler.migration(context, dbInfo.postgresVersion, currentDsl);
+		final Either<String> migration = DslCompiler.migration(context, dbInfo.postgresVersion, dbInfo.dsl, currentDsl);
 		if (!migration.isSuccess()) {
 			context.error("Error creating local SQL migration:");
 			context.error(migration.whyNot());

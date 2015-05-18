@@ -178,7 +178,11 @@ public enum DbConnection implements CompileParameter {
 	}
 
 	private static Map<String, String> parse(final String connectionString) {
-		final String[] args = connectionString.substring(connectionString.indexOf("?") + 1).split("&");
+		final int questionIndex = connectionString.indexOf('?');
+		if (questionIndex == -1) {
+			return new HashMap<String, String>(0);
+		}
+		final String[] args = connectionString.substring(questionIndex + 1).split("&");
 		final Map<String, String> map = new LinkedHashMap<String, String>();
 		for (final String a : args) {
 			final String[] vals = a.split("=");
@@ -282,12 +286,16 @@ public enum DbConnection implements CompileParameter {
 			}
 			final char[] pass = context.askSecret("Database password: ");
 			args.put("password", new String(pass));
-			final StringBuilder newCs = new StringBuilder(connectionString.substring(0, connectionString.indexOf("?") + 1));
+			final int questionIndex = connectionString.indexOf('?');
+			final String newCs = questionIndex == -1
+					? connectionString + "?"
+					: connectionString.substring(0, questionIndex + 1);
+			final StringBuilder csBuilder = new StringBuilder(newCs);
 			for (final Map.Entry<String, String> kv : args.entrySet()) {
-				newCs.append(kv.getKey()).append("=").append(kv.getValue());
-				newCs.append("&");
+				csBuilder.append(kv.getKey()).append("=").append(kv.getValue());
+				csBuilder.append("&");
 			}
-			context.put(INSTANCE, newCs.toString());
+			context.put(INSTANCE, csBuilder.toString());
 			return testConnection(context);
 		}
 		return true;
@@ -299,7 +307,7 @@ public enum DbConnection implements CompileParameter {
 			return true;
 		}
 		final String value = context.get(INSTANCE);
-		if (value == null || !value.contains("/") || !value.contains("?")) {
+		if (value == null || !value.contains("/")) {
 			context.error("Invalid connection string defined. An example: localhost:5433/DbRevenj?user=postgres&password=password");
 			throw new ExitException();
 		}
