@@ -43,6 +43,7 @@ public class Main {
 		for (final CompileParameter cp : plugins) {
 			parameters.add(cp);
 		}
+		//TODO: serice loader close not avialable in Java6. can't delete jar files on Windows
 		return parameters;
 	}
 
