@@ -2,7 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 public enum DotNet implements CompileParameter {
 	INSTANCE;
@@ -33,7 +33,7 @@ public enum DotNet implements CompileParameter {
 				}
 				return Either.fail("Unable to find csc.exe (.NET C# compiler). Add it to path or specify dotnet compile option.");
 			}
-			if (Utils.testCommand(context, "dmcs", "Mono", Arrays.asList("--version"))) {
+			if (Utils.testCommand(context, "dmcs", "Mono", Collections.singletonList("--version"))) {
 				return Either.success("dmcs");
 			}
 			return Either.fail("Unable to find dmcs (Mono C# compiler). Add it to path or specify dotnet compile option.");

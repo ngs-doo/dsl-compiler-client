@@ -89,11 +89,10 @@ public enum TempPath implements CompileParameter {
 						return false;
 					}
 					final String delete = context.ask("Delete files in temporary path? (y/N):");
-					if (!"y".equalsIgnoreCase(delete)) {
-						return false;
-					} else {
+					if ("y".equalsIgnoreCase(delete)) {
 						return prepareCustomPath(context, path);
 					}
+					return false;
 				}
 				context.cache(CACHE_NAME, path);
 				return true;

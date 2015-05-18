@@ -8,7 +8,7 @@ import com.dslplatform.compiler.client.parameters.JavaPath;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 class JavaCompilation {
@@ -69,7 +69,7 @@ class JavaCompilation {
 				javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
 			}
 		} else {
-			final List<File> javaFiles = Utils.findFiles(source, Arrays.asList(".java"));
+			final List<File> javaFiles = Utils.findFiles(source, Collections.singletonList(".java"));
 			for (final File f : javaFiles) {
 				javacArguments.add(f.getAbsolutePath().substring(len));
 			}

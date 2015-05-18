@@ -4,11 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,12 +35,16 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final String target,
 			final List<Settings.Option> settings,
 			final String namespace,
+			final String version,
 			final List<File> dsls) throws ExitException {
 		final Map<String, String> files = new HashMap<String, String>();
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=" + target);
 		if (namespace != null && namespace.length() > 0) {
 			arguments.add("namespace=" + namespace);
+		}
+		if (version != null && version.length() > 0) {
+			arguments.add("version=" + version);
 		}
 		if (settings != null) {
 			for (final Settings.Option o : settings) {
@@ -235,7 +235,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		} else {
 			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
-				return Utils.testCommand(context, mono.get(), "DSL Platform", Arrays.asList(path.getAbsolutePath()));
+				return Utils.testCommand(context, mono.get(), "DSL Platform", Collections.singletonList(path.getAbsolutePath()));
 			} else {
 				context.error("Mono is required to run DSL compiler. Mono not detected or specified.");
 				throw new ExitException();

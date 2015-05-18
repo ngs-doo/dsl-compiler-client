@@ -2,7 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 public enum Maven implements CompileParameter {
 	INSTANCE;
@@ -17,17 +17,17 @@ public enum Maven implements CompileParameter {
 			return Either.success(context.get(INSTANCE));
 		}
 		final String env = System.getenv("M2");
-		if (env != null && Utils.testCommand(context, env, "Apache Maven", Arrays.asList("--version"))) {
+		if (env != null && Utils.testCommand(context, env, "Apache Maven", Collections.singletonList("--version"))) {
 			return Either.success(env);
 		}
 		if (env != null && Utils.isWindows() && !env.toLowerCase().endsWith(".bat")
-				&& Utils.testCommand(context, env + ".bat", "Apache Maven", Arrays.asList("--version"))) {
+				&& Utils.testCommand(context, env + ".bat", "Apache Maven", Collections.singletonList("--version"))) {
 			return Either.success(env + ".bat");
 		}
-		if (Utils.testCommand(context, "mvn", "Apache Maven", Arrays.asList("--version"))) {
+		if (Utils.testCommand(context, "mvn", "Apache Maven", Collections.singletonList("--version"))) {
 			return Either.success("mvn");
 		}
-		if (Utils.isWindows() && Utils.testCommand(context, "mvn.bat", "Apache Maven", Arrays.asList("--version"))) {
+		if (Utils.isWindows() && Utils.testCommand(context, "mvn.bat", "Apache Maven", Collections.singletonList("--version"))) {
 			return Either.success("mvn.bat");
 		}
 		return Either.fail("Unable to find mvn. Add it to path or specify maven compile option.");
@@ -37,7 +37,7 @@ public enum Maven implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(INSTANCE)) {
 			final String mvn = context.get(INSTANCE);
-			if (!Utils.testCommand(context, mvn, "Apache Maven", Arrays.asList("--version"))) {
+			if (!Utils.testCommand(context, mvn, "Apache Maven", Collections.singletonList("--version"))) {
 				context.error("maven parameter is set, but Apache Maven not found/doesn't work. Please check specified maven parameter.");
 				return false;
 			}

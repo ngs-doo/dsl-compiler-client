@@ -2,7 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 public enum Mono implements CompileParameter {
 	INSTANCE;
@@ -16,7 +16,7 @@ public enum Mono implements CompileParameter {
 		if (context.contains(INSTANCE)) {
 			return Either.success(context.get(INSTANCE));
 		} else {
-			if (Utils.testCommand(context, "mono", "Mono", Arrays.asList("--version"))) {
+			if (Utils.testCommand(context, "mono", "Mono", Collections.singletonList("--version"))) {
 				return Either.success("mono");
 			}
 			return Either.fail("Unable to find Mono. Add it to path or specify mono compile option.");
@@ -27,7 +27,7 @@ public enum Mono implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(INSTANCE)) {
 			final String compiler = context.get(INSTANCE);
-			if (Utils.testCommand(context, compiler, "Mono", Arrays.asList("--version"))) {
+			if (Utils.testCommand(context, compiler, "Mono", Collections.singletonList("--version"))) {
 				context.error("mono parameter is set, but Mono not found/doesn't work. Please check specified mono parameter.");
 				return false;
 			}

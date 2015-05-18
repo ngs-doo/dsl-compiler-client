@@ -61,6 +61,7 @@ public class Main {
 			JavaPath.INSTANCE,
 			ScalaPath.INSTANCE,
 			Namespace.INSTANCE,
+			Version.INSTANCE,
 			Settings.INSTANCE,
 			DbConnection.INSTANCE,
 			Prompt.INSTANCE,

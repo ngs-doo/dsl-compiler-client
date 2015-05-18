@@ -4,8 +4,10 @@ import com.dslplatform.compiler.client.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 public enum JavaPath implements CompileParameter {
@@ -34,6 +36,8 @@ public enum JavaPath implements CompileParameter {
 		}
 	}
 
+	private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
+
 	public static Either<Utils.CommandResult> makeArchive(
 			final Context context,
 			final File classOut,
@@ -44,6 +48,16 @@ public enum JavaPath implements CompileParameter {
 		final String jar = tryJar.get();
 
 		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
+
+		try {
+			final File manifest = new File(classOut, "MANIFEST.MF");
+			final String version = context.contains(Version.INSTANCE)
+					? context.get(Version.INSTANCE)
+					: DATE_FORMAT.format(new Date());
+			Utils.saveFile(manifest, "Implementation-Version: " + version + "\n");
+		} catch (IOException e) {
+			context.error("Can't create MANIFEST.TXT.");
+		}
 
 		context.show("Running jar for " + output.getName() + "...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(context, jar, classOut, jarArguments);
@@ -103,8 +117,9 @@ public enum JavaPath implements CompileParameter {
 			final String type,
 			final File output) {
 		final List<String> jarArguments = new ArrayList<String>();
-		jarArguments.add("cf");
+		jarArguments.add("cfm");
 		jarArguments.add(output.getAbsolutePath());
+		jarArguments.add("MANIFEST.MF");
 
 		final int len = source.getAbsolutePath().length() + 1;
 		if (Utils.isWindows()) {
@@ -113,7 +128,7 @@ public enum JavaPath implements CompileParameter {
 				jarArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*." + type);
 			}
 		} else {
-			final List<File> classFiles = Utils.findFiles(source, Arrays.asList("." + type));
+			final List<File> classFiles = Utils.findFiles(source, Collections.singletonList("." + type));
 			for (final File f : classFiles) {
 				jarArguments.add(f.getAbsolutePath().substring(len));
 			}

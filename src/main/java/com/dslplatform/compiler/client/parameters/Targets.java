@@ -208,6 +208,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 							t.value,
 							settings,
 							context.get(Namespace.INSTANCE),
+							context.get(Version.INSTANCE),
 							dsls);
 			try {
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
@@ -265,6 +266,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 		url.append(sb.substring(0, sb.length() - 1));
 		if (context.contains(Namespace.INSTANCE)) {
 			url.append("&namespace=").append(context.get(Namespace.INSTANCE));
+		}
+		if (context.contains(Version.INSTANCE)) {
+			url.append("&version=").append(context.get(Version.INSTANCE));
 		}
 		final String settings = Settings.parseAndConvert(context);
 		if (settings.length() > 0) {
