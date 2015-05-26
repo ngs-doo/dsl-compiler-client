@@ -110,7 +110,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=postgres" + version);
-		if (previousDsls != null) {
+		if (previousDsls != null && !previousDsls.isEmpty()) {
 			final StringBuilder oldDsl = new StringBuilder();
 			for (final String v : previousDsls.values()) {
 				oldDsl.append(v);
