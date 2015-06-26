@@ -6,10 +6,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public enum DslPath implements CompileParameter {
 	INSTANCE;
@@ -50,7 +47,9 @@ public enum DslPath implements CompileParameter {
 			context.put(INSTANCE, value = "./dsl");
 		}
 		final File dslPath = new File(value).getAbsoluteFile();
-		final List<File> dslFiles = Utils.findFiles(dslPath, Arrays.asList(".dsl", ".ddd"));
+		final List<File> dslFiles = dslPath.isFile()
+				? Collections.singletonList(dslPath)
+				: Utils.findFiles(dslPath, Arrays.asList(".dsl", ".ddd"));
 		final Map<String, String> dslMap = new LinkedHashMap<String, String>();
 		final int pathLen = dslPath.getAbsolutePath().length();
 		for (final File file : dslFiles) {
