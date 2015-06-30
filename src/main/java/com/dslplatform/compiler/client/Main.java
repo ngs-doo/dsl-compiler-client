@@ -208,9 +208,9 @@ public class Main {
 		}
 		context.show();
 		context.show("Example usages:");
-		context.show("\t-target=java_client,revenj -db=localhost/Database?user=postgres");
-		context.show("\t/java_client=model.jar /revenj=Model.dll /db=localhost/Database?user=postgres");
-		context.show("\t/properties=development.props /download");
+		context.show("\t-target=java_client,revenj.java -db=localhost/Database?user=postgres");
+		context.show("\t/java_client=model.jar /revenj.net=Model.dll /db=localhost/Database?user=postgres");
+		context.show("\tproperties=development.props download");
 	}
 
 	private static final Properties versionInfo = new Properties();

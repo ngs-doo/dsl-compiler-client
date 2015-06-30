@@ -46,17 +46,20 @@ public enum Targets implements CompileParameter, ParameterParser {
 			"gac/PresentationCore"
 	};
 
-	public static enum Option {
+	public enum Option {
+		REVENJ_JAVA("revenj.java", "Revenj.Java server", "JavaServer", ".java", new CompileRevenjJava(), true),
 		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
+		JAVA_POJO("java_pojo", "Plain Old Java Object", "Java", ".java", new CompileJavaClient("Java POJO", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
-		REVENJ("revenj", "Revenj .NET server", "CSharpServer", ".cs", new CompileRevenj(), false),
-		DOTNET_COMMON("dotnet_common", ".NET common", "CSharp", ".cs", new CompileCsClient(".NET common", null, "dotnet_common", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
+		REVENJ_NET("revenj.net", "Revenj.NET server", "CSharpServer", ".cs", new CompileRevenjNet(), false),
+		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", "CSharp", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
 		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
 		PHP("php_client", "PHP client", "Php", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
 		PHP_UI("php_ui", "PHP UI client", "PhpUI", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient(), false),
+		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
+		SCALA_POSO("scala_poso", "Plain Old Scala Object", "Scala", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala.jar"), false),
 		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
 		private final String value;
@@ -212,7 +215,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 							dsls);
 			try {
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
-					final String fullName = t.value + "/" + kv.getKey() + t.extension;
+					final String fullName = t.name() + "/" + kv.getKey() + t.extension;
 					saveFile(context, temp, t.convertToPath, fullName, kv.getValue());
 				}
 			} catch (IOException e) {
@@ -221,7 +224,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 				throw new ExitException();
 			}
 			if (t.action != null) {
-				t.action.build(new File(temp, t.value), context);
+				t.action.build(new File(temp, t.name()), context);
 			}
 		}
 	}
