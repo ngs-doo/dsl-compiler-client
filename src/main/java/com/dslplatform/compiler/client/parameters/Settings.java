@@ -23,6 +23,9 @@ public enum Settings implements CompileParameter, ParameterParser {
 		NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
 		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server", "multi-tenancy"),
 		LEGACY("legacy", "Legacy methods", "legacy"),
+		NO_JODA_TIME("no-joda-time", "Don't use Joda Time library (use Java 8 date API instead)", "no-joda-time"),
+		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres", "no-prepare-execute"),
+		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)", "minimal-serialization"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
 
 		private final String value;
@@ -73,8 +76,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 			context.show(o.value + " - " + o.description);
 		}
 		context.show("Example usages:");
-		context.show("		-settings=active-record,no-jackson");
-		context.show("		-active-record -no-jackson -manual-json");
+		context.show("		settings=active-record,no-jackson");
+		context.show("		active-record no-jackson manual-json");
 	}
 
 	@Override
