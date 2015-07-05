@@ -7,9 +7,7 @@ import com.dslplatform.compiler.client.parameters.JavaPath;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 class JavaCompilation {
 
@@ -65,8 +63,17 @@ class JavaCompilation {
 			if (javaDirs.size() == 0) {
 				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
 			}
+			final HashSet<String> processed = new HashSet<String>();
 			for (final File f : javaDirs) {
-				javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
+				if (processed.contains(f.getParent())) {
+					continue;
+				}
+				if (f.getAbsoluteFile().length() > len) {
+					javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
+				} else {
+					javacArguments.add(f.getAbsolutePath() + File.separator + "*.java");
+				}
+				processed.add(f.getParent());
 			}
 		} else {
 			final List<File> javaFiles = Utils.findFiles(source, Collections.singletonList(".java"));
