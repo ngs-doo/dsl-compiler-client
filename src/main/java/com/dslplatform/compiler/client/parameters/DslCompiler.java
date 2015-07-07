@@ -245,6 +245,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
 				throw new ExitException();
 			}
+			context.put(INSTANCE, path.getAbsolutePath());
 		}
 		return true;
 	}
