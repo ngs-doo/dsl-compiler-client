@@ -24,7 +24,7 @@ class JavaCompilation {
 		} else if (output.exists() && output.isDirectory()) {
 			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
 		}
-		if (!output.getParentFile().exists()) {
+		if (output.getParentFile() != null && !output.getParentFile().exists()) {
 			context.show("Output folder not found. Will create one in: " + output.getParent());
 			if (!output.getParentFile().mkdirs()) {
 				return Either.fail("Unable to create output folder for: " + output.getAbsolutePath());
