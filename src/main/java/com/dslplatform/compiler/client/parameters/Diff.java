@@ -12,13 +12,17 @@ public enum Diff implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "diff"; }
-	@Override
-	public String getUsage() { return null; }
+	public String getAlias() {
+		return "diff";
+	}
 
-	private static void compareDsls(final Context context) throws ExitException {
+	@Override
+	public String getUsage() {
+		return null;
+	}
+
+	private static void compareDsls(final Context context, final Map<String, String> previousDsl) throws ExitException {
 		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
-		final Map<String, String> previousDsl = DbConnection.getDatabaseDsl(context);
 
 		final Set<String> currentFiles = new HashSet<String>(currentDsl.keySet());
 		currentFiles.removeAll(previousDsl.keySet());
@@ -114,8 +118,10 @@ public enum Diff implements CompileParameter {
 	@Override
 	public boolean check(final Context context) throws ExitException {
 		if (context.contains(INSTANCE)) {
-			if (!context.contains(DbConnection.INSTANCE)) {
-				context.error("Connection string is required to perform a diff operation");
+			if (!context.contains(PostgresConnection.INSTANCE)
+					&& !context.contains(OracleConnection.INSTANCE)) {
+				context.error("Connection string is required to perform a diff operation.\n" +
+						"Neither Oracle or Postgres connection string detected");
 				throw new ExitException();
 			}
 		}
@@ -125,7 +131,18 @@ public enum Diff implements CompileParameter {
 	@Override
 	public void run(final Context context) throws ExitException {
 		if (context.contains(INSTANCE)) {
-			compareDsls(context);
+			if (context.contains(PostgresConnection.INSTANCE)) {
+				final Map<String, String> previousDsl = PostgresConnection.getDatabaseDsl(context);
+				context.show("Comparing Postgres DSL diff...");
+				context.show();
+				compareDsls(context, previousDsl);
+			}
+			if (context.contains(OracleConnection.INSTANCE)) {
+				final Map<String, String> previousDsl = OracleConnection.getDatabaseDsl(context);
+				context.show("Comparing Oracle DSL diff...");
+				context.show();
+				compareDsls(context, previousDsl);
+			}
 		}
 	}
 
@@ -137,7 +154,7 @@ public enum Diff implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		return "Provide diff on changed DSL files. For fast confirmation of changes done before creating new library models or SQL migrations.\n" +
-				"Diff requires read-only access to -NGS- schema in Postgres database where previously applied DSL is stored.\n" +
+				"Diff requires read-only access to -NGS- schema in Postgres/Oracle database where previously applied DSL is stored.\n" +
 				"To disable diff confirmation, use no prompt parameter.";
 	}
 }

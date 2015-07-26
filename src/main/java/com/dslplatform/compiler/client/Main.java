@@ -4,6 +4,7 @@ import com.dslplatform.compiler.client.parameters.*;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -43,7 +44,17 @@ public class Main {
 		for (final CompileParameter cp : plugins) {
 			parameters.add(cp);
 		}
-		//TODO: serice loader close not avialable in Java6. can't delete jar files on Windows
+		//HACK: serice loader will lock jars on Windows
+		//close is not available in Java6, so use reflection to invoke it
+		if (Utils.isWindows()) {
+			try {
+				final Method close = ucl.getClass().getMethod("close");
+				if (close != null) {
+					close.invoke(ucl);
+				}
+			} catch (Exception ignore) {
+			}
+		}
 		return parameters;
 	}
 
@@ -64,12 +75,13 @@ public class Main {
 			Namespace.INSTANCE,
 			Version.INSTANCE,
 			Settings.INSTANCE,
-			DbConnection.INSTANCE,
+			PostgresConnection.INSTANCE,
+			OracleConnection.INSTANCE,
 			Prompt.INSTANCE,
 			Parse.INSTANCE,
 			Diff.INSTANCE,
 			Targets.INSTANCE,
-			ForceMigration.INSTANCE,
+			Force.INSTANCE,
 			Migration.INSTANCE,
 			ApplyMigration.INSTANCE,
 			DisableColors.INSTANCE,
@@ -208,8 +220,8 @@ public class Main {
 		}
 		context.show();
 		context.show("Example usages:");
-		context.show("\t-target=java_client,revenj.java -db=localhost/Database?user=postgres");
-		context.show("\t/java_client=model.jar /revenj.net=Model.dll /db=localhost/Database?user=postgres");
+		context.show("\ttarget=java_client,revenj.java postgres=localhost/Database?user=postgres");
+		context.show("\tjava_client=model.jar revenj.net=Model.dll postgres=localhost/Database?user=postgres");
 		context.show("\tproperties=development.props download");
 	}
 

@@ -8,41 +8,15 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 
-public enum DbConnection implements CompileParameter {
+public enum PostgresConnection implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "db"; }
+	public String getAlias() { return "postgres"; }
 	@Override
 	public String getUsage() { return "connection_string"; }
 
-	private static String unescape(final String element) {
-		return element.replace("\\\"", "\"").replace("\\\\", "\\");
-	}
-
-	private static Map<String, String> convertToMap(final String dsls, final Context context) throws ExitException {
-		final Map<String, String> tuples = new LinkedHashMap<String, String>();
-		if (dsls == null || dsls.length() == 0) {
-			return tuples;
-		}
-		final int endLength = dsls.length() - 1;
-		if (dsls.charAt(0) != '"' || dsls.charAt(endLength) != '"') {
-			context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
-			throw new ExitException();
-		}
-		final String[] pairs = dsls.substring(1, endLength).split("\", ?\"", -1);
-		for (final String pair : pairs) {
-			final String[] kv = pair.split("\"=>\"", -1);
-			if (kv.length != 2) {
-				context.error("Invalid DSL found in database. Can't convert to HSTORE: " + dsls);
-				throw new ExitException();
-			}
-			tuples.put(unescape(kv[0]), unescape(kv[1]));
-		}
-		return tuples;
-	}
-
-	private static final String CACHE_NAME = "database_dsl_cache";
+	private static final String CACHE_NAME = "postgres_dsl_cache";
 
 	public static Map<String, String> getDatabaseDsl(final Context context) throws ExitException {
 		return getDatabaseDslAndVersion(context).dsl;
@@ -51,21 +25,10 @@ public enum DbConnection implements CompileParameter {
 	static String extractPostgresVersion(final String version, final Context context) {
 		final Matcher matcher = Pattern.compile("^\\w+\\s+(\\d+\\.\\d+)").matcher(version);
 		if (!matcher.find()) {
-			context.error("Unable to detect postgres version. Found version info: " + version);
+			context.error("Unable to detect Postgres version. Found version info: " + version);
 			return "";
 		}
 		return matcher.group(1);
-	}
-
-	public static class DatabaseInfo {
-		public final String compilerVersion;
-		public final String postgresVersion;
-		public final Map<String, String> dsl;
-		public DatabaseInfo(final String compiler, final String postgres, final Map<String, String> dsl) {
-			this.compilerVersion = compiler;
-			this.postgresVersion = postgres;
-			this.dsl = dsl;
-		}
 	}
 
 	public static DatabaseInfo getDatabaseDslAndVersion(final Context context) throws ExitException {
@@ -93,7 +56,7 @@ public enum DbConnection implements CompileParameter {
 			context.error(e);
 			throw new ExitException();
 		}
-		final DatabaseInfo emptyResult = new DatabaseInfo("", postgres, new HashMap<String, String>());
+		final DatabaseInfo emptyResult = new DatabaseInfo("Postgres", "", postgres, new HashMap<String, String>());
 		try {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
@@ -127,9 +90,9 @@ public enum DbConnection implements CompileParameter {
 			lastMigration.close();
 			stmt.close();
 			conn.close();
-			if (lastDsl.length() > 0) {
-				final Map<String, String> dslMap = convertToMap(lastDsl, context);
-				final DatabaseInfo result = new DatabaseInfo(compiler, postgres, dslMap);
+			if (lastDsl != null && lastDsl.length() > 0) {
+				final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl, context);
+				final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, postgres, dslMap);
 				context.cache(CACHE_NAME, result);
 				return result;
 			}
@@ -215,7 +178,7 @@ public enum DbConnection implements CompileParameter {
 				context.show("Example connection string: 127.0.0.1:5432/RevenjDb?user=postgres&password=secret");
 				return false;
 			}
-			if (dbDoesntExists && context.contains(ForceMigration.INSTANCE) && context.contains(ApplyMigration.INSTANCE)
+			if (dbDoesntExists && context.contains(Force.INSTANCE) && context.contains(ApplyMigration.INSTANCE)
 					&& args.containsKey("user") && args.containsKey("password")) {
 				final int sl = connectionString.indexOf("/");
 				final String dbName = connectionString.substring(sl + 1, connectionString.indexOf("?"));
@@ -272,9 +235,9 @@ public enum DbConnection implements CompileParameter {
 				final String user = args.get("user");
 				final String question;
 				if (user != null) {
-					question = "Database username (" + user + "): ";
+					question = "Postgres username (" + user + "): ";
 				} else {
-					question = "Database username: ";
+					question = "Postgres username: ";
 				}
 				final String value = context.ask(question);
 				if (value.length() > 0) {
@@ -284,7 +247,7 @@ public enum DbConnection implements CompileParameter {
 					throw new ExitException();
 				}
 			}
-			final char[] pass = context.askSecret("Database password: ");
+			final char[] pass = context.askSecret("Postgres password: ");
 			args.put("password", new String(pass));
 			final int questionIndex = connectionString.indexOf('?');
 			final String newCs = questionIndex == -1

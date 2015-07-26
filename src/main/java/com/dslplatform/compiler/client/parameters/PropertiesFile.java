@@ -122,7 +122,7 @@ public class PropertiesFile implements CompileParameter {
 				"\n" +
 				"Example compile_java.properties:\n" +
 				"	target=java_client\n" +
-				"	db=localhost/Database?user=user&password=password\n" +
+				"	postgres=localhost/Database?user=user&password=password\n" +
 				"	download\n" +
 				"	migration\n" +
 				"	apply\n";

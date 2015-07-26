@@ -47,11 +47,14 @@ public enum Targets implements CompileParameter, ParameterParser {
 	};
 
 	public enum Option {
-		REVENJ_JAVA("revenj.java", "Revenj.Java server", "JavaServer", ".java", new CompileRevenjJava(), true),
+		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("revenj.java"), true),
+		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("java_server_postgres"), true),
 		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		JAVA_POJO("java_pojo", "Plain Old Java Object", "Java", ".java", new CompileJavaClient("Java POJO", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
-		REVENJ_NET("revenj.net", "Revenj.NET server", "CSharpServer", ".cs", new CompileRevenjNet(), false),
+		REVENJ_NET("revenj.net", "Revenj.NET server for Postgres", "CSharpServerPostgres", ".cs", new CompileRevenjNet("revenj.net"), false),
+		REVENJ_NET_POSTGRES("dotnet_server_postgres", "Revenj.NET server for Postgres", "CSharpServerPostgres", ".cs", new CompileRevenjNet("dotnet_server_postgres"), false),
+		REVENJ_NET_ORACLE("dotnet_server_oracle", "Revenj.NET server for Oracle", "CSharpServerOracle", ".cs", new CompileRevenjNet("dotnet_server_oracle"), false),
 		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", "CSharp", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
@@ -99,8 +102,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 			context.show(o.value + " - " + o.description);
 		}
 		context.show("Example usages:");
-		context.show("	-target=java_client,revenj");
-		context.show("	-java_client -revenj=./model/SeverModel.dll");
+		context.show("	-target=java_client,revenj.net");
+		context.show("	-java_client -revenj.net=./model/SeverModel.dll");
 	}
 
 	private static final String CACHE_NAME = "target_option_cache";
@@ -254,7 +257,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		Utils.saveFile(file, content);
 	}
 
-	private void compileOnline(Context context, List<Option> targets) throws ExitException {
+	private static void compileOnline(Context context, List<Option> targets) throws ExitException {
 		final StringBuilder sb = new StringBuilder();
 		final Set<String> addedTargets = new HashSet<String>();
 		for (final Option t : targets) {

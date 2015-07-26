@@ -12,9 +12,15 @@ import java.net.URL;
 
 public class CompileRevenjNet implements BuildAction {
 
+	private final String id;
+
+	public CompileRevenjNet(final String id) {
+		this.id = id;
+	}
+
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", "revenj.net");
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id);
 		final File[] found = revenjDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -92,7 +98,7 @@ public class CompileRevenjNet implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", "revenj.net");
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id);
 		final String customDll = context.get("revenj.net");
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		context.show("Compiling Revenj.NET library...");

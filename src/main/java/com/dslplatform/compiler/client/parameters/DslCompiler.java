@@ -104,15 +104,14 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	public static Either<String> migration(
 			final Context context,
-			final String version,
-			final Map<String, String> previousDsls,
+			final DatabaseInfo dbInfo,
 			final List<File> currentDsls) throws ExitException {
 		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
-		arguments.add("target=postgres" + version);
-		if (previousDsls != null && !previousDsls.isEmpty()) {
+		arguments.add("target=" + dbInfo.database.toLowerCase() + dbInfo.dbVersion);
+		if (dbInfo.dsl != null && !dbInfo.dsl.isEmpty()) {
 			final StringBuilder oldDsl = new StringBuilder();
-			for (final String v : previousDsls.values()) {
+			for (final String v : dbInfo.dsl.values()) {
 				oldDsl.append(v);
 			}
 			final File previousDsl = new File(TempPath.getTempProjectPath(context), "old.dsl");
@@ -123,11 +122,14 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				return Either.fail(ex);
 			}
 			arguments.add("previous-dsl=" + previousDsl.getAbsolutePath());
+			if (dbInfo.compilerVersion != null) {
+				arguments.add("previous-compiler=" + dbInfo.compilerVersion);
+			}
 		}
 		for (final File f : currentDsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
-		context.log("Creating SQL migration...");
+		context.log("Creating SQL migration for " + dbInfo.database + " ...");
 		final Either<Utils.CommandResult> result;
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);

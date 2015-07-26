@@ -98,9 +98,9 @@ Compiling Java client library, .NET server library and applying database migrati
 
     u=account@dsl-platform.com
     java_client=./play/model.jar
-    revenj=./revenj/ServerModel.dll
+    revenj.net=./revenj/ServerModel.dll
     dsl=C:/Models/MyApp
-    db=localhost/DB?user=postgres&password=secret
+    postgres=localhost/DB?user=postgres&password=secret
     migration
     apply
 
@@ -110,11 +110,11 @@ and
 
 Displaying a diff between model previously applied to the database and current one
 
-    java -jar dsl-clc.jar diff db=localhost/MyProject?user=user dsl=modeling/dsl
+    java -jar dsl-clc.jar diff postgres=localhost/MyProject?user=user dsl=modeling/dsl
 
 Disabling prompt and forcing destructive migrations for nightly builds
 
-    java -jar dsl-clc.jar "db=localhost/Project?user=user&password=password" no-prompt migration apply force
+    java -jar dsl-clc.jar "postgres=localhost/Project?user=user&password=password" no-prompt migration apply force
 
 Checking if current DSL is a valid one
 
@@ -122,4 +122,4 @@ Checking if current DSL is a valid one
 
 Saving SQL migration to specific folder with a specific compiler version
 
-    java -jar dsl-clc.jar migration sql=sql-upgrade-scripts db=localhost/Project?user=postgres compiler=/usr/dsl-compiler-v1.0/dsl-compiler.exe
+    java -jar dsl-clc.jar migration sql=sql-upgrade-scripts postgres=localhost/Project?user=postgres compiler=/usr/dsl-compiler-v1.0/dsl-compiler.exe

@@ -2,10 +2,10 @@ package com.dslplatform.compiler.client.parameters;
 
 import org.junit.*;
 
-import static com.dslplatform.compiler.client.parameters.DbConnection.extractPostgresVersion;
+import static com.dslplatform.compiler.client.parameters.PostgresConnection.extractPostgresVersion;
 import static org.junit.Assert.assertEquals;
 
-public class DbConnectionTest {
+public class PostgresConnectionTest {
 	@Test
 	public void testPostgresStrings() {
 		assertEquals("9.3", extractPostgresVersion("PostgreSQL 9.3.5 on x86_64-unknown-linux-gnu, compiled by gcc (Debian 4.7.2-5) 4.7.2, 64-bit", null));

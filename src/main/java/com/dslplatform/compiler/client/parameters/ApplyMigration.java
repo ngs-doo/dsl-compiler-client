@@ -8,9 +8,14 @@ public enum ApplyMigration implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "apply"; }
+	public String getAlias() {
+		return "apply";
+	}
+
 	@Override
-	public String getUsage() { return null; }
+	public String getUsage() {
+		return null;
+	}
 
 	private static boolean hasDestructive(final String[] descriptions) {
 		for (int i = 1; i < descriptions.length; i += 2) {
@@ -25,8 +30,10 @@ public enum ApplyMigration implements CompileParameter {
 	@Override
 	public boolean check(final Context context) throws ExitException {
 		if (context.contains(INSTANCE)) {
-			if (!context.contains(DbConnection.INSTANCE)) {
-				context.error("Connection string is required to apply migration script");
+			if (!context.contains(PostgresConnection.INSTANCE)
+					&& !context.contains(OracleConnection.INSTANCE)) {
+				context.error("Connection string is required to apply migration script.\n" +
+						"Neither Oracle od Postgres connection string was defined.");
 				throw new ExitException();
 			}
 			if (!context.contains(Migration.INSTANCE)) {
@@ -39,52 +46,93 @@ public enum ApplyMigration implements CompileParameter {
 	@Override
 	public void run(final Context context) throws ExitException {
 		if (context.contains(INSTANCE)) {
-			final File file = Migration.getMigrationFile(context);
-			if (file == null) {
+			final File postgres = Migration.getPostgresMigrationFile(context);
+			final File oracle = Migration.getOracleMigrationFile(context);
+			if (postgres == null && oracle == null) {
 				context.error("Can't find SQL migration file. Unable to apply database migration.");
 				throw new ExitException();
 			}
-			final Either<String> trySql = Utils.readFile(file);
-			if (!trySql.isSuccess()) {
-				context.error("Error reading sql migration file.");
-				context.error(trySql.whyNot());
-				throw new ExitException();
+			if (postgres != null) {
+				applyMigrationScript(context, postgres, PostgresDB);
 			}
-			final String sql = trySql.get();
-			if (sql.length() == 0) {
-				context.show("Nothing to apply.");
-				return;
+			if (oracle != null) {
+				applyMigrationScript(context, oracle, OracleDB);
 			}
-			final String[] descriptions = Migration.extractDescriptions(sql);
-			if (descriptions.length > 2) {
-				for (int i = 2; i < descriptions.length; i += 2) {
-					context.show(descriptions[i]);
-				}
-				if (hasDestructive(descriptions)) {
-					context.show();
-					context.show("Destructive migration detected.");
-					if (context.contains(ForceMigration.INSTANCE)) {
-						context.show("Applying destructive migration due to force option.");
-					} else {
-						if (!context.canInteract()) {
-							context.error("Use force option to apply database migration.");
-							throw new ExitException();
-						}
-						final String input = context.ask("Apply migration (y/N):");
-						if (!"y".equalsIgnoreCase(input)) {
-							context.error("Migration canceled.");
-							throw new ExitException();
-						}
+		}
+	}
+
+	private static final DB PostgresDB = new DB() {
+		@Override
+		public String getDName() {
+			return "Postgres";
+		}
+
+		@Override
+		public void execute(Context context, String sql) throws ExitException {
+			PostgresConnection.execute(context, sql);
+		}
+	};
+
+	private static final DB OracleDB = new DB() {
+		@Override
+		public String getDName() {
+			return "Oracle";
+		}
+
+		@Override
+		public void execute(Context context, String sql) throws ExitException {
+			OracleConnection.execute(context, sql);
+		}
+	};
+
+
+	private interface DB {
+		String getDName();
+
+		void execute(final Context context, final String sql) throws ExitException;
+	}
+
+	private static void applyMigrationScript(final Context context, final File file, final DB db) throws ExitException {
+		final Either<String> trySql = Utils.readFile(file);
+		if (!trySql.isSuccess()) {
+			context.error("Error reading SQL migration file for " + db.getDName() + ".");
+			context.error(trySql.whyNot());
+			throw new ExitException();
+		}
+		final String sql = trySql.get();
+		if (sql.length() == 0) {
+			context.show("Nothing to apply.");
+			return;
+		}
+		final String[] descriptions = Migration.extractDescriptions(sql);
+		if (descriptions.length > 2) {
+			for (int i = 2; i < descriptions.length; i += 2) {
+				context.show(descriptions[i]);
+			}
+			if (hasDestructive(descriptions)) {
+				context.show();
+				context.show("Destructive migration detected for " + db.getDName() + ".");
+				if (context.contains(Force.INSTANCE)) {
+					context.show("Applying destructive migration due to force option.");
+				} else {
+					if (!context.canInteract()) {
+						context.error("Use force option to apply database migration.");
+						throw new ExitException();
+					}
+					final String input = context.ask("Apply migration (y/N):");
+					if (!"y".equalsIgnoreCase(input)) {
+						context.error("Migration canceled.");
+						throw new ExitException();
 					}
 				}
 			}
-			context.show("Applying migration...");
-			DbConnection.execute(context, sql);
-			if (file.renameTo(new File(file.getParentFile(), "applied-" + file.getName()))) {
-				context.show("Database migrated and script renamed to: applied-" + file.getName());
-			} else {
-				context.show("Database migrated, but unable to rename script: " + file.getName());
-			}
+		}
+		context.show("Applying migration...");
+		db.execute(context, sql);
+		if (file.renameTo(new File(file.getParentFile(), "applied-" + file.getName()))) {
+			context.show("Database migrated and script renamed to: applied-" + file.getName());
+		} else {
+			context.show("Database migrated, but unable to rename script: " + file.getName());
 		}
 	}
 

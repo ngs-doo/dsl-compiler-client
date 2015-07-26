@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.parameters.ApplyMigration;
-import com.dslplatform.compiler.client.parameters.DbConnection;
+import com.dslplatform.compiler.client.parameters.PostgresConnection;
 import org.junit.Test;
 
 import java.io.File;
@@ -46,7 +46,7 @@ public class MigrationTest {
 		@Override
 		public void run(Context context) throws ExitException {
 			inContext = context.contains(this);
-			context.cache("migration_file", file);
+			context.cache("postgres_migration_file", file);
 		}
 	}
 
@@ -57,7 +57,7 @@ public class MigrationTest {
 		ContextMock ctx = new ContextMock();
 		MockMigration mm = new MockMigration(tmp);
 		ctx.put(ApplyMigration.INSTANCE, null);
-		ctx.put(DbConnection.INSTANCE, "dummy connection string");
+		ctx.put(PostgresConnection.INSTANCE, "dummy connection string");
 		assertFalse(mm.inContext);
 		Main.processContext(ctx, Arrays.asList(mm, ApplyMigration.INSTANCE));
 		assertTrue(tmp.delete());

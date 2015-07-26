@@ -12,9 +12,15 @@ import java.net.URL;
 
 public class CompileRevenjJava implements BuildAction {
 
+	private final String id;
+
+	public CompileRevenjJava(final String id) {
+		this.id = id;
+	}
+
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.Java", "revenj.java");
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.Java", id);
 		final File[] found = revenjDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -81,8 +87,8 @@ public class CompileRevenjJava implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File libDeps = Dependencies.getDependencies(context, "Revenj.Java", "revenj.java");
-		final String customJar = context.get("revenj.java");
+		final File libDeps = Dependencies.getDependencies(context, "Revenj.Java", id);
+		final String customJar = context.get(id);
 		final File model = new File(customJar != null ? customJar : "./generated-server-model.jar");
 		final Either<String> compilation = JavaCompilation.compile("revenj", libDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
