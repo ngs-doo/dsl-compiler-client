@@ -291,8 +291,9 @@ public enum OracleConnection implements CompileParameter {
 				}
 			}
 			if (urls.size() == 0) {
-				context.error("Try downloading ojdbc6.jar from Oracle: http://www.oracle.com/technetwork/database/features/jdbc/index.html " +
-						"and place it in: " + new File(".").getAbsolutePath() + ". Alternatively, try adding thin ojdbc to the classpath.");
+				context.error("Try downloading ojdbc6.jar from Oracle: http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html " +
+						"and place it in: " + new File(".").getAbsolutePath() + "\n" +
+						"Alternatively, try adding thin ojdbc to the classpath or set correct ORACLE_HOME environment variable.");
 				throw new ExitException();
 			}
 			for (final File j : jars) {
@@ -324,7 +325,7 @@ public enum OracleConnection implements CompileParameter {
 				Class.forName("oracle.jdbc.OracleDriver");
 			} catch (ClassNotFoundException oex) {
 				if (context.load(ORACLE_CUSTOM_DRIVER) == null) {
-					context.error("Error trying to load Oracle driver using fallback method. Add thin ojdbc to classpath.");
+					context.error("Error trying to load Oracle driver using fallback method. Add thin ojdbc to the classpath.");
 					throw new ExitException();
 				}
 			}
