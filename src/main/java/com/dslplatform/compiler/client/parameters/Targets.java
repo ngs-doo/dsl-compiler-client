@@ -254,7 +254,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 			context.error("Failed creating target file: " + file.getAbsolutePath());
 			throw new ExitException();
 		}
-		Utils.saveFile(file, content);
+		Utils.saveFile(context, file, content);
 	}
 
 	private static void compileOnline(Context context, List<Option> targets) throws ExitException {

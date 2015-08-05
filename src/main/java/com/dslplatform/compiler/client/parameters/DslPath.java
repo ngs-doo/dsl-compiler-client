@@ -12,9 +12,14 @@ public enum DslPath implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "dsl"; }
+	public String getAlias() {
+		return "dsl";
+	}
+
 	@Override
-	public String getUsage() { return "path"; }
+	public String getUsage() {
+		return "path";
+	}
 
 	private static final String CACHE_MAP_NAME = "current_dsl_map_cache";
 	private static final String CACHE_FILE_NAME = "current_dsl_file_cache";
@@ -49,7 +54,7 @@ public enum DslPath implements CompileParameter {
 		final File dslPath = new File(value).getAbsoluteFile();
 		final List<File> dslFiles = dslPath.isFile()
 				? Collections.singletonList(dslPath)
-				: Utils.findFiles(dslPath, Arrays.asList(".dsl", ".ddd"));
+				: Utils.findFiles(context, dslPath, Arrays.asList(".dsl", ".ddd"));
 		final Map<String, String> dslMap = new LinkedHashMap<String, String>();
 		final int pathLen = dslPath.getAbsolutePath().length();
 		for (final File file : dslFiles) {

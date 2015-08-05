@@ -14,9 +14,14 @@ public enum JavaPath implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "java"; }
+	public String getAlias() {
+		return "java";
+	}
+
 	@Override
-	public String getUsage() { return "path"; }
+	public String getUsage() {
+		return "path";
+	}
 
 	public static Either<String> findCompiler(final Context context) {
 		if (context.contains(INSTANCE)) {
@@ -48,14 +53,14 @@ public enum JavaPath implements CompileParameter {
 		}
 		final String jar = tryJar.get();
 
-		final List<String> jarArguments = makeJarArguments(classOut, "class", output);
+		final List<String> jarArguments = makeJarArguments(context, classOut, "class", output);
 
 		try {
 			final File manifest = new File(classOut, "MANIFEST.MF");
 			final String version = context.contains(Version.INSTANCE)
 					? context.get(Version.INSTANCE)
 					: DATE_FORMAT.format(new Date());
-			Utils.saveFile(manifest, "Implementation-Version: " + version + "\n");
+			Utils.saveFile(context, manifest, "Implementation-Version: " + version + "\n");
 		} catch (IOException e) {
 			context.error("Can't create MANIFEST.MF.");
 			return Either.fail(e);
@@ -83,7 +88,7 @@ public enum JavaPath implements CompileParameter {
 		final String manifestName = "MANIFEST.MF";
 		try {
 			final File mockManifest = new File(classOut, manifestName);
-			Utils.saveFile(mockManifest, "Manifest-Version: 1.0");
+			Utils.saveFile(context, mockManifest, "Manifest-Version: 1.0");
 		} catch (IOException e) {
 			context.error("Can't create mock MANIFEST.MF.");
 			return Either.fail(e);
@@ -106,7 +111,7 @@ public enum JavaPath implements CompileParameter {
 			if (Utils.testCommand(context, "jar", "Usage: jar")) {
 				return Either.success("jar");
 			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
-				return  Either.success(envJH + "/bin/jar");
+				return Either.success(envJH + "/bin/jar");
 			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
 				return Either.success(envJDH + "/bin/jar");
 			} else {
@@ -114,7 +119,9 @@ public enum JavaPath implements CompileParameter {
 			}
 		}
 	}
+
 	private static List<String> makeJarArguments(
+			final Context context,
 			final File source,
 			final String type,
 			final File output) {
@@ -130,7 +137,7 @@ public enum JavaPath implements CompileParameter {
 				jarArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*." + type);
 			}
 		} else {
-			final List<File> classFiles = Utils.findFiles(source, Collections.singletonList("." + type));
+			final List<File> classFiles = Utils.findFiles(context, source, Collections.singletonList("." + type));
 			for (final File f : classFiles) {
 				jarArguments.add(f.getAbsolutePath().substring(len));
 			}

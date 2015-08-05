@@ -20,21 +20,63 @@ public class MigrationTest {
 		public boolean hasLog;
 		public boolean hasError;
 
-		@Override public void show(final String... values) { message = values[0]; }
-		@Override public void log(final String value) { hasLog = true; }
-		@Override public void log(final char[] value, final int len) { hasLog = true; }
-		@Override public void error(final String value) { hasError = true; }
-		@Override public void error(final Exception ex) { hasError = true; }
-		@Override public boolean canInteract() { return false; }
+		@Override
+		public void show(final String... values) {
+			message = values[0];
+		}
+
+		@Override
+		public void log(final String value) {
+			hasLog = true;
+		}
+
+		@Override
+		public void log(final char[] value, final int len) {
+			hasLog = true;
+		}
+
+		@Override
+		public void error(final String value) {
+			hasError = true;
+		}
+
+		@Override
+		public void error(final Exception ex) {
+			hasError = true;
+		}
+
+		@Override
+		public boolean canInteract() {
+			return false;
+		}
 	}
 
 	static class MockMigration implements CompileParameter {
 
-		@Override public String getAlias() { return "migration"; }
-		@Override public String getUsage() { return null; }
-		@Override public String getShortDescription() { return null; }
-		@Override public String getDetailedDescription() { return null; }
-		@Override public boolean check(Context context) throws ExitException { return true; }
+		@Override
+		public String getAlias() {
+			return "migration";
+		}
+
+		@Override
+		public String getUsage() {
+			return null;
+		}
+
+		@Override
+		public String getShortDescription() {
+			return null;
+		}
+
+		@Override
+		public String getDetailedDescription() {
+			return null;
+		}
+
+		@Override
+		public boolean check(Context context) throws ExitException {
+			return true;
+		}
 
 		public boolean inContext;
 		private File file;
@@ -53,7 +95,7 @@ public class MigrationTest {
 	@Test
 	public void testApplyWithoutMigration() throws IOException {
 		File tmp = new File("dummy-migration-" + UUID.randomUUID() + ".sql");
-		Utils.saveFile(tmp, "");
+		Utils.saveFile(new ContextMock(), tmp, "");
 		ContextMock ctx = new ContextMock();
 		MockMigration mm = new MockMigration(tmp);
 		ctx.put(ApplyMigration.INSTANCE, null);

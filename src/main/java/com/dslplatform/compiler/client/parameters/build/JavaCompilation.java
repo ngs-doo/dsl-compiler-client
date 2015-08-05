@@ -69,20 +69,15 @@ class JavaCompilation {
 			if (javaDirs.size() == 0) {
 				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
 			}
-			final HashSet<String> processed = new HashSet<String>();
 			for (final File f : javaDirs) {
-				if (processed.contains(f.getParent())) {
-					continue;
-				}
-				if (f.getAbsoluteFile().length() > len) {
-					javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
+				if (f.equals(source)) {
+					javacArguments.add("*.java");
 				} else {
-					javacArguments.add(f.getAbsolutePath() + File.separator + "*.java");
+					javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
 				}
-				processed.add(f.getParent());
 			}
 		} else {
-			final List<File> javaFiles = Utils.findFiles(source, Collections.singletonList(".java"));
+			final List<File> javaFiles = Utils.findFiles(context, source, Collections.singletonList(".java"));
 			for (final File f : javaFiles) {
 				javacArguments.add(f.getAbsolutePath().substring(len));
 			}

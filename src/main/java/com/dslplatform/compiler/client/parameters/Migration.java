@@ -12,9 +12,14 @@ public enum Migration implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "migration"; }
+	public String getAlias() {
+		return "migration";
+	}
+
 	@Override
-	public String getUsage() { return null; }
+	public String getUsage() {
+		return null;
+	}
 
 	private final static String DESCRIPTION_START = "/*MIGRATION_DESCRIPTION";
 	private final static String DESCRIPTION_END = "MIGRATION_DESCRIPTION*/";
@@ -25,6 +30,7 @@ public enum Migration implements CompileParameter {
 	public static File getPostgresMigrationFile(final Context context) {
 		return context.load(POSTGRES_MIGRATION_FILE_NAME);
 	}
+
 	public static File getOracleMigrationFile(final Context context) {
 		return context.load(ORACLE_MIGRATION_FILE_NAME);
 	}
@@ -57,7 +63,7 @@ public enum Migration implements CompileParameter {
 					context.error("Path for SQL migration script provided (" + value + ") but not found");
 					return false;
 				}
-				if(sqlPath.isFile()) {
+				if (sqlPath.isFile()) {
 					context.error("Provided path for SQL migration is a file and not a folder (" + value + ").\n"
 							+ "Please specify folder which will be used for migration.");
 					return false;
@@ -106,7 +112,7 @@ public enum Migration implements CompileParameter {
 		final String sqlFileName = dbInfo.database.toLowerCase() + "-sql-migration-" + (new Date().getTime());
 		final File sqlFile = new File(path.getAbsolutePath(), sqlFileName + ".sql");
 		try {
-			Utils.saveFile(sqlFile, script);
+			Utils.saveFile(context, sqlFile, script);
 		} catch (IOException e) {
 			context.error("Error saving migration script to " + sqlFile.getAbsolutePath());
 			context.error(e);

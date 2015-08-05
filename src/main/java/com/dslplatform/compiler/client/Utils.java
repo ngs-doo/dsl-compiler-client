@@ -37,7 +37,8 @@ public class Utils {
 		}
 	}
 
-	public static void saveFile(final File file, final String content) throws IOException {
+	public static void saveFile(final Context context, final File file, final String content) throws IOException {
+		context.log("Saving file: " + file.getAbsolutePath());
 		final FileOutputStream fos = new FileOutputStream(file);
 		final Writer writer = new OutputStreamWriter(fos, "UTF-8");
 		writer.write(content);
@@ -53,20 +54,25 @@ public class Utils {
 		return json;
 	}
 
-	public static List<File> findFiles(final File path, final List<String> extensions) {
+	public static List<File> findFiles(final Context context, final File path, final List<String> extensions) {
+		context.log("Searching for files...");
+		for (final String ext : extensions) {
+			context.log("Matching: " + ext);
+		}
 		final List<File> foundFiles = new LinkedList<File>();
-		findFiles(path, foundFiles, extensions);
+		findFiles(context, path, foundFiles, extensions);
 		return foundFiles;
 	}
 
-	private static void findFiles(final File path, final List<File> foundFiles, final List<String> extensions) {
+	private static void findFiles(final Context context, final File path, final List<File> foundFiles, final List<String> extensions) {
 		for (final String fn : path.list()) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
-				findFiles(f, foundFiles, extensions);
+				findFiles(context, f, foundFiles, extensions);
 			} else {
 				for (final String e : extensions) {
 					if (f.getName().endsWith(e)) {
+						context.log("Found: " + f.getAbsolutePath());
 						foundFiles.add(f);
 						break;
 					}
@@ -220,6 +226,14 @@ public class Utils {
 		}
 	}
 
+	private static void logCommand(final Context context, final ProcessBuilder builder) {
+		final StringBuilder description = new StringBuilder("Running: ");
+		for (final String arg : builder.command()) {
+			description.append(arg).append(" ");
+		}
+		context.log(description.toString());
+	}
+
 	public static boolean testCommand(final Context context, final String command, final String contains) {
 		return testCommand(context, command, contains, new ArrayList<String>());
 	}
@@ -230,6 +244,7 @@ public class Utils {
 			commandAndArgs.add(command);
 			commandAndArgs.addAll(arguments);
 			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			logCommand(context, pb);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
 			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null);
@@ -255,6 +270,7 @@ public class Utils {
 			if (path != null) {
 				pb.directory(path);
 			}
+			logCommand(context, pb);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context);
 			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context);

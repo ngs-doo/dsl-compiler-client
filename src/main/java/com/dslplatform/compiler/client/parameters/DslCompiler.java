@@ -116,7 +116,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			}
 			final File previousDsl = new File(TempPath.getTempProjectPath(context), "old.dsl");
 			try {
-				Utils.saveFile(previousDsl, oldDsl.toString());
+				Utils.saveFile(context, previousDsl, oldDsl.toString());
 			} catch (IOException ex) {
 				context.error("Unable to save old DSL version for comparison.");
 				return Either.fail(ex);
