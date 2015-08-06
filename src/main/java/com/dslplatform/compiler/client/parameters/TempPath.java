@@ -10,9 +10,14 @@ public enum TempPath implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "temp"; }
+	public String getAlias() {
+		return "temp";
+	}
+
 	@Override
-	public String getUsage() { return "path"; }
+	public String getUsage() {
+		return "path";
+	}
 
 	private static final String CACHE_NAME = "temp_path_cache";
 
@@ -30,8 +35,8 @@ public enum TempPath implements CompileParameter {
 			final String projectLocation = System.getProperty("user.dir");
 			final File parentFolder = new File(projectLocation).getParentFile();
 			final String projectName = parentFolder == null
-				? "root"
-				: parentFolder.getName();
+					? "root"
+					: parentFolder.getName();
 			final String rnd = UUID.randomUUID().toString();
 			final File temp = File.createTempFile(rnd, ".dsl-test");
 			final File dslPlatformPath = new File(temp.getParentFile().getAbsolutePath(), "DSL-Platform");
@@ -83,16 +88,18 @@ public enum TempPath implements CompileParameter {
 				}
 				final File[] tempFiles = path.listFiles();
 				if (tempFiles != null && tempFiles.length > 0) {
-					context.error("Temporary path contains files: " + path.getAbsolutePath());
-					if (!context.canInteract()) {
-						context.error("Please manage the path you have assigned as temporary.");
-						return false;
+					if (!context.contains(Force.INSTANCE)) {
+						context.error("Temporary path contains files: " + path.getAbsolutePath());
+						if (!context.canInteract()) {
+							context.error("Please manage the path you have assigned as temporary.");
+							return false;
+						}
+						final String delete = context.ask("Delete files in temporary path? (y/N):");
+						if (!"y".equalsIgnoreCase(delete)) {
+							return false;
+						}
 					}
-					final String delete = context.ask("Delete files in temporary path? (y/N):");
-					if ("y".equalsIgnoreCase(delete)) {
-						return prepareCustomPath(context, path);
-					}
-					return false;
+					return prepareCustomPath(context, path);
 				}
 				context.cache(CACHE_NAME, path);
 				return true;
