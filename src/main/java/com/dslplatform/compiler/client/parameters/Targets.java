@@ -103,8 +103,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 			context.show(o.value + " - " + o.description);
 		}
 		context.show("Example usages:");
-		context.show("	-target=java_client,revenj.net");
-		context.show("	-java_client -revenj.net=./model/SeverModel.dll");
+		context.show("\t-target=java_client,revenj.net");
+		context.show("\t-java_client -revenj.net=./model/SeverModel.dll");
 	}
 
 	private static final String CACHE_NAME = "target_option_cache";

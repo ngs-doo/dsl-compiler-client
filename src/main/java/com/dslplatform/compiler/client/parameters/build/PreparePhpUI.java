@@ -14,24 +14,23 @@ public class PreparePhpUI extends PrepareSources {
 		super(targetName, targetId, targetFolder);
 	}
 
-    // @todo temp fix for missing .php extensions, should be removed when fixed in compiler
-    private void fixMissingExtensions(final File sources, final Context context) {
-        for (final String fn : sources.list()) {
-            final File sf = new File(sources, fn);
-            if (sf.isFile() && !sf.getName().endsWith(".twig")) {
-                if (!sf.renameTo(new File(sources, fn.concat(".php")))) {
-                    context.error("Error renaming file " + sf.getAbsolutePath() + " to : " + sf.getName() + ".php");
-                }
-            }
-            else if (sf.isDirectory()) {
-                fixMissingExtensions(sf, context);
-            }
-        }
-    }
+	// @TODO: temp fix for missing .php extensions, should be removed when fixed in the compiler
+	private void fixMissingExtensions(final File sources, final Context context) {
+		for (final String fn : sources.list()) {
+			final File sf = new File(sources, fn);
+			if (sf.isFile() && !sf.getName().endsWith(".twig")) {
+				if (!sf.renameTo(new File(sources, fn.concat(".php")))) {
+					context.error("Error renaming file " + sf.getAbsolutePath() + " to : " + sf.getName() + ".php");
+				}
+			} else if (sf.isDirectory()) {
+				fixMissingExtensions(sf, context);
+			}
+		}
+	}
 
-    @Override
-    public void build(final File sources, final Context context) throws ExitException {
-        fixMissingExtensions(sources, context);
-        super.build(sources, context);
-    }
+	@Override
+	public void build(final File sources, final Context context) throws ExitException {
+		fixMissingExtensions(sources, context);
+		super.build(sources, context);
+	}
 }

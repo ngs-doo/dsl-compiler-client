@@ -31,6 +31,6 @@ public enum Version implements CompileParameter {
 				"\n" +
 				"\n" +
 				"Example:\n" +
-				"	1.0.2";
+				"\t1.0.2";
 	}
 }

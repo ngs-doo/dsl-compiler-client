@@ -121,10 +121,10 @@ public class PropertiesFile implements CompileParameter {
 				"A simple properties file with the same exact names for properties.\n" +
 				"\n" +
 				"Example compile_java.properties:\n" +
-				"	target=java_client\n" +
-				"	postgres=localhost/Database?user=user&password=password\n" +
-				"	download\n" +
-				"	migration\n" +
-				"	apply\n";
+				"\ttarget=java_client\n" +
+				"\tpostgres=localhost/Database?user=user&password=password\n" +
+				"\tdownload\n" +
+				"\tmigration\n" +
+				"\tapply\n";
 	}
 }

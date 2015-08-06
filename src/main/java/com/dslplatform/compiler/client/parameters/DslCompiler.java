@@ -1,23 +1,16 @@
 package com.dslplatform.compiler.client.parameters;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
-
+import com.dslplatform.compiler.client.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.DslServer;
-import com.dslplatform.compiler.client.Either;
-import com.dslplatform.compiler.client.ExitException;
-import com.dslplatform.compiler.client.ParameterParser;
-import com.dslplatform.compiler.client.Utils;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.*;
 
 public enum DslCompiler implements CompileParameter, ParameterParser {
 	INSTANCE;
@@ -281,7 +274,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				"It requires .NET/Mono to run.\n" +
 				"\n" +
 				"Example:\n" +
-				"	-compiler\n" +
-				"	-compiler=/var/dsl-platform/dsl-compiler.exe\n";
+				"\tcompiler\n" +
+				"\tcompiler=/var/dsl-platform/dsl-compiler.exe\n";
 	}
 }

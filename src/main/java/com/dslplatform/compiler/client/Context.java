@@ -97,7 +97,7 @@ public class Context {
 
 	public void log(final char[] value, final int len) {
 		if (withLog) {
-			final String msg =  new String(value, 0, len);
+			final String msg = new String(value, 0, len);
 			write(console, false, withColor ? inColor(Color.YELLOW, msg) : msg);
 		}
 	}

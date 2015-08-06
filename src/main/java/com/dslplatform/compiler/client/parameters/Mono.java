@@ -51,6 +51,6 @@ public enum Mono implements CompileParameter {
 				"If custom path is required this option can be used to specify it.\n" +
 				"\n" +
 				"Example:\n" +
-				"	/var/user/mono-3.10/mono";
+				"\t/var/user/mono-3.10/mono";
 	}
 }

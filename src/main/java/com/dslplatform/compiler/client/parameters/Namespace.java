@@ -31,7 +31,7 @@ public enum Namespace implements CompileParameter {
 				"\n" +
 				"\n" +
 				"Examples:\n" +
-				"	com.company.project\n" +
-				"	Shipping.Model";
+				"\tcom.company.project\n" +
+				"\tShipping.Model";
 	}
 }

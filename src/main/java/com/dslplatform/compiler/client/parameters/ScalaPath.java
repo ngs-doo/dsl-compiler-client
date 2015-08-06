@@ -66,6 +66,6 @@ public enum ScalaPath implements CompileParameter {
 				"SCALA_HOME environment variables will be checked for Scala tools.\n" +
 				"\n" +
 				"Example:\n" +
-				"	/var/user/scala-2.11/scalac";
+				"\t/var/user/scala-2.11/scalac";
 	}
 }

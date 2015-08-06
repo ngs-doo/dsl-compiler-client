@@ -1,6 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
-import org.junit.*;
+import org.junit.Test;
 
 import static com.dslplatform.compiler.client.parameters.PostgresConnection.extractPostgresVersion;
 import static org.junit.Assert.assertEquals;
