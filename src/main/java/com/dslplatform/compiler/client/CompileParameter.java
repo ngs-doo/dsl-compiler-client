@@ -1,15 +1,15 @@
 package com.dslplatform.compiler.client;
 
 public interface CompileParameter {
-	public String getAlias();
+	String getAlias();
 
-	public String getUsage();
+	String getUsage();
 
-	public boolean check(final Context context) throws ExitException;
+	boolean check(final Context context) throws ExitException;
 
-	public void run(final Context context) throws ExitException;
+	void run(final Context context) throws ExitException;
 
-	public String getShortDescription();
+	String getShortDescription();
 
-	public String getDetailedDescription();
+	String getDetailedDescription();
 }

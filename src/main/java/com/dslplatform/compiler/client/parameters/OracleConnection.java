@@ -258,30 +258,22 @@ public enum OracleConnection implements CompileParameter {
 		} catch (ClassNotFoundException ex) {
 			context.error("Error loading Oracle driver (oracle.jdbc.OracleDriver). Will look into alternative locations ...");
 			final File loc = new File(".");
-			final File[] jars = loc.listFiles(new FileFilter() {
+			final List<File> jars = Arrays.asList(loc.listFiles(new FileFilter() {
 				public boolean accept(File file) {
 					final String name = file.getName().toLowerCase();
 					return name.startsWith("ojdbc") && name.endsWith(".jar");
 				}
-			});
-			final List<URL> urls = new ArrayList<URL>(jars.length);
-			if (urls.size() == 0) {
+			}));
+			if (jars.size() == 0) {
 				final String envOH = System.getenv("ORACLE_HOME");
 				if (envOH != null) {
+					context.log("Found ORACLE_HOME environment variable: " + envOH);
 					final File jdbcRootFile = new File(new File(envOH), "ojdbc6.jar");
 					final File jdbcLibFile = new File(new File(new File(new File(envOH), "jdbc"), "lib"), "ojdbc6.jar");
 					if (jdbcRootFile.exists()) {
-						try {
-							urls.add(jdbcRootFile.getAbsoluteFile().toURI().toURL());
-						} catch (MalformedURLException e) {
-							context.error(e);
-						}
+						jars.add(jdbcRootFile.getAbsoluteFile());
 					} else if (jdbcLibFile.exists()) {
-						try {
-							urls.add(jdbcLibFile.getAbsoluteFile().toURI().toURL());
-						} catch (MalformedURLException e) {
-							context.error(e);
-						}
+						jars.add(jdbcLibFile.getAbsoluteFile());
 					} else {
 						context.error("Found ORACLE_HOME environment variable, but jar driver is missing from: "
 								+ jdbcRootFile.getAbsolutePath() + " and " + jdbcLibFile.getAbsolutePath());
@@ -290,26 +282,27 @@ public enum OracleConnection implements CompileParameter {
 					context.log("ORACLE_HOME environment variable not set");
 				}
 			}
-			if (urls.size() == 0) {
+			if (jars.size() == 0) {
 				context.error("Try downloading ojdbc6.jar from Oracle: http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html " +
 						"and place it in: " + new File(".").getAbsolutePath() + "\n" +
 						"Alternatively, try adding thin ojdbc to the classpath or set correct ORACLE_HOME environment variable.");
 				throw new ExitException();
 			}
-			for (final File j : jars) {
+			final URL[] urls = new URL[jars.size()];
+			for (int i = 0; i < jars.size(); i++) {
 				try {
-					urls.add(j.toURI().toURL());
+					urls[i] = jars.get(i).toURI().toURL();
 				} catch (MalformedURLException mex) {
 					context.error(mex);
 				}
 			}
-			final URLClassLoader ucl = new URLClassLoader(urls.toArray(new URL[urls.size()]));
+			final URLClassLoader ucl = new URLClassLoader(urls);
 			final ServiceLoader<java.sql.Driver> drivers = ServiceLoader.load(java.sql.Driver.class, ucl);
 			for (final java.sql.Driver d : drivers) {
 				context.log("Found: " + d);
 				if ("oracle.jdbc.OracleDriver".equals(d.getClass().getName())) {
-					if (urls.size() == 1) {
-						context.show("Found Oracle driver in: " + urls.get(0).getPath());
+					if (urls.length == 1) {
+						context.show("Found Oracle driver in: " + urls[0].getPath());
 					} else {
 						context.show("Found Oracle driver");
 					}

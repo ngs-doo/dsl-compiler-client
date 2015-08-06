@@ -79,8 +79,16 @@ public enum TempPath implements CompileParameter {
 			if (value != null && value.length() > 0) {
 				final File path = new File(value);
 				if (!path.exists()) {
-					context.error("Temporary path provided (" + value + "), but doesn't exists. Please create it or use system path.");
-					return false;
+					if (!context.contains(Force.INSTANCE)) {
+						context.error("Temporary path provided (" + value + "), but doesn't exists. Please create it or use system path.");
+						return false;
+					} else {
+						context.show("Due to force option enabled, creating temp folder in: " + path.getAbsolutePath());
+						if (!path.mkdirs()) {
+							context.error("Failed to create temporary path.");
+							return false;
+						}
+					}
 				}
 				if (!path.isDirectory()) {
 					context.error("Temporary path provided, but it's not a directory: " + value);
@@ -98,7 +106,7 @@ public enum TempPath implements CompileParameter {
 						if (!"y".equalsIgnoreCase(delete)) {
 							return false;
 						}
-					}
+					} else context.log("Cleaning up TEMP folder due to force option");
 					return prepareCustomPath(context, path);
 				}
 				context.cache(CACHE_NAME, path);

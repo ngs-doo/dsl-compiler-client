@@ -1,6 +1,6 @@
 package com.dslplatform.compiler.client;
 
-public class Either<T> {
+public final class Either<T> {
 	private final T value;
 	private final Exception error;
 

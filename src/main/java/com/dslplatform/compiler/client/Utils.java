@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class Utils {
+public abstract class Utils {
 	public static String read(final InputStream stream) throws IOException {
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		final StringBuilder sb = new StringBuilder();

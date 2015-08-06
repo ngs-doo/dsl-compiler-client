@@ -11,7 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-public class DslServer {
+public abstract class DslServer {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/";
 
 	private static String readResponseError(final HttpURLConnection conn) throws IOException {
