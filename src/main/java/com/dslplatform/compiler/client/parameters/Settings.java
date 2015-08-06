@@ -17,13 +17,13 @@ public enum Settings implements CompileParameter, ParameterParser {
 	public enum Option {
 		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "active-record"),
 		UTC("utc", "Timestamp should use UTC by default", "utc"),
-		NO_JACKSON("no-jackson", "Don't use Jackson annotations", "no-jackson"),
+		JACKSON("jackson", "Add Jackson annotations", "jackson"),
 		JAVA_BEANS("java-beans", "Add Java Beans support", "java-beans"),
-		MANUAL_JSON("manual-json", "JSON without external library", "manual-json"),
+		MANUAL_JSON("manual-json", "Add optimized serialization/deserialization methods", "manual-json"),
 		NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
 		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server", "multi-tenancy"),
 		LEGACY("legacy", "Legacy methods", "legacy"),
-		NO_JODA_TIME("no-joda-time", "Don't use Joda Time library (use Java 8 date API instead)", "no-joda-time"),
+		JODA_TIME("joda-time", "Use Joda Time library (instead of Java time API)", "joda-time"),
 		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres", "no-prepare-execute"),
 		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)", "minimal-serialization"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
@@ -76,8 +76,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 			context.show(o.value + " - " + o.description);
 		}
 		context.show("Example usages:");
-		context.show("		settings=active-record,no-jackson");
-		context.show("		active-record no-jackson manual-json");
+		context.show("		settings=active-record,joda-time,jackson");
+		context.show("		active-record manual-json");
 	}
 
 	@Override
