@@ -2,20 +2,18 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
-import com.dslplatform.compiler.client.parameters.Download;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.net.URL;
 
 public class CompileRevenjNet implements BuildAction {
 
 	private final String id;
+	private final String additionalZip;
 
-	public CompileRevenjNet(final String id) {
+	public CompileRevenjNet(final String id, final String additionalZip) {
 		this.id = id;
+		this.additionalZip = additionalZip;
 	}
 
 	@Override
@@ -29,56 +27,7 @@ public class CompileRevenjNet implements BuildAction {
 		});
 		if (found.length == 0) {
 			context.error("Revenj.NET dependencies not found in: " + revenjDeps.getAbsolutePath());
-			if (!context.contains(Download.INSTANCE)) {
-				if (!context.canInteract()) {
-					context.error("Download option not enabled. Enable download option, change dependencies path or place Revenj.NET files in specified folder.");
-					throw new ExitException();
-				}
-				final String answer = context.ask("Do you wish to download latest Revenj.NET version from the Internet (y/N):");
-				if (!"y".equalsIgnoreCase(answer)) {
-					throw new ExitException();
-				}
-			}
-			try {
-				context.show("Downloading Revenj.NET from GitHub...");
-				final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
-				final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
-				conn.setInstanceFollowRedirects(false);
-				conn.setUseCaches(false);
-				conn.connect();
-				if (conn.getResponseCode() != 302) {
-					context.error("Error downloading Revenj.NET from GitHub. Expecting redirect. Got: " + conn.getResponseCode());
-					return false;
-				}
-				final String redirect = conn.getHeaderField("Location");
-				final String tag = redirect.substring(redirect.lastIndexOf('/') + 1);
-				final URL httpServer = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/http-server.zip");
-				Utils.unpackZip(context, revenjDeps, httpServer);
-			} catch (IOException ex) {
-				context.error("Unable to download Revenj.NET from GitHub.");
-				context.error(ex);
-				final String answer;
-				if (!context.contains(Download.INSTANCE)) {
-					if (!context.canInteract()) {
-						throw new ExitException();
-					}
-					answer = context.ask("Try alternative download from DSL Platform (y/N):");
-				} else {
-					answer = "y";
-				}
-				if ("y".equalsIgnoreCase(answer)) {
-					try {
-						context.show("Downloading Revenj.NET from DSL Platform...");
-						DslServer.downloadAndUnpack(context, "server", revenjDeps);
-					} catch (IOException ex2) {
-						context.error("Unable to download Revenj.NET from DSL Platform.");
-						context.error(ex2);
-						return false;
-					}
-				} else {
-					throw new ExitException();
-				}
-			}
+			return DslServer.downloadFromGithubOrPlatform(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
 		}
 		return true;
 	}
@@ -99,7 +48,7 @@ public class CompileRevenjNet implements BuildAction {
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
 		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id);
-		final String customDll = context.get("revenj.net");
+		final String customDll = context.get(id);
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		context.show("Compiling Revenj.NET library...");
 		final Either<String> compilation =

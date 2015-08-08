@@ -1,10 +1,12 @@
 package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.json.JsonValue;
+import com.dslplatform.compiler.client.parameters.Download;
 import com.dslplatform.compiler.client.parameters.Password;
 import com.dslplatform.compiler.client.parameters.Username;
 import org.w3c.dom.Document;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -125,5 +127,72 @@ public abstract class DslServer {
 		final URL server = new URL(REMOTE_URL + "download/" + file + ".zip");
 		context.log("Downloading " + file + ".zip ...");
 		Utils.unpackZip(context, path, server);
+	}
+
+	public static boolean downloadFromGithubOrPlatform(
+			final Context context,
+			final String name,
+			final String zip,
+			final String additionalZip,
+			final File target) throws ExitException {
+		if (!context.contains(Download.INSTANCE)) {
+			if (!context.canInteract()) {
+				context.error("Download option not enabled.\n" +
+						"Enable download option, change dependencies path or place " + name + " files in specified folder: " + target.getAbsolutePath());
+				throw new ExitException();
+			}
+			final String answer = context.ask("Do you wish to download latest Revenj.NET version from the Internet (y/N):");
+			if (!"y".equalsIgnoreCase(answer)) {
+				throw new ExitException();
+			}
+		}
+		try {
+			context.show("Downloading " + name + " from GitHub...");
+			final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
+			final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
+			conn.setInstanceFollowRedirects(false);
+			conn.setUseCaches(false);
+			conn.connect();
+			if (conn.getResponseCode() != 302) {
+				context.error("Error downloading " + name + " from GitHub. Expecting redirect. Got: " + conn.getResponseCode());
+				return false;
+			}
+			final String redirect = conn.getHeaderField("Location");
+			final String tag = redirect.substring(redirect.lastIndexOf('/') + 1);
+			final URL coreUrl = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/" + zip + ".zip");
+			Utils.unpackZip(context, target, coreUrl);
+			if (additionalZip != null) {
+				final URL zipUrl = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/" + additionalZip + ".zip");
+				Utils.unpackZip(context, target, zipUrl);
+			}
+		} catch (IOException ex) {
+			context.error("Unable to download " + name + " from GitHub.");
+			context.error(ex);
+			final String answer;
+			if (!context.contains(Download.INSTANCE)) {
+				if (!context.canInteract()) {
+					throw new ExitException();
+				}
+				answer = context.ask("Try alternative download from DSL Platform (y/N):");
+			} else {
+				answer = "y";
+			}
+			if ("y".equalsIgnoreCase(answer)) {
+				try {
+					context.show("Downloading " + name + " from DSL Platform...");
+					downloadAndUnpack(context, zip, target);
+					if (additionalZip != null) {
+						downloadAndUnpack(context, additionalZip, target);
+					}
+				} catch (IOException ex2) {
+					context.error("Unable to download " + name + " from DSL Platform.");
+					context.error(ex2);
+					return false;
+				}
+			} else {
+				throw new ExitException();
+			}
+		}
+		return true;
 	}
 }
