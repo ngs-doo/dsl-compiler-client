@@ -11,9 +11,14 @@ public enum Targets implements CompileParameter, ParameterParser {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "target"; }
+	public String getAlias() {
+		return "target";
+	}
+
 	@Override
-	public String getUsage() { return "options"; }
+	public String getUsage() {
+		return "options";
+	}
 
 	private final static String[] DOTNET_CLIENT_DEPENDENCIES = {
 			"System.dll",
@@ -59,7 +64,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", "CSharp", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
-		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "dotnet_wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
+		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
 		PHP("php_client", "PHP client", "Php", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
 		PHP_UI("php_ui", "PHP UI client", "PhpUI", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
@@ -239,7 +244,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 			final boolean escapeName,
 			final String name,
 			final String content) throws ExitException, IOException {
-		final String cleanName = name.replace(':', '_');
+		final String cleanName = name.replace(':', '_').replace('<', '_').replace('>', '_');
 		final String nameOnly = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
 		final File file = escapeName
 				? new File(temp, nameOnly.replace(".", "/").replace("\\", "/") + cleanName.substring(nameOnly.length()))

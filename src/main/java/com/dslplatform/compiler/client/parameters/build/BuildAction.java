@@ -6,7 +6,7 @@ import com.dslplatform.compiler.client.ExitException;
 import java.io.File;
 
 public interface BuildAction {
-	public boolean check(final Context context) throws ExitException;
+	boolean check(final Context context) throws ExitException;
 
-	public void build(final File sources, final Context context) throws ExitException;
+	void build(final File sources, final Context context) throws ExitException;
 }
