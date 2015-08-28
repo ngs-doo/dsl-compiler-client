@@ -15,23 +15,25 @@ import java.util.zip.ZipInputStream;
 
 public abstract class Utils {
 	public static String read(final InputStream stream) throws IOException {
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-		final StringBuilder sb = new StringBuilder();
-		final char[] buffer = new char[8192];
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final byte[] buffer = new byte[8192];
 		int len;
-		while ((len = reader.read(buffer)) != -1) {
-			sb.append(buffer, 0, len);
+		while ((len = stream.read(buffer)) != -1) {
+			baos.write(buffer, 0, len);
 		}
-		reader.close();
-		return sb.toString();
+		return new String(baos.toByteArray(), "UTF-8");
 	}
 
 	public static Either<String> readFile(final File file) {
 		try {
-			FileInputStream stream = new FileInputStream(file);
-			final String content = read(stream);
-			stream.close();
-			return Either.success(content);
+			final FileInputStream stream = new FileInputStream(file);
+			try {
+				final String content = read(stream);
+				return Either.success(content);
+			}
+			finally {
+				stream.close();
+			}
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}
@@ -40,10 +42,14 @@ public abstract class Utils {
 	public static void saveFile(final Context context, final File file, final String content) throws IOException {
 		context.log("Saving file: " + file.getAbsolutePath());
 		final FileOutputStream fos = new FileOutputStream(file);
-		final Writer writer = new OutputStreamWriter(fos, "UTF-8");
-		writer.write(content);
-		writer.close();
-		fos.close();
+		try {
+			final Writer writer = new OutputStreamWriter(fos, "UTF-8");
+			writer.write(content);
+			writer.close();
+		}
+		finally {
+			fos.close();
+		}
 	}
 
 	public static JsonObject toJson(final Map<String, String> map) {
@@ -136,11 +142,14 @@ public abstract class Utils {
 		try {
 			final byte[] buffer = new byte[8192];
 			final InputStream stream = new BufferedInputStream(url.openConnection().getInputStream());
-			int len;
-			while ((len = stream.read(buffer)) != -1) {
-				fos.write(buffer, 0, len);
+			try {
+				int len;
+				while ((len = stream.read(buffer)) != -1) {
+					fos.write(buffer, 0, len);
+				}
+			} finally {
+				stream.close();
 			}
-			stream.close();
 		} catch (IOException io) {
 			if (retry > 0) {
 				downloadFileAndRetry(file, url, retry - 1);

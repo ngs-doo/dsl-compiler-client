@@ -120,7 +120,10 @@ public enum PostgresConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		try {
+			final long startAt = System.currentTimeMillis();
 			stmt.execute(sql);
+			final long endAt = System.currentTimeMillis();
+			context.log("Script executed in " + (endAt - startAt) + "ms");
 			stmt.close();
 			conn.close();
 		} catch (SQLException ex) {
