@@ -176,14 +176,14 @@ public enum JavaPath implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return "To compile Java libraries Java compiler is required.\n" +
-				"If javac is not available in path, custom path can be used to specify it.\n" +
+		return "To compile Java libraries a Java compiler is required.\n" +
+				"If javac is not available in the path, custom path can be used to specify it.\n" +
 				"jar is required to package compiled .class files into .jar\n" +
 				"\n" +
 				"JDK_HOME and JAVA_HOME environment variables will be checked for Java tools.\n" +
 				"\n" +
 				"Example:\n" +
 				"\t/var/user/java-8\n" +
-				"where /var/user/java-8/javac and /var/user/java-8/jar exists";
+				"where /var/user/java-8/javac and /var/user/java-8/jar exist";
 	}
 }
