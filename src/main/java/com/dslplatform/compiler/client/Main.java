@@ -44,7 +44,7 @@ public class Main {
 		for (final CompileParameter cp : plugins) {
 			parameters.add(cp);
 		}
-		//HACK: serice loader will lock jars on Windows
+		//HACK: service loader will lock jars on Windows
 		//close is not available in Java6, so use reflection to invoke it
 		if (Utils.isWindows()) {
 			try {
