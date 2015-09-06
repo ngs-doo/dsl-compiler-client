@@ -3,7 +3,7 @@ package com.dslplatform.compiler.client.parameters;
 import org.junit.Test;
 
 import static com.dslplatform.compiler.client.parameters.PostgresConnection.extractPostgresVersion;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class PostgresConnectionTest {
 	@Test
