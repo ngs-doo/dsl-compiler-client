@@ -243,16 +243,24 @@ public abstract class Utils {
 		context.log(description.toString());
 	}
 
+	private static List<String> adaptArgs(final String command, final List<String> arguments) {
+		final List<String> commandAndArgs = new ArrayList<String>();
+		if (Utils.isWindows()) {
+			commandAndArgs.add("cmd");
+			commandAndArgs.add("/c");
+		}
+		commandAndArgs.add(command);
+		commandAndArgs.addAll(arguments);
+		return commandAndArgs;
+	}
+
 	public static boolean testCommand(final Context context, final String command, final String contains) {
-		return testCommand(context, command, contains, new ArrayList<String>());
+		return testCommand(context, command, contains, Collections.<String>emptyList());
 	}
 
 	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments) {
 		try {
-			final List<String> commandAndArgs = new ArrayList<String>();
-			commandAndArgs.add(command);
-			commandAndArgs.addAll(arguments);
-			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			final ProcessBuilder pb = new ProcessBuilder(adaptArgs(command, arguments));
 			logCommand(context, pb);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
@@ -272,10 +280,7 @@ public abstract class Utils {
 
 	public static Either<CommandResult> runCommand(final Context context, final String command, final File path, final List<String> arguments) {
 		try {
-			final List<String> commandAndArgs = new ArrayList<String>();
-			commandAndArgs.add(command);
-			commandAndArgs.addAll(arguments);
-			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			final ProcessBuilder pb = new ProcessBuilder(adaptArgs(command, arguments));
 			if (path != null) {
 				pb.directory(path);
 			}

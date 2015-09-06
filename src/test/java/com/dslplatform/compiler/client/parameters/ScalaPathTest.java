@@ -3,12 +3,14 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.UtilsTest;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 public class ScalaPathTest {
 	private static String fakeScalaPath;
@@ -18,12 +20,26 @@ public class ScalaPathTest {
 		fakeScalaPath = UtilsTest.getScriptPath() + "/fake-scala";
 	}
 
-	@Test
-	public void testJavaPathParameter() {
-		final Context context = new Context();
+	private Context context;
+
+	@Before
+	public void initContext() {
+		context = new Context();
 		// context.put(LogOutput.INSTANCE, null);
-		final String scriptPath = Utils.isWindows() ? "bat/scalac.bat" : "empty/scalac";
-		context.put(ScalaPath.INSTANCE, fakeScalaPath + "/" + scriptPath);
+	}
+
+	@Test
+	public void testScalaPathBat() {
+		assumeTrue(Utils.isWindows());
+		context.put(ScalaPath.INSTANCE, fakeScalaPath + "/bat/scalac.bat");
+		assertTrue(ScalaPath.INSTANCE.check(context));
+	}
+
+
+	@Test
+	public void testScalaPathEmpty() {
+		assumeFalse(Utils.isWindows());
+		context.put(ScalaPath.INSTANCE, fakeScalaPath + "/empty/scalac");
 		assertTrue(ScalaPath.INSTANCE.check(context));
 	}
 
