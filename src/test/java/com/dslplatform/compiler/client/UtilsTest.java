@@ -1,6 +1,6 @@
 package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.parameters.Mono;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 
 public class UtilsTest {
-	private static Context context;
 	private static File fakeJavaFolder;
 	private static String expected;
 
@@ -28,131 +28,123 @@ public class UtilsTest {
 
 	@BeforeClass
 	public static void initPath() throws IOException {
-		context = new Context();
-		// context.put(LogOutput.INSTANCE, null);
-
 		fakeJavaFolder = new File(getScriptPath(), "fake-java");
 		assertTrue(fakeJavaFolder.exists());
 
 		expected = "Usage: javac" + System.getProperty("line.separator");
 	}
 
-	private static Either<Utils.CommandResult> runInJavac(final String command, final String... arguments) {
+	private Context context;
+
+	@Before
+	public void assumeWindows() {
+		context = new Context();
+		// context.put(LogOutput.INSTANCE, null);
+	}
+
+	private Either<Utils.CommandResult> runInJavac(final String command, final String... arguments) {
 		return Utils.runCommand(context, command, fakeJavaFolder, Arrays.asList(arguments));
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 
 	@Test
-	public void testBatDirectly() {
-		final File javacBat = new File(fakeJavaFolder, "bat/javac.bat");
-		assertTrue(javacBat.exists());
-
-		final Either<Utils.CommandResult> result = runInJavac(javacBat.getPath());
-		assertEquals(Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
-	}
-
-	@Test
-	public void testEmptyDirectly() {
-		final File javacEmpty = new File(fakeJavaFolder, "empty/javac");
-		assertTrue(javacEmpty.exists());
-
-		final Either<Utils.CommandResult> result = runInJavac(javacEmpty.getPath());
-		assertEquals(!Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
-	}
-
-	@Test
 	public void testExeDirectly() {
+		assumeTrue(Utils.isWindows());
 		final File javacExe = new File(fakeJavaFolder, "exe/javac.exe");
 		assertTrue(javacExe.exists());
 
 		final Either<Utils.CommandResult> result = runInJavac(javacExe.getPath());
-		assertEquals(Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
 	}
 
 	@Test
-	public void testNetDirectly() {
-		final File javacNet = new File(fakeJavaFolder, "net/javac.exe");
-		assertTrue(javacNet.exists());
+	public void testCmdDirectly() {
+		assumeTrue(Utils.isWindows());
+		final File javacCmd = new File(fakeJavaFolder, "cmd/javac.cmd");
+		assertTrue(javacCmd.exists());
 
-		if (Utils.isWindows()) {
-			final Either<Utils.CommandResult> result = runInJavac(javacNet.getPath());
-			assertTrue(result.isSuccess());
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
-		else if (Mono.INSTANCE.check(context)) {
-			final Either<Utils.CommandResult> result = runInJavac("mono", javacNet.getPath());
-			assertTrue(result.isSuccess());
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
+		final Either<Utils.CommandResult> result = runInJavac(javacCmd.getPath());
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
+	}
+	
+	@Test
+	public void testBatDirectly() {
+		assumeTrue(Utils.isWindows());
+		final File javacBat = new File(fakeJavaFolder, "bat/javac.bat");
+		assertTrue(javacBat.exists());
+
+		final Either<Utils.CommandResult> result = runInJavac(javacBat.getPath());
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
 	}
 
 	@Test
 	public void testShDirectly() {
+		assumeFalse(Utils.isWindows());
 		final File javacSh = new File(fakeJavaFolder, "sh/javac.sh");
 		assertTrue(javacSh.exists());
 
 		final Either<Utils.CommandResult> result = runInJavac(javacSh.getPath());
-		assertEquals(!Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
+	}
+
+	@Test
+	public void testEmptyDirectly() {
+		assumeFalse(Utils.isWindows());
+		final File javacEmpty = new File(fakeJavaFolder, "empty/javac");
+		assertTrue(javacEmpty.exists());
+
+		final Either<Utils.CommandResult> result = runInJavac(javacEmpty.getPath());
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 
 	@Test
+	public void testExeNoExtension() {
+		assumeTrue(Utils.isWindows());
+		final File javacExe = new File(fakeJavaFolder, "exe/javac");
+		assertFalse(javacExe.exists()); // does not exist!
+
+		final Either<Utils.CommandResult> result = runInJavac(javacExe.getPath());
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
+	}
+
+	@Test
+	public void testCmdNoExtension() {
+		assumeTrue(Utils.isWindows());
+		final File javacCmd = new File(fakeJavaFolder, "cmd/javac");
+		assertFalse(javacCmd.exists()); // does not exist!
+
+		// %ComSpec% is required for running .bat files without specifying their extension
+		final Either<Utils.CommandResult> result = runInJavac("cmd", "/c", javacCmd.getPath());
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
+	}
+
+	@Test
 	public void testBatNoExtension() {
+		assumeTrue(Utils.isWindows());
 		final File javacBat = new File(fakeJavaFolder, "bat/javac");
 		assertFalse(javacBat.exists()); // does not exist!
 
 		// %ComSpec% is required for running .bat files without specifying their extension
 		final Either<Utils.CommandResult> result = runInJavac("cmd", "/c", javacBat.getPath());
-		assertEquals(Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
-	}
-
-	@Test
-	public void testExeNoExtension() {
-		final File javacExe = new File(fakeJavaFolder, "exe/javac");
-		assertFalse(javacExe.exists()); // does not exist!
-
-		final Either<Utils.CommandResult> result = runInJavac(javacExe.getPath());
-		assertEquals(Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
-	}
-
-	@Test
-	public void testNetNoExtension() {
-		final File javacNet = new File(fakeJavaFolder, "net/javac");
-		assertFalse(javacNet.exists()); // does not exist!
-
-		final Either<Utils.CommandResult> result = runInJavac(javacNet.getPath());
-		assertEquals(Utils.isWindows(), result.isSuccess());
-		if (result.isSuccess()) {
-			assertEquals(expected, result.get().output);
-			assertEquals("", result.get().error);
-		}
+		assertTrue(result.isSuccess());
+		assertEquals(expected, result.get().output);
+		assertEquals("", result.get().error);
 	}
 }
