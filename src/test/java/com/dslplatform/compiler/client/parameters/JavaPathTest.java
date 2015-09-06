@@ -2,11 +2,11 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Utils;
-import com.dslplatform.compiler.client.UtilsTest;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -14,10 +14,24 @@ import static org.junit.Assume.*;
 
 public class JavaPathTest {
 	private static String fakeJavaPath;
+	private static File fakeJavaFolder;
+
+	public static String getScriptPath() {
+		final String testClasses = JavaPathTest.class.getResource("/").getPath();
+		final File scripts = new File(testClasses + "/../../src/test/scripts");
+		try {
+			return scripts.getCanonicalPath();
+		}
+		catch (final IOException e) {
+			return scripts.getAbsolutePath();
+		}
+	}
 
 	@BeforeClass
 	public static void initPath() throws IOException {
-		fakeJavaPath = UtilsTest.getScriptPath() + "/fake-java";
+		fakeJavaFolder = new File(getScriptPath(), "fake-java");
+		assertTrue(fakeJavaFolder.exists());
+		fakeJavaPath = getScriptPath() + "/fake-java";
 	}
 
 	private Context context;
@@ -25,28 +39,6 @@ public class JavaPathTest {
 	@Before
 	public void initContext() {
 		context = new Context();
-		// context.put(LogOutput.INSTANCE, null);
-	}
-
-	@Test
-	public void testJavaPathExe() {
-		assumeTrue(Utils.isWindows());
-		context.put(JavaPath.INSTANCE, fakeJavaPath + "/exe");
-		assertTrue(JavaPath.INSTANCE.check(context));
-	}
-
-	@Test
-	public void testJavaPathExeAndFolder() {
-		assumeTrue(Utils.isWindows());
-		context.put(JavaPath.INSTANCE, fakeJavaPath + "/exe-and-folder");
-		assertTrue(JavaPath.INSTANCE.check(context));
-	}
-
-	@Test
-	public void testJavaPathExeAndEmpty() {
-		assumeTrue(Utils.isWindows());
-		context.put(JavaPath.INSTANCE, fakeJavaPath + "/exe-and-empty");
-		assertTrue(JavaPath.INSTANCE.check(context));
 	}
 
 	@Test
@@ -98,5 +90,46 @@ public class JavaPathTest {
 		assertTrue(JavaPath.INSTANCE.check(context));
 	}
 
-	// TODO: Test JAVA_HOME/JDK_HOME environment settings by spawning a new process?
+	@Before
+	public void assumeWindows() {
+		context = new Context();
+	}
+
+	@Test
+	public void testSh() {
+		assumeFalse(Utils.isWindows());
+		final File javacSh = new File(fakeJavaFolder, "sh/javac.sh");
+		assertTrue(javacSh.exists());
+		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "sh").getPath());
+		assertTrue(JavaPath.findCompiler(context).isSuccess());
+	}
+
+	@Test
+	public void testEmpty() {
+		assumeFalse(Utils.isWindows());
+		final File javacEmpty = new File(fakeJavaFolder, "empty/javac");
+		assertTrue(javacEmpty.exists());
+		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "empty").getPath());
+		assertTrue(JavaPath.findCompiler(context).isSuccess());
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------
+
+	@Test
+	public void testCmd() {
+		assumeTrue(Utils.isWindows());
+		final File javacCmd = new File(fakeJavaFolder, "cmd/javac");
+		assertFalse(javacCmd.exists()); // does not exist!
+		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "cmd").getPath());
+		assertTrue(JavaPath.findCompiler(context).isSuccess());
+	}
+
+	@Test
+	public void testBat() {
+		assumeTrue(Utils.isWindows());
+		final File javacBat = new File(fakeJavaFolder, "bat/javac");
+		assertFalse(javacBat.exists()); // does not exist!
+		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "bat").getPath());
+		assertTrue(JavaPath.findCompiler(context).isSuccess());
+	}
 }

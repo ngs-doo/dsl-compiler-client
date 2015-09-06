@@ -30,8 +30,7 @@ public abstract class Utils {
 			try {
 				final String content = read(stream);
 				return Either.success(content);
-			}
-			finally {
+			} finally {
 				stream.close();
 			}
 		} catch (IOException ex) {
@@ -46,8 +45,7 @@ public abstract class Utils {
 			final Writer writer = new OutputStreamWriter(fos, "UTF-8");
 			writer.write(content);
 			writer.close();
-		}
-		finally {
+		} finally {
 			fos.close();
 		}
 	}
@@ -243,24 +241,37 @@ public abstract class Utils {
 		context.log(description.toString());
 	}
 
-	private static List<String> adaptArgs(final String command, final List<String> arguments) {
-		final List<String> commandAndArgs = new ArrayList<String>();
-		if (Utils.isWindows()) {
-			commandAndArgs.add("cmd");
-			commandAndArgs.add("/c");
+	public static Either<String> findCommand(final Context context, final String path, final String name, final String contains) {
+		final String simple = path != null ? new File(path, name).getAbsolutePath() : name;
+		if (testCommand(context, simple, contains, new ArrayList<String>())) {
+			context.log("Found " + name + " in " + simple);
+			return Either.success(simple);
 		}
-		commandAndArgs.add(command);
-		commandAndArgs.addAll(arguments);
-		return commandAndArgs;
+		if (isWindows()) {
+			final String bat = path != null ? new File(path, name + ".bat").getAbsolutePath() : name + ".bat";
+			if (testCommand(context, bat, contains, new ArrayList<String>())) {
+				context.log("Found " + name + " in " + bat);
+				return Either.success(bat);
+			}
+			final String cmd = path != null ? new File(path, name + ".cmd").getAbsolutePath() : name + ".cmd";
+			if (testCommand(context, cmd, contains, new ArrayList<String>())) {
+				context.log("Found " + name + " in " + cmd);
+				return Either.success(cmd);
+			}
+		}
+		return Either.fail("File not found: " + name);
 	}
 
 	public static boolean testCommand(final Context context, final String command, final String contains) {
-		return testCommand(context, command, contains, Collections.<String>emptyList());
+		return testCommand(context, command, contains, new ArrayList<String>());
 	}
 
 	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments) {
 		try {
-			final ProcessBuilder pb = new ProcessBuilder(adaptArgs(command, arguments));
+			final List<String> commandAndArgs = new ArrayList<String>();
+			commandAndArgs.add(command);
+			commandAndArgs.addAll(arguments);
+			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
 			logCommand(context, pb);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
@@ -280,7 +291,10 @@ public abstract class Utils {
 
 	public static Either<CommandResult> runCommand(final Context context, final String command, final File path, final List<String> arguments) {
 		try {
-			final ProcessBuilder pb = new ProcessBuilder(adaptArgs(command, arguments));
+			final List<String> commandAndArgs = new ArrayList<String>();
+			commandAndArgs.add(command);
+			commandAndArgs.addAll(arguments);
+			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
 			if (path != null) {
 				pb.directory(path);
 			}

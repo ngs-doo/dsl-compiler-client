@@ -23,27 +23,44 @@ public enum JavaPath implements CompileParameter {
 		return "path";
 	}
 
+	private static final String CACHE_FILE_PREFIX = "java_path_cache_";
+
 	public static Either<String> findCompiler(final Context context) {
+		return getCommand(context, "javac", "Java compiler");
+	}
+
+	private static Either<String> getJarCommand(final Context context) {
+		return getCommand(context, "jar", "Java archive tool");
+	}
+
+	private static Either<String> getCommand(final Context context, final String name, final String description) {
 		if (context.contains(INSTANCE)) {
-			final File javac = new File(context.get(INSTANCE), "javac");
-			return Either.success(javac.getAbsolutePath());
-		} else {
-			final String envJH = System.getenv("JAVA_HOME");
-			final String envJDH = System.getenv("JDK_HOME");
-			if (Utils.testCommand(context, "javac", "Usage: javac")) {
-				return Either.success("javac");
-			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/javac", "Usage: javac")) {
-				return Either.success(envJH + "/bin/javac");
-			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/javac", "Usage: javac")) {
-				return Either.success(envJDH + "/bin/javac");
-			}
-			return Either.fail("Unable to find Java compiler. Add it to path or specify java compile option.");
+			final String file = context.load(CACHE_FILE_PREFIX + name);
+			return Either.success(file);
 		}
+		final String envJH = System.getenv("JAVA_HOME");
+		final String envJDK = System.getenv("JDK_HOME");
+		final Either<String> path = Utils.findCommand(context, null, name, "Usage: " + name);
+		if (path.isSuccess()) {
+			context.cache(CACHE_FILE_PREFIX + name, path.get());
+			return Either.success(path.get());
+		}
+		if (envJH != null) {
+			final Either<String> homePath = Utils.findCommand(context, new File(envJH, "bin").getPath(), name, "Usage: " + name);
+			context.cache(CACHE_FILE_PREFIX + name, homePath.get());
+			return Either.success(homePath.get());
+		}
+		if (envJDK != null) {
+			final Either<String> homePath = Utils.findCommand(context, new File(envJDK, "bin").getPath(), name, "Usage: " + name);
+			context.cache(CACHE_FILE_PREFIX + name, homePath.get());
+			return Either.success(homePath.get());
+		}
+		return Either.fail("Unable to find " + description + ". Add it to path or specify java compile option.");
 	}
 
 	private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
 
-	public static Either<Utils.CommandResult> makeArchive(
+	public static synchronized Either<Utils.CommandResult> makeArchive(
 			final Context context,
 			final File classOut,
 			final File output) {
@@ -101,25 +118,6 @@ public enum JavaPath implements CompileParameter {
 		return Utils.runCommand(context, jar, classOut, jarArguments);
 	}
 
-	private static Either<String> getJarCommand(final Context context) {
-		if (context.contains(INSTANCE)) {
-			final File jarFile = new File(context.get(INSTANCE), "jar");
-			return Either.success(jarFile.getAbsolutePath());
-		} else {
-			final String envJH = System.getenv("JAVA_HOME");
-			final String envJDH = System.getenv("JDK_HOME");
-			if (Utils.testCommand(context, "jar", "Usage: jar")) {
-				return Either.success("jar");
-			} else if (envJH != null && Utils.testCommand(context, envJH + "/bin/jar", "Usage: jar")) {
-				return Either.success(envJH + "/bin/jar");
-			} else if (envJDH != null && Utils.testCommand(context, envJDH + "/bin/jar", "Usage: jar")) {
-				return Either.success(envJDH + "/bin/jar");
-			} else {
-				return Either.fail("Unable to find Java archive tool. Add it to path or specify java compile option.");
-			}
-		}
-	}
-
 	private static List<String> makeJarArguments(
 			final Context context,
 			final File source,
@@ -149,18 +147,20 @@ public enum JavaPath implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(INSTANCE)) {
 			final String path = context.get(INSTANCE);
-			final File javac = new File(path, "javac");
-			if (!Utils.testCommand(context, javac.getAbsolutePath(), "Usage: javac")) {
+			final Either<String> javac = Utils.findCommand(context, path, "javac", "Usage: javac");
+			if (!javac.isSuccess()) {
 				context.error("java parameter is set, but Java compiler not found/doesn't work. Please check specified java parameter.");
-				context.error("Trying to use: " + javac.getAbsolutePath());
+				context.error("Trying to find javac in " + path);
 				return false;
 			}
-			final File jar = new File(path, "jar");
-			if (!Utils.testCommand(context, jar.getAbsolutePath(), "Usage: jar")) {
+			final Either<String> jar = Utils.findCommand(context, path, "jar", "Usage: jar");
+			if (!jar.isSuccess()) {
 				context.error("java parameter is set, but Java archive tool not found/doesn't work. Please check specified java parameter.");
-				context.error("Trying to use: " + jar.getAbsolutePath());
+				context.error("Trying to find jar in " + path);
 				return false;
 			}
+			context.cache(CACHE_FILE_PREFIX + "javac", javac.get());
+			context.cache(CACHE_FILE_PREFIX + "jar", jar.get());
 		}
 		return true;
 	}
