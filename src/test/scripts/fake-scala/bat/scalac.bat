@@ -1,0 +1,1 @@
+@echo Usage: scalac
