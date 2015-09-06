@@ -106,45 +106,17 @@ public enum PostgresConnection implements CompileParameter {
 		return emptyResult;
 	}
 
-	static Map<String, String> splitConnectionString(final String connectionString) {
-		final Map<String, String> params = new LinkedHashMap<String, String>();
-		final String[] qSplit = connectionString.split("\\?", 2);
-		params.put(null, qSplit[0]);
-		if (qSplit.length > 1) {
-			for (final String param : qSplit[1].split("&", -1)) {
-				final String[] eqSplit = param.split("=", 2);
-				params.put(eqSplit[0], eqSplit.length > 1 ? eqSplit[1] : null);
-			}
-		}
-		return params;
-	}
-
-	static String joinConnectionParams(final Map<String, String> params) {
-		final StringBuilder sb = new StringBuilder(params.get(null));
-		if (params.size() > 1) {
-			boolean first = true;
-			for (final String key : params.keySet()) {
-				if (key == null) continue;
-				sb.append(first ? '?' : '&').append(key);
-				first = false;
-				final String value = params.get(key);
-				if (value != null) {
-					sb.append("=").append(value);
-				}
-			}
-		}
-		return sb.toString();
-	}
-
 	public static void execute(final Context context, final String sql) throws ExitException {
-		final Map<String, String> params = PostgresConnection.splitConnectionString(context.get(INSTANCE));
-		// do not replace protocolVersion if manually configured
-		if (!params.containsKey("protocolVersion")) params.put("protocolVersion", "2");
-		final String connectionString = "jdbc:postgresql://" + PostgresConnection.joinConnectionParams(params);
+		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
+
+		// if protocolVersion is present in the connectionString, it will take precedence
+		final Properties defaultParams = new Properties();
+		defaultParams.put("protocolVersion", "2");
+
 		Connection conn;
 		Statement stmt;
 		try {
-			conn = DriverManager.getConnection(connectionString);
+			conn = DriverManager.getConnection(connectionString, defaultParams);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
