@@ -302,7 +302,7 @@ public abstract class Utils {
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context);
 			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context);
-			compilation.waitFor();
+			final int exitCode = compilation.waitFor();
 			result.join();
 			error.join();
 			if (result.exception != null) {
@@ -311,7 +311,7 @@ public abstract class Utils {
 			if (error.exception != null) {
 				return Either.fail(error.exception);
 			}
-			return Either.success(new CommandResult(result.output.toString(), error.output.toString(), compilation.exitValue()));
+			return Either.success(new CommandResult(result.output.toString(), error.output.toString(), exitCode));
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		} catch (InterruptedException ex) {

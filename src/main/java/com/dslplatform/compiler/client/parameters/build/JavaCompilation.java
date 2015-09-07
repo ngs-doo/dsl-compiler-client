@@ -55,7 +55,8 @@ class JavaCompilation {
 
 		final List<String> javacArguments = new ArrayList<String>();
 		javacArguments.add("-encoding");
-		javacArguments.add("UTF8");
+		javacArguments.add("UTF-8");
+		javacArguments.add("-Xlint:none"); // notices still get emitted to the stderr
 		javacArguments.add("-d");
 		javacArguments.add("compile-" + name);
 		javacArguments.add("-cp");
@@ -88,8 +89,12 @@ class JavaCompilation {
 			return Either.fail(execCompile.whyNot());
 		}
 		final Utils.CommandResult compilation = execCompile.get();
-		if (compilation.error.length() > 0) {
-			return Either.fail(compilation.error);
+		if (compilation.exitCode != 0) {
+			if (compilation.error.length() > 0) {
+				return Either.fail(compilation.error);
+			} else {
+				return Either.fail("Non-zero exit code: " + compilation.exitCode);
+			}
 		}
 		if (compilation.output.contains("error")) {
 			final StringBuilder sb = new StringBuilder();
