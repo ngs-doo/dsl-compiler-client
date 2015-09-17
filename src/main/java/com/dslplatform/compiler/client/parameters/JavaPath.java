@@ -5,10 +5,7 @@ import com.dslplatform.compiler.client.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public enum JavaPath implements CompileParameter {
 	INSTANCE;
@@ -63,26 +60,54 @@ public enum JavaPath implements CompileParameter {
 	public static synchronized Either<Utils.CommandResult> makeArchive(
 			final Context context,
 			final File classOut,
-			final File output) {
+			final File output,
+			final Map<String, List<String>> services) {
 		final Either<String> tryJar = getJarCommand(context);
 		if (!tryJar.isSuccess()) {
 			return Either.fail(tryJar.whyNot());
 		}
 		final String jar = tryJar.get();
 
-		final List<String> jarArguments = makeJarArguments(context, classOut, "class", output);
+		final List<String> jarArguments = makeJarArguments(context, classOut, "class", output, services);
 
+		final File metaInf = new File(classOut, "META-INF");
+		final File manifest = new File(metaInf, "MANIFEST.MF");
+		if (!metaInf.exists()) {
+			if (!metaInf.mkdirs()) {
+				return Either.fail("Error creating: " + metaInf.getAbsolutePath());
+			}
+		}
 		try {
-			final File manifest = new File(classOut, "MANIFEST.MF");
 			final String version = context.contains(Version.INSTANCE)
 					? context.get(Version.INSTANCE)
 					: DATE_FORMAT.format(new Date());
 			Utils.saveFile(context, manifest, "Implementation-Version: " + version + "\n");
 		} catch (IOException e) {
-			context.error("Can't create MANIFEST.MF.");
+			context.error("Can't create manifest: " + manifest);
 			return Either.fail(e);
 		}
-
+		if (services != null) {
+			final File servicePath = new File(metaInf, "services");
+			if (!servicePath.exists()) {
+				if (!servicePath.mkdirs()) {
+					return Either.fail("Error creating: " + servicePath.getAbsolutePath());
+				}
+			}
+			for (Map.Entry<String, List<String>> kv : services.entrySet()) {
+				final File service = new File(servicePath, kv.getKey());
+				try {
+					StringBuilder sb = new StringBuilder();
+					for (String it : kv.getValue()) {
+						sb.append(it);
+						sb.append("\n");
+					}
+					Utils.saveFile(context, service, sb.toString());
+				} catch (IOException e) {
+					context.error("Can't create service: " + kv);
+					return Either.fail(e);
+				}
+			}
+		}
 		context.show("Running jar for " + output.getName() + "...");
 		final Either<Utils.CommandResult> execArchive = Utils.runCommand(context, jar, classOut, jarArguments);
 		if (!execArchive.isSuccess()) {
@@ -104,7 +129,7 @@ public enum JavaPath implements CompileParameter {
 
 		final String manifestName = "MANIFEST.MF";
 		try {
-			final File mockManifest = new File(classOut, manifestName);
+			final File mockManifest = new File(new File(classOut, "META-INF"), "MANIFEST.MF");
 			Utils.saveFile(context, mockManifest, "Manifest-Version: 1.0");
 		} catch (IOException e) {
 			context.error("Can't create mock MANIFEST.MF.");
@@ -122,11 +147,22 @@ public enum JavaPath implements CompileParameter {
 			final Context context,
 			final File source,
 			final String type,
-			final File output) {
+			final File output,
+			final Map<String, List<String>> services) {
 		final List<String> jarArguments = new ArrayList<String>();
 		jarArguments.add("cfm");
 		jarArguments.add(output.getAbsolutePath());
-		jarArguments.add("MANIFEST.MF");
+		jarArguments.add("META-INF" + File.separator + "MANIFEST.MF");
+
+		if (services != null && !services.isEmpty()) {
+			if (Utils.isWindows()) {
+				jarArguments.add("META-INF" + File.separator + "services" + File.separator + "*");
+			} else {
+				for (String key : services.keySet()) {
+					jarArguments.add("META-INF" + File.separator + "services" + File.separator + key);
+				}
+			}
+		}
 
 		final int len = source.getAbsolutePath().length() + 1;
 		if (Utils.isWindows()) {

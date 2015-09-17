@@ -3,12 +3,12 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.Namespace;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.URL;
+import java.util.*;
 
 public class CompileRevenjJava implements BuildAction {
 
@@ -58,28 +58,29 @@ public class CompileRevenjJava implements BuildAction {
 			} catch (IOException ex) {
 				context.error("Unable to download Revenj.NET from GitHub.");
 				context.error(ex);*/
-				final String answer;
-				if (!context.contains(Download.INSTANCE)) {
-					if (!context.canInteract()) {
-						throw new ExitException();
-					}
-					//answer = context.ask("Try alternative download from DSL Platform (y/N):");
-					answer = context.ask("Download from DSL Platform (y/N):");
-				} else {
-					answer = "y";
-				}
-				if ("y".equalsIgnoreCase(answer)) {
-					try {
-						context.show("Downloading Revenj.Java from DSL Platform...");
-						DslServer.downloadAndUnpack(context, "revenj-java", revenjDeps);
-					} catch (IOException ex2) {
-						context.error("Unable to download Revenj.Java from DSL Platform.");
-						context.error(ex2);
-						return false;
-					}
-				} else {
+			final String answer;
+			if (!context.contains(Download.INSTANCE)) {
+				if (!context.canInteract()) {
 					throw new ExitException();
 				}
+				//answer = context.ask("Try alternative download from DSL Platform (y/N):");
+				//answer = context.ask("Download from DSL Platform (y/N):");
+				answer = "y";
+			} else {
+				answer = "y";
+			}
+			if ("y".equalsIgnoreCase(answer)) {
+				try {
+					context.show("Downloading Revenj.Java from DSL Platform...");
+					DslServer.downloadAndUnpack(context, "revenj-java", revenjDeps);
+				} catch (IOException ex2) {
+					context.error("Unable to download Revenj.Java from DSL Platform.");
+					context.error(ex2);
+					return false;
+				}
+			} else {
+				throw new ExitException();
+			}
 			//}
 		}
 		return true;
@@ -90,7 +91,12 @@ public class CompileRevenjJava implements BuildAction {
 		final File libDeps = Dependencies.getDependencies(context, "Revenj.Java", id);
 		final String customJar = context.get(id);
 		final File model = new File(customJar != null ? customJar : "./generated-server-model.jar");
-		final Either<String> compilation = JavaCompilation.compile("revenj", libDeps, sources, model, context);
+		final String namespace = context.get(Namespace.INSTANCE);
+		final String bootClass = namespace != null && namespace.length() > 0 ? namespace + ".Boot" : "Boot";
+		//TODO: not sure if service should be registered without namespace
+		final Map<String, List<String>> services = new HashMap<String, List<String>>();
+		services.put("org.revenj.extensibility.SystemAspect", Collections.singletonList(bootClass));
+		final Either<String> compilation = JavaCompilation.compile("revenj", libDeps, sources, model, services, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj.Java library compilation.");
 			context.error(compilation.whyNot());

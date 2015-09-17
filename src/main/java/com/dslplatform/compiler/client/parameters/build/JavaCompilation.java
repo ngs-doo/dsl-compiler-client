@@ -16,6 +16,7 @@ class JavaCompilation {
 			final File libraries,
 			final File source,
 			final File output,
+			final Map<String, List<String>> services,
 			final Context context) {
 		if (output.exists() && !output.isDirectory()) {
 			if (!output.delete()) {
@@ -109,7 +110,7 @@ class JavaCompilation {
 			return Either.fail(compilation.output);
 		}
 
-		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, classOut, output);
+		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, classOut, output, services);
 		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
 		}
