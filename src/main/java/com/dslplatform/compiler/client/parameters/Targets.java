@@ -52,8 +52,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 	};
 
 	public enum Option {
-		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("revenj.java"), true),
-		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("java_server_postgres"), true),
+		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("revenj.java", "revenj-java"), true),
+		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("java_server_postgres", "revenj-java"), true),
+		REVENJ_SPRING("revenj.spring", "Revenj.Java server for Spring with Postgres", "SpringServerPostgres", ".java", new CompileRevenjJava("revenj.spring", "revenj-spring"), true),
 		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		JAVA_POJO("java_pojo", "Plain Old Java Object", "Java", ".java", new CompileJavaClient("Java POJO", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
 		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),

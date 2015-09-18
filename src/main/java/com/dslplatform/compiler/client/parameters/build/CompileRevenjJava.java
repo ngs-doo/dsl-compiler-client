@@ -13,9 +13,11 @@ import java.util.*;
 public class CompileRevenjJava implements BuildAction {
 
 	private final String id;
+	private final String zip;
 
-	public CompileRevenjJava(final String id) {
+	public CompileRevenjJava(final String id, final String zip) {
 		this.id = id;
+		this.zip = zip;
 	}
 
 	@Override
@@ -72,7 +74,7 @@ public class CompileRevenjJava implements BuildAction {
 			if ("y".equalsIgnoreCase(answer)) {
 				try {
 					context.show("Downloading Revenj.Java from DSL Platform...");
-					DslServer.downloadAndUnpack(context, "revenj-java", revenjDeps);
+					DslServer.downloadAndUnpack(context, zip, revenjDeps);
 				} catch (IOException ex2) {
 					context.error("Unable to download Revenj.Java from DSL Platform.");
 					context.error(ex2);
