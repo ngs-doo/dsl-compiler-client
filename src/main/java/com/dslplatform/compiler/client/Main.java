@@ -85,7 +85,9 @@ public class Main {
 			Migration.INSTANCE,
 			ApplyMigration.INSTANCE,
 			DisableColors.INSTANCE,
-			LogOutput.INSTANCE
+			LogOutput.INSTANCE,
+			VarraySize.INSTANCE,
+			GrantRole.INSTANCE
 	};
 
 	public static boolean processContext(final Context context, final List<CompileParameter> parameters) {

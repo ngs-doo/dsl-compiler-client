@@ -102,6 +102,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		final File compiler = new File(context.get(INSTANCE));
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=" + dbInfo.database.toLowerCase() + dbInfo.dbVersion);
+		if (context.contains(VarraySize.INSTANCE)) {
+			arguments.add("varray=" + context.get(VarraySize.INSTANCE));
+		}
+		if (context.contains(GrantRole.INSTANCE)) {
+			arguments.add("role=" + context.get(GrantRole.INSTANCE));
+		}
 		if (dbInfo.dsl != null && !dbInfo.dsl.isEmpty()) {
 			final StringBuilder oldDsl = new StringBuilder();
 			for (final String v : dbInfo.dsl.values()) {

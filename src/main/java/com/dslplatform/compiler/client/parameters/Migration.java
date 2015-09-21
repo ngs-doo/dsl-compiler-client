@@ -133,15 +133,21 @@ public enum Migration implements CompileParameter {
 	private static String onlineMigration(final Context context, final DatabaseInfo dbInfo) throws ExitException {
 		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
 		final String dbName = dbInfo.database.toLowerCase();
-		final String url =
+		final StringBuilder url = new StringBuilder(
 				"Platform.svc/unmanaged/" + dbName + "-migration?version=" + dbInfo.compilerVersion
-						+ "&" + dbName + "=" + dbInfo.dbVersion;
+						+ "&" + dbName + "=" + dbInfo.dbVersion);
+		if (context.contains(VarraySize.INSTANCE)) {
+			url.append("&varray=").append(context.get(VarraySize.INSTANCE));
+		}
+		if (context.contains(GrantRole.INSTANCE)) {
+			url.append("&role=").append(context.get(GrantRole.INSTANCE));
+		}
 		final JsonObject arg =
 				new JsonObject()
 						.add("Old", Utils.toJson(dbInfo.dsl))
 						.add("New", Utils.toJson(currentDsl));
 		context.show("Downloading SQL migration...");
-		final Either<String> response = DslServer.put(url, context, arg);
+		final Either<String> response = DslServer.put(url.toString(), context, arg);
 		if (!response.isSuccess()) {
 			context.error("Error creating online SQL migration:");
 			context.error(response.whyNot());
