@@ -163,12 +163,15 @@ public enum JavaPath implements CompileParameter {
 				}
 			}
 		}
-
 		final int len = source.getAbsolutePath().length() + 1;
 		if (Utils.isWindows()) {
 			final List<File> classDirs = Utils.findNonEmptyDirs(source, "." + type);
 			for (final File f : classDirs) {
-				jarArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*." + type);
+				if (f.equals(source)) {
+					jarArguments.add("*." + type);
+				} else {
+					jarArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*." + type);
+				}
 			}
 		} else {
 			final List<File> classFiles = Utils.findFiles(context, source, Collections.singletonList("." + type));
