@@ -1,6 +1,5 @@
 package com.dslplatform.compiler.client;
 
-import com.dslplatform.compiler.client.json.JsonObject;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -48,14 +47,6 @@ public abstract class Utils {
 		} finally {
 			fos.close();
 		}
-	}
-
-	public static JsonObject toJson(final Map<String, String> map) {
-		final JsonObject json = new JsonObject();
-		for (final Map.Entry<String, String> kv : map.entrySet()) {
-			json.add(kv.getKey(), kv.getValue());
-		}
-		return json;
 	}
 
 	public static List<File> findFiles(final Context context, final File path, final List<String> extensions) {

@@ -58,9 +58,10 @@ public enum Download implements CompileParameter {
 			final Context context,
 			final String name,
 			final String zip,
-			final String client,
+			final String id,
+			final String path,
 			final String library) throws ExitException {
-		final File dependencies = Dependencies.getDependencies(context, name, client);
+		final File dependencies = Dependencies.getDependencies(context, name, id);
 		final File[] found = dependencies.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -85,7 +86,7 @@ public enum Download implements CompileParameter {
 			}
 			context.show("Downloading " + name + " from Sonatype...");
 			try {
-				final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/com/dslplatform/" + library + "/maven-metadata.xml");
+				final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/" + path + "/" + library + "/maven-metadata.xml");
 				final Either<Document> doc = Utils.readXml(maven.openConnection().getInputStream());
 				if (!doc.isSuccess()) {
 					context.error("Error downloading library info from Sonatype.");
@@ -95,8 +96,8 @@ public enum Download implements CompileParameter {
 				final Element root = doc.get().getDocumentElement();
 				final Element versioning = (Element) root.getElementsByTagName("versioning").item(0);
 				final String version = versioning.getElementsByTagName("release").item(0).getTextContent();
-				final String sharedUrl = "https://oss.sonatype.org/content/repositories/releases/com/dslplatform/" +
-						library + "/" + version + "/" + library + "-" + version;
+				final String sharedUrl = "https://oss.sonatype.org/content/repositories/releases/" +
+						path + "/" + library + "/" + version + "/" + library + "-" + version;
 				final URL pomUrl = new URL(sharedUrl + ".pom");
 				final File pomFile = new File(dependencies, library + "-" + version + ".pom");
 				Utils.downloadFile(pomFile, pomUrl);

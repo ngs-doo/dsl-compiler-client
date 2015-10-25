@@ -2,9 +2,13 @@ package com.dslplatform.compiler.client.parameters.build;
 
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
+import com.dslplatform.compiler.client.parameters.Download;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.net.URL;
 
 public class CompileRevenjNet implements BuildAction {
 
@@ -27,7 +31,7 @@ public class CompileRevenjNet implements BuildAction {
 		});
 		if (found.length == 0) {
 			context.error("Revenj.NET dependencies not found in: " + revenjDeps.getAbsolutePath());
-			return DslServer.downloadFromGithubOrPlatform(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
+			return downloadFromGithub(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
 		}
 		return true;
 	}
@@ -65,5 +69,51 @@ public class CompileRevenjNet implements BuildAction {
 			context.log(compilation.get());
 			throw new ExitException();
 		}
+	}
+
+	private static boolean downloadFromGithub(
+			final Context context,
+			final String name,
+			final String zip,
+			final String additionalZip,
+			final File target) throws ExitException {
+		if (!context.contains(Download.INSTANCE)) {
+			if (!context.canInteract()) {
+				context.error("Download option not enabled.\n" +
+						"Enable download option, change dependencies path or place " + name + " files in specified folder: " + target.getAbsolutePath());
+				throw new ExitException();
+			}
+			final String answer = context.ask("Do you wish to download latest Revenj.NET version from the Internet (y/N):");
+			if (!"y".equalsIgnoreCase(answer)) {
+				throw new ExitException();
+			}
+		}
+		try {
+			context.show("Downloading " + name + " from GitHub...");
+			final URL latest = new URL("https://github.com/ngs-doo/revenj/releases/latest");
+			final HttpsURLConnection conn = (HttpsURLConnection) latest.openConnection();
+			conn.setInstanceFollowRedirects(false);
+			conn.setUseCaches(false);
+			conn.connect();
+			final String tag;
+			if (conn.getResponseCode() != 302) {
+				context.error("Error downloading " + name + " from GitHub. Will continue with tag 1.2.1. Expecting redirect. Got: " + conn.getResponseCode());
+				tag = "1.2.1";
+			} else {
+				final String redirect = conn.getHeaderField("Location");
+				tag = redirect.substring(redirect.lastIndexOf('/') + 1);
+			}
+			final URL coreUrl = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/" + zip + ".zip");
+			Utils.unpackZip(context, target, coreUrl);
+			if (additionalZip != null) {
+				final URL zipUrl = new URL("https://github.com/ngs-doo/revenj/releases/download/" + tag + "/" + additionalZip + ".zip");
+				Utils.unpackZip(context, target, zipUrl);
+			}
+		} catch (IOException ex) {
+			context.error("Unable to download " + name + " from GitHub.");
+			context.error(ex);
+			return false;
+		}
+		return true;
 	}
 }

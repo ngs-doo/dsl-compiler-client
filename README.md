@@ -50,7 +50,7 @@ DSL compiler acts as a developer in your team which does all the boring work you
 
 ###Getting started
 
-Browse [dsl-platform](https://dsl-platform.com/) to get a feeling of supported DSL constructs. Compiler comes with a free offline version, but it requires Mono/.NET on the system.
+Browse [dsl-platform](https://dsl-platform.com/) to get a feeling of supported DSL constructs. Compiler requires Mono/.NET on the system.
 
 Think about your domain - DSL is designed to get out of the way while modeling. Write some DSL which captures everything you need from it.
 
@@ -74,17 +74,13 @@ This will display all available options of the tool and examples on how to use i
 ###Compiled libraries
 
 This tool is used to produce a compiled library which you can use to implement custom behavior and business logic.
-While you can use generated code instead of compiled library, this behavior is highly discouraged since it leads to broken development once you start modifying generated code.
+While you can use generated code instead of compiled library, this behavior is highly discouraged.
 
 ###Usage examples
 
-Compiling Java client library from DSL located in ./dsl folder
+Compiling Java client library from DSL located in ./dsl folder (you will need Mono or .NET to use the compiler)
 
     java -jar dsl-clc.jar target=java_client
-
-Compiling Java client library from DSL located in ./dsl folder using an offline compiler (you will need Mono or .NET to use offline compiler)
-
-    java -jar dsl-clc.jar target=java_client compiler
 
 Creating PHP source from DSL located in ./model folder
 
@@ -96,7 +92,6 @@ Compiling Java client library and specifying output jar name
 
 Compiling Java client library, .NET server library and applying database migration using properties file *compile-options.props* with the content
 
-    u=account@dsl-platform.com
     java_client=./play/model.jar
     revenj.net=./revenj/ServerModel.dll
     dsl=C:/Models/MyApp
@@ -118,8 +113,8 @@ Disabling prompt and forcing destructive migrations for nightly builds
 
 Checking if current DSL is a valid one
 
-    java -jar dsl-clc.jar parse u=my-account@dsl-platform
+    java -jar dsl-clc.jar parse
 
-Saving SQL migration to specific folder with a specific compiler version
+Saving SQL migration to custom folder with a specific compiler version
 
     java -jar dsl-clc.jar migration sql=sql-upgrade-scripts postgres=localhost/Project?user=postgres compiler=/usr/dsl-compiler-v1.0/dsl-compiler.exe

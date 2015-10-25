@@ -1,7 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.JsonObject;
 import com.dslplatform.compiler.client.parameters.build.*;
 
 import java.io.*;
@@ -52,29 +51,28 @@ public enum Targets implements CompileParameter, ParameterParser {
 	};
 
 	public enum Option {
-		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("revenj.java", "revenj-java"), true),
-		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", "JavaServerPostgres", ".java", new CompileRevenjJava("java_server_postgres", "revenj-java"), true),
-		REVENJ_SPRING("revenj.spring", "Revenj.Java server for Spring with Postgres", "SpringServerPostgres", ".java", new CompileRevenjJava("revenj.spring", "revenj-spring"), true),
-		JAVA_CLIENT("java_client", "Java client", "Java", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
-		JAVA_POJO("java_pojo", "Plain Old Java Object", "Java", ".java", new CompileJavaClient("Java POJO", "java-client", "java_client", "dsl-client-java", "./generated-model-java.jar"), true),
-		ANDORID("android", "Android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "dsl-client-java", "./generated-model-android.jar"), true),
-		REVENJ_NET("revenj.net", "Revenj.NET server for Postgres", "CSharpServerPostgres", ".cs", new CompileRevenjNet("revenj.net", null), false),
-		REVENJ_NET_POSTGRES("dotnet_server_postgres", "Revenj.NET server for Postgres", "CSharpServerPostgres", ".cs", new CompileRevenjNet("dotnet_server_postgres", null), false),
-		REVENJ_NET_ORACLE_32("dotnet_server_oracle_32", "Revenj.NET server for Oracle with 32bit client driver", "CSharpServerOracle", ".cs", new CompileRevenjNet("dotnet_server_oracle_32", "oracle-driver-32bit"), false),
-		REVENJ_NET_ORACLE_64("dotnet_server_oracle_64", "Revenj.NET server for Oracle with 64bit client driver", "CSharpServerOracle", ".cs", new CompileRevenjNet("dotnet_server_oracle_64", "oracle-driver-64bit"), false),
-		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", "CSharp", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
-		DOTNET_CLIENT("dotnet_client", ".NET client", "CSharpClient", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
-		DOTNET_PORTABLE("dotnet_portable", ".NET portable", "CSharpPortable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
-		DOTNET_WPF("wpf", ".NET WPF GUI", "Wpf", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
-		PHP("php_client", "PHP client", "Php", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
-		PHP_UI("php_ui", "PHP UI client", "PhpUI", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
-		SCALA_CLIENT("scala_client", "Scala client", "ScalaClient", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
-		SCALA_POSO("scala_poso", "Plain Old Scala Object", "Scala", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala.jar"), false),
-		SCALA_SERVER("scala_server", "Scala server", "ScalaServer", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
+		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("revenj.java", "revenj-java", "revenj-core"), true),
+		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("java_server_postgres", "revenj-java", "revenj-core"), true),
+		REVENJ_SPRING("revenj.spring", "Revenj.Java server for Spring with Postgres", ".java", new CompileRevenjJava("revenj.spring", "revenj-spring", "revenj-spring"), true),
+		JAVA_CLIENT("java_client", "Java client", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "com/dslplatform", "dsl-client-java", "./generated-model-java.jar"), true),
+		JAVA_POJO("java_pojo", "Plain Old Java Object", ".java", new CompileJavaClient("Java POJO", "java-client", "java_client", "com/dslplatform", "dsl-client-java", "./generated-model-java.jar"), true),
+		ANDORID("android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "com/dslplatform", "dsl-client-java", "./generated-model-android.jar"), true),
+		REVENJ_NET("revenj.net", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("revenj.net", null), false),
+		REVENJ_NET_POSTGRES("dotnet_server_postgres", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("dotnet_server_postgres", null), false),
+		REVENJ_NET_ORACLE_32("dotnet_server_oracle_32", "Revenj.NET server for Oracle with 32bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_32", "oracle-driver-32bit"), false),
+		REVENJ_NET_ORACLE_64("dotnet_server_oracle_64", "Revenj.NET server for Oracle with 64bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_64", "oracle-driver-64bit"), false),
+		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
+		DOTNET_CLIENT("dotnet_client", ".NET client", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
+		DOTNET_PORTABLE("dotnet_portable", ".NET portable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
+		DOTNET_WPF("wpf", ".NET WPF GUI", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
+		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
+		PHP_UI("php_ui", "PHP UI client", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
+		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
+		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala.jar"), false),
+		SCALA_SERVER("scala_server", "Scala server", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
 
 		private final String value;
 		private final String description;
-		private final String platformName;
 		private final String extension;
 		private final BuildAction action;
 		private final boolean convertToPath;
@@ -82,13 +80,11 @@ public enum Targets implements CompileParameter, ParameterParser {
 		Option(
 				final String value,
 				final String description,
-				final String platformName,
 				final String extension,
 				final BuildAction action,
 				final boolean convertToPath) {
 			this.value = value;
 			this.description = description;
-			this.platformName = platformName;
 			this.extension = extension;
 			this.action = action;
 			this.convertToPath = convertToPath;
@@ -201,14 +197,10 @@ public enum Targets implements CompileParameter, ParameterParser {
 		if (targets == null) {
 			return;
 		}
-		if (context.contains(DslCompiler.INSTANCE)) {
-			compileOffline(context, targets);
-		} else {
-			compileOnline(context, targets);
-		}
+		compile(context, targets);
 	}
 
-	private void compileOffline(Context context, List<Option> targets) throws ExitException {
+	private void compile(Context context, List<Option> targets) throws ExitException {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<Settings.Option> settings = Settings.get(context);
 		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
@@ -262,61 +254,6 @@ public enum Targets implements CompileParameter, ParameterParser {
 			throw new ExitException();
 		}
 		Utils.saveFile(context, file, content);
-	}
-
-	private static void compileOnline(Context context, List<Option> targets) throws ExitException {
-		final StringBuilder sb = new StringBuilder();
-		final Set<String> addedTargets = new HashSet<String>();
-		for (final Option t : targets) {
-			if (!addedTargets.contains(t.platformName)) {
-				sb.append(t.platformName);
-				sb.append(',');
-				addedTargets.add(t.platformName);
-			}
-		}
-		final Map<String, String> dsls = DslPath.getCurrentDsl(context);
-		final StringBuilder url = new StringBuilder("Platform.svc/unmanaged/source?targets=");
-		url.append(sb.substring(0, sb.length() - 1));
-		if (context.contains(Namespace.INSTANCE)) {
-			url.append("&namespace=").append(context.get(Namespace.INSTANCE));
-		}
-		if (context.contains(Version.INSTANCE)) {
-			url.append("&version=").append(context.get(Version.INSTANCE));
-		}
-		final String settings = Settings.parseAndConvert(context);
-		if (settings.length() > 0) {
-			url.append("&options=").append(settings);
-		}
-		context.show("Compiling DSL online...");
-		final Either<String> response = DslServer.put(url.toString(), context, Utils.toJson(dsls));
-		if (!response.isSuccess()) {
-			context.error("Error compiling DSL to specified target.");
-			context.error(response.whyNot());
-			throw new ExitException();
-		}
-		final JsonObject files = JsonObject.readFrom(response.get());
-		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
-		final Set<String> escapeNames = new HashSet<String>();
-		for (final Option t : targets) {
-			if (t.convertToPath) {
-				escapeNames.add(t.platformName);
-			}
-		}
-		try {
-			for (final String name : files.names()) {
-				final boolean escapeName = name.contains("/") && escapeNames.contains(name.substring(0, name.indexOf("/")));
-				saveFile(context, temp, escapeName, name, files.get(name).asString());
-			}
-		} catch (IOException e) {
-			context.error("Can't create temporary target file. Compilation results can't be saved locally.");
-			context.error(e);
-			throw new ExitException();
-		}
-		for (final Option t : targets) {
-			if (t.action != null) {
-				t.action.build(new File(temp, t.platformName), context);
-			}
-		}
 	}
 
 	@Override

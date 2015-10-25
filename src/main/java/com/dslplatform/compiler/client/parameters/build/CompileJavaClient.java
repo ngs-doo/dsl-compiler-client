@@ -11,6 +11,7 @@ public class CompileJavaClient implements BuildAction {
 	private final String name;
 	private final String zip;
 	private final String library;
+	private final String path;
 	private final String maven;
 	private final String jar;
 
@@ -18,10 +19,12 @@ public class CompileJavaClient implements BuildAction {
 			final String name,
 			final String zip,
 			final String library,
+			final String path,
 			final String maven,
 			final String jar) {
 		this.name = name;
 		this.zip = zip;
+		this.path = path;
 		this.library = library;
 		this.maven = maven;
 		this.jar = jar;
@@ -29,7 +32,7 @@ public class CompileJavaClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		return Download.checkJars(context, name, zip, library, maven);
+		return Download.checkJars(context, name, zip, path, library, maven);
 	}
 
 	@Override

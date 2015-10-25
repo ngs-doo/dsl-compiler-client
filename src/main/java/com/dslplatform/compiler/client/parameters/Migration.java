@@ -1,8 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.JsonObject;
-import com.dslplatform.compiler.client.json.JsonValue;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,12 +101,15 @@ public enum Migration implements CompileParameter {
 			final File path,
 			final DatabaseInfo dbInfo,
 			final String file) throws ExitException {
-		final String script;
-		if (context.contains(DslCompiler.INSTANCE)) {
-			script = offlineMigration(context, dbInfo);
-		} else {
-			script = onlineMigration(context, dbInfo);
+		final List<File> currentDsl = DslPath.getDslPaths(context);
+		context.show("Creating SQL migration for " + dbInfo.database + " ...");
+		final Either<String> migration = DslCompiler.migration(context, dbInfo, currentDsl);
+		if (!migration.isSuccess()) {
+			context.error("Error creating local SQL migration:");
+			context.error(migration.whyNot());
+			throw new ExitException();
 		}
+		final String script = migration.get();
 		final String sqlFileName = dbInfo.database.toLowerCase() + "-sql-migration-" + (new Date().getTime());
 		final File sqlFile = new File(path.getAbsolutePath(), sqlFileName + ".sql");
 		try {
@@ -128,46 +129,6 @@ public enum Migration implements CompileParameter {
 			context.show("No database changes detected.");
 		}
 		context.cache(file, sqlFile);
-	}
-
-	private static String onlineMigration(final Context context, final DatabaseInfo dbInfo) throws ExitException {
-		final Map<String, String> currentDsl = DslPath.getCurrentDsl(context);
-		final String dbName = dbInfo.database.toLowerCase();
-		final StringBuilder url = new StringBuilder(
-				"Platform.svc/unmanaged/" + dbName + "-migration?version=" + dbInfo.compilerVersion
-						+ "&" + dbName + "=" + dbInfo.dbVersion);
-		if (context.contains(VarraySize.INSTANCE)) {
-			url.append("&varray=").append(context.get(VarraySize.INSTANCE));
-		}
-		if (context.contains(GrantRole.INSTANCE)) {
-			url.append("&role=").append(context.get(GrantRole.INSTANCE));
-		}
-		final JsonObject arg =
-				new JsonObject()
-						.add("Old", Utils.toJson(dbInfo.dsl))
-						.add("New", Utils.toJson(currentDsl));
-		context.show("Downloading SQL migration...");
-		final Either<String> response = DslServer.put(url.toString(), context, arg);
-		if (!response.isSuccess()) {
-			context.error("Error creating online SQL migration:");
-			context.error(response.whyNot());
-			throw new ExitException();
-		}
-		return response.get().startsWith("\"") && response.get().endsWith("\"")
-				? JsonValue.readFrom(response.get()).asString()
-				: response.get();
-	}
-
-	private static String offlineMigration(final Context context, final DatabaseInfo dbInfo) throws ExitException {
-		final List<File> currentDsl = DslPath.getDslPaths(context);
-		context.show("Creating SQL migration for " + dbInfo.database + " ...");
-		final Either<String> migration = DslCompiler.migration(context, dbInfo, currentDsl);
-		if (!migration.isSuccess()) {
-			context.error("Error creating local SQL migration:");
-			context.error(migration.whyNot());
-			throw new ExitException();
-		}
-		return migration.get();
 	}
 
 	@Override

@@ -192,10 +192,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (!context.contains(INSTANCE)) {
-			return true;
-		}
-		final String value = context.get(INSTANCE);
+		final String value = context.contains(INSTANCE) ? context.get(INSTANCE) : null;
 		final boolean isEmpty = value == null || value.length() == 0;
 		final File path = new File(isEmpty ? "dsl-compiler.exe" : value);
 		if (path.isDirectory()) {
@@ -271,12 +268,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	@Override
 	public String getShortDescription() {
-		return "Path to DSL Platform compiler. For offline compilation, local compiler can be specified";
+		return "Path to DSL Platform compiler. .NET or Mono are required to run the compiler";
 	}
 
 	@Override
 	public String getDetailedDescription() {
-		return "DSL Platform compiler can be downloaded for offline use.\n" +
+		return "DSL Platform compiler.\n" +
 				"It requires .NET/Mono to run.\n" +
 				"\n" +
 				"Example:\n" +

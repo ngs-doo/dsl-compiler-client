@@ -1,7 +1,6 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.JsonValue;
 
 import java.util.Map;
 
@@ -9,9 +8,14 @@ public enum Parse implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "parse"; }
+	public String getAlias() {
+		return "parse";
+	}
+
 	@Override
-	public String getUsage() { return null; }
+	public String getUsage() {
+		return null;
+	}
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
@@ -28,25 +32,13 @@ public enum Parse implements CompileParameter {
 	@Override
 	public void run(final Context context) throws ExitException {
 		if (context.contains(INSTANCE)) {
-			if (context.contains(DslCompiler.INSTANCE)) {
-				context.show("Validating DSL locally ...");
-				final Either<Boolean> result = DslCompiler.parse(context, DslPath.getDslPaths(context));
-				if (result.isSuccess()) {
-					context.show("Parse successful.");
-				} else {
-					context.error(result.whyNot());
-					throw new ExitException();
-				}
+			context.show("Validating DSL ...");
+			final Either<Boolean> result = DslCompiler.parse(context, DslPath.getDslPaths(context));
+			if (result.isSuccess()) {
+				context.show("Parse successful.");
 			} else {
-				final JsonValue json = Utils.toJson(DslPath.getCurrentDsl(context));
-				context.show("Validating DSL online...");
-				final Either<String> result = DslServer.put("Platform.svc/parse", context, json);
-				if (result.isSuccess()) {
-					context.show("Parse successful.");
-				} else {
-					context.error(result.whyNot());
-					throw new ExitException();
-				}
+				context.error(result.whyNot());
+				throw new ExitException();
 			}
 		}
 	}

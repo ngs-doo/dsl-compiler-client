@@ -59,8 +59,6 @@ public class Main {
 	}
 
 	private static CompileParameter[] DEFAULT_PARAMETERS = new CompileParameter[]{
-			Username.INSTANCE,
-			Password.INSTANCE,
 			DslPath.INSTANCE,
 			SqlPath.INSTANCE,
 			Download.INSTANCE,

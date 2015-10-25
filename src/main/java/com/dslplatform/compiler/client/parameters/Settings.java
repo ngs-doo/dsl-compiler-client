@@ -15,27 +15,25 @@ public enum Settings implements CompileParameter, ParameterParser {
 	public String getUsage() { return "options"; }
 
 	public enum Option {
-		ACTIVE_RECORD("active-record", "Active record pattern in client libraries", "active-record"),
-		UTC("utc", "Timestamp should use UTC by default", "utc"),
-		JACKSON("jackson", "Add Jackson annotations", "jackson"),
-		JAVA_BEANS("java-beans", "Add Java Beans support", "java-beans"),
-		MANUAL_JSON("manual-json", "Add optimized serialization/deserialization methods", "manual-json"),
-		NO_HELPERS("no-helpers", "Don't use helper methods", "no-helpers"),
-		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server", "multi-tenancy"),
-		LEGACY("legacy", "Legacy methods", "legacy"),
-		JODA_TIME("joda-time", "Use Joda Time library (instead of Java time API)", "joda-time"),
-		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres", "no-prepare-execute"),
-		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)", "minimal-serialization"),
-		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes", "disable-companion");
+		ACTIVE_RECORD("active-record", "Active record pattern in client libraries"),
+		UTC("utc", "Timestamp should use UTC by default"),
+		JACKSON("jackson", "Add Jackson annotations"),
+		JAVA_BEANS("java-beans", "Add Java Beans support"),
+		MANUAL_JSON("manual-json", "Add optimized serialization/deserialization methods"),
+		NO_HELPERS("no-helpers", "Don't use helper methods"),
+		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server"),
+		LEGACY("legacy", "Legacy methods"),
+		JODA_TIME("joda-time", "Use Joda Time library (instead of Java time API)"),
+		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres"),
+		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)"),
+		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes");
 
 		private final String value;
 		private final String description;
-		private final String platformName;
 
-		Option(final String value, final String description, final String platformName) {
+		Option(final String value, final String description) {
 			this.value = value;
 			this.description = description;
-			this.platformName = platformName;
 		}
 
 		private static Option from(final String value) {
@@ -57,18 +55,6 @@ public enum Settings implements CompileParameter, ParameterParser {
 
 	public static List<Option> get(final Context context) {
 		return context.load(CACHE_NAME);
-	}
-	public static String parseAndConvert(final Context context) {
-		final List<Option> settings = context.load(CACHE_NAME);
-		if(settings == null) {
-			return "";
-		}
-		final StringBuilder sb = new StringBuilder();
-		for (final Option o : settings) {
-			sb.append(o.platformName);
-			sb.append(',');
-		}
-		return sb.length() > 0 ? sb.substring(0, sb.length() - 1) : "";
 	}
 
 	private static void listOptions(final Context context) {

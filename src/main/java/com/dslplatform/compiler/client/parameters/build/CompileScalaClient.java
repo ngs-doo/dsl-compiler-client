@@ -29,7 +29,7 @@ public class CompileScalaClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		return Download.checkJars(context, name, zip, library, maven);
+		return Download.checkJars(context, name, zip, library, "com/dslplatform", maven);
 	}
 
 	@Override
