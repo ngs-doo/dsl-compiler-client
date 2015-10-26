@@ -32,7 +32,7 @@ public class CompileJavaClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		return Download.checkJars(context, name, zip, path, library, maven);
+		return Download.checkJars(context, name, zip, library, path, maven);
 	}
 
 	@Override
