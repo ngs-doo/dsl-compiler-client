@@ -23,6 +23,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		NO_HELPERS("no-helpers", "Don't use helper methods"),
 		MULTI_TENANCY("multi-tenancy", "Support Multi-tenancy on server"),
 		LEGACY("legacy", "Legacy methods"),
+		SOURCE_ONLY("source-only", "Only provide source code, don't run post-step (compilation)"),
 		JODA_TIME("joda-time", "Use Joda Time library (instead of Java time API)"),
 		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres"),
 		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)"),
