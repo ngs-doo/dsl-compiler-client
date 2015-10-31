@@ -69,6 +69,10 @@ public enum Download implements CompileParameter {
 			}
 		});
 		if (found.length == 0) {
+			if (zip == null && library == null) {
+				context.log("No dependencies defined for: " + name);
+				return true;
+			}
 			context.error(name + " not found in: " + dependencies.getAbsolutePath());
 			if (!context.contains(INSTANCE)) {
 				if (!context.canInteract()) {
@@ -80,7 +84,7 @@ public enum Download implements CompileParameter {
 					throw new ExitException();
 				}
 			}
-			final Either<String> tryMaven = Maven.findMaven(context);
+			final Either<String> tryMaven = library != null ? Maven.findMaven(context) : Either.<String>fail("Maven not defined");
 			if (!tryMaven.isSuccess()) {
 				if (zip == null) {
 					context.error("Unable to find Maven. Dependency can't be downloaded.");

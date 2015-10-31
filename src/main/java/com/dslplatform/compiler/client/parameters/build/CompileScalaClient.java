@@ -27,22 +27,8 @@ public class CompileScalaClient implements BuildAction {
 		this.jar = jar;
 	}
 
-	public CompileScalaClient(
-			final String name,
-			final String library,
-			final String jar) {
-		this.name = name;
-		this.zip = null;
-		this.library = library;
-		this.maven = null;
-		this.jar = jar;
-	}
-
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		if (zip == null && maven == null) {
-			return true;
-		}
 		return Download.checkJars(context, name, zip, library, "com/dslplatform", maven);
 	}
 
