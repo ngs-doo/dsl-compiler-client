@@ -82,6 +82,10 @@ public enum Download implements CompileParameter {
 			}
 			final Either<String> tryMaven = Maven.findMaven(context);
 			if (!tryMaven.isSuccess()) {
+				if (zip == null) {
+					context.error("Unable to find Maven. Dependency can't be downloaded.");
+					throw new ExitException();
+				}
 				return Download.downloadZip(dependencies, context, name, zip);
 			}
 			context.show("Downloading " + name + " from Sonatype...");

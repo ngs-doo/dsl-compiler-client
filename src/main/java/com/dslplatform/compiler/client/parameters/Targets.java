@@ -69,7 +69,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 		PHP_UI("php_ui", "PHP UI client", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala.jar"), false),
-		SCALA_SERVER("scala_server", "Scala server", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true);
+		SCALA_SERVER("scala_server", "Scala server", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true),
+		SCALA_SERVER_POSTGRES("scala_server_postgres", "Scala server (Postgres)", ".scala", new PrepareSources("Scala server", "scala_server_postgres", "Generated-Scala-Server"), true),
+		SCALA_SERVER_ORACLE("scala_server_oracle", "Scala server (Oracle)", ".scala", new CompileScalaClient("Scala server (Oracle)", "scala_server_oracle", "./generated-scala-oracle.jar"), false);
 
 		private final String value;
 		private final String description;
