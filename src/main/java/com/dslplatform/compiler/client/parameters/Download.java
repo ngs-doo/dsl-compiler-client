@@ -84,7 +84,7 @@ public enum Download implements CompileParameter {
 					throw new ExitException();
 				}
 			}
-			final Either<String> tryMaven = library != null ? Maven.findMaven(context) : Either.<String>fail("Maven not defined");
+			final Either<String> tryMaven = library != null && path != null ? Maven.findMaven(context) : Either.<String>fail("Library not defined");
 			if (!tryMaven.isSuccess()) {
 				if (zip == null) {
 					context.error("Unable to find Maven. Dependency can't be downloaded.");
