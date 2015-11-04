@@ -110,13 +110,14 @@ public enum PostgresConnection implements CompileParameter {
 		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
 
 		// if protocolVersion is present in the connectionString, it will take precedence
-		final Properties defaultParams = new Properties();
-		defaultParams.put("protocolVersion", "2");
+		// final Properties defaultParams = new Properties();
+		// defaultParams.put("protocolVersion", "2");
 
 		Connection conn;
 		Statement stmt;
 		try {
-			conn = DriverManager.getConnection(connectionString, defaultParams);
+			// conn = DriverManager.getConnection(connectionString, defaultParams);
+			conn = DriverManager.getConnection(connectionString);
 			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
