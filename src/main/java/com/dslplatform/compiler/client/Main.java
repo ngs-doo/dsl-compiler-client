@@ -11,13 +11,11 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 public class Main {
-
 	public static void main(final String[] args) {
 		final Context context = new Context();
 		final List<CompileParameter> parameters = initializeParameters(context, ".");
-		if (parse(args, context, parameters)) {
-			processContext(context, parameters);
-		}
+		final int returnCode = parse(args, context, parameters) ? (processContext(context, parameters) ? 0 : 1) : 2;
+		System.exit(returnCode);
 	}
 
 	static List<CompileParameter> initializeParameters(final Context context, final String path) {
