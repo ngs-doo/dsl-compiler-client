@@ -108,6 +108,8 @@ public enum PostgresConnection implements CompileParameter {
 
 	public static void execute(final Context context, final String sql) throws ExitException {
 		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
+		System.setProperty("receiveBufferSize", Integer.toString(sql.length() * 2));
+		context.log("Setting Postgres receiveBufferSize to " + (sql.length() * 2)  + " otherwise execution might hang ;(");
 
 		Connection conn;
 		Statement stmt;
