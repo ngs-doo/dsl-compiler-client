@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="DDDLanguage.AboutControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.10.0"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid Background="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarOptionsBackgroundKey}}"
+          TextElement.Foreground="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextActiveKey}}">
+        <StackPanel Orientation="Vertical">
+            <TextBlock Margin="10" HorizontalAlignment="Center" FontWeight="Bold" >DSL Platform</TextBlock>
+            <TextBlock Margin="10" TextWrapping="Wrap" >
+                Invasive software composition platform based on Domain-Driven Design. More info available at: 
+                <Hyperlink NavigateUri="https://dsl-platform.com" RequestNavigate="Hyperlink_RequestNavigate">dsl-platform</Hyperlink>.
+            </TextBlock>
+            <TextBlock Margin="10,0,10,0" TextWrapping="Wrap" >
+                This plugin allows you to compile libraries for .NET based on the model description from DSL.
+                All DSL files from solution are used for compilation.<LineBreak/>
+                Server/client/portable .NET libraries will be created in the specified library folder.
+            </TextBlock>
+            <TextBlock Text="{Binding Message, Mode=OneWay}" TextWrapping="Wrap" Margin="10" FontWeight="Bold" Foreground="Red" />
+        </StackPanel>
+    </Grid>
+</UserControl>

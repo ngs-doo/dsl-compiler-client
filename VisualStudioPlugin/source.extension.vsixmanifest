@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de">
+    <Name>DDD for DSL Platform</Name>
+    <Author>N.G.S.</Author>
+    <Version>1.3.1</Version>
+    <Description xml:space="preserve">Domain-Driven Design Language by DSL Platform</Description>
+    <Locale>1033</Locale>
+    <MoreInfoUrl>https://dsl-platform.com</MoreInfoUrl>
+    <License>License.txt</License>
+    <GettingStartedGuide>https://docs.dsl-platform.com</GettingStartedGuide>
+    <Icon>file.png</Icon>
+    <PreviewImage>dsl.png</PreviewImage>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Pro</Edition>	  
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Pro</Edition>	  
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>Pro</Edition>	  
+        <Edition>Community</Edition>
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="13.0">
+        <Edition>Pro</Edition>	  
+        <Edition>Community</Edition>
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="14.0">
+        <Edition>Pro</Edition>
+        <Edition>Community</Edition>
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="15.0">
+        <Edition>Pro</Edition>
+        <Edition>Community</Edition>
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+      <Name>Visual Studio MPF</Name>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+  </Content>
+</Vsix>
