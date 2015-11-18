@@ -1,0 +1,11 @@
+target
+.classpath
+.project
+.settings
+.history
+.target
+.cache
+out/
+*.orig
+*~
+.idea/workspace.xml

@@ -1,0 +1,46 @@
+<idea-plugin version="2">
+  <id>com.dslplatform.ideaplugin</id>
+  <name>DSL Platform</name>
+  <version>0.1</version>
+  <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
+
+  <description><![CDATA[
+      IDEA integration with DLS Platform.<br>
+      <em>dsl platform ddd</em>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      Initial release.<br>
+      <em>dsl platform ddd</em>
+    ]]>
+  </change-notes>
+
+  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+  <idea-version since-build="131"/>
+
+  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+    <fileTypeFactory implementation="com.dslplatform.ideaplugin.DslFileTypeFactory"/>
+    <lang.syntaxHighlighterFactory key="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
+    <colorSettingsPage implementation="com.dslplatform.ideaplugin.DslColorSettingsPage"/>
+  </extensions>
+
+  <application-components>
+    <!-- Add your application components here -->
+  </application-components>
+
+  <project-components>
+    <!-- Add your project components here -->
+  </project-components>
+
+  <actions>
+    <!-- Add your actions here -->
+  </actions>
+
+</idea-plugin>
