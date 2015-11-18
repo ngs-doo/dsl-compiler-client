@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="DSL Platform DDD Language"
+            extensions="dsl,ddd"
+            icon="icons/icon.ico"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            class="com.dslplatform.plugin.editor.DSLEditor"
+            id="com.dslplatform.plugin.editor.DSLEditor">
+      </editor>
+   </extension>
+
+
+</plugin>

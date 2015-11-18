@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: DSL Platform DDD Language
+Bundle-SymbolicName: DSLPlatform_DDD_Language;singleton:=true
+Bundle-Version: 0.2.1
+Bundle-Activator: com.dslplatform.plugin.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ lib/dsl-grammar.jar
+Bundle-Vendor: DSL Platform

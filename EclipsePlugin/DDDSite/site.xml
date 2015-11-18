@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="DDD for DSL Platform" url="https://tools.dsl-platform.com/eclipse">
+      DDD language is a syntax highlighter for the declarative model specification used by DSL Platform.
+DSL Platform is an Invasive software composition platform based on Domain-Driven Design. 
+It uses DSL model to manage various system components, such as: object-relational database, server side libraries and client side libraries.
+   </description>
+   <feature url="features/DDD_for_DSL_platform_0.2.1.jar" id="DDD_for_DSL_platform" version="0.2.1"/>
+</site>
