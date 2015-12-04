@@ -228,13 +228,13 @@ namespace DDDLanguage
 			return (T)ser.ReadObject(stream);
 		}
 
-		public static Either<string> Parse(DTE dte, string dslCompiler)
+		public static Either<string> Parse(DTE dte)
 		{
 			try
 			{
 				var dsls = LocateCurrentDsl(dte);
 				if (dsls.Count == 0) return Either.Success("Nothing to parse. No DSL files found.");
-				var result = Compiler.CompileDsl(dslCompiler, new StringBuilder(), dsls);
+				var result = Compiler.CompileDsl(new StringBuilder(), dsls, null, _ => 0);
 				if (result.Success)
 					return Either.Success("Parse OK");
 				return Either<string>.Fail(result.Error);
@@ -265,7 +265,7 @@ namespace DDDLanguage
 				var files = LocateCurrentDsl(dte);
 				if (files.Count == 0)
 					return Either<DiffResult>.Fail("No DSL files found. Please check your solution for .dsl/.ddd files which are used for compilation.");
-				var result = RunMigration(dslCompiler, dbInfo, db, files);
+				var result = RunMigration(dbInfo, db, files);
 				if (!result.Success)
 					return Either<DiffResult>.Fail(result.Error);
 				return Either.Success(ProcessDiffStream(result.Value, dbInfo, dsls));
@@ -353,7 +353,7 @@ namespace DDDLanguage
 				if (postgresDb.CompileMigration)
 				{
 					var dbInfo = ReadInfoFromPostgres(postgresDb);
-					var result = RunMigration(targets.CompilerPath, dbInfo, postgresDb, dsls);
+					var result = RunMigration(dbInfo, postgresDb, dsls);
 					if (!result.Success)
 						return Either<string>.Fail(result.Error);
 					ProcessMigrationStream(
@@ -365,7 +365,7 @@ namespace DDDLanguage
 				if (oracleDb.CompileMigration)
 				{
 					var dbInfo = ReadInfoFromOracle(oracleDb);
-					var result = RunMigration(targets.CompilerPath, dbInfo, oracleDb, dsls);
+					var result = RunMigration(dbInfo, oracleDb, dsls);
 					if (!result.Success)
 						return Either<string>.Fail(result.Error);
 					ProcessMigrationStream(false, result.Value, oracleDb, null);
@@ -398,7 +398,7 @@ namespace DDDLanguage
 			}
 		}
 
-		private static Either<ChunkedMemoryStream> RunMigration(string dslCompiler, DbInfo info, DatabaseInfo db, List<string> dsls)
+		private static Either<ChunkedMemoryStream> RunMigration(DbInfo info, DatabaseInfo db, List<string> dsls)
 		{
 			var sb = new StringBuilder();
 			sb.Append("target=").Append(info.Target).Append(info.Database.Major).Append('.').Append(info.Database.Minor);
@@ -416,7 +416,7 @@ namespace DDDLanguage
 			}
 			try
 			{
-				return Compiler.CompileDsl(dslCompiler, sb, dsls);
+				return Compiler.CompileDsl(sb, dsls, null, cms => new ChunkedMemoryStream(cms));
 			}
 			finally
 			{

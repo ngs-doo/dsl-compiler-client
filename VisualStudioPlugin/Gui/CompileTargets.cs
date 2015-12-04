@@ -8,7 +8,16 @@ namespace DDDLanguage
 {
 	internal class CompileTargets
 	{
-		public string CompilerPath { get; set; }
+		private string dslCompiler;
+		public string CompilerPath
+		{
+			get { return dslCompiler; }
+			set
+			{
+				dslCompiler = value;
+				Compiler.SetupServer(dslCompiler);
+			}
+		}
 
 		private LibraryInfo oldPocoLibrary;
 		public readonly LibraryInfo PocoLibrary;
@@ -91,12 +100,12 @@ namespace DDDLanguage
 				sb.Append(" settings=legacy");
 			if (target.NoHelpers)
 				sb.Append(" settings=no-helpers");
-			var result = Compiler.CompileDsl(dslCompiler, sb, dsls);
+			sb.Append(" format=xml");
+			var result = Compiler.CompileDsl(sb, dsls, null, cms => XElement.Load(cms));
 			if (result.Success)
 			{
-				var xml = XElement.Load(result.Value);
 				var dict =
-					(from x in xml.Elements()
+					(from x in result.Value.Elements()
 					 let elem = x.Elements()
 					 select new { key = elem.First().Value, value = elem.Last().Value })
 					 .ToDictionary(it => it.key, it => it.value);

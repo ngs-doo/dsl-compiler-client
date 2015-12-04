@@ -108,7 +108,7 @@ namespace DDDLanguage
 			Compile = new RelayCommand(CompileAction, CanCompile);
 			Parse =
 				new RelayCommand(
-					() => TryAction("Parsing DSL ...", () => ServerActions.Parse(DTE, DslCompiler)).OnSuccess(m => { Message = m; ChangeMessage(); }));
+					() => TryAction("Parsing DSL ...", () => ServerActions.Parse(DTE)).OnSuccess(m => { Message = m; ChangeMessage(); }));
 			PostgresDiff = new RelayCommand(() => CreateDiffAction(ServerActions.PostgresDiff, PostgresDb), () => PostgresDb.CanDiff);
 			OracleDiff = new RelayCommand(() => CreateDiffAction(ServerActions.OracleDiff, OracleDb), () => OracleDb.CanDiff);
 			DownloadLibrary = new RelayCommand(arg => DonwloadLibraryAction(arg as string), () => true);
@@ -512,6 +512,7 @@ namespace DDDLanguage
 			{
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
+				Compiler.Stop();
 				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
 				if (result.Success)
 				{
@@ -539,6 +540,7 @@ namespace DDDLanguage
 			{
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
+				Compiler.Stop();
 				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
 				if (result.Success)
 				{
