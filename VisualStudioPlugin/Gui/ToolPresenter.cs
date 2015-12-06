@@ -512,7 +512,7 @@ namespace DDDLanguage
 			{
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
-				Compiler.Stop();
+				Compiler.Stop(false);
 				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
 				if (result.Success)
 				{
@@ -540,7 +540,7 @@ namespace DDDLanguage
 			{
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
-				Compiler.Stop();
+				Compiler.Stop(false);
 				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
 				if (result.Success)
 				{

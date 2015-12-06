@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -14,7 +14,7 @@ namespace DDDLanguage
 		private readonly Dictionary<SyntaxType, DddTokenTag> DddTags;
 		private ITagSpan<DddTokenTag>[] Tags = new ITagSpan<DddTokenTag>[0];
 		private volatile bool Invalidated = true;
-		private readonly IDisposable Subscription;
+		private readonly Timer Timer;
 
 		internal DddTokenTagger(ITextBuffer buffer)
 		{
@@ -23,19 +23,26 @@ namespace DDDLanguage
 			DddTags[SyntaxType.Keyword] = new DddTokenTag(DddTokenTypes.Keyword);
 			DddTags[SyntaxType.Identifier] = new DddTokenTag(DddTokenTypes.Identifier);
 			DddTags[SyntaxType.StringQuote] = new DddTokenTag(DddTokenTypes.StringQuote);
+			this.Timer = new System.Threading.Timer(_ => Task.Factory.StartNew(ParseAndCache), null, -1, -1);
 			ParseAndCache();
-			Subscription =
-				Observable.FromEventPattern<TextContentChangedEventArgs>(Buffer, "Changed")
-				.Where(ev => ev.EventArgs.After == Buffer.CurrentSnapshot)
-				.Select(ev => { Invalidated = true; return ev; })
-				.Throttle(TimeSpan.FromSeconds(0.4))
-				.Subscribe(ev => Task.Factory.StartNew(ParseAndCache));
+			Buffer.Changed += (s, ea) =>
+			{
+				if (ea.After != Buffer.CurrentSnapshot)
+					return;
+				Invalidated = true;
+				lock (Timer)
+					Timer.Change(300, -1);
+			};
 		}
 
 		private void ParseAndCache()
 		{
 			if (!Invalidated)
+			{
+				lock (Timer)
+					Timer.Change(-1, -1);
 				return;
+			}
 			try
 			{
 				Invalidated = false;
@@ -65,8 +72,14 @@ namespace DDDLanguage
 					return;
 				Tags = arr;
 				TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, Span.FromBounds(0, snapshot.Length))));
-			}//TODO error handler
-			catch { }
+				lock (Timer)
+					Timer.Change(1000, -1);
+			}
+			catch
+			{
+				lock (Timer)
+					Timer.Change(5000, -1);
+			}
 		}
 
 		private static bool TagsEqual(ITagSpan<DddTokenTag>[] left, ITagSpan<DddTokenTag>[] right)

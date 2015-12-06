@@ -19,22 +19,28 @@ namespace DDDLanguage
 		private static string DslCompiler;
 		private static Process RunningServer;
 		private static int ServerPort;
+		private static object sync = new object();
 
 		static Compiler()
 		{
-			AppDomain.CurrentDomain.DomainUnload += (s, ea) => Stop();
-			AppDomain.CurrentDomain.ProcessExit += (s, ea) => Stop();
+			AppDomain.CurrentDomain.DomainUnload += (s, ea) => Stop(false);
+			AppDomain.CurrentDomain.ProcessExit += (s, ea) => Stop(false);
 		}
 
-		public static void Stop()
+		public static void Stop(bool restart)
 		{
-			if (RunningServer != null)
+			lock (sync)
 			{
-				try { RunningServer.Kill(); }
-				catch { }
-				try { RunningServer.Close(); }
-				catch { }
-				RunningServer = null;
+				if (RunningServer != null)
+				{
+					try { RunningServer.Kill(); }
+					catch { }
+					try { RunningServer.Close(); }
+					catch { }
+					RunningServer = null;
+				}
+				if (restart)
+					SetupServer(DslCompiler);
 			}
 		}
 
@@ -45,22 +51,25 @@ namespace DDDLanguage
 			if (!File.Exists(dslCompiler))
 				return;
 			DslCompiler = dslCompiler;
-			if (RunningServer == null)
+			lock (sync)
 			{
-				ServerPort = Rnd.Next(12000, 25000);
-				RunningServer =
-					new System.Diagnostics.Process
-					{
-						StartInfo = new ProcessStartInfo(DslCompiler, "server-mode " + ServerPort)
+				if (RunningServer == null)
+				{
+					ServerPort = Rnd.Next(20000, 60000);
+					RunningServer =
+						new System.Diagnostics.Process
 						{
-							CreateNoWindow = true,
-							WindowStyle = ProcessWindowStyle.Hidden,
-							RedirectStandardOutput = true,
-							UseShellExecute = false,
-							WorkingDirectory = LibraryInfo.BasePath,
-						}
-					};
-				RunningServer.Start();
+							StartInfo = new ProcessStartInfo(DslCompiler, "server-mode port=" + ServerPort + " parent=" + Process.GetCurrentProcess().Id)
+							{
+								CreateNoWindow = true,
+								WindowStyle = ProcessWindowStyle.Hidden,
+								RedirectStandardOutput = false,
+								UseShellExecute = false,
+								WorkingDirectory = LibraryInfo.BasePath,
+							}
+						};
+					RunningServer.Start();
+				}
 			}
 		}
 
@@ -68,16 +77,15 @@ namespace DDDLanguage
 		{
 			if (reset)
 			{
-				Stop();
-				SetupServer(DslCompiler);
-				Thread.Sleep(2000);
+				Stop(true);
+				return null;
 			}
-			var tcp = new TcpClient(AddressFamily.InterNetworkV6);
-			tcp.Connect(IPAddress.IPv6Loopback, ServerPort);
+			var tcp = new TcpClient(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork);
+			tcp.Connect(Socket.OSSupportsIPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, ServerPort);
 			if (!tcp.Connected)
 				return null;
 			tcp.Client.Blocking = true;
-			tcp.SendTimeout = 30000;
+			tcp.SendTimeout = 3000;
 			tcp.ReceiveTimeout = 30000;
 			return tcp;
 		}
@@ -174,7 +182,11 @@ namespace DDDLanguage
 				if (tcp == null)
 					tcp = ConnectToServer(true);
 				if (tcp == null)
+				{
+					if (dsls != null)
+						return CompileDsl<T>(sb.ToString(), extract);
 					return Either<T>.Fail("Unable to start DSL Platform compiler");
+				}
 				sb.Append("\n");
 				tcp.Client.Send(Encoding.UTF8.GetBytes(sb.ToString()));
 				if (dsl != null)
@@ -191,7 +203,9 @@ namespace DDDLanguage
 			}
 			catch (Exception ex)
 			{
-				Stop();
+				Stop(true);
+				if (dsls != null)
+					return CompileDsl<T>(sb.ToString(), extract);
 				return Either<T>.Fail(ex.Message);
 			}
 			finally
@@ -202,6 +216,31 @@ namespace DDDLanguage
 					catch { }
 				}
 			}
+		}
+
+		private static Either<T> CompileDsl<T>(string args, Func<ChunkedMemoryStream, T> extract)
+		{
+			var process =
+				new System.Diagnostics.Process
+				{
+					StartInfo = new ProcessStartInfo(DslCompiler, args)
+					{
+						CreateNoWindow = true,
+						WindowStyle = ProcessWindowStyle.Hidden,
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						WorkingDirectory = LibraryInfo.BasePath
+					}
+				};
+			process.Start();
+			var cms = new ChunkedMemoryStream();
+			process.StandardOutput.BaseStream.CopyTo(cms);
+			process.WaitForExit();
+			cms.Position = 0;
+			if (process.ExitCode == 0)
+				return Either.Success(extract(cms));
+			else
+				return Either<T>.Fail(new StreamReader(cms).ReadToEnd());
 		}
 	}
 }

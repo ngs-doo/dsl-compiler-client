@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -14,19 +14,22 @@ namespace DDDLanguage
 		private ITextSnapshot Snapshot;
 		private Region[] Regions = new Region[0];
 		private volatile bool Invalidated = true;
-		private readonly IDisposable Subscription;
+		private readonly Timer Timer;
 
 		internal DddOutliningTagger(ITextBuffer buffer)
 		{
 			this.Buffer = buffer;
 			this.Snapshot = buffer.CurrentSnapshot;
+			this.Timer = new System.Threading.Timer(_ => Task.Factory.StartNew(ParseAndCache), null, -1, -1);
 			ParseAndCache();
-			Subscription =
-				Observable.FromEventPattern<TextContentChangedEventArgs>(Buffer, "Changed")
-				.Where(ev => ev.EventArgs.After == Buffer.CurrentSnapshot)
-				.Select(ev => { Invalidated = true; return ev; })
-				.Throttle(TimeSpan.FromSeconds(0.4))
-				.Subscribe(ev => Task.Factory.StartNew(ParseAndCache));
+			Buffer.Changed += (s, ea) =>
+			{
+				if (ea.After != Buffer.CurrentSnapshot)
+					return;
+				Invalidated = true;
+				lock (Timer)
+					Timer.Change(300, -1);
+			};
 		}
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged = (s, ea) => { };
@@ -70,7 +73,11 @@ namespace DDDLanguage
 		private void ParseAndCache()
 		{
 			if (!Invalidated)
+			{
+				lock (Timer)
+					Timer.Change(-1, -1);
 				return;
+			}
 			try
 			{
 				Invalidated = false;
@@ -173,8 +180,14 @@ namespace DDDLanguage
 
 				if (changeStart <= changeEnd)
 					TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(newSnapshot, Span.FromBounds(changeStart, changeEnd))));
+				lock (Timer)
+					Timer.Change(1000, -1);
 			}
-			catch { }
+			catch
+			{
+				lock (Timer)
+					Timer.Change(5000, -1);
+			}
 		}
 
 		private static SnapshotSpan AsSnapshotSpan(Region region, ITextSnapshot snapshot)
