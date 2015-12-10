@@ -3,7 +3,13 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
+import org.postgresql.PGProperty;
+import org.postgresql.core.*;
+import org.postgresql.core.v3.*;
+import org.postgresql.util.*;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
@@ -12,11 +18,17 @@ public enum PostgresConnection implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "postgres"; }
+	public String getAlias() {
+		return "postgres";
+	}
+
 	@Override
-	public String getUsage() { return "connection_string"; }
+	public String getUsage() {
+		return "connection_string";
+	}
 
 	private static final String CACHE_NAME = "postgres_dsl_cache";
+	private static final Charset UTF8 = Charset.forName("UTF-8");
 
 	public static Map<String, String> getDatabaseDsl(final Context context) throws ExitException {
 		return getDatabaseDslAndVersion(context).dsl;
@@ -108,32 +120,100 @@ public enum PostgresConnection implements CompileParameter {
 
 	public static void execute(final Context context, final String sql) throws ExitException {
 		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
-		System.setProperty("receiveBufferSize", Integer.toString(sql.length() * 2));
-		context.log("Setting Postgres receiveBufferSize to " + (sql.length() * 2)  + " otherwise execution might hang ;(");
+		String[] parts = context.get(INSTANCE).split("/");
+		Properties props = parse(connectionString);
+		if (props == null || parts.length < 2) {
+			context.error("Unable to parse connection properties");
+			throw new ExitException();
+		}
+		PGStream pgStream = null;
+		ProtocolConnection connection = null;
+		try {
+			try {
+				String server = parts[0];
+				String database = parts[1].substring(0, parts[1].indexOf('?'));
+				String[] info = server.split(":");
+				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
+				int timeout = PGProperty.CONNECT_TIMEOUT.getInt(props) * 1000;
+				pgStream = new PGStream(hostSpec, 30 * timeout);
+				connection = DslConnectionFactory.openConnection(pgStream, database, props);
+			} catch (Exception e) {
+				context.error("Error opening connection to " + connectionString);
+				context.error(e);
+				throw new ExitException();
+			}
+			try {
+				final long startAt = System.currentTimeMillis();
+				byte[] sqlBytes = sql.getBytes(UTF8);
+				pgStream.SendChar('Q');
+				pgStream.SendInteger4(5 + sqlBytes.length);
+				pgStream.Send(sqlBytes);
+				pgStream.SendChar(0);
+				pgStream.flush();
+				checkResponse(pgStream);
+				final long endAt = System.currentTimeMillis();
+				context.log("Script executed in " + (endAt - startAt) + "ms");
+			} catch (Exception ex) {
+				context.error("Error executing sql script");
+				context.error(ex);
+				throw new ExitException();
+			}
+		} finally {
+			try {
+				if (pgStream != null) {
+					pgStream.close();
+				}
+			} catch (Exception ignore) {
+			}
+			try {
+				if (connection != null) {
+					connection.close();
+				}
+			} catch (Exception ignore) {
+			}
+		}
+	}
 
-		Connection conn;
-		Statement stmt;
-		try {
-			conn = DriverManager.getConnection(connectionString);
-			stmt = conn.createStatement();
-		} catch (SQLException e) {
-			context.error("Error opening connection to " + connectionString);
-			context.error(e);
-			throw new ExitException();
-		}
-		try {
-			final long startAt = System.currentTimeMillis();
-			stmt.execute(sql);
-			final long endAt = System.currentTimeMillis();
-			context.log("Script executed in " + (endAt - startAt) + "ms");
-			stmt.close();
-			conn.close();
-		} catch (SQLException ex) {
-			context.error("Error executing sql script");
-			context.error(ex);
-			cleanup(conn, context);
-			throw new ExitException();
-		}
+	private static void checkResponse(PGStream pgStream) throws IOException {
+		do {
+			int c = pgStream.ReceiveChar();
+			switch (c) {
+				case 'A':
+					pgStream.ReceiveInteger4();
+					pgStream.ReceiveInteger4();
+					pgStream.ReceiveString();
+					pgStream.ReceiveString();
+					break;
+				case 'C':
+					int len = pgStream.ReceiveInteger4();
+					pgStream.ReceiveString(len - 5);
+					pgStream.ReceiveChar();
+					break;
+				case 'D':
+					try {
+						pgStream.ReceiveTupleV3();
+					} catch (OutOfMemoryError ignore) {
+					}
+					break;
+				case 'E':
+					int lenE = pgStream.ReceiveInteger4();
+					String totalMessage = pgStream.ReceiveString(lenE - 4);
+					ServerErrorMessage errorMsg = new ServerErrorMessage(totalMessage, 0);
+					throw new IOException(new PSQLException(errorMsg));
+				case 'I':
+					pgStream.ReceiveInteger4();
+					break;
+				case 'Z':
+					if (pgStream.ReceiveInteger4() != 5) {
+						throw new IOException("unexpected length of ReadyForQuery message");
+					}
+					return;
+				default:
+					int lenSkip = pgStream.ReceiveInteger4();
+					pgStream.Skip(lenSkip - 4);
+					break;
+			}
+		} while (pgStream.hasMessagePending());
 	}
 
 	private static void cleanup(final Connection conn, final Context context) {
@@ -145,13 +225,13 @@ public enum PostgresConnection implements CompileParameter {
 		}
 	}
 
-	private static Map<String, String> parse(final String connectionString) {
+	private static Properties parse(final String connectionString) {
 		final int questionIndex = connectionString.indexOf('?');
 		if (questionIndex == -1) {
-			return new HashMap<String, String>(0);
+			return new Properties();
 		}
 		final String[] args = connectionString.substring(questionIndex + 1).split("&");
-		final Map<String, String> map = new LinkedHashMap<String, String>();
+		final Properties map = new Properties();
 		for (final String a : args) {
 			final String[] vals = a.split("=");
 			if (vals.length != 2) {
@@ -176,7 +256,7 @@ public enum PostgresConnection implements CompileParameter {
 			final boolean dbDoesntExists = "3D000".equals(e.getSQLState());
 			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
 			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());
-			final Map<String, String> args = parse(connectionString);
+			final Properties args = parse(connectionString);
 			if (args == null) {
 				context.show();
 				context.error("Invalid connection string provided: " + connectionString);
@@ -198,7 +278,7 @@ public enum PostgresConnection implements CompileParameter {
 				try {
 					final StringBuilder newCs = new StringBuilder(connectionString.substring(0, sl + 1));
 					newCs.append("postgres?");
-					for (final Map.Entry<String, String> kv : args.entrySet()) {
+					for (final Map.Entry<Object, Object> kv : args.entrySet()) {
 						newCs.append(kv.getKey()).append("=").append(kv.getValue());
 						newCs.append("&");
 					}
@@ -231,13 +311,13 @@ public enum PostgresConnection implements CompileParameter {
 				context.error("Database not found. Since force option is not enabled, existing database must be used.");
 				return false;
 			}
-			if (args.get("password") != null) {
+			if (args.getProperty("password") != null) {
 				final String answer = context.ask("Retry database connection with different credentials (y/N):");
 				if (!"y".equalsIgnoreCase(answer)) {
 					return false;
 				}
 			} else {
-				final String user = args.get("user");
+				final String user = args.getProperty("user");
 				final String question;
 				if (user != null) {
 					question = "Postgres username (" + user + "): ";
@@ -259,7 +339,7 @@ public enum PostgresConnection implements CompileParameter {
 					? connectionString + "?"
 					: connectionString.substring(0, questionIndex + 1);
 			final StringBuilder csBuilder = new StringBuilder(newCs);
-			for (final Map.Entry<String, String> kv : args.entrySet()) {
+			for (final Map.Entry<Object, Object> kv : args.entrySet()) {
 				csBuilder.append(kv.getKey()).append("=").append(kv.getValue());
 				csBuilder.append("&");
 			}
