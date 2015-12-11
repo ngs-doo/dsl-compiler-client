@@ -135,7 +135,7 @@ public enum PostgresConnection implements CompileParameter {
 				String[] info = server.split(":");
 				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
 				int timeout = PGProperty.CONNECT_TIMEOUT.getInt(props) * 1000;
-				pgStream = new PGStream(hostSpec, 30 * timeout);
+				pgStream = new PGStream(hostSpec, timeout);
 				connection = DslConnectionFactory.openConnection(pgStream, database, props);
 			} catch (Exception e) {
 				context.error("Error opening connection to " + connectionString);
@@ -150,7 +150,7 @@ public enum PostgresConnection implements CompileParameter {
 				pgStream.Send(sqlBytes);
 				pgStream.SendChar(0);
 				pgStream.flush();
-				checkResponse(pgStream);
+				checkResponse(pgStream, context);
 				final long endAt = System.currentTimeMillis();
 				context.log("Script executed in " + (endAt - startAt) + "ms");
 			} catch (Exception ex) {
@@ -174,7 +174,7 @@ public enum PostgresConnection implements CompileParameter {
 		}
 	}
 
-	private static void checkResponse(PGStream pgStream) throws IOException {
+	private static void checkResponse(PGStream pgStream, Context context) throws IOException {
 		do {
 			int c = pgStream.ReceiveChar();
 			switch (c) {
@@ -208,12 +208,18 @@ public enum PostgresConnection implements CompileParameter {
 						throw new IOException("unexpected length of ReadyForQuery message");
 					}
 					return;
+				case 'N':
+					int lenN = pgStream.ReceiveInteger4();
+					String totalWarning = pgStream.ReceiveString(lenN - 4);
+					ServerErrorMessage warningMsg = new ServerErrorMessage(totalWarning, 0);
+					context.log(warningMsg.getMessage());
+					break;
 				default:
 					int lenSkip = pgStream.ReceiveInteger4();
 					pgStream.Skip(lenSkip - 4);
 					break;
 			}
-		} while (pgStream.hasMessagePending());
+		} while (true);
 	}
 
 	private static void cleanup(final Connection conn, final Context context) {

@@ -79,15 +79,7 @@ public class DslConnectionFactory {
 		} else {
 			if ("disable".equals(sslmode)) {
 				requireSSL = trySSL = false;
-			}
-			//allow and prefer are not handled yet
-		  /*else if ("allow".equals(sslmode) || "prefer".equals(sslmode))
-          {  
-            //XXX Allow and prefer are treated the same way
-            requireSSL = false;
-            trySSL = true;
-          }*/
-			else if ("require".equals(sslmode) || "verify-ca".equals(sslmode) || "verify-full".equals(sslmode)) {
+			} else if ("require".equals(sslmode) || "verify-ca".equals(sslmode) || "verify-full".equals(sslmode)) {
 				requireSSL = trySSL = true;
 			} else {
 				throw new PSQLException(GT.tr("Invalid sslmode value: {0}", sslmode), PSQLState.CONNECTION_UNABLE_TO_CONNECT);
@@ -167,17 +159,11 @@ public class DslConnectionFactory {
 			paramList.add(new String[]{"client_encoding", "UTF8"});
 			paramList.add(new String[]{"DateStyle", "ISO"});
 			paramList.add(new String[]{"TimeZone", createPostgresTimeZone()});
-			String assumeMinServerVersion = PGProperty.ASSUME_MIN_SERVER_VERSION.get(info);
-			if (Utils.parseServerVersionStr(assumeMinServerVersion) >= ServerVersion.v9_0.getVersionNum()) {
-				// User is explicitly telling us this is a 9.0+ server so set properties here:
-				paramList.add(new String[]{"extra_float_digits", "3"});
-				String appName = PGProperty.APPLICATION_NAME.get(info);
-				if (appName != null) {
-					paramList.add(new String[]{"application_name", appName});
-				}
-			} else {
-				// User has not explicitly told us that this is a 9.0+ server so stick to old default:
-				paramList.add(new String[]{"extra_float_digits", "2"});
+			// User is explicitly telling us this is a 9.0+ server so set properties here:
+			paramList.add(new String[]{"extra_float_digits", "3"});
+			String appName = PGProperty.APPLICATION_NAME.get(info);
+			if (appName != null) {
+				paramList.add(new String[]{"application_name", appName});
 			}
 
 			String currentSchema = PGProperty.CURRENT_SCHEMA.get(info);
@@ -206,8 +192,6 @@ public class DslConnectionFactory {
 				protoConnection.close();
 				throw new PSQLException(GT.tr("Could not find a server with specified targetServerType: {0}", targetServerType), PSQLState.CONNECTION_UNABLE_TO_CONNECT);
 			}
-
-			runInitialQueries(protoConnection, info, logger);
 
 			// And we're done.
 			return protoConnection;
@@ -348,7 +332,7 @@ public class DslConnectionFactory {
 		// or an authentication request
 
 		String password = PGProperty.PASSWORD.get(info);
-        
+
         /* SSPI negotiation state, if used */
 		SSPIClient sspiClient = null;
 
@@ -678,30 +662,6 @@ public class DslConnectionFactory {
 					throw new PSQLException(GT.tr("Protocol error.  Session setup failed."), PSQLState.PROTOCOL_VIOLATION);
 			}
 		}
-	}
-
-	private static void runInitialQueries(ProtocolConnection protoConnection, Properties info, Logger logger) throws SQLException {
-		String assumeMinServerVersion = PGProperty.ASSUME_MIN_SERVER_VERSION.get(info);
-		if (Utils.parseServerVersionStr(assumeMinServerVersion) >= ServerVersion.v9_0.getVersionNum()) {
-			// We already sent the parameter values in the StartupMessage so skip this
-			return;
-		}
-
-		final int dbVersion = protoConnection.getServerVersionNum();
-
-		if (dbVersion >= ServerVersion.v9_0.getVersionNum()) {
-			SetupQueryRunner.run(protoConnection, "SET extra_float_digits = 3", false);
-		}
-
-		String appName = PGProperty.APPLICATION_NAME.get(info);
-		if (appName != null && dbVersion >= ServerVersion.v9_0.getVersionNum()) {
-			StringBuilder sql = new StringBuilder();
-			sql.append("SET application_name = '");
-			Utils.escapeLiteral(sql, appName, protoConnection.getStandardConformingStrings());
-			sql.append("'");
-			SetupQueryRunner.run(protoConnection, sql.toString(), false);
-		}
-
 	}
 
 	private static boolean isMaster(ProtocolConnectionImpl protoConnection, Logger logger) throws SQLException, IOException {
