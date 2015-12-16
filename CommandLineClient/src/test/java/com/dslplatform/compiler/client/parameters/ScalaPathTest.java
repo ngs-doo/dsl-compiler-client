@@ -1,15 +1,18 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.Utils;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.Utils;
 
 public class ScalaPathTest {
 	private static String fakeScalaPath;
@@ -36,7 +39,12 @@ public class ScalaPathTest {
 	@Test
 	public void testScalaPathEmpty() {
 		assumeFalse(Utils.isWindows());
-		context.put(ScalaPath.INSTANCE, fakeScalaPath + "/empty/scalac");
+		
+		// chmod +x
+		File scalacFile = new File(fakeScalaPath + "/empty/scalac");
+		scalacFile.setExecutable(true);
+		
+		context.put(ScalaPath.INSTANCE, scalacFile.getAbsolutePath());
 		assertTrue(ScalaPath.INSTANCE.check(context));
 	}
 }
