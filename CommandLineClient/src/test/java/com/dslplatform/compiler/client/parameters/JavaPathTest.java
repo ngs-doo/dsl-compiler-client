@@ -86,7 +86,15 @@ public class JavaPathTest {
 	@Test
 	public void testJavaPathEmpty() {
 		assumeFalse(Utils.isWindows());
-		context.put(JavaPath.INSTANCE, fakeJavaPath + "/empty");
+
+		// chmod +x (GitHub doesn't store permissions)
+		File emptyJavaPath = new File(fakeJavaPath, "empty");
+		File javacFile = new File(emptyJavaPath, "javac");
+		File jarFile = new File(emptyJavaPath, "jar");
+		javacFile.setExecutable(true);
+		jarFile.setExecutable(true);
+
+		context.put(JavaPath.INSTANCE, emptyJavaPath.getAbsolutePath());
 		assertTrue(JavaPath.INSTANCE.check(context));
 	}
 
