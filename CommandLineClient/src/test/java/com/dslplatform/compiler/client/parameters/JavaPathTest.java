@@ -87,7 +87,7 @@ public class JavaPathTest {
 	public void testJavaPathEmpty() {
 		assumeFalse(Utils.isWindows());
 
-		// chmod +x (GitHub doesn't store permissions)
+		// chmod +x
 		File emptyJavaPath = new File(fakeJavaPath, "empty");
 		File javacFile = new File(emptyJavaPath, "javac");
 		File jarFile = new File(emptyJavaPath, "jar");

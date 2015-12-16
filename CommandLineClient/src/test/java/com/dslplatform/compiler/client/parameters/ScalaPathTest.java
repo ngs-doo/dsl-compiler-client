@@ -40,7 +40,7 @@ public class ScalaPathTest {
 	public void testScalaPathEmpty() {
 		assumeFalse(Utils.isWindows());
 		
-		// chmod +x (GitHub doesn't store permissions)
+		// chmod +x
 		File scalacFile = new File(fakeScalaPath + "/empty/scalac");
 		scalacFile.setExecutable(true);
 		
