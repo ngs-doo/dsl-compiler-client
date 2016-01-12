@@ -172,10 +172,10 @@ namespace DDDLanguage
 						var path = d.StartsWith(LibraryInfo.BasePath) ? d.Substring(LibraryInfo.BasePath.Length) : d;
 						sb.Append(" \"dsl=").Append(path).Append('"');
 					}
+					sb.Append(" \"path=");
+					sb.Append(LibraryInfo.BasePath);
+					sb.Append('"');
 				}
-				sb.Append(" \"path=");
-				sb.Append(LibraryInfo.BasePath);
-				sb.Append('"');
 				tcp = ConnectToServer(false);
 				var cms = CMS.Value;
 				var buf = Buffer.Value;
@@ -187,15 +187,20 @@ namespace DDDLanguage
 						return CompileDsl<T>(sb.ToString(), extract);
 					return Either<T>.Fail("Unable to start DSL Platform compiler");
 				}
-				sb.Append("\n");
+				sb.Append(" include-length\n");
 				tcp.Client.Send(Encoding.UTF8.GetBytes(sb.ToString()));
 				if (dsl != null)
 					tcp.Client.Send(Encoding.UTF8.GetBytes(dsl));
 				cms.SetLength(0);
 				var read = tcp.Client.Receive(buf, 4, SocketFlags.None);
 				var succes = read == 4 && buf[0] == 'O';
-				while ((read = tcp.Client.Receive(buf)) > 0)
+				read = tcp.Client.Receive(buf, 4, SocketFlags.None);
+				var length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+				while (length > 0 && (read = tcp.Client.Receive(buf)) > 0)
+				{
+					length -= read;
 					cms.Write(buf, 0, read);
+				}
 				cms.Position = 0;
 				if (succes)
 					return Either.Success(extract(cms));

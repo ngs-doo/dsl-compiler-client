@@ -15,6 +15,7 @@ public class Main {
 		final Context context = new Context();
 		final List<CompileParameter> parameters = initializeParameters(context, ".");
 		final int returnCode = parse(args, context, parameters) ? (processContext(context, parameters) ? 0 : 1) : 2;
+		context.close();
 		System.exit(returnCode);
 	}
 

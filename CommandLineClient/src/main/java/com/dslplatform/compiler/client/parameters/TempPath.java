@@ -26,7 +26,15 @@ public enum TempPath implements CompileParameter {
 	}
 
 	public static File getTempRootPath(final Context context) {
-		final File temp = context.load(CACHE_NAME);
+		File temp = context.load(CACHE_NAME);
+		if (temp == null) {
+			if (prepareSystemTempPath(context)) {
+				temp = context.load(CACHE_NAME);
+			}
+			if (temp == null) {
+				throw new RuntimeException("Unable to setup temporary path");
+			}
+		}
 		return context.contains(INSTANCE) ? temp : temp.getParentFile();
 	}
 

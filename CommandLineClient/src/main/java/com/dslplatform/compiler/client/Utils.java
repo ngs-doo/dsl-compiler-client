@@ -13,6 +13,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public abstract class Utils {
+	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
+
+	public static void downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
+		final URL server = new URL(REMOTE_URL + file + ".zip");
+		context.show("Downloading " + file + ".zip from DSL Platform...");
+		unpackZip(context, path, server);
+	}
+
 	public static String read(final InputStream stream) throws IOException {
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		final byte[] buffer = new byte[8192];

@@ -4,7 +4,7 @@
 	<groupId>com.dslplatform</groupId>
 	<artifactId>dsl-clc</artifactId>
 	<packaging>jar</packaging>
-	<version>1.5.0</version>
+	<version>1.5.1</version>
 	<name>DSL Platform - Compiler Command-Line Client</name>
 	<url>https://github.com/ngs-doo/dsl-compiler-client</url>
 	<description>Command line client for interaction with DSL Platform compiler (https://dsl-platform.com)</description>
@@ -14,6 +14,11 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>9.4-1206-jdbc4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.dslplatform</groupId>
+			<artifactId>dsl-json</artifactId>
+			<version>0.9.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.fusesource.jansi</groupId>

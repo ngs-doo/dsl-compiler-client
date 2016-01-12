@@ -1,39 +1,154 @@
 package com.dslplatform.ideaplugin;
 
-import com.dslplatform.grammar.NGSLexer;
-import com.dslplatform.grammar.NGSParser;
-import com.dslplatform.grammar.SyntaxConcept;
+import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.Either;
+import com.dslplatform.compiler.client.Main;
+import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.DslCompiler;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
 import com.intellij.lexer.*;
 import com.intellij.psi.tree.IElementType;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.*;
 
 public class DslLexerParser extends Lexer implements PsiParser {
 
 	private String lastDsl;
-	private List<AST> ast = new ArrayList<>();
+	private List<AST> ast = new ArrayList<AST>();
 	private int position = 0;
 
 	static class AST {
-		public final SyntaxConcept concept;
+		public final DslCompiler.SyntaxConcept concept;
 		public final TokenType type;
 		public final int offset;
 		public final int length;
 
-		public AST(SyntaxConcept concept, int offset, int length) {
+		public AST(DslCompiler.SyntaxConcept concept, int offset, int length) {
 			this.concept = concept;
-			this.type = concept == null ? TokenType.IGNORED : TokenType.from(concept.Type);
+			this.type = concept == null ? TokenType.IGNORED : TokenType.from(concept.type);
 			this.offset = offset;
 			this.length = length;
+		}
+	}
+
+	static class DslContext extends Context {
+		public final StringBuilder showLog = new StringBuilder();
+		public final StringBuilder errorLog = new StringBuilder();
+		public final StringBuilder traceLog = new StringBuilder();
+
+		public void reset() {
+			showLog.setLength(0);
+			errorLog.setLength(0);
+			traceLog.setLength(0);
+		}
+
+		public void show(String... values) {
+			for (String v : values) {
+				showLog.append(v);
+			}
+		}
+
+		public void log(String value) {
+			traceLog.append(value);
+		}
+
+		public void log(char[] value, int len) {
+			traceLog.append(value, 0, len);
+		}
+
+		public void error(String value) {
+			errorLog.append(value);
+		}
+
+		public void error(Exception ex) {
+			errorLog.append(ex.getMessage());
+			traceLog.append(ex.toString());
+		}
+	}
+
+	private final DslContext context = new DslContext();
+	private Socket socket;
+
+	private final static File compiler;
+	private static Process process;
+	private static long startedOn;
+	private static int port;
+
+	static {
+		DslContext ctx = new DslContext();
+		Main.processContext(
+				ctx,
+				Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE)
+		);
+		compiler = new File(ctx.get(DslCompiler.INSTANCE));
+		startServer(ctx);
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				stopServer();
+			}
+		}));
+	}
+
+	private synchronized void socketCleanup(DslContext context, boolean restartServer) {
+		if (context.errorLog.length() > 0) {
+			System.err.println(context.errorLog.toString());
+		}
+		long now = (new Date()).getTime();
+		if (restartServer && now > startedOn + 5000) {
+			stopServer();
+		}
+		if (socket != null) {
+			try {
+				socket.close();
+			} catch (Exception ignore) {
+			}
+			socket = null;
+		}
+	}
+
+	private static synchronized void stopServer() {
+		if (process != null) {
+			System.out.println("Stopped DSL Platform compiler");
+			try {
+				process.destroy();
+			} catch (Exception ignore) {
+			}
+			process = null;
+		}
+	}
+
+	private static synchronized void startServer(DslContext context) {
+		stopServer();
+		Random rnd = new Random();
+		port = rnd.nextInt(40000) + 20000;
+		Either<Process> tryProcess = DslCompiler.startServer(context, compiler, port);
+		startedOn = (new Date()).getTime();
+		process = tryProcess.isSuccess() ? tryProcess.get() : null;
+		if (process != null) {
+			System.out.println("Started DSL Platform compiler");
+			Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						if (process != null) {
+							process.waitFor();
+						}
+					} catch (Exception ignore) {
+					}
+					process = null;
+				}
+			});
+			thread.setDaemon(true);
+			thread.start();
 		}
 	}
 
@@ -53,17 +168,10 @@ public class DslLexerParser extends Lexer implements PsiParser {
 		String dsl = charSequence.toString();
 		if (!dsl.equals(lastDsl)) {
 			lastDsl = dsl;
-
-			ANTLRStringStream stream = new ANTLRStringStream(dsl);
-			NGSLexer lexer = new NGSLexer(stream);
-			NGSParser parser = new NGSParser(new CommonTokenStream(lexer));
-
-			try {
-				parser.ProcessDsl("dsl");
-			} catch (RecognitionException ignore) {
-			}
-			List<SyntaxConcept> parsed = parser.GetSyntax();
-			List<AST> newAst = new ArrayList<>(parsed.size() * 2);
+			List<DslCompiler.SyntaxConcept> parsed = dsl.length() > 0
+					? parseTokens(dsl)
+					: new ArrayList<DslCompiler.SyntaxConcept>(0);
+			List<AST> newAst = new ArrayList<AST>(parsed.size() * 2);
 			String[] lines = dsl.split("\\n");
 			int[] linesTotal = new int[lines.length];
 			int runningTotal = 0;
@@ -71,12 +179,12 @@ public class DslLexerParser extends Lexer implements PsiParser {
 				linesTotal[i] = runningTotal;
 				runningTotal += lines[i].length() + 1;
 			}
-			for (SyntaxConcept c : parsed) {
-				switch (c.Type) {
+			for (DslCompiler.SyntaxConcept c : parsed) {
+				switch (c.type) {
 					case Identifier:
 					case Keyword:
 					case StringQuote:
-						newAst.add(new AST(c, linesTotal[c.Line - 1] + c.Column, c.Value.length()));
+						newAst.add(new AST(c, linesTotal[c.line - 1] + c.column, c.value.length()));
 				}
 			}
 			if (newAst.size() == 0 && dsl.length() > 0) {
@@ -109,6 +217,35 @@ public class DslLexerParser extends Lexer implements PsiParser {
 			}
 		}
 		position = 0;
+	}
+
+	private List<DslCompiler.SyntaxConcept> parseTokens(String dsl) {
+		try {
+			context.reset();
+			if (process == null) {
+				startServer(context);
+			} else {
+				if (socket == null) {
+					context.put(DslCompiler.INSTANCE, Integer.toString(port));
+					if (!DslCompiler.INSTANCE.check(context)) {
+						throw new IOException("Unable to setup socket");
+					}
+					socket = context.load(DslCompiler.DSL_COMPILER_SOCKET);
+				}
+				Either<DslCompiler.ParseResult> result = DslCompiler.parseTokens(context, socket, dsl);
+				if (result.isSuccess()) {
+					//TODO: don't kill socket
+					socketCleanup(context, false);
+					return result.get().tokens;
+				} else {
+					System.err.println(result.explainError());
+					socketCleanup(context, true);
+				}
+			}
+		} catch (Exception ignore) {
+			socketCleanup(context, true);
+		}
+		return new ArrayList<DslCompiler.SyntaxConcept>(0);
 	}
 
 	static class OffsetPosition implements LexerPosition {

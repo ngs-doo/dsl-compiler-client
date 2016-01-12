@@ -80,8 +80,7 @@ public class CompileCsClient implements BuildAction {
 				}
 			}
 			try {
-				context.show("Downloading " + name + " from DSL Platform...");
-				DslServer.downloadAndUnpack(context, zip, libDeps);
+				Utils.downloadAndUnpack(context, zip, libDeps);
 			} catch (IOException ex) {
 				context.error("Unable to download " + name + " from DSL Platform.");
 				context.error(ex);

@@ -7,13 +7,11 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.fusesource.jansi.AnsiConsole;
 
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Context {
+public class Context implements Closeable {
 	private final Map<String, String> parameters = new HashMap<String, String>();
 	private final Map<String, Object> cache = new HashMap<String, Object>();
 
@@ -135,5 +133,18 @@ public class Context {
 			write(console, false, question + " ");
 		}
 		return System.console().readPassword();
+	}
+
+	@Override
+	public void close() {
+		for (Object it : cache.values()) {
+			if (it instanceof Closeable) {
+				try {
+					((Closeable) it).close();
+				} catch (IOException e) {
+					error(e);
+				}
+			}
+		}
 	}
 }

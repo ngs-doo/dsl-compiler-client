@@ -211,13 +211,11 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<Settings.Option> settings = Settings.get(context);
 		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
-		final File compiler = new File(context.get(DslCompiler.INSTANCE));
 		final boolean sourceOnly = context.contains(Settings.Option.SOURCE_ONLY.toString());
 		for (final Option t : targets) {
 			Map<String, String> files =
 					DslCompiler.compile(
 							context,
-							compiler,
 							t.value,
 							settings,
 							context.get(Namespace.INSTANCE),

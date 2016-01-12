@@ -105,7 +105,7 @@ public enum Migration implements CompileParameter {
 		context.show("Creating SQL migration for " + dbInfo.database + " ...");
 		final Either<String> migration = DslCompiler.migration(context, dbInfo, currentDsl);
 		if (!migration.isSuccess()) {
-			context.error("Error creating local SQL migration:");
+			context.error("Error creating SQL migration:");
 			context.error(migration.whyNot());
 			throw new ExitException();
 		}

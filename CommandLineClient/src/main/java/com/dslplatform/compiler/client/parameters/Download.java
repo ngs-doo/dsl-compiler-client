@@ -25,7 +25,7 @@ public enum Download implements CompileParameter {
 			final String zip) {
 		try {
 			context.show("Downloading " + name + " from DSL Platform...");
-			DslServer.downloadAndUnpack(context, zip, dependencies);
+			Utils.downloadAndUnpack(context, zip, dependencies);
 		} catch (IOException ex) {
 			context.error("Error downloading dependencies from DSL Platform.");
 			context.error(ex);
