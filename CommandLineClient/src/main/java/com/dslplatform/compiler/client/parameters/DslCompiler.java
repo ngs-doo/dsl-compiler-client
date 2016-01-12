@@ -56,6 +56,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		final Either<byte[]> response = runCompiler(context, arguments);
 		if (!response.isSuccess()) {
 			context.error(response.whyNot());
+			throw new ExitException();
 		}
 		final Either<Document> xml = Utils.readXml(new ByteArrayInputStream(response.get()));
 		if (!xml.isSuccess()) {
@@ -308,7 +309,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			return Either.fail(result.whyNot());
 		}
 		if (result.get().exitCode != 0) {
-			return Either.fail(result.get().output);
+			return Either.fail(result.get().output + result.get().error);
 		}
 		return Either.success(result.get().output.getBytes(UTF_8));
 	}
