@@ -51,7 +51,7 @@ public enum Maven implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom Apache Maven";
+		return "Specify custom Apache Maven";
 	}
 
 	@Override

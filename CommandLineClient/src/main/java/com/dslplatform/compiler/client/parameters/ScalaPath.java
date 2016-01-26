@@ -54,7 +54,7 @@ public enum ScalaPath implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom path to Scala compiler (scalac)";
+		return "Specify custom path to Scala compiler (scalac)";
 	}
 
 	@Override

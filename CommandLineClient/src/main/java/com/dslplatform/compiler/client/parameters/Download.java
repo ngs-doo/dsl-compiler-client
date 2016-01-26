@@ -152,7 +152,7 @@ public enum Download implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Download library dependencies if not available.";
+		return "Download library dependencies if not available";
 	}
 
 	@Override

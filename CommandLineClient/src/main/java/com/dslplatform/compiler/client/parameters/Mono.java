@@ -41,7 +41,7 @@ public enum Mono implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify path to Mono";
+		return "Specify path to Mono";
 	}
 
 	@Override

@@ -21,7 +21,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	@Override
 	public String getUsage() {
-		return "path or ip address";
+		return "path or IP address";
 	}
 
 	private final static Charset UTF_8 = Charset.forName("UTF-8");

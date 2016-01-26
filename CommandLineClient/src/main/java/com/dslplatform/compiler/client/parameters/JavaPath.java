@@ -210,7 +210,7 @@ public enum JavaPath implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom path to Java compiler (javac) and Java archive tool (jar)";
+		return "Specify custom path to Java compiler (javac) and Java Archive Tool (jar)";
 	}
 
 	@Override
