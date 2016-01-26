@@ -131,7 +131,7 @@ public enum PostgresConnection implements CompileParameter {
 		try {
 			try {
 				String server = parts[0];
-				String database = parts[1].substring(0, parts[1].indexOf('?'));
+				String database = parts[1].indexOf('?') == -1 ? parts[1] : parts[1].substring(0, parts[1].indexOf('?'));
 				String[] info = server.split(":");
 				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
 				int timeout = PGProperty.CONNECT_TIMEOUT.getInt(props) * 1000;

@@ -187,7 +187,7 @@ namespace DDDLanguage
 						return CompileDsl<T>(sb.ToString(), extract);
 					return Either<T>.Fail("Unable to start DSL Platform compiler");
 				}
-				sb.Append(" include-length\n");
+				sb.Append("\n");
 				tcp.Client.Send(Encoding.UTF8.GetBytes(sb.ToString()));
 				if (dsl != null)
 					tcp.Client.Send(Encoding.UTF8.GetBytes(dsl));
@@ -195,12 +195,8 @@ namespace DDDLanguage
 				var read = tcp.Client.Receive(buf, 4, SocketFlags.None);
 				var succes = read == 4 && buf[0] == 'O';
 				read = tcp.Client.Receive(buf, 4, SocketFlags.None);
-				var length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
-				while (length > 0 && (read = tcp.Client.Receive(buf)) > 0)
-				{
-					length -= read;
+				while ((read = tcp.Client.Receive(buf)) > 0)
 					cms.Write(buf, 0, read);
-				}
 				cms.Position = 0;
 				if (succes)
 					return Either.Success(extract(cms));
