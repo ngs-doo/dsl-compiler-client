@@ -69,7 +69,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		DOTNET_WPF("wpf", ".NET WPF GUI", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
 		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
 		PHP_UI("php_ui", "PHP UI client", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
-		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.10", "./generated-model-scala-client.jar"), false),
+		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), false),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), false),
 		SCALA_SERVER("scala_server", "Scala server", ".scala", new PrepareSources("Scala server", "scala_server", "Generated-Scala-Server"), true),
 		SCALA_SERVER_POSTGRES("scala_server_postgres", "Scala server (Postgres)", ".scala", new PrepareSources("Scala server", "scala_server_postgres", "Generated-Scala-Server"), true),

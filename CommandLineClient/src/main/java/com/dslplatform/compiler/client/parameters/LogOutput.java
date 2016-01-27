@@ -22,7 +22,7 @@ public enum LogOutput implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Show detailed log.";
+		return "Show detailed log";
 	}
 
 	@Override

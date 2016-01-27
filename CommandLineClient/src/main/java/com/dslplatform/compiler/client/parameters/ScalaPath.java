@@ -54,7 +54,7 @@ public enum ScalaPath implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom path to Scala compiler (scalac)";
+		return "Specify custom path to Scala compiler (scalac)";
 	}
 
 	@Override
@@ -66,6 +66,7 @@ public enum ScalaPath implements CompileParameter {
 				"SCALA_HOME environment variables will be checked for Scala tools.\n" +
 				"\n" +
 				"Example:\n" +
+				"\tC:\\Scala\\scala-2.11.7\\bin\\scalac.bat" +
 				"\t/var/user/scala-2.11/scalac";
 	}
 }

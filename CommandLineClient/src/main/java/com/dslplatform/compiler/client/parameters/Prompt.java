@@ -21,7 +21,7 @@ public enum Prompt implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Should try to interact on missing arguments or errors.";
+		return "Should not interact on missing arguments or errors?";
 	}
 
 	@Override

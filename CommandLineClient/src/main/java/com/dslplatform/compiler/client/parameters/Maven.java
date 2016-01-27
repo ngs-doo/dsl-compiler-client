@@ -51,7 +51,7 @@ public enum Maven implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom Apache Maven";
+		return "Specify custom Apache Maven";
 	}
 
 	@Override
@@ -62,7 +62,9 @@ public enum Maven implements CompileParameter {
 				"If Maven is not used, dependencies can be downloaded from DSL Platform.\n" +
 				"If set, M2 environment parameter will be checked." +
 				"\n" +
-				"Example:\n" +
-				"\tC:/apache-maven-2.2.1/bin/mvn.bat";
+				"Examples:\n" +
+				"\tC:/apache-maven-2.2.1/bin/mvn.bat" +
+				"\tC:\\apache-maven-3.3.3\\bin\\mvn.cmd" +
+				"\t/usr/share/maven/bin/mvn";
 	}
 }

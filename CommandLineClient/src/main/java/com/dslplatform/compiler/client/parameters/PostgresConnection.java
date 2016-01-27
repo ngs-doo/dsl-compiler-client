@@ -154,7 +154,7 @@ public enum PostgresConnection implements CompileParameter {
 				final long endAt = System.currentTimeMillis();
 				context.log("Script executed in " + (endAt - startAt) + "ms");
 			} catch (Exception ex) {
-				context.error("Error executing sql script");
+				context.error("Error executing SQL script");
 				context.error(ex);
 				throw new ExitException();
 			}
@@ -380,7 +380,7 @@ public enum PostgresConnection implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Connection string to Postgres database. To create a SQL migration a database with previous dsl must be provided";
+		return "Connection string to Postgres database. To create an SQL migration a database with previous DSL must be provided";
 	}
 
 	@Override
@@ -391,6 +391,7 @@ public enum PostgresConnection implements CompileParameter {
 				"\n" +
 				"Example connection strings:\n" +
 				"\n" +
+				"\tlocalhost/mydb\n" +
 				"\tlocalhost/Database?user=postgres\n" +
 				"\tserver:5432/DB?user=migration&password=secret&ssl=true\n" +
 				"\n" +

@@ -112,7 +112,7 @@ public class PropertiesFile implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "use file with predefined arguments";
+		return "Use file with predefined arguments";
 	}
 
 	@Override

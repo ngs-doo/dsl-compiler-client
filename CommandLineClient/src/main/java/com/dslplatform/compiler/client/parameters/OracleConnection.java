@@ -153,7 +153,7 @@ public enum OracleConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException ex) {
-			context.error("Error executing sql script");
+			context.error("Error executing SQL script");
 			context.error(ex);
 			cleanup(conn, context);
 			throw new ExitException();
@@ -332,7 +332,7 @@ public enum OracleConnection implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Connection string to Oracle database. To create a SQL migration a database with previous dsl must be provided";
+		return "Connection string to Oracle database. To create an SQL migration a database with previous DSL must be provided";
 	}
 
 	@Override

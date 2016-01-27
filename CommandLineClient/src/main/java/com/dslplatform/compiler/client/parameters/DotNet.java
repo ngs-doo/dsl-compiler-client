@@ -61,7 +61,7 @@ public enum DotNet implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "specify custom .NET/Mono compiler";
+		return "Specify custom .NET/Mono compiler";
 	}
 
 	@Override

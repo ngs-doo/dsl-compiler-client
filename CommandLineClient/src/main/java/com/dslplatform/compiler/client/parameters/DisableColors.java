@@ -22,7 +22,7 @@ public enum DisableColors implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Disable ANSI colors.";
+		return "Disable ANSI colors";
 	}
 
 	@Override

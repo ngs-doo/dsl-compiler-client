@@ -105,7 +105,7 @@ public enum DslPath implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "path to DSL files";
+		return "Path to DSL files";
 	}
 
 	@Override
