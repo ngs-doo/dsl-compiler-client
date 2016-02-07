@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.json.*;
+import com.dslplatform.compiler.client.json.DslJson;
 import org.w3c.dom.*;
 
 import java.io.*;
@@ -227,9 +227,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				os.write(buf, 0, read);
 			}
 			os.flush();
-			final JsonReader<Object> reader = new JsonReader<Object>(os.getBuffer(), os.size(), null);
-			reader.getNextToken();
-			return Either.success(new ParseResult(DslJson.deserializeMap(reader)));
+			return Either.success(new ParseResult(DslJson.readMap(os.getBuffer(), os.size())));
 		} catch (IOException e) {
 			return Either.fail(e.getMessage());
 		}
