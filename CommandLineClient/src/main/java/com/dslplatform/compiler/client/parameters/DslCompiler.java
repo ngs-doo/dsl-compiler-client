@@ -217,12 +217,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			}
 			read = is.read(buf, 0, 4);
 			if (read != 4) {
-				return Either.fail("Invalid response from server.");
+				return Either.fail("Invalid response from server. Expecting length.");
 			}
 			int length = readInt(buf);
 			os.reset();
-			while (length > 0 && read > 0) {
-				read = is.read(buf);
+			while (length > 0 && (read = is.read(buf)) > 0) {
 				length -= read;
 				os.write(buf, 0, read);
 			}
@@ -256,13 +255,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final boolean success = read == 4 && buf[0] == 'O';
 			read = is.read(buf, 0, 4);
 			if (read != 4) {
-				return Either.fail("Invalid response from server.");
+				return Either.fail("Invalid response from server. Expecting length.");
 			}
 			int length = readInt(buf);
 			context.log("Response size from DSL compiler: " + length);
 			os.reset();
-			while (length > 0 && read > 0) {
-				read = is.read(buf);
+			while (length > 0 && (read = is.read(buf)) > 0) {
 				length -= read;
 				os.write(buf, 0, read);
 			}
