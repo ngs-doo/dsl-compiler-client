@@ -27,6 +27,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		JODA_TIME("joda-time", "Use Joda Time library (instead of Java time API)"),
 		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres"),
 		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)"),
+		LAZY_LOAD_WARNING("lazy-load-warning", "Inject warning when accessing lazy load property"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes");
 
 		private final String value;
