@@ -9,6 +9,7 @@ import java.lang.management.ManagementFactory;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public enum DslCompiler implements CompileParameter, ParameterParser {
@@ -424,6 +425,10 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final File compiler = new File(tempPath, "dsl-compiler.exe");
 			if (compiler.exists() && testCompiler(context, compiler)) {
 				if (isEmpty) {
+					if (context.contains(Download.INSTANCE)) {
+						context.show("Checking for latest compiler version due to download option");
+						checkForLatestVersion(context, path, tempPath, compiler);
+					}
 					context.put(INSTANCE, compiler.getAbsolutePath());
 					return true;
 				}
@@ -443,18 +448,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					if (!answer.toLowerCase().equals("y")) throw new ExitException();
 				} else throw new ExitException();
 			}
-			try {
-				Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);
-			} catch (final IOException ex) {
-				context.error("Error downloading compiler from https://dsl-platform.com");
-				context.error(ex);
-				throw new ExitException();
-			}
-			if (!testCompiler(context, compiler)) {
-				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
-				throw new ExitException();
-			}
-			context.put(INSTANCE, compiler.getAbsolutePath());
+			downloadCompiler(context, path, tempPath, compiler);
 		} else {
 			if (!testCompiler(context, path)) {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
@@ -463,6 +457,40 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			context.put(INSTANCE, path.getAbsolutePath());
 		}
 		return true;
+	}
+
+	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
+		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler");
+		if (!lastModified.isSuccess()) {
+			context.error(lastModified.whyNot());
+		} else {
+			if (compiler.lastModified() == lastModified.get()) {
+				final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				context.show("dsl-compiler.exe at latest version (" + sdf.format(compiler.lastModified()) + ")");
+			} else {
+				context.show("Newer version of dsl-compiler.exe found at DSL Platform website.");
+				downloadCompiler(context, path, tempPath, compiler);
+			}
+		}
+	}
+
+	private static void downloadCompiler(final Context context, final File path, final File tempPath, final File compiler) throws ExitException {
+		final long lastModified;
+		try {
+			lastModified = Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);
+		} catch (final IOException ex) {
+			context.error("Error downloading compiler from https://dsl-platform.com");
+			context.error(ex);
+			throw new ExitException();
+		}
+		if (!testCompiler(context, compiler)) {
+			context.error("Specified compiler is invalid: " + path.getAbsolutePath());
+			throw new ExitException();
+		}
+		if (!compiler.setLastModified(lastModified)) {
+			context.error("Unable to set matching last modified date");
+		}
+		context.put(INSTANCE, compiler.getAbsolutePath());
 	}
 
 	private static boolean testCompiler(final Context context, final File path) throws ExitException {

@@ -7,7 +7,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -15,10 +17,22 @@ import java.util.zip.ZipInputStream;
 public abstract class Utils {
 	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
 
-	public static void downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
+	public static long downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
 		final URL server = new URL(REMOTE_URL + file + ".zip");
 		context.show("Downloading " + file + ".zip from DSL Platform...");
-		unpackZip(context, path, server);
+		return unpackZip(context, path, server);
+	}
+
+	public static Either<Long> lastModified(final Context context, final String file) {
+		try {
+			final URL server = new URL(REMOTE_URL + file + ".zip");
+			context.log("Checking last modified info for " + file + ".zip from DSL Platform...");
+			final HttpURLConnection connection = (HttpURLConnection) server.openConnection();
+			connection.setRequestMethod("HEAD");
+			return Either.success(connection.getLastModified());
+		} catch (IOException ex) {
+			return Either.fail(ex);
+		}
 	}
 
 	public static String read(final InputStream stream) throws IOException {
@@ -84,18 +98,20 @@ public abstract class Utils {
 		}
 	}
 
-	public static void unpackZip(final Context context, final File path, final URL remoteUrl) throws IOException {
-		unpackZip(context, path, remoteUrl, new ArrayList<File>(), 3);
+	public static long unpackZip(final Context context, final File path, final URL remoteUrl) throws IOException {
+		return unpackZip(context, path, remoteUrl, new ArrayList<File>(), 3);
 	}
 
-	private static void unpackZip(
+	private static long unpackZip(
 			final Context context,
 			final File path,
 			final URL remoteUrl,
 			final ArrayList<File> unpackedFiles,
 			final int retry) throws IOException {
 		try {
-			final InputStream response = remoteUrl.openConnection().getInputStream();
+			final URLConnection connection = remoteUrl.openConnection();
+			final long lastModified = connection.getLastModified();
+			final InputStream response = connection.getInputStream();
 			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));
 			ZipEntry entry;
 			final byte[] buffer = new byte[8192];
@@ -114,6 +130,7 @@ public abstract class Utils {
 				zip.closeEntry();
 			}
 			zip.close();
+			return lastModified;
 		} catch (IOException io) {
 			context.error(io);
 			for (final File f : unpackedFiles) {
@@ -125,8 +142,9 @@ public abstract class Utils {
 			}
 			if (retry > 0) {
 				context.log("Retrying download... from " + remoteUrl);
-				unpackZip(context, path, remoteUrl, new ArrayList<File>(), retry - 1);
-			} else throw io;
+				return unpackZip(context, path, remoteUrl, new ArrayList<File>(), retry - 1);
+			}
+			throw io;
 		}
 	}
 
