@@ -20,6 +20,7 @@ namespace DDDLanguage
 		private static Process RunningServer;
 		private static int ServerPort;
 		private static object sync = new object();
+		private static DateTime StartedOn;
 
 		static Compiler()
 		{
@@ -69,10 +70,12 @@ namespace DDDLanguage
 							}
 						};
 					RunningServer.Start();
+					StartedOn = DateTime.Now;
 				}
 			}
 		}
 
+		//TODO: reuse TcpClient (keep-alive)
 		public static TcpClient ConnectToServer(bool reset)
 		{
 			if (reset)
@@ -89,6 +92,7 @@ namespace DDDLanguage
 			tcp.ReceiveTimeout = 30000;
 			return tcp;
 		}
+
 		public static string RootPath
 		{
 			get
@@ -176,47 +180,70 @@ namespace DDDLanguage
 					sb.Append(LibraryInfo.BasePath);
 					sb.Append('"');
 				}
-				tcp = ConnectToServer(false);
-				var cms = CMS.Value;
-				var buf = Buffer.Value;
-				if (tcp == null)
-					tcp = ConnectToServer(true);
+				try
+				{
+					tcp = ConnectToServer(false);
+					if (tcp == null)
+						tcp = ConnectToServer(true);
+				}
+				catch (SocketException)
+				{
+					if (DateTime.Now < StartedOn.AddMinutes(1))
+						Thread.Sleep(1000);
+					CloseTcp(tcp);
+					tcp = ConnectToServer(false);
+				}
 				if (tcp == null)
 				{
 					if (dsls != null)
 						return CompileDsl<T>(sb.ToString(), extract);
 					return Either<T>.Fail("Unable to start DSL Platform compiler");
 				}
-				sb.Append("\n");
-				tcp.Client.Send(Encoding.UTF8.GetBytes(sb.ToString()));
-				if (dsl != null)
-					tcp.Client.Send(Encoding.UTF8.GetBytes(dsl));
-				cms.SetLength(0);
-				var read = tcp.Client.Receive(buf, 4, SocketFlags.None);
-				var succes = read == 4 && buf[0] == 'O';
-				read = tcp.Client.Receive(buf, 4, SocketFlags.None);
-				while ((read = tcp.Client.Receive(buf)) > 0)
-					cms.Write(buf, 0, read);
-				cms.Position = 0;
-				if (succes)
-					return Either.Success(extract(cms));
-				return Either<T>.Fail(new StreamReader(cms).ReadToEnd());
+				return SendRequest<T>(sb.ToString(), dsl, extract, tcp);
 			}
 			catch (Exception ex)
 			{
-				Stop(true);
+				if (DateTime.Now < StartedOn.AddMinutes(1))
+					Stop(true);
 				if (dsls != null)
 					return CompileDsl<T>(sb.ToString(), extract);
 				return Either<T>.Fail(ex.Message);
 			}
-			finally
+			finally { CloseTcp(tcp); }
+		}
+
+		private static void CloseTcp(TcpClient tcp)
+		{
+			if (tcp != null)
 			{
-				if (tcp != null)
-				{
-					try { tcp.Close(); }
-					catch { }
-				}
+				try { tcp.Close(); }
+				catch { }
 			}
+		}
+
+		private static Either<T> SendRequest<T>(string arguments, string dsl, Func<ChunkedMemoryStream, T> extract, TcpClient tcp)
+		{
+			var cms = CMS.Value;
+			var buf = Buffer.Value;
+			tcp.Client.Send(Encoding.UTF8.GetBytes(arguments + " include-length\n"));
+			if (dsl != null)
+				tcp.Client.Send(Encoding.UTF8.GetBytes(dsl));
+			cms.SetLength(0);
+			var read = tcp.Client.Receive(buf, 4, SocketFlags.None);
+			var succes = read == 4 && buf[0] == 'O';
+			read = tcp.Client.Receive(buf, 4, SocketFlags.None);
+			if (read != 4)
+				return Either<T>.Fail("Invalid response from server. Expecting length.");
+			var length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+			while (length > 0 && (read = tcp.Client.Receive(buf)) > 0)
+			{
+				length -= read;
+				cms.Write(buf, 0, read);
+			}
+			cms.Position = 0;
+			if (succes)
+				return Either.Success(extract(cms));
+			return Either<T>.Fail(new StreamReader(cms).ReadToEnd());
 		}
 
 		private static Either<T> CompileDsl<T>(string args, Func<ChunkedMemoryStream, T> extract)

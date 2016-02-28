@@ -203,7 +203,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final Socket socket,
 			final String dsl) throws IOException {
 		final byte[] dslUtf8 = dsl.getBytes(UTF_8);
-		final String command = "tokens=" + dslUtf8.length + " format=json include-length\n";
+		final String command = "tokens=" + dslUtf8.length + " format=json include-length keep-alive\n";
 		try {
 			final OutputStream sos = socket.getOutputStream();
 			sos.write(command.getBytes(UTF_8));
@@ -244,7 +244,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 		sb.append("path=\"");
 		sb.append(System.getProperty("user.dir"));
-		sb.append("\" include-length\n");
+		sb.append("\" include-length keep-alive\n");
 		try {
 			final OutputStream sos = socket.getOutputStream();
 			sos.write(sb.toString().getBytes(UTF_8));
@@ -401,7 +401,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				if (socket.isConnected()) {
 					try {
 						socket.setKeepAlive(true);
-						socket.setSoTimeout(30000);
+						socket.setSoTimeout(5000);
 					} catch (SocketException ignore) {
 					}
 					context.cache(DSL_COMPILER_SOCKET, socket);
