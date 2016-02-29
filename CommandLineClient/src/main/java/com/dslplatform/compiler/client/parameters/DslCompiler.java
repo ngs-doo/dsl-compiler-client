@@ -6,6 +6,8 @@ import org.w3c.dom.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
@@ -176,6 +178,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		arguments.add(compiler.getAbsolutePath());
 		arguments.add("server-mode");
 		arguments.add("port=" + port);
+		if (InetAddress.getLoopbackAddress() instanceof Inet4Address) {
+			arguments.add("ip=v4");
+		}
 		try {
 			String procId = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
 			arguments.add("parent=" + procId);
@@ -387,15 +392,22 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			if (port > 0) {
 				Socket socket;
 				try {
-					socket = new Socket("::1", port);
-				} catch (Exception ignore) {
-					context.log("Unable to open socket to port on IPv6 localhost: " + value);
+					socket = new Socket(InetAddress.getLoopbackAddress(), port);
+				} catch (Exception ex) {
+					context.error("Unable to open socket on default loopback: " + value);
+					context.error(ex);
 					try {
-						socket = new Socket("127.0.0.1", port);
-					} catch (Exception ex) {
-						context.error("Unable to open socket to port on localhost: " + value);
-						context.error(ex);
-						throw new ExitException();
+						socket = new Socket("::1", port);
+					} catch (Exception ex6) {
+						context.error("Unable to open socket to port on IPv6 localhost: " + value);
+						context.error(ex6);
+						try {
+							socket = new Socket("127.0.0.1", port);
+						} catch (Exception ex4) {
+							context.error("Unable to open socket to port on localhost: " + value);
+							context.error(ex4);
+							throw new ExitException();
+						}
 					}
 				}
 				if (socket.isConnected()) {
