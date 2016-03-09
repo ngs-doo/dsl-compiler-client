@@ -62,7 +62,7 @@ public class PrepareSources implements BuildAction {
 				try {
 					Utils.saveFile(context, tf, content.get());
 				} catch (IOException ex) {
-					context.error("Error writing target PHP file: " + tf.getAbsolutePath());
+					context.error("Error writing target " + targetName + " file: " + tf.getAbsolutePath());
 					throw new ExitException();
 				}
 			}
