@@ -314,7 +314,11 @@ public enum PostgresConnection implements CompileParameter {
 				throw new ExitException();
 			} else if (dbDoesntExists) {
 				context.show();
-				context.error("Database not found. Since force option is not enabled, existing database must be used.");
+				if (context.contains(ApplyMigration.INSTANCE)) {
+					context.error("Database not found. Since force option is not enabled, existing database must be used.");
+				} else {
+					context.error("Database not found. Use both force and apply to both create a new database and apply migration to it.");
+				}
 				return false;
 			}
 			if (args.getProperty("password") != null) {

@@ -46,8 +46,12 @@ public enum Mono implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return "To run Mono applications, Mono is required.\n" +
+		return "To run Mono applications, Mono is required (3+).\n" +
 				"On Windows Mono is not required, but can be used, while on Linux Mono is usually available via command line.\n" +
+				"\n" +
+				"On Linux Mono can be installed with sudo apt-get install mono-complete.\n" +
+				"Mac version of Mono can be installed through installer at: http://www.mono-project.com/download/.\n" +
+				"\n" +
 				"If custom path is required this option can be used to specify it.\n" +
 				"\n" +
 				"Example:\n" +
