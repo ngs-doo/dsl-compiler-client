@@ -187,7 +187,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 			context.error("Please check your DSL folder: " + context.get(DslPath.INSTANCE));
 			return false;
 		}
-		final boolean sourceOnly = context.contains(Settings.Option.SOURCE_ONLY.toString());
+		final boolean sourceOnly = Settings.get(context).contains(Settings.Option.SOURCE_ONLY);
 		if (!sourceOnly) {
 			for (final Option o : options) {
 				if (!o.action.check(context)) {
@@ -212,7 +212,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<Settings.Option> settings = Settings.get(context);
 		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
-		final boolean sourceOnly = context.contains(Settings.Option.SOURCE_ONLY.toString());
+		final boolean sourceOnly = settings.contains(Settings.Option.SOURCE_ONLY);
 		for (final Option t : targets) {
 			Map<String, String> files =
 					DslCompiler.compile(
