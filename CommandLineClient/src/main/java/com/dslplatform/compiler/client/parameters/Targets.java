@@ -233,6 +233,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 				context.error(e);
 				throw new ExitException();
 			}
+			context.notify("TARGET", t);
 			if (!sourceOnly && t.action != null) {
 				t.action.build(new File(temp, t.name()), context);
 			}

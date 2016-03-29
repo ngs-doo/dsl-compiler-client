@@ -57,6 +57,11 @@ public class Context implements Closeable {
 		cache.put(name, value);
 	}
 
+	public <T> T notify(final String action, final T target) {
+		log("Notify: " + action + " for " + target);
+		return target;
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T load(final String name) {
 		return (T) cache.get(name);

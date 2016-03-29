@@ -43,7 +43,6 @@ class JavaCompilation {
 		if (!classOut.mkdirs()) {
 			return Either.fail("Error creating temporary folder for Java class files: " + classOut.getAbsolutePath());
 		}
-		final int len = source.getAbsolutePath().length() + 1;
 		final File[] externalJars = libraries.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(final File dir, final String name) {
@@ -66,24 +65,11 @@ class JavaCompilation {
 			classPath.append(File.pathSeparatorChar).append(j.getAbsolutePath());
 		}
 		javacArguments.add(classPath.toString());
-		if (Utils.isWindows()) {
-			final List<File> javaDirs = Utils.findNonEmptyDirs(source, ".java");
-			if (javaDirs.size() == 0) {
-				return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
-			}
-			for (final File f : javaDirs) {
-				if (f.equals(source)) {
-					javacArguments.add("*.java");
-				} else {
-					javacArguments.add(f.getAbsolutePath().substring(len) + File.separator + "*.java");
-				}
-			}
-		} else {
-			final List<File> javaFiles = Utils.findFiles(context, source, Collections.singletonList(".java"));
-			for (final File f : javaFiles) {
-				javacArguments.add(f.getAbsolutePath().substring(len));
-			}
-		}
+		context.notify("JAVAC", javacArguments);
+		List<String> sources = Utils.listSources(source, context, ".java");
+		if (sources.isEmpty())
+			return Either.fail("Unable to find Java generated sources in: " + source.getAbsolutePath());
+		javacArguments.addAll(sources);
 		context.show("Running javac for " + output.getName() + " ...");
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, javac, source, javacArguments);
 		if (!execCompile.isSuccess()) {

@@ -6,10 +6,7 @@ import org.w3c.dom.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -79,12 +76,14 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			context.error(new String(response.get(), UTF_8));
 			throw new ExitException();
 		}
+		context.notify("SOURCES", files);
 		return files;
 	}
 
 	private static Either<byte[]> runCompiler(Context context, List<String> arguments) throws ExitException {
 		final Socket socket = context.load(DSL_COMPILER_SOCKET);
 		final File compiler = new File(context.get(DslCompiler.INSTANCE));
+		context.notify("COMPILATION", arguments);
 		return socket != null
 				? runCompilerSocket(context, socket, arguments)
 				: runCompilerFile(context, compiler, arguments);
@@ -178,8 +177,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		arguments.add(compiler.getAbsolutePath());
 		arguments.add("server-mode");
 		arguments.add("port=" + port);
-		if (InetAddress.getLoopbackAddress() instanceof Inet4Address) {
-			arguments.add("ip=v4");
+		try {
+			if (InetAddress.getLocalHost() instanceof Inet4Address) {
+				arguments.add("ip=v4");
+			}
+		} catch (UnknownHostException ignore) {
 		}
 		try {
 			String procId = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
@@ -353,7 +355,8 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (!result.isSuccess()) {
 			return Either.fail(result.whyNot());
 		}
-		return Either.success(new String(result.get(), UTF_8));
+		final String sql = new String(result.get(), UTF_8);
+		return Either.success(context.notify("MIGRATION", sql));
 	}
 
 	public static Either<Boolean> parse(final Context context, final List<File> dsls) throws ExitException {
@@ -392,9 +395,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			if (port > 0) {
 				Socket socket;
 				try {
-					socket = new Socket(InetAddress.getLoopbackAddress(), port);
+					socket = new Socket(InetAddress.getLocalHost(), port);
 				} catch (Exception ex) {
-					context.error("Unable to open socket on default loopback: " + value);
+					context.error("Unable to open socket on default localhost: " + value);
 					context.error(ex);
 					try {
 						socket = new Socket("::1", port);

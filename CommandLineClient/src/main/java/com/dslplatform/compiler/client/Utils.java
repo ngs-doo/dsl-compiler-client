@@ -256,6 +256,7 @@ public abstract class Utils {
 			description.append(arg).append(" ");
 		}
 		context.log(description.toString());
+		context.notify("PROCESS", builder);
 	}
 
 	public static Either<String> findCommand(final Context context, final String path, final String name, final String contains) {
@@ -379,5 +380,26 @@ public abstract class Utils {
 				findNonEmptyDirs(f, foundFiles, extension);
 			}
 		}
+	}
+
+	public static List<String> listSources(File source, Context context, String extension) {
+		final int len = source.getAbsolutePath().length() + 1;
+		final List<String> list = new ArrayList<String>();
+		if (isWindows()) {
+			final List<File> dirs = findNonEmptyDirs(source, extension);
+			for (final File f : dirs) {
+				if (f.equals(source)) {
+					list.add("*" + extension);
+				} else {
+					list.add(f.getAbsolutePath().substring(len) + File.separator + "*" + extension);
+				}
+			}
+		} else {
+			final List<File> files = findFiles(context, source, Collections.singletonList(extension));
+			for (final File f : files) {
+				list.add(f.getAbsolutePath().substring(len));
+			}
+		}
+		return list;
 	}
 }
