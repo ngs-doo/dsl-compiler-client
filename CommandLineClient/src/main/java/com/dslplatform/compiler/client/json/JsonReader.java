@@ -21,16 +21,15 @@ final class JsonReader {
 	}
 
 	private int tokenStart;
-	protected int currentIndex = 0;
-	private long currentPosition = 0;
+	private int currentIndex = 0;
 	private byte last = ' ';
 
 	protected int length;
 	private final char[] tmp;
 
-	protected final byte[] buffer;
+	private final byte[] buffer;
 
-	protected JsonReader(final char[] tmp, final byte[] buffer, final int length) {
+	private JsonReader(final char[] tmp, final byte[] buffer, final int length) {
 		this.tmp = tmp;
 		this.buffer = buffer;
 		this.length = length;
@@ -54,12 +53,6 @@ final class JsonReader {
 
 	public int length() {
 		return length;
-	}
-
-	void reset(int newLength) {
-		currentPosition += currentIndex;
-		currentIndex = 0;
-		this.length = newLength;
 	}
 
 	private final static Charset UTF_8 = Charset.forName("UTF-8");
@@ -105,48 +98,6 @@ final class JsonReader {
 		}
 		currentIndex += i - 1;
 		last = bb;
-		return tmp;
-	}
-
-	public final String readSimpleString() throws IOException {
-		if (last != '"')
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
-		int i = 0;
-		int ci = currentIndex;
-		try {
-			while (i < tmp.length) {
-				final byte bb = buffer[ci++];
-				if (bb == '"') break;
-				tmp[i++] = (char) bb;
-			}
-		} catch (ArrayIndexOutOfBoundsException ignore) {
-			throw new IOException("JSON string was not closed with a double quote at: " + currentIndex);
-		}
-		if (ci > length) {
-			throw new IOException("JSON string was not closed with a double quote at: " + currentIndex);
-		}
-		currentIndex = ci;
-		return new String(tmp, 0, i);
-	}
-
-	public final char[] readSimpleQuote() throws IOException {
-		if (last != '"') {
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
-		}
-		int ci = tokenStart = currentIndex;
-		try {
-			for (int i = 0; i < tmp.length; i++) {
-				final byte bb = buffer[ci++];
-				if (bb == '"') break;
-				tmp[i] = (char) bb;
-			}
-		} catch (ArrayIndexOutOfBoundsException ignore) {
-			throw new IOException("JSON string was not closed with a double quote at: " + currentIndex);
-		}
-		if (ci > length) {
-			throw new IOException("JSON string was not closed with a double quote at: " + currentIndex);
-		}
-		currentIndex = ci;
 		return tmp;
 	}
 
@@ -196,11 +147,6 @@ final class JsonReader {
 			}
 		}
 		currentIndex = ci;
-
-		return readLargeString(startIndex);
-	}
-
-	protected String readLargeString(final int startIndex) throws IOException {
 
 		if (currentIndex >= length) {
 			throw new IOException("JSON string was not closed with a double quote at: " + currentIndex);
@@ -294,7 +240,7 @@ final class JsonReader {
 		throw new IOException("JSON string was not closed with a double quote!");
 	}
 
-	protected static int hexToInt(final byte value) throws IOException {
+	private static int hexToInt(final byte value) throws IOException {
 		if (value >= '0' && value <= '9') return value - 0x30;
 		if (value >= 'A' && value <= 'F') return value - 0x37;
 		if (value >= 'a' && value <= 'f') return value - 0x57;
@@ -375,120 +321,7 @@ final class JsonReader {
 	}
 
 	public final long positionInStream() {
-		return currentPosition + currentIndex;
-	}
-
-	public final int fillName() throws IOException {
-		if (last != '"') {
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
-		}
-		tokenStart = currentIndex;
-		int ci = currentIndex;
-		long hash = 0x811c9dc5;
-		while (ci < buffer.length) {
-			final byte b = buffer[ci++];
-			if (b == '"') break;
-			hash ^= b;
-			hash *= 0x1000193;
-		}
-		currentIndex = ci;
-		if (read() != ':') {
-			if (!wasWhiteSpace() || getNextToken() != ':') {
-				throw new IOException("Expecting ':' at position " + positionInStream() + ". Found " + (char) last);
-			}
-		}
-		return (int) hash;
-	}
-
-	public final int calcHash() throws IOException {
-		if (last != '"') {
-			throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) last);
-		}
-		tokenStart = currentIndex;
-		int ci = currentIndex;
-		long hash = 0x811c9dc5;
-		while (ci < buffer.length) {
-			final byte b = buffer[ci++];
-			if (b == '"') break;
-			hash ^= b;
-			hash *= 0x1000193;
-		}
-		currentIndex = ci;
-		return (int) hash;
-	}
-
-	public final boolean wasLastName(final String name) {
-		if (name.length() != currentIndex - tokenStart) {
-			return false;
-		}
-		for (int i = 0; i < name.length(); i++) {
-			if (name.charAt(i) != buffer[tokenStart + i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public final String getLastName() throws IOException {
-		return new String(buffer, tokenStart, currentIndex - tokenStart - 1, "ISO-8859-1");
-	}
-
-	private byte skipString() throws IOException {
-		byte c = read();
-		byte prev = c;
-		while (c != '"' || prev == '\\') {
-			prev = c;
-			c = read();
-		}
-		return getNextToken();
-	}
-
-	public final byte skip() throws IOException {
-		if (last == '"') return skipString();
-		else if (last == '{') {
-			byte nextToken = getNextToken();
-			if (nextToken == '}') return getNextToken();
-			if (nextToken == '"') nextToken = skipString();
-			else
-				throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) nextToken);
-			if (nextToken != ':')
-				throw new IOException("Expecting ':' at position " + positionInStream() + ". Found " + (char) nextToken);
-			getNextToken();
-			nextToken = skip();
-			while (nextToken == ',') {
-				nextToken = getNextToken();
-				if (nextToken == '"') nextToken = skipString();
-				else
-					throw new IOException("Expecting '\"' at position " + positionInStream() + ". Found " + (char) nextToken);
-				if (nextToken != ':')
-					throw new IOException("Expecting ':' at position " + positionInStream() + ". Found " + (char) nextToken);
-				getNextToken();
-				nextToken = skip();
-			}
-			if (nextToken != '}')
-				throw new IOException("Expecting '}' at position " + positionInStream() + ". Found " + (char) nextToken);
-			return getNextToken();
-		} else if (last == '[') {
-			getNextToken();
-			byte nextToken = skip();
-			while (nextToken == ',') {
-				getNextToken();
-				nextToken = skip();
-			}
-			if (nextToken != ']')
-				throw new IOException("Expecting ']' at position " + positionInStream() + ". Found " + (char) nextToken);
-			return getNextToken();
-		} else {
-			while (last != ',' && last != '}' && last != ']')
-				read();
-			return last;
-		}
-	}
-
-	public String readNext() throws IOException {
-		final int start = currentIndex - 1;
-		skip();
-		return new String(buffer, start, currentIndex - start - 1, "UTF-8");
+		return currentIndex;
 	}
 
 	public final boolean wasNull() throws IOException {

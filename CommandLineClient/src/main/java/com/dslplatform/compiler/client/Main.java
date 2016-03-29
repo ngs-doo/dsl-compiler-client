@@ -19,7 +19,7 @@ public class Main {
 		System.exit(returnCode);
 	}
 
-	static List<CompileParameter> initializeParameters(final Context context, final String path) {
+	public static List<CompileParameter> initializeParameters(final Context context, final String path) {
 		final List<CompileParameter> parameters = new ArrayList<CompileParameter>(DEFAULT_PARAMETERS.length + 2);
 		parameters.add(new Help(parameters));
 		parameters.add(new PropertiesFile(parameters));
