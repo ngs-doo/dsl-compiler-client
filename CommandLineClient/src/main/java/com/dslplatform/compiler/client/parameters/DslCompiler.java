@@ -83,6 +83,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	private static Either<byte[]> runCompiler(Context context, List<String> arguments) throws ExitException {
 		final Socket socket = context.load(DSL_COMPILER_SOCKET);
 		final File compiler = new File(context.get(DslCompiler.INSTANCE));
+		arguments.add("path=" + System.getProperty("user.dir"));
 		context.notify("COMPILATION", arguments);
 		return socket != null
 				? runCompilerSocket(context, socket, arguments)
@@ -240,18 +241,30 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 	}
 
+	private static boolean hasWhitespace(final String input) {
+		for (int i = 0; i < input.length(); i++) {
+			if (Character.isWhitespace(input.charAt(i)))
+				return true;
+		}
+		return false;
+	}
+
 	private static Either<byte[]> runCompilerSocket(
 			final Context context,
 			final Socket socket,
 			final List<String> arguments) throws ExitException {
 		final StringBuilder sb = new StringBuilder();
 		for (String arg : arguments) {
-			sb.append(arg);
+			if (!arg.startsWith("\"") && hasWhitespace(arg)) {
+				sb.append('"');
+				sb.append(arg);
+				sb.append('"');
+			} else {
+				sb.append(arg);
+			}
 			sb.append(' ');
 		}
-		sb.append("path=\"");
-		sb.append(System.getProperty("user.dir"));
-		sb.append("\" include-length keep-alive\n");
+		sb.append("include-length keep-alive\n");
 		try {
 			final OutputStream sos = socket.getOutputStream();
 			sos.write(sb.toString().getBytes(UTF_8));

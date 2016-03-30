@@ -42,7 +42,7 @@ public enum TempPath implements CompileParameter {
 		try {
 			final String projectLocation = System.getProperty("user.dir");
 			final File parentFolder = new File(projectLocation).getParentFile();
-			final String projectName = parentFolder == null
+			final String projectName = parentFolder == null || parentFolder.getName().isEmpty()
 					? "root"
 					: parentFolder.getName();
 			final String rnd = UUID.randomUUID().toString();
