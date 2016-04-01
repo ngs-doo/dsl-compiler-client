@@ -410,13 +410,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				try {
 					socket = new Socket(InetAddress.getLocalHost(), port);
 				} catch (Exception ex) {
-					context.error("Unable to open socket on default localhost: " + value);
-					context.error(ex);
+					context.log("Unable to open socket on default localhost: " + value);
 					try {
 						socket = new Socket("::1", port);
 					} catch (Exception ex6) {
-						context.error("Unable to open socket to port on IPv6 localhost: " + value);
-						context.error(ex6);
+						context.log("Unable to open socket to port on IPv6 localhost: " + value);
 						try {
 							socket = new Socket("127.0.0.1", port);
 						} catch (Exception ex4) {
