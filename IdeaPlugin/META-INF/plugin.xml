@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.2</version>
+  <version>0.3</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[

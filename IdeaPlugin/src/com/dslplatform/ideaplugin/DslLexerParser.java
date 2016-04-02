@@ -12,8 +12,10 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.*;
 
@@ -140,7 +142,7 @@ public class DslLexerParser extends Lexer implements PsiParser {
 		process = proc;
 		if (proc != null) {
 			logger.info("Started DSL Platform compiler at port: " + port);
-			Thread thread = new Thread(new Runnable() {
+			Thread waitExit = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -151,8 +153,25 @@ public class DslLexerParser extends Lexer implements PsiParser {
 					process = null;
 				}
 			});
-			thread.setDaemon(true);
-			thread.start();
+			waitExit.setDaemon(true);
+			waitExit.start();
+			Thread consumeOutput = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					final char[] buffer = new char[8192];
+					int len;
+					try {
+						while ((len = reader.read(buffer)) != -1) {
+							logger.debug(new String(buffer, 0, len));
+						}
+						reader.close();
+					} catch (IOException ignore) {
+					}
+				}
+			});
+			consumeOutput.setDaemon(true);
+			consumeOutput.start();
 		}
 	}
 
@@ -254,7 +273,14 @@ public class DslLexerParser extends Lexer implements PsiParser {
 			logger.warn("Unable to setup socket to DSL Platform");
 		}
 		logger.info("Socket connected");
-		return context.load(DslCompiler.DSL_COMPILER_SOCKET);
+		socket = context.load(DslCompiler.DSL_COMPILER_SOCKET);
+		if (socket != null) {
+			try {
+				socket.setSoTimeout(10000);
+			} catch(Exception ignore) {
+			}
+		}
+		return socket;
 	}
 
 	static class OffsetPosition implements LexerPosition {

@@ -427,7 +427,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				if (socket.isConnected()) {
 					try {
 						socket.setKeepAlive(true);
-						socket.setSoTimeout(5000);
+						socket.setSoTimeout(30000);
 					} catch (SocketException ignore) {
 					}
 					context.cache(DSL_COMPILER_SOCKET, socket);
