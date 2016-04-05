@@ -121,28 +121,6 @@ public enum JavaPath implements CompileParameter {
 		return Either.success(execArchive.get());
 	}
 
-	public static Either<Utils.CommandResult> makeEmptyArchive(Context context, final File classOut, File output) {
-		final Either<String> tryJar = getJarCommand(context);
-		if (!tryJar.isSuccess())
-			return Either.fail(tryJar.whyNot());
-		final String jar = tryJar.get();
-
-		final String manifestName = "MANIFEST.MF";
-		try {
-			final File mockManifest = new File(new File(classOut, "META-INF"), "MANIFEST.MF");
-			Utils.saveFile(context, mockManifest, "Manifest-Version: 1.0");
-		} catch (IOException e) {
-			context.error("Can't create mock MANIFEST.MF.");
-			return Either.fail(e);
-		}
-
-		final List<String> jarArguments = new ArrayList<String>();
-		jarArguments.add("cfm");
-		jarArguments.add(output.getAbsolutePath());
-		jarArguments.add(manifestName);
-		return Utils.runCommand(context, jar, classOut, jarArguments);
-	}
-
 	private static List<String> makeJarArguments(
 			final Context context,
 			final File source,

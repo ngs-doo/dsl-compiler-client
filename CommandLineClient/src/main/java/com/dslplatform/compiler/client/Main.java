@@ -24,7 +24,7 @@ public class Main {
 		parameters.add(new Help(parameters));
 		parameters.add(new PropertiesFile(parameters));
 		Collections.addAll(parameters, DEFAULT_PARAMETERS);
-		final File loc = new File(path); //TODO: allow custom plugin path
+		final File loc = new File(path);
 		final File[] jars = loc.listFiles(new FileFilter() {
 			public boolean accept(File file) {
 				return file.getPath().toLowerCase().endsWith(".jar");
@@ -89,6 +89,7 @@ public class Main {
 
 	public static boolean processContext(final Context context, final List<CompileParameter> parameters) {
 		try {
+			context.notify("PROCESS", parameters);
 			for (final CompileParameter cp : parameters) {
 				if (!cp.check(context)) {
 					if (cp.getDetailedDescription() != null) {

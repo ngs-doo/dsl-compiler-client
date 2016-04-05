@@ -220,7 +220,7 @@ public abstract class Utils {
 			this.context = null;
 		}
 
-		public static ConsumeStream start(final InputStream stream, final Context context) {
+		static ConsumeStream start(final InputStream stream, final Context context) {
 			if (stream == null) {
 				return new ConsumeStream();
 			}
@@ -256,7 +256,7 @@ public abstract class Utils {
 			description.append(arg).append(" ");
 		}
 		context.log(description.toString());
-		context.notify("PROCESS", builder);
+		context.notify("EXEC", builder);
 	}
 
 	public static Either<String> findCommand(final Context context, final String path, final String name, final String contains) {

@@ -9,7 +9,6 @@ import com.dslplatform.compiler.client.parameters.ScalaPath;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 class ScalaCompilation {

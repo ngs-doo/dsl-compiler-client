@@ -21,7 +21,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	@Override
 	public String getUsage() {
-		return "path or IP address";
+		return "path or IP port";
 	}
 
 	private final static Charset UTF_8 = Charset.forName("UTF-8");
@@ -106,6 +106,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		public final ParseError error;
 		public final List<SyntaxConcept> tokens;
 
+		@SuppressWarnings("unchecked")
 		ParseResult(Map<String, Object> map) {
 			List<Map<String, Object>> tokenMap = (List<Map<String, Object>>) map.get("Tokens");
 			this.tokens = new ArrayList<SyntaxConcept>(tokenMap != null ? tokenMap.size() : 0);
@@ -159,7 +160,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	private static class ByteStream extends ByteArrayOutputStream {
 		private final byte[] temp = new byte[8192];
 
-		public byte[] getBuffer() {
+		byte[] getBuffer() {
 			return buf;
 		}
 	}

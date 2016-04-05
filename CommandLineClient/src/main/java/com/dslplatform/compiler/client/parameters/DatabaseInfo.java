@@ -7,12 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 class DatabaseInfo {
-	public final String database;
-	public final String compilerVersion;
-	public final String dbVersion;
-	public final Map<String, String> dsl;
+	final String database;
+	final String compilerVersion;
+	final String dbVersion;
+	final Map<String, String> dsl;
 
-	public DatabaseInfo(final String database, final String compilerVersion, final String dbVersion, final Map<String, String> dsl) {
+	DatabaseInfo(final String database, final String compilerVersion, final String dbVersion, final Map<String, String> dsl) {
 		this.database = database;
 		this.compilerVersion = compilerVersion;
 		this.dbVersion = dbVersion;
@@ -23,7 +23,7 @@ class DatabaseInfo {
 		return element.replace("\\\"", "\"").replace("\\\\", "\\");
 	}
 
-	public static Map<String, String> convertToMap(final String dsls, final Context context) throws ExitException {
+	static Map<String, String> convertToMap(final String dsls, final Context context) throws ExitException {
 		final Map<String, String> tuples = new LinkedHashMap<String, String>();
 		if (dsls == null || dsls.length() == 0) {
 			return tuples;
