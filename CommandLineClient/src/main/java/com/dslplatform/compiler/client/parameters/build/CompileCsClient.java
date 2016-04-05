@@ -6,7 +6,6 @@ import com.dslplatform.compiler.client.parameters.Download;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 
 public class CompileCsClient implements BuildAction {
 
@@ -60,7 +59,7 @@ public class CompileCsClient implements BuildAction {
 				dependencies[i] = actualFile.getAbsolutePath();
 			}
 		}
-		final File libDeps = Dependencies.getDependencies(context, name, library);
+		final File libDeps = Dependencies.getDependencies(context, name, library, zip, true);
 		final File[] found = libDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -79,13 +78,7 @@ public class CompileCsClient implements BuildAction {
 					throw new ExitException();
 				}
 			}
-			try {
-				Utils.downloadAndUnpack(context, zip, libDeps);
-			} catch (IOException ex) {
-				context.error("Unable to download " + name + " from DSL Platform.");
-				context.error(ex);
-				return false;
-			}
+			return Download.downloadZip(libDeps, context, name, zip);
 		}
 		return true;
 	}

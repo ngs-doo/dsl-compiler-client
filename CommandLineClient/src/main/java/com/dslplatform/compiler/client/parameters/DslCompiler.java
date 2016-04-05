@@ -8,7 +8,6 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.*;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public enum DslCompiler implements CompileParameter, ParameterParser {
@@ -487,21 +486,19 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	}
 
 	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
-		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler");
+		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
 		if (!lastModified.isSuccess()) {
 			context.error(lastModified.whyNot());
-		} else {
-			if (compiler.lastModified() == lastModified.get()) {
-				final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-				context.show("dsl-compiler.exe at latest version (" + sdf.format(compiler.lastModified()) + ")");
-			} else {
-				context.show("Newer version of dsl-compiler.exe found at DSL Platform website.");
-				downloadCompiler(context, path, tempPath, compiler);
-			}
+		} else if (compiler.lastModified() != lastModified.get()) {
+			downloadCompiler(context, path, tempPath, compiler);
 		}
 	}
 
-	private static void downloadCompiler(final Context context, final File path, final File tempPath, final File compiler) throws ExitException {
+	private static void downloadCompiler(
+			final Context context,
+			final File path,
+			final File tempPath,
+			final File compiler) throws ExitException {
 		final long lastModified;
 		try {
 			lastModified = Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);

@@ -22,7 +22,7 @@ public class CompileRevenjNet implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id);
+		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id, "dotnet-core", true);
 		final File[] found = revenjDeps.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {

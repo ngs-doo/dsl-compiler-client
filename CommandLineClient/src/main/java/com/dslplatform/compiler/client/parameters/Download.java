@@ -23,14 +23,17 @@ public enum Download implements CompileParameter {
 		return null;
 	}
 
-	private static boolean downloadZip(
+	public static boolean downloadZip(
 			final File dependencies,
 			final Context context,
 			final String name,
 			final String zip) {
 		try {
 			context.show("Downloading " + name + " from DSL Platform...");
-			Utils.downloadAndUnpack(context, zip, dependencies);
+			final long lastModified = Utils.downloadAndUnpack(context, zip, dependencies);
+			if (!dependencies.setLastModified(lastModified)) {
+				context.error("Unable to set last modified info on: " + dependencies.getAbsolutePath());
+			}
 		} catch (IOException ex) {
 			context.error("Error downloading dependencies from DSL Platform.");
 			context.error(ex);
@@ -66,7 +69,7 @@ public enum Download implements CompileParameter {
 			final String id,
 			final String path,
 			final String... libraries) throws ExitException {
-		final File dependencies = Dependencies.getDependencies(context, name, id);
+		final File dependencies = Dependencies.getDependencies(context, name, id, zip, true);
 		final File[] found = dependencies.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -95,11 +98,17 @@ public enum Download implements CompileParameter {
 					context.error("Unable to find Maven. Dependency can't be downloaded.");
 					throw new ExitException();
 				}
-				return Download.downloadZip(dependencies, context, name, zip);
+				return downloadZip(dependencies, context, name, zip);
 			}
 			for (final String library : libraries) {
 				if (!downloadLibrary(context, name, path, dependencies, tryMaven, library, zip)) {
 					return false;
+				}
+			}
+			final Either<Long> lastModified = Utils.lastModified(context, zip, name, 0);
+			if (lastModified.isSuccess()) {
+				if (!dependencies.setLastModified(lastModified.get())) {
+					context.error("Unable to set last modified info on: " + dependencies.getAbsolutePath());
 				}
 			}
 		}
@@ -114,7 +123,7 @@ public enum Download implements CompileParameter {
 			final Either<String> tryMaven,
 			final String library,
 			final String zip) throws ExitException {
-		context.show("Downloading " + name + " from Sonatype...");
+		context.show("Downloading " + name + " (" + library + ") from Sonatype...");
 		try {
 			final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/" + path + "/" + library + "/maven-metadata.xml");
 			final Either<Document> doc = Utils.readXml(maven.openConnection().getInputStream());

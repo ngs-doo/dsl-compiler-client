@@ -1,20 +1,33 @@
 package com.dslplatform.compiler.client.parameters;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Context;
-import com.dslplatform.compiler.client.ExitException;
+import com.dslplatform.compiler.client.*;
 
 import java.io.File;
+import java.io.IOException;
 
 public enum Dependencies implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "dependencies"; }
+	public String getAlias() {
+		return "dependencies";
+	}
+
 	@Override
-	public String getUsage() { return "path"; }
+	public String getUsage() {
+		return "path";
+	}
 
 	public static File getDependencies(final Context context, final String name, final String library) throws ExitException {
+		return getDependencies(context, name, library, null, false);
+	}
+
+	public static File getDependencies(
+			final Context context,
+			final String name,
+			final String library,
+			final String zip,
+			final boolean check) throws ExitException {
 		final File dependencies;
 		if (context.contains("dependency:" + library)) {
 			dependencies = new File(context.get("dependency:" + library));
@@ -26,6 +39,30 @@ public enum Dependencies implements CompileParameter {
 			if (!dependencies.mkdirs()) {
 				context.error("Failed to create " + name + " dependency folder: " + dependencies.getAbsolutePath());
 				throw new ExitException();
+			}
+		} else if (check && context.contains(Download.INSTANCE)) {
+			final Either<Long> modified = Utils.lastModified(context, zip, name, dependencies.lastModified());
+			if (modified.isSuccess() && dependencies.lastModified() != modified.get()) {
+				context.show("Outdated dependencies found in: " + dependencies.getAbsolutePath());
+				if (context.contains(Force.INSTANCE) || context.canInteract()) {
+					if (context.contains(Force.INSTANCE)) {
+						context.show("Due to force option, outdated dependencies will be removed.");
+					} else {
+						final String input = context.ask("Clear outdated dependencies for " + name + " (y/N):");
+						if (!"y".equalsIgnoreCase(input)) {
+							return dependencies;
+						}
+					}
+					try {
+						Utils.deletePath(dependencies);
+					} catch (IOException ex) {
+						context.error(ex);
+						throw new ExitException();
+					}
+				} else {
+					context.show("Unable to interact; skipping clearing old dependencies.");
+					context.show("Use force parameter to automatically force latest dependency download.");
+				}
 			}
 		}
 		return dependencies;

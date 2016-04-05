@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -23,13 +24,28 @@ public abstract class Utils {
 		return unpackZip(context, path, server);
 	}
 
-	public static Either<Long> lastModified(final Context context, final String file) {
+	public static Either<Long> lastModified(final Context context, final String file, final String name, final long current) {
 		try {
 			final URL server = new URL(REMOTE_URL + file + ".zip");
 			context.log("Checking last modified info for " + file + ".zip from DSL Platform...");
 			final HttpURLConnection connection = (HttpURLConnection) server.openConnection();
 			connection.setRequestMethod("HEAD");
-			return Either.success(connection.getLastModified());
+			final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			final long latest = connection.getLastModified();
+			if (current == latest && current != 0) {
+				context.show(name + " at latest version (" + sdf.format(latest) + ")");
+			} else if (current > 0 && latest > 0) {
+				context.show("Different version of " + name + " found at DSL Platform website.");
+				context.show("Local version: " + sdf.format(current));
+				context.show("Upstream version: " + sdf.format(latest));
+			} else {
+				if (latest == 0) {
+					context.show(name + " not found at DSL Platform website.");
+				} else {
+					context.show("Upstream version: " + sdf.format(latest));
+				}
+			}
+			return Either.success(latest);
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}
