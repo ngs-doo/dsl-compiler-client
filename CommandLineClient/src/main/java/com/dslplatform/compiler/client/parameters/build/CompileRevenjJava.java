@@ -12,12 +12,12 @@ public class CompileRevenjJava implements BuildAction {
 
 	private final String id;
 	private final String zip;
-	private final String maven;
+	private final String[] maven;
 
 	public CompileRevenjJava(
 			final String id,
 			final String zip,
-			final String maven) {
+			final String... maven) {
 		this.id = id;
 		this.zip = zip;
 		this.maven = maven;

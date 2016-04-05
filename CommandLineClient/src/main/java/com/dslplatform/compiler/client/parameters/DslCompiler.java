@@ -84,7 +84,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		final Socket socket = context.load(DSL_COMPILER_SOCKET);
 		final File compiler = new File(context.get(DslCompiler.INSTANCE));
 		arguments.add("path=" + System.getProperty("user.dir"));
-		context.notify("COMPILATION", arguments);
+		context.notify("DSL", arguments);
 		return socket != null
 				? runCompilerSocket(context, socket, arguments)
 				: runCompilerFile(context, compiler, arguments);

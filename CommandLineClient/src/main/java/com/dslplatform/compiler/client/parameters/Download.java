@@ -14,9 +14,14 @@ public enum Download implements CompileParameter {
 	INSTANCE;
 
 	@Override
-	public String getAlias() { return "download"; }
+	public String getAlias() {
+		return "download";
+	}
+
 	@Override
-	public String getUsage() { return null; }
+	public String getUsage() {
+		return null;
+	}
 
 	private static boolean downloadZip(
 			final File dependencies,
@@ -60,7 +65,7 @@ public enum Download implements CompileParameter {
 			final String zip,
 			final String id,
 			final String path,
-			final String library) throws ExitException {
+			final String... libraries) throws ExitException {
 		final File dependencies = Dependencies.getDependencies(context, name, id);
 		final File[] found = dependencies.listFiles(new FilenameFilter() {
 			@Override
@@ -69,7 +74,7 @@ public enum Download implements CompileParameter {
 			}
 		});
 		if (found.length == 0) {
-			if (zip == null && library == null) {
+			if (zip == null && libraries.length == 0) {
 				context.log("No dependencies defined for: " + name);
 				return true;
 			}
@@ -84,7 +89,7 @@ public enum Download implements CompileParameter {
 					throw new ExitException();
 				}
 			}
-			final Either<String> tryMaven = library != null && path != null ? Maven.findMaven(context) : Either.<String>fail("Library not defined");
+			final Either<String> tryMaven = libraries.length > 0 && path != null ? Maven.findMaven(context) : Either.<String>fail("Library not defined");
 			if (!tryMaven.isSuccess()) {
 				if (zip == null) {
 					context.error("Unable to find Maven. Dependency can't be downloaded.");
@@ -92,51 +97,67 @@ public enum Download implements CompileParameter {
 				}
 				return Download.downloadZip(dependencies, context, name, zip);
 			}
-			context.show("Downloading " + name + " from Sonatype...");
-			try {
-				final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/" + path + "/" + library + "/maven-metadata.xml");
-				final Either<Document> doc = Utils.readXml(maven.openConnection().getInputStream());
-				if (!doc.isSuccess()) {
-					context.error("Error downloading library info from Sonatype.");
-					context.error(doc.whyNot());
+			for (final String library : libraries) {
+				if (!downloadLibrary(context, name, path, dependencies, tryMaven, library, zip)) {
 					return false;
 				}
-				final Element root = doc.get().getDocumentElement();
-				final Element versioning = (Element) root.getElementsByTagName("versioning").item(0);
-				final String version = versioning.getElementsByTagName("release").item(0).getTextContent();
-				final String sharedUrl = "https://oss.sonatype.org/content/repositories/releases/" +
-						path + "/" + library + "/" + version + "/" + library + "-" + version;
-				final URL pomUrl = new URL(sharedUrl + ".pom");
-				final File pomFile = new File(dependencies, library + "-" + version + ".pom");
-				Utils.downloadFile(pomFile, pomUrl);
-				final URL jarUrl = new URL(sharedUrl + ".jar");
-				Utils.downloadFile(new File(dependencies, library + "-" + version + ".jar"), jarUrl);
-				context.show("Downloading " + name + " library dependencies with Maven...");
-				final Either<Utils.CommandResult> gatherDeps =
-						Utils.runCommand(
-								context,
-								tryMaven.get(),
-								pomFile.getParentFile(),
-								Arrays.asList(
-										"dependency:copy-dependencies",
-										"\"-DoutputDirectory=" + dependencies.getAbsolutePath() + "\"",
-										"\"-f=" + pomFile.getAbsolutePath() + "\""));
-				if (!gatherDeps.isSuccess()) {
-					context.error("Error gathering dependencies with Maven.");
-					context.error(gatherDeps.whyNot());
-					return promptForAlternative(dependencies, context, name, zip);
-				}
-				final String result = gatherDeps.get().output + gatherDeps.get().error;
-				if (!result.contains("BUILD SUCCESS")) {
-					context.error("Maven error during dependency download.");
-					context.show(result);
-					return promptForAlternative(dependencies, context, name, zip);
-				}
-			} catch (IOException ex) {
-				context.error("Unable to download " + name + " from Sonatype.");
-				context.error(ex);
+			}
+		}
+		return true;
+	}
+
+	private static boolean downloadLibrary(
+			final Context context,
+			final String name,
+			final String path,
+			final File dependencies,
+			final Either<String> tryMaven,
+			final String library,
+			final String zip) throws ExitException {
+		context.show("Downloading " + name + " from Sonatype...");
+		try {
+			final URL maven = new URL("https://oss.sonatype.org/content/repositories/releases/" + path + "/" + library + "/maven-metadata.xml");
+			final Either<Document> doc = Utils.readXml(maven.openConnection().getInputStream());
+			if (!doc.isSuccess()) {
+				context.error("Error downloading library info from Sonatype.");
+				context.error(doc.whyNot());
+				return false;
+			}
+			final Element root = doc.get().getDocumentElement();
+			final Element versioning = (Element) root.getElementsByTagName("versioning").item(0);
+			final String version = versioning.getElementsByTagName("release").item(0).getTextContent();
+			final String sharedUrl = "https://oss.sonatype.org/content/repositories/releases/" +
+					path + "/" + library + "/" + version + "/" + library + "-" + version;
+			final URL pomUrl = new URL(sharedUrl + ".pom");
+			final File pomFile = new File(dependencies, library + "-" + version + ".pom");
+			Utils.downloadFile(pomFile, pomUrl);
+			final URL jarUrl = new URL(sharedUrl + ".jar");
+			Utils.downloadFile(new File(dependencies, library + "-" + version + ".jar"), jarUrl);
+			context.show("Downloading " + name + " library dependencies with Maven...");
+			final Either<Utils.CommandResult> gatherDeps =
+					Utils.runCommand(
+							context,
+							tryMaven.get(),
+							pomFile.getParentFile(),
+							Arrays.asList(
+									"dependency:copy-dependencies",
+									"\"-DoutputDirectory=" + dependencies.getAbsolutePath() + "\"",
+									"\"-f=" + pomFile.getAbsolutePath() + "\""));
+			if (!gatherDeps.isSuccess()) {
+				context.error("Error gathering dependencies with Maven.");
+				context.error(gatherDeps.whyNot());
 				return promptForAlternative(dependencies, context, name, zip);
 			}
+			final String result = gatherDeps.get().output + gatherDeps.get().error;
+			if (!result.contains("BUILD SUCCESS")) {
+				context.error("Maven error during dependency download.");
+				context.show(result);
+				return promptForAlternative(dependencies, context, name, zip);
+			}
+		} catch (IOException ex) {
+			context.error("Unable to download " + name + " from Sonatype.");
+			context.error(ex);
+			return promptForAlternative(dependencies, context, name, zip);
 		}
 		return true;
 	}
