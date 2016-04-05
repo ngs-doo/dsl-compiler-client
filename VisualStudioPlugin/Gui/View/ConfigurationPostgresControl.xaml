@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationPostgresControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>Revenj.NET server libraries</Bold><LineBreak/>
+Revenj.NET server provides infrastructure for deep invasive software composition with DSL model.<LineBreak/>
+This means that persistence, POCO/DTO classes, serialization, LINQ, reporting, OLAP and various other features are available for consumption.<LineBreak/>
+If you wish you can use libraries in a small DSL Platform server framework or use it from any other framework such as ASP.NET MVC.<LineBreak/>
+Libraries consist from several files which you can download from server or compile yourself.<LineBreak/>
+Core version is optimized for use inside other frameworks such as ASP.NET MVC, while full version is a standalone server which can be used through REST-like interface.<LineBreak/>
+DSL Platform libraries are BSD licensed and source is available on GitHub.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <TextBlock Margin="5">
+                    <Hyperlink NavigateUri="https://github.com/ngs-doo/revenj/releases" RequestNavigate="Hyperlink_RequestNavigate">
+                        Revenj.NET Postgres library
+                    </Hyperlink>
+                </TextBlock>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <TextBlock Text="Dll name" Width="120"/>
+                <TextBox Text="{Binding Path=PostgresLibrary.Name}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Width="120"
+                Command="{Binding ChangeTarget}" CommandParameter="Postgres" />
+                <TextBox Text="{Binding Path=PostgresLibrary.Target}" 
+                    ToolTip="Target folder is used to place compiled library."
+                    Foreground="{Binding Path=PostgresLibrary.TargetColor}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Dependency path" Width="120"
+                Command="{Binding ChangeDependencies}" CommandParameter="Postgres" />
+                <TextBox Text="{Binding Path=PostgresLibrary.Dependencies}" 
+                    ToolTip="Dependencies for specialized library are used during compilation process."
+                    Foreground="{Binding Path=PostgresLibrary.DependenciesColor}" />
+            </DockPanel>
+            <CheckBox IsChecked="{Binding Path=PostgresLibrary.WithManualJson}" 
+                Content="Manual JSON"
+                Margin="5"
+                ToolTip="Library will be compiled with JSON serialization baked into domain objects"/>
+            <CheckBox IsChecked="{Binding Path=PostgresLibrary.UseUtc}" 
+                Content="UTC time"
+                Margin="5"
+                ToolTip="DateTime will default to UTC instead of Local"/>
+            <CheckBox IsChecked="{Binding Path=PostgresLibrary.MinimalSerialization}" 
+                Content="Minimal serialization"
+                Margin="5"
+                ToolTip="Serialize only non-default properties"/>
+            <CheckBox IsChecked="{Binding Path=PostgresLibrary.NoPrepareExecute}" 
+                Content="Don't use PREPARE/EXECUTE"
+                Margin="5"
+                ToolTip="PREPARE/EXECUTE requires two roundtrips and can cause problems on servers behind some pooling tools"/>
+            <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:revenj-core.zip" />
+            <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:http-server.zip" />
+            <TextBlock Text="Connection string" Margin="5" />
+            <TextBox Text="{Binding PostgresDb.ConnectionString}" Margin="5" 
+                        ToolTip="Example connection string: server=localhost;database=revenj;user=postgres;password=secret" />
+            <DockPanel Margin="5">
+                <Button Content="SQL scripts path" Width="120"
+                Command="{Binding ChangePostgresSqlScripts}" />
+                <TextBox Text="{Binding Path=PostgresDb.SqlScriptsPath}" 
+                    ToolTip="Where sql scripts will be saved after compilation. If folder is not specified or found, temporary path will be used."
+                    Foreground="{Binding Path=PostgresDb.SqlScriptsPathColor}" />
+            </DockPanel>
+            <Separator />
+            <StackPanel Orientation="Vertical">
+                <CheckBox Content="Diff before compile" IsChecked="{Binding PostgresDb.DiffBefore}" 
+                    ToolTip="Recommended value: checked" />
+                <CheckBox Content="Confirm unsafe changes" IsChecked="{Binding PostgresDb.ConfirmUnsafe}" 
+                    ToolTip="Recommended value: checked" />
+                <CheckBox Content="Apply migration" IsChecked="{Binding PostgresDb.ApplyMigration}" 
+                    ToolTip="Recommended value: unchecked" />
+            </StackPanel>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

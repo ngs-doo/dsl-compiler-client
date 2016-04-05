@@ -4,9 +4,9 @@ using System.Windows.Navigation;
 
 namespace DDDLanguage
 {
-	public partial class ConfigurationControl : UserControl
+	public partial class ConfigurationPortableControl : UserControl
 	{
-		public ConfigurationControl()
+		public ConfigurationPortableControl()
 		{
 			InitializeComponent();
 		}

@@ -143,10 +143,28 @@
     <Compile Include="Gui\ChunkedMemoryStream.cs" />
     <Compile Include="Gui\CompileTargets.cs" />
     <Compile Include="Gui\DatabaseInfo.cs" />
-    <Compile Include="Gui\View\ConfigurationControl.xaml.cs">
-      <DependentUpon>ConfigurationControl.xaml</DependentUpon>
+    <Compile Include="Gui\View\ConfigurationOracleControl.xaml.cs">
+      <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Gui\Compiler.cs" />
+    <Compile Include="Gui\View\ConfigurationPocoControl.xaml.cs">
+      <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\View\ConfigurationClientControl.xaml.cs">
+      <DependentUpon>ConfigurationClientControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\View\ConfigurationPortableControl.xaml.cs">
+      <DependentUpon>ConfigurationPortableControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\View\ConfigurationPhpControl.xaml.cs">
+      <DependentUpon>ConfigurationPhpControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\View\ConfigurationWpfControl.xaml.cs">
+      <DependentUpon>ConfigurationWpfControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\View\ConfigurationPostgresControl.xaml.cs">
+      <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Gui\View\DiffControl.xaml.cs">
       <DependentUpon>DiffControl.xaml</DependentUpon>
     </Compile>
@@ -241,9 +259,33 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Gui\View\ConfigurationControl.xaml">
+    <Page Include="Gui\View\ConfigurationOracleControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Gui\View\ConfigurationPocoControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationClientControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationPortableControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationPhpControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationWpfControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationPostgresControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Gui\View\DiffControl.xaml">
       <SubType>Designer</SubType>

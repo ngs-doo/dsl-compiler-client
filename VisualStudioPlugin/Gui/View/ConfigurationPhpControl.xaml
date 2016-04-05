@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationPhpControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>PHP source</Bold><LineBreak/>
+DSL Platform can create "typesafe" PHP source code which interacts with DSL Platform PHP client library.<LineBreak/>
+Library is available via composer: https://github.com/ngs-doo/dsl-client-php.<LineBreak/>
+DSL Platform libraries are BSD licensed and source is available on GitHub.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <TextBlock Margin="5">
+                    <Hyperlink NavigateUri="https://github.com/ngs-doo/dsl-client-php" RequestNavigate="Hyperlink_RequestNavigate">
+                        PHP client source
+                    </Hyperlink>
+                </TextBlock>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Command="{Binding ChangeTarget}" CommandParameter="Php" Width="120" />
+                <TextBox Text="{Binding Path=PhpLibrary.Target}" 
+                    ToolTip="Target folder where generated PHP source should be placed."
+                    Foreground="{Binding Path=PhpLibrary.TargetColor}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <TextBlock Text="Namespace" Width="120"/>
+                <TextBox Text="{Binding Path=PhpLibrary.Namespace}" />
+            </DockPanel>
+            <CheckBox IsChecked="{Binding Path=PhpLibrary.WithActiveRecord}" 
+                Content="Active record"
+                Margin="5"
+                ToolTip="Source will be generated with active record pattern"/>
+            <CheckBox IsChecked="{Binding Path=PhpLibrary.WithHelperMethods}" 
+                Content="Helper methods"
+                Margin="5"
+                ToolTip="Source will be generated with static helper methods"/>
+            <CheckBox IsChecked="{Binding Path=PhpLibrary.Legacy}" 
+                Content="Legacy methods"
+                Margin="5"
+                ToolTip="Source will be generated with legacy methods (persist, etc...)"/>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

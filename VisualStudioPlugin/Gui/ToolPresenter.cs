@@ -50,7 +50,14 @@ namespace DDDLanguage
 		public ICommand ChangePostgresSqlScripts { get; private set; }
 		public ICommand ChangeOracleSqlScripts { get; private set; }
 
-		public ICommand ChangeConfiguration { get; private set; }
+		public ICommand ConfigurePoco { get; private set; }
+		public ICommand ConfigureClient { get; private set; }
+		public ICommand ConfigurePortable { get; private set; }
+		public ICommand ConfigurePhp { get; private set; }
+		public ICommand ConfigureWpf { get; private set; }
+		public ICommand ConfigurePostgres { get; private set; }
+		public ICommand ConfigureOracle { get; private set; }
+
 		public ICommand BackToStatus { get; private set; }
 
 		public ICommand ConfirmDiff { get; private set; }
@@ -122,7 +129,13 @@ namespace DDDLanguage
 					() => true);
 			ChangePostgresSqlScripts = new RelayCommand(() => ChangeSqlPath(PostgresDb));
 			ChangeOracleSqlScripts = new RelayCommand(() => ChangeSqlPath(OracleDb));
-			ChangeConfiguration = new RelayCommand(OpenConfigurationAction);
+			ConfigurePoco = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPocoControl()));
+			ConfigureClient = new RelayCommand(() => OpenConfigurationAction(new ConfigurationClientControl()));
+			ConfigurePortable = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPortableControl()));
+			ConfigurePhp = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPhpControl()));
+			ConfigureWpf = new RelayCommand(() => OpenConfigurationAction(new ConfigurationWpfControl()));
+			ConfigurePostgres = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPostgresControl()));
+			ConfigureOracle = new RelayCommand(() => OpenConfigurationAction(new ConfigurationOracleControl()));
 			BackToStatus = new RelayCommand(GoBackAction);
 			ConfirmDiff = new RelayCommand(StepThroughCompilation, CanCompile);
 			DownloadCompiler =
@@ -308,11 +321,12 @@ namespace DDDLanguage
 			}
 		}
 
-		private void OpenConfigurationAction()
+		private void OpenConfigurationAction(FrameworkElement view)
 		{
 			Message = null;
 			ChangeMessage();
-			LastTool.Content = new ConfigurationControl { DataContext = this };
+			view.DataContext = this;
+			LastTool.Content = view;
 		}
 
 		private void GoBackAction()

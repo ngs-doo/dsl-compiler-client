@@ -59,7 +59,7 @@ namespace DDDLanguage
 				latest.KeepAlive = false;
 				latest.AllowAutoRedirect = false;
 				var redirect = (HttpWebResponse)latest.GetResponse();
-				var tag = "1.2.1";
+				var tag = "1.3.0";
 				if (redirect.StatusCode == HttpStatusCode.Redirect)
 				{
 					var location = redirect.GetResponseHeader("Location");

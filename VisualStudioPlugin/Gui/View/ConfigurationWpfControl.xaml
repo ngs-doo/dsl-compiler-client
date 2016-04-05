@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationWpfControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>DSL Platform .NET WPF libraries</Bold><LineBreak/>
+Simple GUI framework integrated with DSL model.<LineBreak/>
+Presenters, views, commands and various other concepts can be declared in DSL and mapped to UI.<LineBreak/>
+Library consist from several files which you can download from server or compile yourself.<LineBreak/>
+DSL Platform libraries are BSD licensed and source is available on GitHub.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <Button DockPanel.Dock="Right" Content="Download" Width="60"
+                Command="{Binding DownloadLibrary}" CommandParameter="Wpf:dotnet-wpf.zip" />
+                <TextBlock Text="WPF library" Margin="5"/>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <TextBlock Text="Dll name" Width="120"/>
+                <TextBox Text="{Binding Path=WpfLibrary.Name}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Width="120"
+                Command="{Binding ChangeTarget}" CommandParameter="Wpf" />
+                <TextBox Text="{Binding Path=WpfLibrary.Target}" 
+                    ToolTip="Target folder is used to place compiled library."
+                    Foreground="{Binding Path=WpfLibrary.TargetColor}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Dependency path" Width="120"
+                Command="{Binding ChangeDependencies}" CommandParameter="Wpf" />
+                <TextBox Text="{Binding Path=WpfLibrary.Dependencies}" 
+                    ToolTip="Dependencies for specialized library are used during compilation process."
+                    Foreground="{Binding Path=WpfLibrary.DependenciesColor}" />
+            </DockPanel>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,60 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationClientControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>DSL Platform .NET client libraries</Bold><LineBreak/>
+.NET client provides infrastructure for deep invasive software composition with DSL model.<LineBreak/>
+This means that persistence, POCO/DTO classes, serialization, LINQ, reporting, OLAP and various other features are available for consumption.<LineBreak/>
+Libraries consist from several files which you can download from server or compile yourself.<LineBreak/>
+DSL Platform libraries are BSD licensed and source is available on GitHub.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <Button DockPanel.Dock="Right" Content="Download" Width="60" 
+                Command="{Binding DownloadLibrary}" CommandParameter="Client:dotnet_client.zip" />
+                <TextBlock Text="Client library" Margin="5"/>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <TextBlock Text="Dll name" Width="120"/>
+                <TextBox Text="{Binding Path=ClientLibrary.Name}"/>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Width="120"
+                Command="{Binding ChangeTarget}" CommandParameter="Client" />
+                <TextBox Text="{Binding Path=ClientLibrary.Target}" 
+                    ToolTip="Target folder is used to place compiled library." 
+                    Foreground="{Binding Path=ClientLibrary.TargetColor}"/>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Dependency path" Width="120"
+                Command="{Binding ChangeDependencies}" CommandParameter="Client" />
+                <TextBox Text="{Binding Path=ClientLibrary.Dependencies}" 
+                    ToolTip="Dependencies for specialized library are used during compilation process."
+                    Foreground="{Binding Path=ClientLibrary.DependenciesColor}" />
+            </DockPanel>
+            <CheckBox IsChecked="{Binding Path=ClientLibrary.WithActiveRecord}" 
+                Content="Active record"
+                Margin="5"
+                ToolTip="Library will be compiled with active record pattern"/>
+            <CheckBox IsChecked="{Binding Path=ClientLibrary.WithHelperMethods}" 
+                Content="Helper methods"
+                Margin="5"
+                ToolTip="Library will be compiled with static helper methods"/>
+            <CheckBox IsChecked="{Binding Path=ClientLibrary.UseUtc}" 
+                Content="UTC time"
+                Margin="5"
+                ToolTip="DateTime will default to UTC instead of Local"/>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

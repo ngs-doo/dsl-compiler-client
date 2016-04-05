@@ -1,0 +1,93 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationOracleControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>Revenj.NET server libraries</Bold><LineBreak/>
+Revenj.NET server provides infrastructure for deep invasive software composition with DSL model.<LineBreak/>
+This means that persistence, POCO/DTO classes, serialization, LINQ, reporting, OLAP and various other features are available for consumption.<LineBreak/>
+If you wish you can use libraries in a small DSL Platform server framework or use it from any other framework such as ASP.NET MVC.<LineBreak/>
+Libraries consist from several files which you can download from server or compile yourself.<LineBreak/>
+Core version is optimized for use inside other frameworks such as ASP.NET MVC, while full version is a standalone server which can be used through REST-like interface.<LineBreak/>
+DSL Platform libraries are BSD licensed and source is available on GitHub.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <TextBlock Margin="5">
+                    <Hyperlink NavigateUri="https://github.com/ngs-doo/revenj/releases" RequestNavigate="Hyperlink_RequestNavigate">
+                        Revenj.NET Oracle library
+                    </Hyperlink>
+                </TextBlock>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <TextBlock Text="Dll name" Width="120"/>
+                <TextBox Text="{Binding Path=OracleLibrary.Name}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Command="{Binding ChangeTarget}" CommandParameter="Oracle" Width="120" />
+                <TextBox Text="{Binding Path=OracleLibrary.Target}" 
+                    ToolTip="Target folder is used to place compiled library."
+                    Foreground="{Binding Path=OracleLibrary.TargetColor}" />
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Dependency path" Command="{Binding ChangeDependencies}" CommandParameter="Oracle" Width="120" />
+                <TextBox Text="{Binding Path=OracleLibrary.Dependencies}" 
+                    ToolTip="Dependencies for specialized library are used during compilation process."
+                    Foreground="{Binding Path=OracleLibrary.DependenciesColor}" />
+            </DockPanel>
+            <CheckBox IsChecked="{Binding Path=OracleLibrary.WithManualJson}" 
+                Content="Manual JSON"
+                Margin="5"
+                ToolTip="Library will be compiled with JSON serialization baked into domain objects"/>
+            <CheckBox IsChecked="{Binding Path=OracleLibrary.UseUtc}" 
+                Content="UTC time"
+                Margin="5"
+                ToolTip="DateTime will default to UTC instead of Local"/>
+            <CheckBox IsChecked="{Binding Path=OracleLibrary.MinimalSerialization}" 
+                Content="Minimal serialization"
+                Margin="5"
+                ToolTip="Serialize only non-default properties"/>
+            <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:revenj-core.zip" />
+            <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:http-server.zip" />
+            <Button Margin="2" Content="Download 32bit Oracle driver" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-32bit.zip" />
+            <Button Margin="2" Content="Download 64bit Oracle driver" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-64bit.zip" />
+            <TextBlock Text="Connection string" Margin="5" />
+            <TextBox Text="{Binding OracleDb.ConnectionString}" Margin="5" 
+                        ToolTip="Example connection string: Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=xe)));User Id=revenj;Password=secret" />
+            <DockPanel Margin="5">
+                <Button Content="SQL scripts path" Width="120"
+                Command="{Binding ChangeOracleSqlScripts}" />
+                <TextBox Text="{Binding OracleDb.SqlScriptsPath}" 
+                    ToolTip="Where sql scripts will be saved after compilation. If folder is not specified or found, temporary path will be used."
+                    Foreground="{Binding OracleDb.SqlScriptsPathColor}" />
+            </DockPanel>
+            <DockPanel Margin="2">
+                <TextBlock Text="Varray size" Width="120"/>
+                <TextBox Text="{Binding OracleDb.VarraySize}" ToolTip="Array elements will be created with specified maximum size (default is 32768)" />
+            </DockPanel>
+            <DockPanel Margin="2">
+                <TextBlock Text="Grant role" Width="120"/>
+                <TextBox Text="{Binding OracleDb.GrantRole}" ToolTip="SQL script will grant permissions to specified role (instead of public)" />
+            </DockPanel>
+            <Separator />
+            <StackPanel Orientation="Vertical">
+                <CheckBox Content="Diff before compile" IsChecked="{Binding OracleDb.DiffBefore}" 
+                    ToolTip="Recommended value: checked" />
+                <!--CheckBox Content="Confirm unsafe changes" IsChecked="{Binding OracleConfirmUnsafe}" 
+                    ToolTip="Recommended value: checked" /-->
+                <!--CheckBox Content="Apply migration" IsChecked="{Binding OracleApplyMigration}" 
+                    ToolTip="Recommended value: unchecked" /-->
+            </StackPanel>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
