@@ -12,11 +12,7 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
+import java.io.*;
 import java.util.*;
 
 public class DslLexerParser extends Lexer implements PsiParser {
@@ -71,107 +67,35 @@ public class DslLexerParser extends Lexer implements PsiParser {
 		}
 	}
 
-	private final static DslContext context;
-	private static Socket socket;
-
-	private final static File compiler;
-	private static Process process;
-	private static long startedOn;
-	private static int port;
-	private final static Logger logger;
+	private static DslCompiler.TokenParser tokenParser;
 
 	static {
-		logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
-		context = new DslContext(logger);
+		Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
+		DslContext context = new DslContext(logger);
 		context.put(Download.INSTANCE, null);
 		if (!Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE))) {
 			logger.warn("Unable to setup DSL command line client");
 		}
 		final String path = context.get(DslCompiler.INSTANCE);
 		if (path == null) {
-			logger.warn("Unable to setup dsl-compiler.exe");
-			compiler = new File("dsl-compiler.exe");
+			logger.error("Unable to setup dsl-compiler.exe");
 		} else {
-			compiler = new File(path);
+			final File compiler = new File(path);
 			logger.info("DSL Platform compiler found at: " + compiler.getAbsolutePath());
-			startServer(context);
-			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-				@Override
-				public void run() {
-					stopServer();
-				}
-			}));
-		}
-	}
-
-	private static synchronized void socketCleanup(boolean restartServer) {
-		long now = (new Date()).getTime();
-		if (restartServer && now > startedOn + 60000) {
-			stopServer();
-		}
-		final Socket sock = socket;
-		if (sock != null) {
-			try {
-				sock.close();
-			} catch (Exception ignore) {
-			}
-			socket = null;
-		}
-	}
-
-	private static synchronized void stopServer() {
-		final Process proc = process;
-		if (proc != null) {
-			logger.info("Stopped DSL Platform compiler");
-			try {
-				proc.destroy();
-			} catch (Exception ignore) {
-			}
-			process = null;
-		}
-	}
-
-	private static synchronized void startServer(DslContext context) {
-		logger.info("Starting DSL Platform compiler...");
-		stopServer();
-		Random rnd = new Random();
-		port = rnd.nextInt(40000) + 20000;
-		Either<Process> tryProcess = DslCompiler.startServer(context, compiler, port);
-		startedOn = (new Date()).getTime();
-		final Process proc = tryProcess.isSuccess() ? tryProcess.get() : null;
-		process = proc;
-		if (proc != null) {
-			logger.info("Started DSL Platform compiler at port: " + port);
-			Thread waitExit = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						proc.waitFor();
-					} catch (Exception ignore) {
-					}
-					logger.info("DSL Platform compiler process stopped");
-					process = null;
-				}
-			});
-			waitExit.setDaemon(true);
-			waitExit.start();
-			Thread consumeOutput = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-					final char[] buffer = new char[8192];
-					int len;
-					try {
-						while ((len = reader.read(buffer)) != -1) {
-							logger.debug(new String(buffer, 0, len));
+			Either<DslCompiler.TokenParser> trySetup = DslCompiler.setupServer(context, compiler);
+			if (trySetup.isSuccess()) {
+				tokenParser = trySetup.get();
+				Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							tokenParser.close();
+							tokenParser = null;
+						} catch (Exception ignore) {
 						}
-						reader.close();
-					} catch (IOException ignore) {
 					}
-				}
-			});
-			consumeOutput.setDaemon(true);
-			consumeOutput.start();
+				}));
+			}
 		}
 	}
 
@@ -191,7 +115,7 @@ public class DslLexerParser extends Lexer implements PsiParser {
 		String dsl = charSequence.toString();
 		if (!dsl.equals(lastDsl)) {
 			lastDsl = dsl;
-			List<DslCompiler.SyntaxConcept> parsed = dsl.length() > 0
+			List<DslCompiler.SyntaxConcept> parsed = dsl.length() > 0 && tokenParser != null
 					? parseTokens(dsl)
 					: new ArrayList<DslCompiler.SyntaxConcept>(0);
 			List<AST> newAst = new ArrayList<AST>(parsed.size() * 2);
@@ -243,44 +167,11 @@ public class DslLexerParser extends Lexer implements PsiParser {
 	}
 
 	private static synchronized List<DslCompiler.SyntaxConcept> parseTokens(String dsl) {
-		try {
-			if (process == null) {
-				startServer(context);
-			} else {
-				socket = setupSocket(socket);
-				Either<DslCompiler.ParseResult> result = DslCompiler.parseTokens(context, socket, dsl);
-				if (!result.isSuccess()) {
-					socketCleanup(false);
-					socket = setupSocket(null);
-					result = DslCompiler.parseTokens(context, socket, dsl);
-				}
-				if (result.isSuccess()) {
-					return result.get().tokens;
-				} else {
-					socketCleanup(true);
-				}
-			}
-		} catch (Exception ex) {
-			socketCleanup(true);
+		Either<DslCompiler.ParseResult> result = tokenParser.parse(dsl);
+		if (!result.isSuccess() || result.get().tokens == null) {
+			return new ArrayList<DslCompiler.SyntaxConcept>(0);
 		}
-		return new ArrayList<DslCompiler.SyntaxConcept>(0);
-	}
-
-	private static synchronized Socket setupSocket(Socket socket) throws ExitException, IOException {
-		if (socket != null) return socket;
-		context.put(DslCompiler.INSTANCE, Integer.toString(port));
-		if (!DslCompiler.INSTANCE.check(context)) {
-			logger.warn("Unable to setup socket to DSL Platform");
-		}
-		logger.info("Socket connected");
-		socket = context.load(DslCompiler.DSL_COMPILER_SOCKET);
-		if (socket != null) {
-			try {
-				socket.setSoTimeout(10000);
-			} catch(Exception ignore) {
-			}
-		}
-		return socket;
+		return result.get().tokens;
 	}
 
 	static class OffsetPosition implements LexerPosition {

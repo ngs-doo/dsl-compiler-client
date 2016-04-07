@@ -25,7 +25,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	private final static Charset UTF_8 = Charset.forName("UTF-8");
 
-	public static final String DSL_COMPILER_SOCKET = "dsl-compiler-socket";
+	private static final String DSL_COMPILER_SOCKET = "dsl-compiler-socket";
 
 	public static Map<String, String> compile(
 			final Context context,
@@ -81,7 +81,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	private static Either<byte[]> runCompiler(Context context, List<String> arguments) throws ExitException {
 		final Socket socket = context.load(DSL_COMPILER_SOCKET);
-		final File compiler = new File(context.get(DslCompiler.INSTANCE));
+		final File compiler = new File(context.get(INSTANCE));
 		arguments.add("path=" + System.getProperty("user.dir"));
 		context.notify("DSL", arguments);
 		return socket != null
@@ -173,7 +173,179 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		return ret;
 	}
 
-	public static Either<Process> startServer(Context context, File compiler, int port) {
+	public static class TokenParser implements Closeable {
+		private final Context context;
+		private final File compiler;
+
+		private int port;
+		private Socket socket;
+		private Process process;
+		private long startedOn;
+
+		TokenParser(final Context context, final File compiler, final int port, final Process process) {
+			this.context = context;
+			this.compiler = compiler;
+			setupMonitor(port, process, this);
+		}
+
+		private void setupMonitor(final int port, final Process process, final TokenParser parser) {
+			parser.port = port;
+			parser.process = process;
+			context.show("Started DSL Platform compiler at port: " + port);
+			final Thread waitExit = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						process.waitFor();
+					} catch (Exception ignore) {
+					}
+					context.show("DSL Platform compiler process stopped");
+					parser.process = null;
+				}
+			});
+			waitExit.setDaemon(true);
+			waitExit.start();
+			final Thread consumeOutput = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+					final char[] buffer = new char[8192];
+					int len;
+					try {
+						while ((len = reader.read(buffer)) != -1) {
+							context.log(new String(buffer, 0, len));
+						}
+						reader.close();
+					} catch (IOException ignore) {
+					}
+				}
+			});
+			consumeOutput.setDaemon(true);
+			consumeOutput.start();
+			startedOn = (new Date()).getTime();
+		}
+
+		public Either<ParseResult> parse(String dsl) {
+			try {
+				if (process == null) {
+					final Random rnd = new Random();
+					final int port = rnd.nextInt(40000) + 20000;
+					final Either<Process> tryProcess = startServerMode(context, compiler, port);
+					if (!tryProcess.isSuccess()) {
+						return Either.fail(tryProcess.whyNot());
+					}
+					setupMonitor(port, tryProcess.get(), this);
+					return Either.fail("Server restarting...");
+				}
+				Either<ParseResult> result = parseTokens(setupSocket(), dsl);
+				if (!result.isSuccess()) {
+					socketCleanup(false);
+					result = parseTokens(setupSocket(), dsl);
+				}
+				if (!result.isSuccess()) {
+					socketCleanup(true);
+				}
+				return result;
+			} catch (Exception ex) {
+				socketCleanup(true);
+				return Either.fail(ex);
+			}
+		}
+
+		private Either<ParseResult> parseTokens(final Socket socket, final String dsl) throws IOException {
+			final byte[] dslUtf8 = dsl.getBytes(UTF_8);
+			final String command = "tokens=" + dslUtf8.length + " format=json include-length keep-alive\n";
+			try {
+				final OutputStream sos = socket.getOutputStream();
+				sos.write(command.getBytes(UTF_8));
+				sos.write(dslUtf8);
+				sos.flush();
+				final ByteStream os = getByteStream(context);
+				final byte[] buf = os.temp;
+				final InputStream is = socket.getInputStream();
+				int read = is.read(buf, 0, 4);
+				if (read != 4 || buf[0] != 'O') {
+					return Either.fail("Invalid response from server.");
+				}
+				read = is.read(buf, 0, 4);
+				if (read != 4) {
+					return Either.fail("Invalid response from server. Expecting length.");
+				}
+				int length = readInt(buf);
+				os.reset();
+				while (length > 0 && (read = is.read(buf)) > 0) {
+					length -= read;
+					os.write(buf, 0, read);
+				}
+				os.flush();
+				return Either.success(new ParseResult(DslJson.readMap(os.getBuffer(), os.size())));
+			} catch (IOException e) {
+				return Either.fail(e.getMessage());
+			}
+		}
+
+		private Socket setupSocket() throws ExitException, IOException {
+			if (socket != null) return socket;
+			context.put(INSTANCE, Integer.toString(port));
+			if (!INSTANCE.check(context)) {
+				context.error("Unable to setup socket to DSL Platform");
+			}
+			context.show("Socket connected");
+			socket = context.load(DSL_COMPILER_SOCKET);
+			if (socket != null) {
+				try {
+					socket.setSoTimeout(10000);
+				} catch (Exception ignore) {
+				}
+			}
+			return socket;
+		}
+
+		private void socketCleanup(final boolean restartServer) {
+			final long now = (new Date()).getTime();
+			if (restartServer && now > startedOn + 60000) {
+				stopServer();
+			}
+			final Socket sock = this.socket;
+			if (sock != null) {
+				try {
+					sock.close();
+				} catch (Exception ignore) {
+				}
+				this.socket = null;
+				context.cache(DSL_COMPILER_SOCKET, null);
+			}
+		}
+
+		private void stopServer() {
+			final Process proc = process;
+			if (proc != null) {
+				context.show("Stopped DSL Platform compiler");
+				try {
+					proc.destroy();
+				} catch (Exception ignore) {
+				}
+				this.process = null;
+			}
+		}
+
+		public void close() {
+			stopServer();
+		}
+	}
+
+	public static Either<TokenParser> setupServer(final Context context, final File compiler) {
+		context.show("Starting DSL Platform compiler...");
+		final Random rnd = new Random();
+		final int port = rnd.nextInt(40000) + 20000;
+		final Either<Process> tryProcess = startServerMode(context, compiler, port);
+		if (!tryProcess.isSuccess()) {
+			return Either.fail(tryProcess.whyNot());
+		}
+		return Either.success(new TokenParser(context, compiler, port, tryProcess.get()));
+	}
+
+	private static Either<Process> startServerMode(final Context context, final File compiler, final int port) {
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add(compiler.getAbsolutePath());
 		arguments.add("server-mode");
@@ -198,46 +370,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			}
 		}
 		final ProcessBuilder pb = new ProcessBuilder(arguments);
-		context.put(DslCompiler.INSTANCE, Integer.toString(port));
+		context.put(INSTANCE, Integer.toString(port));
 		try {
 			return Either.success(pb.start());
 		} catch (IOException e) {
 			return Either.fail(e);
-		}
-	}
-
-	public static Either<ParseResult> parseTokens(
-			final Context context,
-			final Socket socket,
-			final String dsl) throws IOException {
-		final byte[] dslUtf8 = dsl.getBytes(UTF_8);
-		final String command = "tokens=" + dslUtf8.length + " format=json include-length keep-alive\n";
-		try {
-			final OutputStream sos = socket.getOutputStream();
-			sos.write(command.getBytes(UTF_8));
-			sos.write(dslUtf8);
-			sos.flush();
-			final ByteStream os = getByteStream(context);
-			final byte[] buf = os.temp;
-			final InputStream is = socket.getInputStream();
-			int read = is.read(buf, 0, 4);
-			if (read != 4 || buf[0] != 'O') {
-				return Either.fail("Invalid response from server.");
-			}
-			read = is.read(buf, 0, 4);
-			if (read != 4) {
-				return Either.fail("Invalid response from server. Expecting length.");
-			}
-			int length = readInt(buf);
-			os.reset();
-			while (length > 0 && (read = is.read(buf)) > 0) {
-				length -= read;
-				os.write(buf, 0, read);
-			}
-			os.flush();
-			return Either.success(new ParseResult(DslJson.readMap(os.getBuffer(), os.size())));
-		} catch (IOException e) {
-			return Either.fail(e.getMessage());
 		}
 	}
 
