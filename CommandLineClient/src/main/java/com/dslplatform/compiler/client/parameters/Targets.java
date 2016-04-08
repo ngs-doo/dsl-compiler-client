@@ -103,6 +103,11 @@ public enum Targets implements CompileParameter, ParameterParser {
 			}
 			return null;
 		}
+
+		@Override
+		public String toString() {
+			return value;
+		}
 	}
 
 	private static void listOptions(final Context context) {

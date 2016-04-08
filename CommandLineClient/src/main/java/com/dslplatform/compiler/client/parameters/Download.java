@@ -187,6 +187,8 @@ public enum Download implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return "Always download missing dependencies.";
+		return "Always download missing dependencies.\n" +
+				"Dependencies will be checked for latest version.\n" +
+				"Dependencies will be downloaded through Maven or from DSL Platform website.";
 	}
 }

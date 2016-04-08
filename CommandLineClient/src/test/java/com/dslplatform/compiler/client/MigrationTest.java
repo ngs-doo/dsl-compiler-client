@@ -47,6 +47,11 @@ public class MigrationTest {
 		public boolean canInteract() {
 			return false;
 		}
+
+		@Override
+		public <T> T notify(final String action, final T target) {
+			return target;
+		}
 	}
 
 	static class MockMigration implements CompileParameter {

@@ -50,8 +50,8 @@ public enum Parse implements CompileParameter {
 
 	@Override
 	public String getDetailedDescription() {
-		return "This library doesn't contain parser for DSL.\n" +
-				"Use other libraries for Eclipse or Visual Studio which provide syntax highlighting and basic parsing for DSL.\n" +
+		return "This library uses external parser for DSL. Parser can be started through: DslCompiler.setupServer method.\n" +
+				"Eclipse, IntelliJ IDEA and other IDE plugins use such setup for syntax highlighting.\n\n" +
 				"DSL Platform compiler can be used to validate current DSL. Error descriptions will be provided in case of errors.";
 	}
 }
