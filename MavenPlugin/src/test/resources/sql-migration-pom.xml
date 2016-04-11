@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.dslplatform</groupId>
+	<artifactId>dummy-test-project</artifactId>
+	<packaging>jar</packaging>
+	<version>1.0.0</version>
+	<name>DSL Platform - Compiler Command-Line Client</name>
+	<url>https://github.com/ngs-doo/dsl-compiler-client</url>
+	<description>Command line client for interaction with DSL Platform compiler (https://dsl-platform.com)</description>
+	
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.dslplatform</groupId>
+				<artifactId>dsl-platform-maven-plugin</artifactId>
+				<version>1.0-SNAPSHOT</version>
+				<configuration>
+					<postgres>localhost:5429/test_db?user=test_user&amp;password=test_pass</postgres>
+					<dsl>src/test/resources/dsl</dsl>
+					<applySql>true</applySql>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
