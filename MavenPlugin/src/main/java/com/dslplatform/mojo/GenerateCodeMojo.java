@@ -13,6 +13,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +40,15 @@ public class GenerateCodeMojo extends AbstractMojo {
 	@Parameter(name = "dsl", property = "dsl", defaultValue = "dsl")
 	private String dslPath;
 
-	@Parameter(name = "namespace", property = "namespace", defaultValue="")
+	@Parameter(name = "namespace", property = "namespace", defaultValue = "")
 	private String namespaceString;
+
+	@Parameter(name = "settings", property = "settings")
+	private String[] settings_;
 
 	private Targets.Option targetParsed;
 	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
-	private Map<Settings.Option, String> flagsParsed = new HashMap<Settings.Option, String>();
+	private List<Settings.Option> settingsParsed = new ArrayList<Settings.Option>();
 
 	public MavenProject getProject() {
 		return project;
@@ -101,6 +105,18 @@ public class GenerateCodeMojo extends AbstractMojo {
 		compileParametersParsed.put(Namespace.INSTANCE, namespace);
 	}
 
+	public void setSettings(String[] settings) {
+		getLog().info("Setting settings");
+		this.settings_ = settings;
+		this.settingsParsed = new ArrayList<Settings.Option>(settings.length);
+		for (String setting : settings) {
+			Settings.Option option = Utils.settingsOptionFrom(setting);
+			if (option != null) {
+				this.settingsParsed.add(option);
+			}
+		}
+	}
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
@@ -108,7 +124,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 		MojoContext context = new MojoContext(getLog())
 				.with(this.targetParsed)
-				.with(this.flagsParsed)
+				.with(this.settingsParsed)
 				.with(this.compileParametersParsed)
 				.with(Force.INSTANCE)
 				.with(Download.INSTANCE)
