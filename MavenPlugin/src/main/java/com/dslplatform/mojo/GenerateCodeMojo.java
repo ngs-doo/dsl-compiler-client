@@ -166,10 +166,13 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 	protected void registerServices(MojoContext context) throws MojoExecutionException {
 		String namespace = context.get(Namespace.INSTANCE);
-		String service = namespace == null ? "Boot" : namespace + ".Boot";
-		Utils.createDirIfNotExists(this.servicesManifest);
-		File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
-		Utils.writeToFile(context, servicesRegistration, service);
+		String service = namespace == null || namespace.length() == 0 ? "Boot" : namespace + ".Boot";
+		File boot = new File(generatedSources, service.replace(".", File.pathSeparator) + ".java");
+		if (boot.exists()) {
+			Utils.createDirIfNotExists(this.servicesManifest);
+			File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
+			Utils.writeToFile(context, servicesRegistration, service);
+		}
 	}
 
 	private void copyGeneratedSources(MojoContext context) throws MojoExecutionException {
