@@ -31,7 +31,7 @@ public class DslPlatformMojo
 	@Parameter(property = "targets")
 	private Map<String, String> targets_;
 
-	@Parameter(property = "flags")
+	@Parameter(property = "flags", name = "flags")
 	private String[] flags_;
 
 	@Parameter(property = "compileParameters")

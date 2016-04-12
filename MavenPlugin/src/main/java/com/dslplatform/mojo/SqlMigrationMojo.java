@@ -91,6 +91,10 @@ public class SqlMigrationMojo extends AbstractMojo {
 		return this.oracle;
 	}
 
+	public void setApplySql(boolean applySql) {
+		this.applySql = applySql;
+	}
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
