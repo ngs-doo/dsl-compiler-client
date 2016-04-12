@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Properties;
 
 @Mojo(name = DslPlatformMojo.GOAL)
-public class DslPlatformMojo
-		extends AbstractMojo {
+public class DslPlatformMojo extends AbstractMojo {
 
 	public static final String GOAL = "execute";
 
@@ -73,16 +72,13 @@ public class DslPlatformMojo
 		return context;
 	}
 
-	public void execute()
-			throws MojoExecutionException, MojoFailureException {
+	public void execute() throws MojoExecutionException, MojoFailureException {
 
-		if(this.properties == null) {
+		if (this.properties == null) {
 			throw new MojoExecutionException("The given properties file not found: " + propertiesAbsolutePath);
 		}
 
-		this.context
-				.with(new PropertiesFile(new ArrayList<CompileParameter>()), propertiesAbsolutePath);
-				;
+		this.context.with(new PropertiesFile(new ArrayList<CompileParameter>()), propertiesAbsolutePath);
 
 		List<CompileParameter> params = Main.initializeParameters(context, ".");
 
@@ -92,5 +88,4 @@ public class DslPlatformMojo
 
 		context.close();
 	}
-
 }
