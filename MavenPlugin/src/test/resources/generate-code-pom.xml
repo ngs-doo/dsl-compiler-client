@@ -29,10 +29,10 @@
 					<servicesManifest>target/classes/META-INF/services</servicesManifest>
 					<target>revenj.java</target>
 					<dsl>src/test/resources/dsl</dsl>
-					<settings>
-						<settings>manual-json</settings>
-						<settings>jackson</settings>
-					</settings>
+					<options>
+						<option>manual-json</option>
+						<option>jackson</option>
+					</options>
 				</configuration>
 			</plugin>
 		</plugins>

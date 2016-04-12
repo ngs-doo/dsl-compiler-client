@@ -46,8 +46,8 @@ public class GenerateCodeMojo extends AbstractMojo {
 	@Parameter(property = "namespace", defaultValue = "")
 	private String namespace;
 
-	@Parameter(property = "settings")
-	private String[] settings;
+	@Parameter(property = "options")
+	private String[] options;
 
 	private Targets.Option targetParsed;
 	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
@@ -116,10 +116,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 		return namespace;
 	}
 
-	public void setSettings(String[] value) {
-		this.settings = value;
-		this.settingsParsed = new ArrayList<Settings.Option>(settings.length);
-		for (String setting : settings) {
+	public void setOptions(String[] value) {
+		this.options = value;
+		this.settingsParsed = new ArrayList<Settings.Option>(options.length);
+		for (String setting : options) {
 			Settings.Option option = Utils.settingsOptionFrom(setting);
 			if (option != null) {
 				this.settingsParsed.add(option);
@@ -127,8 +127,8 @@ public class GenerateCodeMojo extends AbstractMojo {
 		}
 	}
 
-	public String[] getSettings() {
-		return settings;
+	public String[] getOptions() {
+		return options;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {

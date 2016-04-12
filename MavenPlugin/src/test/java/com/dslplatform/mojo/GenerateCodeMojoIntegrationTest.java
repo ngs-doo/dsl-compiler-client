@@ -52,7 +52,7 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 		String namespace = mojo.getNamespace();
 		assertEquals(namespace != null ? namespace + ".Boot" : "Boot", FileUtils.readFileToString(servicesFile));
 
-		String[] settings = mojo.getSettings();
+		String[] settings = mojo.getOptions();
 		assertEquals(2, settings.length);
 		assertEquals("manual-json", settings[0]);
 		assertEquals("jackson", settings[1]);
