@@ -8,134 +8,89 @@ import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
-//@Mojo(name = DslPlatformMojo.GOAL)
+@Mojo(name = DslPlatformMojo.GOAL)
 public class DslPlatformMojo
 		extends AbstractMojo {
 
 	public static final String GOAL = "execute";
 
-	@Parameter(defaultValue = "src/generated/java")
-	private String generatedSourcesTarget;
+	private final MojoContext context = new MojoContext(getLog());
 
-	@Parameter(defaultValue = "src/main/resources/META-INF/services")
-	private String servicesManifestTarget;
+	@Component
+	private MavenProject project;
 
-	@Parameter(property = "targets")
-	private Map<String, String> targets_;
+	@Parameter(required = true)
+	private Properties properties;
 
-	@Parameter(property = "flags")
-	private String[] flags_;
+	private String propertiesAbsolutePath;
 
-	@Parameter(property = "compileParameters")
-	private Map<String, String> compileParameters_;
+	public MavenProject getProject() {
+		return project;
+	}
 
-	private Map<Targets.Option, String> targetsParsed;
+	public void setProject(MavenProject project) {
+		this.project = project;
+	}
 
-	public void setTargets(Map<String, String> targets) {
-		getLog().info("Setting targets");
-		this.targets_ = targets;
-		this.targetsParsed = new HashMap<Targets.Option, String>();
-		for (Map.Entry<String, String> kv : targets.entrySet()) {
-			String key = kv.getKey();
-			String value = kv.getValue();
+	public Properties getProperties() {
+		return properties;
+	}
 
-			Targets.Option option = Utils.targetOptionFrom(key);
-			if (option != null) this.targetsParsed.put(option, value);
+	public void setProperties(String path) {
+		propertiesAbsolutePath = Utils.resourceAbsolutePath(path);
+		getLog().info("Setting properties from file: " + propertiesAbsolutePath);
+		try {
+			if (propertiesAbsolutePath != null) {
+				properties = new Properties();
+				properties.load(new FileInputStream(propertiesAbsolutePath));
+
+			}
+		} catch (IOException e) {
+			this.properties = null;
 		}
 	}
 
-	private List<Settings.Option> flagsParsed;
-
-	public void setFlags(String[] flags) {
-		getLog().info("Setting flags");
-		this.flags_ = flags;
-		this.flagsParsed = new ArrayList<Settings.Option>(flags.length);
-		for (String setting : flags) {
-
-			Settings.Option option = Utils.settingsOptionFrom(setting);
-			if (option != null) this.flagsParsed.add(option);
-		}
+	public String getPropertiesAbsolutePath() {
+		return propertiesAbsolutePath;
 	}
 
-	private Map<CompileParameter, String> compileParametersParsed;
+	public void setPropertiesAbsolutePath(String propertiesAbsolutePath) {
+		this.propertiesAbsolutePath = propertiesAbsolutePath;
+	}
 
-	public void setCompileParameters(Map<String, String> compileParameters) {
-		getLog().info("Setting compile parameters");
-		this.compileParameters_ = compileParameters;
-		this.compileParametersParsed = new HashMap<CompileParameter, String>();
-		for (Map.Entry<String, String> kv : compileParameters.entrySet()) {
-			String key = kv.getKey();
-			String value = kv.getValue();
-
-			CompileParameter compileParameter = Utils.compileParameterFrom(key);
-			if (compileParameter != null) this.compileParametersParsed.put(compileParameter, value);
-		}
+	public MojoContext getContext() {
+		return context;
 	}
 
 	public void execute()
 			throws MojoExecutionException, MojoFailureException {
-		Utils.cleanupParameters(compileParametersParsed);
-		// TODO: Default values
-		Utils.sanitizeDirectories(compileParametersParsed);
 
-		MojoContext context = new MojoContext(getLog())
-				.with(targetsParsed)
-				.with(compileParametersParsed)
-				.with(flagsParsed)
-				.with(Force.INSTANCE)
-				.with(Download.INSTANCE)
-				.with(Prompt.INSTANCE)
-				.with(Settings.Option.SOURCE_ONLY);
+		if(this.properties == null) {
+			throw new MojoExecutionException("The given properties file not found: " + propertiesAbsolutePath);
+		}
+
+		this.context
+				.with(new PropertiesFile(new ArrayList<CompileParameter>()), propertiesAbsolutePath);
+				;
 
 		List<CompileParameter> params = Main.initializeParameters(context, ".");
 
 		if (!Main.processContext(context, params)) {
 			throw new MojoExecutionException(context.errorLog.toString());
-		} else {
-			// Copy generated sources
-			copyGeneratedSources(context);
-			registerServices(context);
 		}
 
 		context.close();
-	}
-
-	private void copyGeneratedSources(MojoContext context) throws MojoExecutionException{
-		File tmpPath = TempPath.getTempProjectPath(context);
-		getLog().info("Temp path: " + tmpPath.getAbsolutePath());
-		for (Targets.Option target : this.targetsParsed.keySet()) {
-			// TODO: Multiple java targets will overwrite each other
-			File generatedSources = new File(tmpPath.getAbsolutePath(), target.name());
-			Utils.createDirIfNotExists(this.generatedSourcesTarget);
-			Utils.copyFolder(generatedSources, new File(this.generatedSourcesTarget), context);
-		}
-	}
-
-	protected void registerServices(MojoContext context) throws MojoExecutionException {
-		// TODO: Add check if we generated code
-		String namespace = context.get(Namespace.INSTANCE);
-		String service = namespace == null ? "Boot" : namespace + ".Boot";
-		Utils.createDirIfNotExists(this.servicesManifestTarget);
-		File servicesRegistration = new File(servicesManifestTarget, "org.revenj.extensibility.SystemAspect");
-		Utils.writeToFile(context, servicesRegistration, service);
-	}
-
-	protected <K, V> void write(Map<K, V> map) {
-		for (Map.Entry kv : map.entrySet()) {
-			getLog().info(kv.getKey().toString() + " : " + kv.getValue());
-		}
-	}
-
-	private <K> void write(List<K> list) {
-		getLog().info(list.toString());
 	}
 
 }

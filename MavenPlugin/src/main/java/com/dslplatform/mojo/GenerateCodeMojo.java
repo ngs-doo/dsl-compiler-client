@@ -8,6 +8,7 @@ import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -25,7 +26,9 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 	private static final String SERVICES_FILE = "org.revenj.extensibility.SystemAspect";
 
-	@Parameter(defaultValue = "${project}")
+	private final MojoContext context = new MojoContext(getLog());
+
+	@Component
 	private MavenProject project;
 
 	@Parameter(property = "compiler")
@@ -131,6 +134,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 		return options;
 	}
 
+	public MojoContext getContext() {
+		return context;
+	}
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
@@ -140,7 +147,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 			throw new MojoExecutionException("Target not specified. Please specify target, for example: <target>revenj.java</target>");
 		}
 
-		MojoContext context = new MojoContext(getLog())
+		this.context
 				.with(this.targetParsed)
 				.with(this.settingsParsed)
 				.with(this.compileParametersParsed)
@@ -181,4 +188,6 @@ public class GenerateCodeMojo extends AbstractMojo {
 		Utils.createDirIfNotExists(this.generatedSources);
 		Utils.copyFolder(generatedSources, new File(this.generatedSources), context);
 	}
+
+
 }

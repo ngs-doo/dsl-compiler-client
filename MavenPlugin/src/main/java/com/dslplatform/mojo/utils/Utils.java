@@ -44,10 +44,6 @@ public class Utils {
 			ScalaPath.INSTANCE
 	};
 
-	/**
-	 * @deprecated This is a bad idea, we should just use direct paths
-	 */
-	@Deprecated
 	public static String resourceAbsolutePath(String resource) {
 		if (resource == null) return null;
 
