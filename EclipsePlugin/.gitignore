@@ -1,8 +1,5 @@
 target
-.classpath
-.project
 .idea
-.settings
 .history
 .target
 .cache
