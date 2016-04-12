@@ -3,7 +3,6 @@ package com.dslplatform.mojo;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
-import org.apache.maven.project.MavenProject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +25,7 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	@Test
-	public void testGenerateCode()
-			throws Exception {
+	public void testGenerateCode() throws Exception {
 		File pom = getTestFile("src/test/resources/generate-code-pom.xml");
 		assertNotNull(pom);
 		assertTrue(pom.exists());
@@ -37,7 +35,7 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 		mojo.setProject(new MavenProjectStub());
 		mojo.execute();
 
-		String sourcesPath = mojo.getGeneratedSourcesTarget();
+		String sourcesPath = mojo.getGeneratedSources();
 		TestUtils.assertDir(sourcesPath);
 		TestUtils.assertDir(sourcesPath + "/MojoTestModule");
 		TestUtils.assertFile(sourcesPath + "/MojoTestModule/MojoTestAggregate.java");
@@ -45,7 +43,7 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 		TestUtils.assertFile(sourcesPath + "/MojoTestModule/converters/MojoTestAggregateConverter.java");
 		TestUtils.assertFile(sourcesPath + "/Boot.java");
 
-		File servicesDir = new File(mojo.getServicesManifestTarget());
+		File servicesDir = new File(mojo.getServicesManifest());
 		TestUtils.assertDir(servicesDir.getAbsolutePath());
 
 		File servicesFile = new File(servicesDir, "org.revenj.extensibility.SystemAspect");
@@ -54,7 +52,9 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 		String namespace = mojo.getNamespace();
 		assertEquals(namespace != null ? namespace + ".Boot" : "Boot", FileUtils.readFileToString(servicesFile));
 
-
+		String[] settings = mojo.getSettings();
+		assertEquals(2, settings.length);
+		assertEquals("manual-json", settings[0]);
+		assertEquals("jackson", settings[1]);
 	}
-
 }

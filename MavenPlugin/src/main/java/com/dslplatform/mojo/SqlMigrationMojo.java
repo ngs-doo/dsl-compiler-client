@@ -20,6 +20,9 @@ public class SqlMigrationMojo extends AbstractMojo {
 
 	public static final String GOAL = "sql-migration";
 
+	@Parameter(property = "compiler")
+	private String compiler;
+
 	@Parameter(property = "dsl", defaultValue = "dsl")
 	private String dsl;
 
@@ -38,46 +41,55 @@ public class SqlMigrationMojo extends AbstractMojo {
 	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
 	private Map<Settings.Option, String> flagsParsed = new HashMap<Settings.Option, String>();
 
-	public void setDsl(String path) {
-		if (path == null) return;
-		this.dsl = path;
-		compileParametersParsed.put(DslPath.INSTANCE, this.dsl);
+	public void setCompiler(String value) {
+		if (value == null) return;
+		this.compiler = value;
+		compileParametersParsed.put(DslCompiler.INSTANCE, value);
+	}
+
+	public String getCompiler() {
+		return this.compiler;
+	}
+
+	public void setDsl(String value) {
+		if (value == null) return;
+		this.dsl = value;
+		compileParametersParsed.put(DslPath.INSTANCE, value);
 	}
 
 	public String getDsl() {
 		return this.dsl;
 	}
 
-	public void setSql(String path) {
-		if (path == null) return;
-		this.sql = path;
-		compileParametersParsed.put(SqlPath.INSTANCE, this.sql);
+	public void setSql(String value) {
+		if (value == null) return;
+		this.sql = value;
+		compileParametersParsed.put(SqlPath.INSTANCE, value);
 	}
 
 	public String getSql() {
 		return this.sql;
 	}
 
-	public void setPostgres(String connectionString) {
-		if (connectionString == null) return;
-		this.postgres = connectionString;
-		compileParametersParsed.put(PostgresConnection.INSTANCE, this.postgres);
+	public void setPostgres(String value) {
+		if (value == null) return;
+		this.postgres = value;
+		compileParametersParsed.put(PostgresConnection.INSTANCE, value);
 	}
 
 	public String getPostgres() {
 		return this.postgres;
 	}
 
-	public void setOracle(String connectionString) {
-		if (connectionString == null) return;
-		this.oracle = connectionString;
-		compileParametersParsed.put(OracleConnection.INSTANCE, this.oracle);
+	public void setOracle(String value) {
+		if (value == null) return;
+		this.oracle = value;
+		compileParametersParsed.put(OracleConnection.INSTANCE, value);
 	}
 
 	public String getOracle() {
 		return this.oracle;
 	}
-
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
@@ -85,7 +97,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 		Utils.sanitizeDirectories(this.compileParametersParsed);
 
 		if (oracle == null && postgres == null) {
-			throw new MojoExecutionException("Neither Oracle or Postgres jdbc url not specify. Please specify one, for example: <postgres>localhost/database?user=postgres</postgres>");
+			throw new MojoExecutionException("Neither Oracle or Postgres jdbc url specified. Please specify one, for example: <postgres>localhost/database?user=postgres</postgres>");
 		}
 
 		MojoContext context = new MojoContext(getLog())

@@ -25,10 +25,14 @@
 				<artifactId>dsl-platform-maven-plugin</artifactId>
 				<version>1.0-SNAPSHOT</version>
 				<configuration>
-					<generatedSourcesTarget>target/generated-sources</generatedSourcesTarget>
-					<servicesManifestTarget>target/classes/META-INF/services</servicesManifestTarget>
+					<generatedSources>target/generated-sources</generatedSources>
+					<servicesManifest>target/classes/META-INF/services</servicesManifest>
 					<target>revenj.java</target>
 					<dsl>src/test/resources/dsl</dsl>
+					<settings>
+						<settings>manual-json</settings>
+						<settings>jackson</settings>
+					</settings>
 				</configuration>
 			</plugin>
 		</plugins>

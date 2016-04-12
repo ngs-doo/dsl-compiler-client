@@ -28,11 +28,14 @@ public class GenerateCodeMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 
-	@Parameter(property = "generatedSourcesTarget", defaultValue = "target/generated-sources")
-	private String generatedSourcesTarget;
+	@Parameter(property = "compiler")
+	private String compiler;
 
-	@Parameter(property = "servicesManifestTarget", defaultValue = "target/classes/META-INF/services")
-	private String servicesManifestTarget;
+	@Parameter(property = "generatedSources", defaultValue = "target/generated-sources")
+	private String generatedSources;
+
+	@Parameter(property = "servicesManifest", defaultValue = "target/classes/META-INF/services")
+	private String servicesManifest;
 
 	@Parameter(property = "target", required = true)
 	private String target;
@@ -58,28 +61,36 @@ public class GenerateCodeMojo extends AbstractMojo {
 		this.project = project;
 	}
 
-	public void setGeneratedSourcesTarget(String value) {
-		this.generatedSourcesTarget = value;
+	public void setCompiler(String value) {
+		if (value == null) return;
+		this.compiler = value;
+		compileParametersParsed.put(DslCompiler.INSTANCE, value);
 	}
 
-	public String getGeneratedSourcesTarget() {
-		return generatedSourcesTarget;
+	public String getCompiler() {
+		return this.compiler;
 	}
 
-	public void setServicesManifestTarget(String value) {
-		this.servicesManifestTarget = value;
+	public void setGeneratedSources(String value) {
+		this.generatedSources = value;
 	}
 
-	public String getServicesManifestTarget() {
-		return servicesManifestTarget;
+	public String getGeneratedSources() {
+		return generatedSources;
+	}
+
+	public void setServicesManifest(String value) {
+		this.servicesManifest = value;
+	}
+
+	public String getServicesManifest() {
+		return servicesManifest;
 	}
 
 	public void setTarget(String value) {
-		getLog().info("Setting target " + value);
 		if (value == null) return;
 		this.target = value;
 		this.targetParsed = Utils.targetOptionFrom(value);
-		getLog().info("Parsed value " + targetParsed);
 	}
 
 	public String getTarget() {
@@ -106,7 +117,6 @@ public class GenerateCodeMojo extends AbstractMojo {
 	}
 
 	public void setSettings(String[] value) {
-		getLog().info("Setting settings");
 		this.settings = value;
 		this.settingsParsed = new ArrayList<Settings.Option>(settings.length);
 		for (String setting : settings) {
@@ -115,6 +125,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 				this.settingsParsed.add(option);
 			}
 		}
+	}
+
+	public String[] getSettings() {
+		return settings;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -144,7 +158,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 			copyGeneratedSources(context);
 			registerServices(context);
 			// This supposedly adds generated sources to maven compile classpath:
-			project.addCompileSourceRoot(this.generatedSourcesTarget);
+			project.addCompileSourceRoot(this.generatedSources);
 		}
 
 		context.close();
@@ -153,17 +167,15 @@ public class GenerateCodeMojo extends AbstractMojo {
 	protected void registerServices(MojoContext context) throws MojoExecutionException {
 		String namespace = context.get(Namespace.INSTANCE);
 		String service = namespace == null ? "Boot" : namespace + ".Boot";
-		Utils.createDirIfNotExists(this.servicesManifestTarget);
-		File servicesRegistration = new File(servicesManifestTarget, SERVICES_FILE);
+		Utils.createDirIfNotExists(this.servicesManifest);
+		File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
 		Utils.writeToFile(context, servicesRegistration, service);
 	}
 
 	private void copyGeneratedSources(MojoContext context) throws MojoExecutionException {
 		File tmpPath = TempPath.getTempProjectPath(context);
 		File generatedSources = new File(tmpPath.getAbsolutePath(), targetParsed.name());
-		Utils.createDirIfNotExists(this.generatedSourcesTarget);
-		Utils.copyFolder(generatedSources, new File(this.generatedSourcesTarget), context);
+		Utils.createDirIfNotExists(this.generatedSources);
+		Utils.copyFolder(generatedSources, new File(this.generatedSources), context);
 	}
-
-
 }
