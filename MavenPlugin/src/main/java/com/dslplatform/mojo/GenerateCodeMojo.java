@@ -26,6 +26,8 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 	private static final String SERVICES_FILE = "org.revenj.extensibility.SystemAspect";
 
+	private final MojoContext context = new MojoContext(getLog());
+
 	@Component
 	private MavenProject project;
 
@@ -132,6 +134,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 		return options;
 	}
 
+	public MojoContext getContext() {
+		return context;
+	}
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
@@ -141,7 +147,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 			throw new MojoExecutionException("Target not specified. Please specify target, for example: <target>revenj.java</target>");
 		}
 
-		MojoContext context = new MojoContext(getLog())
+		this.context
 				.with(this.targetParsed)
 				.with(this.settingsParsed)
 				.with(this.compileParametersParsed)

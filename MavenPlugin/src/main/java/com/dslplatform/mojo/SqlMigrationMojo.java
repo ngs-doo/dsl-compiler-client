@@ -20,6 +20,8 @@ public class SqlMigrationMojo extends AbstractMojo {
 
 	public static final String GOAL = "sql-migration";
 
+	private final MojoContext context = new MojoContext(getLog());
+
 	@Parameter(property = "compiler")
 	private String compiler;
 
@@ -95,6 +97,10 @@ public class SqlMigrationMojo extends AbstractMojo {
 		this.applySql = applySql;
 	}
 
+	public MojoContext getContext() {
+		return context;
+	}
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
@@ -104,7 +110,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 			throw new MojoExecutionException("Neither Oracle or Postgres jdbc url specified. Please specify one, for example: <postgres>localhost/database?user=postgres</postgres>");
 		}
 
-		MojoContext context = new MojoContext(getLog())
+		this.context
 				.with(this.flagsParsed)
 				.with(this.compileParametersParsed)
 				.with(Migration.INSTANCE)

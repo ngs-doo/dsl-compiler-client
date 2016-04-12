@@ -25,10 +25,7 @@
 				<artifactId>dsl-platform-maven-plugin</artifactId>
 				<version>1.0-SNAPSHOT</version>
 				<configuration>
-					<generatedSources>target/generated-sources</generatedSources>
-					<servicesManifest>target/classes/META-INF/services</servicesManifest>
-					<target>java_pojo</target>
-					<dsl>src/test/resources/dsl</dsl>
+					<properties>properties/migration.properties</properties>
 				</configuration>
 			</plugin>
 		</plugins>
