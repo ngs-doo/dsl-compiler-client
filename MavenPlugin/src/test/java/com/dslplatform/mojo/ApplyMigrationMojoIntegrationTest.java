@@ -39,8 +39,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	@Test
-	public void testApplyMigration()
-			throws Exception {
+	public void testApplyMigration() throws Exception {
 		File pom = getTestFile("src/test/resources/sql-migration-pom.xml");
 		assertNotNull(pom);
 		assertTrue(pom.exists());
@@ -60,7 +59,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	private static void assertSchemaExists(Connection conn, String schemaName) throws SQLException {
-		System.out.println("Asserting schema exists: " + schemaName);
+		//System.out.println("Asserting schema exists: " + schemaName);
 		Statement assertStatement = conn.createStatement();
 		assertStatement.execute("SELECT EXISTS(SELECT schema_name FROM information_schema.schemata WHERE schema_name = '" + schemaName + "');");
 		ResultSet rs = assertStatement.getResultSet();
@@ -70,7 +69,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	private static void assertTableExists(Connection conn, String schemaName, String tableName) throws SQLException {
-		System.out.println("Asserting table exists: " + schemaName + ", " + tableName);
+		//System.out.println("Asserting table exists: " + schemaName + ", " + tableName);
 		Statement assertStatement = conn.createStatement();
 		assertTrue(assertStatement.execute("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_schema = '" + schemaName + "' AND table_name = '" + tableName + "');"));
 		ResultSet rs = assertStatement.getResultSet();
@@ -79,7 +78,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	private static void assertColumnExists(Connection conn, String schemaName, String tableName, String columnName) throws SQLException {
-		System.out.println("Asserting column exists: " + schemaName + ", " + tableName + ", " + columnName);
+		//System.out.println("Asserting column exists: " + schemaName + ", " + tableName + ", " + columnName);
 		Statement assertStatement = conn.createStatement();
 		assertTrue(assertStatement.execute("SELECT EXISTS(SELECT * FROM information_schema.columns WHERE table_schema = '" + schemaName + "' AND table_name = '" + tableName + "' AND column_name = '" + columnName + "');"));
 		ResultSet rs = assertStatement.getResultSet();

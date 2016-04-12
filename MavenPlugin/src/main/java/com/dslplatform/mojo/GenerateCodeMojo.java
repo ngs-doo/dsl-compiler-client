@@ -28,23 +28,23 @@ public class GenerateCodeMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}")
 	private MavenProject project;
 
-	@Parameter(name = "generatedSourcesTarget", property = "generatedSourcesTarget", defaultValue = "target/generated-sources")
-	private String generatedSourcesTarget_;
+	@Parameter(property = "generatedSourcesTarget", defaultValue = "target/generated-sources")
+	private String generatedSourcesTarget;
 
-	@Parameter(name = "servicesManifestTarget", property = "servicesManifestTarget", defaultValue = "target/classes/META-INF/services")
-	private String servicesManifestTarget_;
+	@Parameter(property = "servicesManifestTarget", defaultValue = "target/classes/META-INF/services")
+	private String servicesManifestTarget;
 
-	@Parameter(name = "target", property = "target", required = true)
-	private String compileTarget;
+	@Parameter(property = "target", required = true)
+	private String target;
 
-	@Parameter(name = "dsl", property = "dsl", defaultValue = "dsl")
-	private String dslPath;
+	@Parameter(property = "dsl", defaultValue = "dsl")
+	private String dsl;
 
-	@Parameter(name = "namespace", property = "namespace", defaultValue = "")
-	private String namespaceString;
+	@Parameter(property = "namespace", defaultValue = "")
+	private String namespace;
 
-	@Parameter(name = "settings", property = "settings")
-	private String[] settings_;
+	@Parameter(property = "settings")
+	private String[] settings;
 
 	private Targets.Option targetParsed;
 	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
@@ -58,56 +58,56 @@ public class GenerateCodeMojo extends AbstractMojo {
 		this.project = project;
 	}
 
-	public void setGeneratedSourcesTarget(String generatedSourcesTarget_) {
-		this.generatedSourcesTarget_ = generatedSourcesTarget_;
+	public void setGeneratedSourcesTarget(String value) {
+		this.generatedSourcesTarget = value;
 	}
 
 	public String getGeneratedSourcesTarget() {
-		return generatedSourcesTarget_;
+		return generatedSourcesTarget;
 	}
 
-	public void setServicesManifestTarget(String servicesManifestTarget_) {
-		this.servicesManifestTarget_ = servicesManifestTarget_;
+	public void setServicesManifestTarget(String value) {
+		this.servicesManifestTarget = value;
 	}
 
 	public String getServicesManifestTarget() {
-		return servicesManifestTarget_;
+		return servicesManifestTarget;
+	}
+
+	public void setTarget(String value) {
+		getLog().info("Setting target " + value);
+		if (value == null) return;
+		this.target = value;
+		this.targetParsed = Utils.targetOptionFrom(value);
+		getLog().info("Parsed value " + targetParsed);
 	}
 
 	public String getTarget() {
-		return compileTarget;
+		return target;
+	}
+
+	public void setDsl(String value) {
+		if (value == null) return;
+		this.dsl = value;
+		compileParametersParsed.put(DslPath.INSTANCE, value);
 	}
 
 	public String getDsl() {
-		return dslPath;
+		return dsl;
+	}
+
+	public void setNamespace(String value) {
+		this.namespace = value;
+		compileParametersParsed.put(Namespace.INSTANCE, value);
 	}
 
 	public String getNamespace() {
-		return this.namespaceString;
+		return namespace;
 	}
 
-	public void setTarget(String target) {
-		System.out.println("Target: " + target);
-		if (target == null) return;
-		this.compileTarget = target;
-		this.targetParsed = Utils.targetOptionFrom(target);
-		System.out.println("Target: " + targetParsed);
-	}
-
-	public void setDsl(String dsl) {
-		if (dsl == null) return;
-		this.dslPath = dsl;
-		compileParametersParsed.put(DslPath.INSTANCE, dsl);
-	}
-
-	public void setNamespace(String namespace) {
-		this.namespaceString = namespace;
-		compileParametersParsed.put(Namespace.INSTANCE, namespace);
-	}
-
-	public void setSettings(String[] settings) {
+	public void setSettings(String[] value) {
 		getLog().info("Setting settings");
-		this.settings_ = settings;
+		this.settings = value;
 		this.settingsParsed = new ArrayList<Settings.Option>(settings.length);
 		for (String setting : settings) {
 			Settings.Option option = Utils.settingsOptionFrom(setting);
@@ -121,6 +121,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 		Utils.cleanupParameters(this.compileParametersParsed);
 		// TODO: Default values
 		Utils.sanitizeDirectories(this.compileParametersParsed);
+
+		if (targetParsed == null) {
+			throw new MojoExecutionException("Target not specified. Please specify target, for example: <target>revenj.java</target>");
+		}
 
 		MojoContext context = new MojoContext(getLog())
 				.with(this.targetParsed)
@@ -140,7 +144,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 			copyGeneratedSources(context);
 			registerServices(context);
 			// This supposedly adds generated sources to maven compile classpath:
-			project.addCompileSourceRoot(this.generatedSourcesTarget_);
+			project.addCompileSourceRoot(this.generatedSourcesTarget);
 		}
 
 		context.close();
@@ -149,16 +153,16 @@ public class GenerateCodeMojo extends AbstractMojo {
 	protected void registerServices(MojoContext context) throws MojoExecutionException {
 		String namespace = context.get(Namespace.INSTANCE);
 		String service = namespace == null ? "Boot" : namespace + ".Boot";
-		Utils.createDirIfNotExists(this.servicesManifestTarget_);
-		File servicesRegistration = new File(servicesManifestTarget_, SERVICES_FILE);
-		Utils.writeToFile(servicesRegistration, service, "UTF-8");
+		Utils.createDirIfNotExists(this.servicesManifestTarget);
+		File servicesRegistration = new File(servicesManifestTarget, SERVICES_FILE);
+		Utils.writeToFile(context, servicesRegistration, service);
 	}
 
 	private void copyGeneratedSources(MojoContext context) throws MojoExecutionException {
 		File tmpPath = TempPath.getTempProjectPath(context);
 		File generatedSources = new File(tmpPath.getAbsolutePath(), targetParsed.name());
-		Utils.createDirIfNotExists(this.generatedSourcesTarget_);
-		Utils.copyFolder(generatedSources, new File(this.generatedSourcesTarget_), context);
+		Utils.createDirIfNotExists(this.generatedSourcesTarget);
+		Utils.copyFolder(generatedSources, new File(this.generatedSourcesTarget), context);
 	}
 
 

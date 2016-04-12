@@ -125,7 +125,7 @@ public class DslPlatformMojo
 		String service = namespace == null ? "Boot" : namespace + ".Boot";
 		Utils.createDirIfNotExists(this.servicesManifestTarget);
 		File servicesRegistration = new File(servicesManifestTarget, "org.revenj.extensibility.SystemAspect");
-		Utils.writeToFile(servicesRegistration, service, "UTF-8");
+		Utils.writeToFile(context, servicesRegistration, service);
 	}
 
 	protected <K, V> void write(Map<K, V> map) {
