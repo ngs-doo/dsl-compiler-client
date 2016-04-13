@@ -4,22 +4,22 @@ import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
-import com.dslplatform.grammar.SyntaxConcept;
-import com.dslplatform.grammar.SyntaxType;
+import com.dslplatform.compiler.client.parameters.DslCompiler.SyntaxConcept;
+import com.dslplatform.compiler.client.parameters.DslCompiler.SyntaxType;
 
 public class ClassificationFormat {
 
 	public static Color getColor(SyntaxConcept concept) {
 		// TODO remove hc styles, use preference store
-		switch (concept.Type) {
+		switch (concept.type) {
 		case Keyword:
 			return new Color(getDisplay(), 155, 0, 128);
 		case Identifier:
 			return new Color(getDisplay(), 0, 0, 155);
 		case StringQuote:
 			return new Color(getDisplay(), 139, 0, 0);
-		case Delimiter:
-			return new Color(getDisplay(), 0, 0, 0);
+		//case Delimiter:
+		//	return new Color(getDisplay(), 0, 0, 0);
 		default:
 			return null;
 		}
@@ -28,8 +28,8 @@ public class ClassificationFormat {
 	public static boolean hasTextAttribute(SyntaxType type) {
 		return type == SyntaxType.Keyword
 				|| type == SyntaxType.Identifier
-				|| type == SyntaxType.StringQuote
-				|| type == SyntaxType.Delimiter;
+				|| type == SyntaxType.StringQuote;
+				// || type == SyntaxType.Delimiter;
 	}
 	
 	public static TextAttribute getTextAttribute(SyntaxConcept concept) {

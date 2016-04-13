@@ -1,14 +1,13 @@
 package com.dslplatform.plugin.editor;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.RecognitionException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextAttribute;
@@ -16,29 +15,55 @@ import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.ITokenScanner;
 import org.eclipse.jface.text.rules.Token;
 
-import com.dslplatform.grammar.NGSLexer;
-import com.dslplatform.grammar.NGSParser;
-import com.dslplatform.grammar.SyntaxConcept;
-import com.dslplatform.grammar.SyntaxType;
+import com.dslplatform.compiler.client.CompileParameter;
+import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.Either;
+import com.dslplatform.compiler.client.Main;
+import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.DslCompiler;
+import com.dslplatform.compiler.client.parameters.DslCompiler.SyntaxConcept;
+import com.dslplatform.compiler.client.parameters.LogOutput;
 import com.dslplatform.plugin.Logger;
 
 public class TokenScanner implements ITokenScanner {
 
-	private final ArrayList<SyntaxConcept> concepts;
+	private final ArrayList<DslCompiler.SyntaxConcept> concepts;
 	private final List<Integer> lineOffsets;
 	private int lastScannedIndex;
+	private static DslCompiler.TokenParser tokenParser;
+
+	static {
+		Context context = new Context();
+		context.put(LogOutput.INSTANCE, null);
+		context.put(Download.INSTANCE, null);
+		if (!Main.processContext(context, Arrays.<CompileParameter> asList(Download.INSTANCE, DslCompiler.INSTANCE))) {
+			Logger.info("Unable to setup DSL command line client");
+		}
+		final String path = context.get(DslCompiler.INSTANCE);
+		if (path == null) {
+			Logger.info("Unable to setup dsl-compiler.exe");
+		} else {
+			final File compiler = new File(path);
+			Logger.info("DSL Platform compiler found at: " + compiler.getAbsolutePath());
+			Either<DslCompiler.TokenParser> trySetup = DslCompiler.setupServer(context, compiler);
+			if (trySetup.isSuccess()) {
+				com.dslplatform.plugin.Logger.info("Initializing tokenParser");
+				tokenParser = trySetup.get();
+				com.dslplatform.plugin.Logger.info("tokenParser initialized");
+			}
+		}
+	}
 
 	public TokenScanner() {
-		concepts = new ArrayList<SyntaxConcept>();
+		concepts = new ArrayList<DslCompiler.SyntaxConcept>();
 		lineOffsets = new ArrayList<Integer>();
 	}
 
 	@Override
 	public void setRange(final IDocument document, int offset, int length) {
-		
 		try {
 			String dsl = document.get(0, document.getLength());
-			parse("dsl", dsl);
+			parse("dsl: " + document.toString(), dsl);
 			try {
 				calculateLineOffsets(dsl);
 			} catch (IOException e) {
@@ -57,132 +82,109 @@ public class TokenScanner implements ITokenScanner {
 			lastScannedIndex++;
 			if (lastScannedIndex >= concepts.size())
 				return Token.EOF;
-			
+
 			SyntaxConcept concept = getLastConcept();
 			TextAttribute attr = ClassificationFormat.getTextAttribute(concept);
 			if (attr != null) {
-				Logger.debug("token: '"+concept.Type+"' @"+concept.Line+","+concept.Column+"; value: "+concept.Value);
+				Logger.debug("token: '" + concept.type + "' @" + concept.line + "," + concept.column + "; value: "
+						+ concept.value);
 				return new Token(attr);
-			}
-			else {
-				Logger.debug("ignored: '"+concept.Type+"' @"+concept.Line+","+concept.Column+"; value: "+concept.Value);
+			} else {
+				Logger.debug("ignored: '" + concept.type + "' @" + concept.line + "," + concept.column + "; value: "
+						+ concept.value);
 			}
 		}
 	}
-	
+
 	@Override
 	public int getTokenOffset() {
 		SyntaxConcept concept = getLastConcept();
-		return getOffset(concept.Line, concept.Column);
+		return getOffset(concept.line, concept.column);
 	}
 
 	@Override
 	public int getTokenLength() {
-		return getLastConcept().Value.length();
+		return getLastConcept().value.length();
 	}
-	
+
+	private synchronized List<DslCompiler.SyntaxConcept> parseTokens(String dsl) {
+		if (tokenParser == null)
+			return new ArrayList<DslCompiler.SyntaxConcept>(0);
+
+		Either<DslCompiler.ParseResult> result = tokenParser.parse(dsl);
+		if (!result.isSuccess() || result.get().tokens == null) {
+			// TODO markers
+			Logger.info("Parsing FAIL");
+			Logger.info(result.explainError());
+			Logger.info(result.whyNot().getMessage());
+			return new ArrayList<DslCompiler.SyntaxConcept>(0);
+		}
+
+		if (result.get().error != null) {
+			Logger.info("Error: " + result.get().error.error);
+			
+			// TODO markers
+			//ParseError error = result.get().error;
+			/*Map<String, Object> marker = new HashMap();
+			marker.put(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+			marker.put(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+			marker.put(IMarker.LINE_NUMBER, error.line);
+			marker.put(IMarker.MESSAGE, error.error);
+			markers.add(marker);*/
+			
+		}
+		return result.get().tokens;
+	}
+
 	private void parse(final String script, String content) {
 		reset();
-		
-		final ANTLRStringStream stream = new ANTLRStringStream(content);
-		final NGSLexer lexer = new NGSLexer(stream);
-		final NGSParser parser = new NGSParser(new CommonTokenStream(lexer));
-		
-		try {
-			parser.ProcessDsl(script);
-		} catch (RecognitionException ex) {
-			Logger.debug("PARSE EXCEPTION: @line " + ex.line + ex.getMessage());
-		}
-		
-		List<SyntaxConcept> parsed = parser.GetSyntax();
-		parsed = orderConcepts(parsed);
-		parsed = delimitConcepts(parsed);
-		concepts.addAll(parsed);
-	}
-	
-	/**
-	 * Append delimiter token after each concept that can be highlighted,
-	 * which prevents merging of adjacent tokens with same text attributes 
-	 */
-	private List<SyntaxConcept> delimitConcepts(List<SyntaxConcept> concepts) {
-		List<SyntaxConcept> delimited = new ArrayList<SyntaxConcept>();
-		for (int i = 0; i < concepts.size(); i++) {
-			SyntaxConcept current = concepts.get(i);
-			delimited.add(current);
-			if (i < concepts.size()-1) {
-				if(ClassificationFormat.hasTextAttribute(current.Type))
-					delimited.add(new SyntaxConcept(SyntaxType.Delimiter, " ",
-							"dsl", current.Line, current.Column + current.Value.length()));
-			}
-		}
-		return delimited;
-	}
-	
-	/**
-	 * Reorder concepts in same order as they appear in the document
-	 */
-	private List<SyntaxConcept> orderConcepts(List<SyntaxConcept> concepts) {
-		List<SyntaxConcept> ordered = new ArrayList<SyntaxConcept>();
-		SyntaxConcept current;
-		SyntaxConcept previous;
-		int pr;
-		for (int i=0; i < concepts.size(); i++) {
-			current = concepts.get(i);
-			pr = i-1;
-			while (pr > 0) {
-				previous = concepts.get(pr);
-				if (previous.Line < current.Line || (previous.Line == current.Line && previous.Column < current.Column))
-					break;
-				pr--;
-			}
-			ordered.add(pr+1, current);
-		}
-		return ordered;
+		concepts.addAll(content.length() > 0 && tokenParser != null
+				? parseTokens(content)
+				: new ArrayList<DslCompiler.SyntaxConcept>(0));
 	}
 
 	private int getOffset(int line, int column) {
-		return lineOffsets.get(line-1) + column;
+		return lineOffsets.get(line - 1) + column;
 	}
-	
+
 	private void calculateLineOffsets(String content) throws IOException {
 		char c;
 		int offset = 0;
 		BufferedReader reader = new BufferedReader(new StringReader(content));
-		
+
 		lineOffsets.clear();
 		lineOffsets.add(0);
-		
+
 		while (true) {
 			int singleChar = reader.read();
 			if (singleChar == -1)
 				break;
-			c = (char)singleChar;
+			c = (char) singleChar;
 			offset++;
-			
+
 			if (c == 0)
 				break;
-			
+
 			if (c == '\n')
 				lineOffsets.add(offset);
 			if (c == '\r') {
-				c = (char)reader.read();
+				c = (char) reader.read();
 				if (c == '\n') {
 					offset++;
 					lineOffsets.add(offset);
-				}
-				else {
+				} else {
 					lineOffsets.add(offset);
 					offset++;
-				}				
+				}
 			}
 		}
 	}
-	
+
 	private void reset() {
 		lastScannedIndex = -1;
 		concepts.clear();
 	}
-	
+
 	private SyntaxConcept getLastConcept() {
 		return concepts.get(lastScannedIndex);
 	}

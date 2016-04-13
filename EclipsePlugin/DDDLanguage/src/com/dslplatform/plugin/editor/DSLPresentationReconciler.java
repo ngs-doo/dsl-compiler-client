@@ -16,11 +16,4 @@ public class DSLPresentationReconciler extends PresentationReconciler implements
 	public void updateTextPresentation(TextPresentation presentation) {
 		viewer.changeTextPresentation(presentation, false);
 	}
-
-	@Override
-	public void updateMarkers(TextPresentation presentation) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

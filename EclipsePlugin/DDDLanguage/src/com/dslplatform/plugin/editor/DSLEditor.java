@@ -7,11 +7,7 @@ public class DSLEditor extends TextEditor {
 
 	public DSLEditor() {
 		super();
-		
-		// final IResource resource = (IResource) this.getEditorInput().getAdapter(IResource.class);
-
-		
-		setSourceViewerConfiguration(new DSLSourceViewerConfiguration());
+		setSourceViewerConfiguration(new DSLSourceViewerConfiguration(this));
 	}
 
 	public IDocument getDocument() {
