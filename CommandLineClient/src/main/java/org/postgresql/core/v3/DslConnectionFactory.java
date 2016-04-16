@@ -42,6 +42,8 @@ import org.postgresql.util.PSQLWarning;
 import org.postgresql.util.ServerErrorMessage;
 import org.postgresql.util.UnixCrypt;
 
+import javax.net.SocketFactory;
+
 /**
  * ConnectionFactory implementation for version 3 (7.4+) connections.
  *
@@ -261,7 +263,7 @@ public class DslConnectionFactory {
 
 				// We have to reconnect to continue.
 				pgStream.close();
-				return new PGStream(pgStream.getHostSpec(), connectTimeout);
+				return new PGStream(SocketFactory.getDefault(), pgStream.getHostSpec(), connectTimeout);
 
 			case 'N':
 				if (logger.logDebug())
