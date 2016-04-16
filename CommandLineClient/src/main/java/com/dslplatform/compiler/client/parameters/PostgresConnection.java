@@ -8,6 +8,7 @@ import org.postgresql.core.*;
 import org.postgresql.core.v3.*;
 import org.postgresql.util.*;
 
+import javax.net.SocketFactory;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.*;
@@ -135,7 +136,8 @@ public enum PostgresConnection implements CompileParameter {
 				String[] info = server.split(":");
 				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
 				int timeout = PGProperty.CONNECT_TIMEOUT.getInt(props) * 1000;
-				pgStream = new PGStream(hostSpec, timeout);
+
+				pgStream = new PGStream(SocketFactory.getDefault(), hostSpec, timeout);
 				connection = DslConnectionFactory.openConnection(pgStream, database, props);
 			} catch (Exception e) {
 				context.error("Error opening connection to " + connectionString);
