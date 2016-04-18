@@ -10,14 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 public class MojoContext extends Context {
-	public final StringBuilder showLog = new StringBuilder();
 	public final StringBuilder errorLog = new StringBuilder();
-	public final StringBuilder traceLog = new StringBuilder();
 
 	private final Log log;
 
 	public MojoContext(Log log) {
-		super();
 		this.log = log;
 	}
 
@@ -62,9 +59,10 @@ public class MojoContext extends Context {
 	}
 
 	public MojoContext with(List<Settings.Option> settings) {
-		if (settings != null)
+		if (settings != null) {
 			for (Settings.Option option : settings)
 				this.with(option);
+		}
 		return this;
 	}
 
@@ -82,30 +80,36 @@ public class MojoContext extends Context {
 	}
 
 	public void show(String... values) {
-		for (String v : values) {
-			showLog.append(v + "\n");
-			log.info(v);
+		if (log.isInfoEnabled()) {
+			for (String v : values) {
+				log.info(v);
+			}
 		}
 	}
 
 	public void log(String value) {
-		traceLog.append(value + "\n");
-		log.info(value);
+		if (log.isDebugEnabled()) {
+			log.debug(value);
+		}
 	}
 
 	public void log(char[] value, int len) {
-		traceLog.append(value, 0, len);
+		if (log.isDebugEnabled()) {
+			log.debug(new String(value, 0, len));
+		}
 	}
 
 	public void error(String value) {
 		errorLog.append(value + "\n");
-		log.error(value);
+		if (log.isErrorEnabled()) {
+			log.error(value);
+		}
 	}
 
 	public void error(Exception ex) {
 		errorLog.append(ex.getMessage());
-		traceLog.append(ex.toString());
-		log.error(ex);
+		if (log.isErrorEnabled()) {
+			log.error(ex);
+		}
 	}
-
 }

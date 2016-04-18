@@ -39,8 +39,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	@Test
-	public void testApplyMigration()
-			throws Exception {
+	public void testApplyMigration() throws Exception {
 		File pom = getTestFile("src/test/resources/sql-migration-pom.xml");
 		assertNotNull(pom);
 		assertTrue(pom.exists());

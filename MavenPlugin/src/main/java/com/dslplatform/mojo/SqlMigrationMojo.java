@@ -37,7 +37,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 	@Parameter(property = "oracle")
 	private String oracle;
 
-	@Parameter(property = "applySql", defaultValue = "true")
+	@Parameter(property = "applySql", defaultValue = "false")
 	private boolean applySql;
 
 	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
