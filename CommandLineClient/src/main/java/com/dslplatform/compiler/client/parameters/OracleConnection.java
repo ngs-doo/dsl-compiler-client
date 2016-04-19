@@ -147,6 +147,7 @@ public enum OracleConnection implements CompileParameter {
 			for (final String part : parts) {
 				final String trimmed = part.trim();
 				if (trimmed.length() > 0) {
+					context.log(trimmed);
 					stmt.execute(trimmed);
 				}
 			}
