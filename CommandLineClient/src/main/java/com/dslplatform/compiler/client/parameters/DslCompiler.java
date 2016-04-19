@@ -453,7 +453,17 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
-				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
+				final Either<Utils.CommandResult> firstTry = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
+				if (!firstTry.isSuccess()) {
+					context.error("Running Mono failed. Mono is buggy, so retry is in order... in 1 second");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException ignore) {
+					}
+					result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
+				} else {
+					result = firstTry;
+				}
 			} else {
 				context.error("Mono is required to run DSL compiler. Mono not detected or specified.");
 				throw new ExitException();
