@@ -27,7 +27,7 @@ public class DslColorSettingsPage implements ColorSettingsPage {
 	@NotNull
 	@Override
 	public SyntaxHighlighter getHighlighter() {
-		return new DslSyntaxHighlighter();
+		return new DslSyntaxHighlighter(null, null);
 	}
 
 	@NotNull

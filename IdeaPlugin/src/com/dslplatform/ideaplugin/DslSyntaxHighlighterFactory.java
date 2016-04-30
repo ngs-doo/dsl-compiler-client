@@ -10,6 +10,6 @@ public class DslSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
     @NotNull
     @Override
     public SyntaxHighlighter getSyntaxHighlighter(Project project, VirtualFile virtualFile) {
-        return new DslSyntaxHighlighter();
+        return new DslSyntaxHighlighter(project, virtualFile);
     }
 }
