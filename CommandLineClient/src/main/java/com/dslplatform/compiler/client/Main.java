@@ -4,11 +4,13 @@ import com.dslplatform.compiler.client.parameters.*;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.jar.Manifest;
 
 public class Main {
 	public static void main(final String[] args) {
@@ -228,22 +230,24 @@ public class Main {
 	private static final Properties versionInfo = new Properties();
 
 	private static String getVersionInfo(final String section) {
-		if (versionInfo.isEmpty()) {
-			try {
-				versionInfo.load(Main.class.getResourceAsStream("dsl-clc.properties"));
-			} catch (final Throwable t) {
-				t.printStackTrace();
+		try {
+			final Enumeration<URL> resources = Main.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+			while (resources.hasMoreElements()) {
+				final Manifest manifest = new Manifest(resources.nextElement().openStream());
+				if ("DSL Platform - Compiler Command-Line Client".equals(manifest.getMainAttributes().getValue("Specification-Title"))) {
+					return manifest.getMainAttributes().getValue(section);
+				}
 			}
+		} catch (IOException ignore) {
 		}
-
-		return versionInfo.getProperty(section);
+		return "unknown";
 	}
 
 	public static String getVersion() {
-		return getVersionInfo("version");
+		return getVersionInfo("Specification-Version");
 	}
 
 	public static String getReleaseDate() {
-		return getVersionInfo("date");
+		return getVersionInfo("Build-Time");
 	}
 }

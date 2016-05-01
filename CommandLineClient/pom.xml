@@ -74,8 +74,12 @@
 				<configuration>
 					<archive>
 						<manifest>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 							<mainClass>com.dslplatform.compiler.client.Main</mainClass>
 						</manifest>
+						<manifestEntries>
+							<Build-Time>${maven.build.timestamp}</Build-Time>
+						</manifestEntries>
 					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
