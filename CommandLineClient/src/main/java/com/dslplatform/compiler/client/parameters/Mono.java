@@ -19,6 +19,9 @@ public enum Mono implements CompileParameter {
 			if (Utils.testCommand(context, "mono", "Mono", Collections.singletonList("--version"))) {
 				return Either.success("mono");
 			}
+			if (Utils.testCommand(context, "/usr/local/bin/mono", "Mono", Collections.singletonList("--version"))) {
+				return Either.success("/usr/local/bin/mono");
+			}
 			return Either.fail("Unable to find Mono. Add it to path or specify mono compile option.");
 		}
 	}

@@ -22,7 +22,7 @@ public enum Parse implements CompileParameter {
 		if (context.contains(INSTANCE)) {
 			final Map<String, String> dslMap = DslPath.getCurrentDsl(context);
 			if (dslMap.size() == 0) {
-				context.error("DSL files not found in: " + context.get(DslPath.INSTANCE) + ". At least one DSL file required.");
+				context.error("DSL files not found in: '" + context.get(DslPath.INSTANCE) + "'. At least one DSL file required.");
 				return false;
 			}
 		}
