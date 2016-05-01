@@ -124,7 +124,7 @@ public class Context implements Closeable {
 
 	public String ask(final String question) {
 		if (withColor) {
-			write(console, false, Ansi.ansi().fgBright(Ansi.Color.WHITE).bold().a(question + " ").boldOff().reset().toString());
+			write(console, false, Ansi.ansi().fgBright(Color.DEFAULT).bold().a(question + " ").boldOff().reset().toString());
 		} else {
 			write(console, false, question + " ");
 		}
@@ -133,7 +133,7 @@ public class Context implements Closeable {
 
 	public char[] askSecret(final String question) {
 		if (withColor) {
-			write(console, false, Ansi.ansi().fgBright(Ansi.Color.CYAN).bold().a(question + " ").boldOff().reset().toString());
+			write(console, false, Ansi.ansi().fgBright(Color.CYAN).bold().a(question + " ").boldOff().reset().toString());
 		} else {
 			write(console, false, question + " ");
 		}
