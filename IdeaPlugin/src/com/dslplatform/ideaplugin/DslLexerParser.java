@@ -104,7 +104,7 @@ public class DslLexerParser extends Lexer {
 		}
 		final String path = context.get(DslCompiler.INSTANCE);
 		if (path == null) {
-			logger.error("Unable to setup dsl-compiler.exe");
+			logger.error("Unable to setup dsl-compiler.exe. Please check if Mono/.NET is installed and available on path.");
 		} else {
 			final File compiler = new File(path);
 			logger.info("DSL Platform compiler found at: " + compiler.getAbsolutePath());
