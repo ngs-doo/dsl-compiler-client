@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -32,6 +33,9 @@ public abstract class Utils {
 			connection.setRequestMethod("HEAD");
 			final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			final long latest = connection.getLastModified();
+			if (latest == 0 && connection.getResponseCode() == -1) {
+				return Either.fail("Unable to check " + file + " version on DSL Platform. Internet connection not available?");
+			}
 			if (current == latest && current != 0) {
 				context.show(name + " at latest version (" + sdf.format(latest) + ")");
 			} else if (current > 0 && latest > 0) {
@@ -46,6 +50,9 @@ public abstract class Utils {
 				}
 			}
 			return Either.success(latest);
+		} catch (UnknownHostException ex) {
+			context.show("Unable to check for " + file + " on DSL Platform.");
+			return Either.success(current);
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}

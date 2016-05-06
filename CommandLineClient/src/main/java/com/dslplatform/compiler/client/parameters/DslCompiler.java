@@ -635,7 +635,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
 		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
 		if (!lastModified.isSuccess()) {
-			context.error(lastModified.whyNot());
+			context.show(lastModified.explainError());
 		} else if (compiler.lastModified() != lastModified.get()) {
 			downloadCompiler(context, path, tempPath, compiler);
 		}
