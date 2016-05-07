@@ -76,11 +76,26 @@ public class DslLexerParser extends Lexer {
 		}
 
 		public void log(String value) {
-			logger.debug(value);
+			if (logger.isDebugEnabled()) {
+				logger.debug(value);
+			}
 		}
 
 		public void log(char[] value, int len) {
-			logger.debug(new String(value, 0, len));
+			if (logger.isDebugEnabled()) {
+				logger.debug(new String(value, 0, len));
+			}
+		}
+
+		public void warning(String value) {
+			logger.warn(value);
+		}
+
+		public void warning(Exception ex) {
+			logger.warn(ex.getMessage());
+			if (logger.isDebugEnabled()) {
+				logger.debug(ex.toString());
+			}
 		}
 
 		public void error(String value) {
@@ -89,7 +104,9 @@ public class DslLexerParser extends Lexer {
 
 		public void error(Exception ex) {
 			logger.warn(ex.getMessage());
-			logger.debug(ex.toString());
+			if (logger.isDebugEnabled()) {
+				logger.debug(ex.toString());
+			}
 		}
 	}
 

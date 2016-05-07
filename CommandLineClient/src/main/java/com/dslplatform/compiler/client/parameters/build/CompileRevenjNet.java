@@ -97,8 +97,8 @@ public class CompileRevenjNet implements BuildAction {
 			conn.connect();
 			final String tag;
 			if (conn.getResponseCode() != 302) {
-				context.error("Error downloading " + name + " from GitHub. Will continue with tag 1.3.0. Expecting redirect. Got: " + conn.getResponseCode());
-				tag = "1.3.0";
+				context.warning("Error downloading " + name + " from GitHub. Will continue with tag 1.3.1. Expecting redirect. Got: " + conn.getResponseCode());
+				tag = "1.3.1";
 			} else {
 				final String redirect = conn.getHeaderField("Location");
 				tag = redirect.substring(redirect.lastIndexOf('/') + 1);

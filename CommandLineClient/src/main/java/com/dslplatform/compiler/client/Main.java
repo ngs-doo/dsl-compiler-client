@@ -76,7 +76,7 @@ public class Main {
 			Settings.INSTANCE,
 			PostgresConnection.INSTANCE,
 			OracleConnection.INSTANCE,
-			Prompt.INSTANCE,
+			DisablePrompt.INSTANCE,
 			Parse.INSTANCE,
 			Diff.INSTANCE,
 			Targets.INSTANCE,

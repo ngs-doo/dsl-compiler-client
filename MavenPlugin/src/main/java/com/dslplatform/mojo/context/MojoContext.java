@@ -99,6 +99,20 @@ public class MojoContext extends Context {
 		}
 	}
 
+	public void warning(String value) {
+		errorLog.append(value + "\n");
+		if (log.isWarnEnabled()) {
+			log.warn(value);
+		}
+	}
+
+	public void warning(Exception ex) {
+		errorLog.append(ex.getMessage());
+		if (log.isWarnEnabled()) {
+			log.warn(ex);
+		}
+	}
+
 	public void error(String value) {
 		errorLog.append(value + "\n");
 		if (log.isErrorEnabled()) {

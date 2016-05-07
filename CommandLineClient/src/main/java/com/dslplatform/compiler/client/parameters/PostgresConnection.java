@@ -38,7 +38,7 @@ public enum PostgresConnection implements CompileParameter {
 	static String extractPostgresVersion(final String version, final Context context) {
 		final Matcher matcher = Pattern.compile("^\\w+\\s+(\\d+\\.\\d+)").matcher(version);
 		if (!matcher.find()) {
-			context.error("Unable to detect Postgres version. Found version info: " + version);
+			context.warning("Unable to detect Postgres version. Found version info: " + version);
 			return "";
 		}
 		return matcher.group(1);
@@ -259,8 +259,8 @@ public enum PostgresConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			context.error("Error connecting to the database.");
-			context.error(e);
+			context.warning("Error connecting to the database.");
+			context.warning(e);
 			final boolean dbDoesntExists = "3D000".equals(e.getSQLState());
 			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
 			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());

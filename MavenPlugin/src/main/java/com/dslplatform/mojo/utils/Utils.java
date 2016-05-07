@@ -33,7 +33,7 @@ public class Utils {
 			Namespace.INSTANCE,
 			Mono.INSTANCE,
 			OracleConnection.INSTANCE,
-			Prompt.INSTANCE,
+			DisablePrompt.INSTANCE,
 			Dependencies.INSTANCE,
 			Parse.INSTANCE,
 			Download.INSTANCE,

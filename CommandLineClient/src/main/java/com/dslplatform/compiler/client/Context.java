@@ -2,7 +2,7 @@ package com.dslplatform.compiler.client;
 
 import com.dslplatform.compiler.client.parameters.DisableColors;
 import com.dslplatform.compiler.client.parameters.LogOutput;
-import com.dslplatform.compiler.client.parameters.Prompt;
+import com.dslplatform.compiler.client.parameters.DisablePrompt;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Color;
 import org.fusesource.jansi.AnsiConsole;
@@ -22,7 +22,7 @@ public class Context implements Closeable {
 	private boolean withColor = true;
 
 	public void put(final CompileParameter parameter, final String value) {
-		if (parameter instanceof Prompt) {
+		if (parameter instanceof DisablePrompt) {
 			noPrompt = true;
 		} else if (parameter instanceof LogOutput) {
 			withLog = true;
@@ -102,6 +102,20 @@ public class Context implements Closeable {
 		if (withLog) {
 			final String msg = new String(value, 0, len);
 			write(console, false, withColor ? inColor(Color.YELLOW, msg) : msg);
+		}
+	}
+
+
+	public void warning(final String value) {
+		write(console, true, withColor ? inColor(Color.MAGENTA, value) : value);
+	}
+
+	public void warning(final Exception ex) {
+		warning(ex.getMessage());
+		if (withLog) {
+			final StringWriter sw = new StringWriter();
+			ex.printStackTrace(new PrintWriter(sw));
+			warning(sw.toString());
 		}
 	}
 

@@ -32,7 +32,7 @@ public enum Download implements CompileParameter {
 			context.show("Downloading " + name + " from DSL Platform...");
 			final long lastModified = Utils.downloadAndUnpack(context, zip, dependencies);
 			if (!dependencies.setLastModified(lastModified)) {
-				context.error("Unable to set last modified info on: " + dependencies.getAbsolutePath());
+				context.warning("Unable to set last modified info on: " + dependencies.getAbsolutePath());
 			}
 		} catch (IOException ex) {
 			context.error("Error downloading dependencies from DSL Platform.");
@@ -108,7 +108,7 @@ public enum Download implements CompileParameter {
 			final Either<Long> lastModified = Utils.lastModified(context, zip, name, 0);
 			if (lastModified.isSuccess()) {
 				if (!dependencies.setLastModified(lastModified.get())) {
-					context.error("Unable to set last modified info on: " + dependencies.getAbsolutePath());
+					context.warning("Unable to set last modified info on: " + dependencies.getAbsolutePath());
 				}
 			}
 		}

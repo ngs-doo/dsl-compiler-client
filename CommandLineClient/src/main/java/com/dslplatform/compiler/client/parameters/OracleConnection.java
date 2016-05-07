@@ -37,7 +37,7 @@ public enum OracleConnection implements CompileParameter {
 	static String extractOracleVersion(final String version, final Context context) {
 		final Matcher matcher = Pattern.compile("^\\w+\\s+(\\d+\\.\\d+)").matcher(version);
 		if (!matcher.find()) {
-			context.error("Unable to detect Oracle version. Found version info: " + version);
+			context.warning("Unable to detect Oracle version. Found version info: " + version);
 			return "";
 		}
 		return matcher.group(1);
@@ -197,8 +197,8 @@ public enum OracleConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			context.error("Error connecting to the database.");
-			context.error(e);
+			context.warning("Error connecting to the database.");
+			context.warning(e);
 			if (e.getErrorCode() == 12514) {
 				context.error("Oracle database not found. Please create database before using clc or check if correct connection string was provided");
 				return false;
@@ -257,7 +257,7 @@ public enum OracleConnection implements CompileParameter {
 		try {
 			Class.forName("oracle.jdbc.OracleDriver");
 		} catch (ClassNotFoundException ex) {
-			context.error("Error loading Oracle driver (oracle.jdbc.OracleDriver). Will look into alternative locations ...");
+			context.warning("Error loading Oracle driver (oracle.jdbc.OracleDriver). Will look into alternative locations ...");
 			final File loc = new File(".");
 			final List<File> jars = new ArrayList<File>(Arrays.asList(loc.listFiles(new FileFilter() {
 				public boolean accept(File file) {
@@ -276,11 +276,11 @@ public enum OracleConnection implements CompileParameter {
 					} else if (jdbcLibFile.exists()) {
 						jars.add(jdbcLibFile.getAbsoluteFile());
 					} else {
-						context.error("Found ORACLE_HOME environment variable, but jar driver is missing from: "
+						context.warning("Found ORACLE_HOME environment variable, but jar driver is missing from: "
 								+ jdbcRootFile.getAbsolutePath() + " and " + jdbcLibFile.getAbsolutePath());
 					}
 				} else {
-					context.log("ORACLE_HOME environment variable not set");
+					context.warning("ORACLE_HOME environment variable not set");
 				}
 			}
 			if (jars.size() == 0) {

@@ -2,7 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-public enum Prompt implements CompileParameter {
+public enum DisablePrompt implements CompileParameter {
 	INSTANCE;
 
 	@Override

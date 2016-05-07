@@ -455,7 +455,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				arguments.add(0, compiler.getAbsolutePath());
 				final Either<Utils.CommandResult> firstTry = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
 				if (!firstTry.isSuccess()) {
-					context.error("Running Mono failed. Mono is buggy, so retry is in order... in 1 second");
+					context.warning("Running Mono failed. Mono is buggy, so retry is in order... in 1 second");
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException ignore) {
@@ -557,11 +557,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				try {
 					socket = new Socket(InetAddress.getLocalHost(), port);
 				} catch (Exception ex) {
-					context.log("Unable to open socket on default localhost: " + value);
+					context.warning("Unable to open socket on default localhost: " + value);
 					try {
 						socket = new Socket("::1", port);
 					} catch (Exception ex6) {
-						context.log("Unable to open socket to port on IPv6 localhost: " + value);
+						context.warning("Unable to open socket to port on IPv6 localhost: " + value);
 						try {
 							socket = new Socket("127.0.0.1", port);
 						} catch (Exception ex4) {
@@ -592,7 +592,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 		if (!path.exists()) {
 			if (!isEmpty) {
-				context.error("Specified compiler path not found: " + path.getAbsolutePath());
+				context.warning("Specified compiler path not found: " + path.getAbsolutePath());
 			}
 			final File tempPath = TempPath.getTempRootPath(context);
 			final File compiler = new File(tempPath, "dsl-compiler.exe");
@@ -621,6 +621,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					if (!answer.toLowerCase().equals("y")) throw new ExitException();
 				} else throw new ExitException();
 			}
+			context.show("Downloading DSL Platform compiler since it's not found in: " + compiler.getAbsolutePath());
 			downloadCompiler(context, path, tempPath, compiler);
 		} else {
 			if (!testCompiler(context, path)) {
@@ -635,7 +636,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
 		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
 		if (!lastModified.isSuccess()) {
-			context.show(lastModified.explainError());
+			context.warning(lastModified.whyNot());
 		} else if (compiler.lastModified() != lastModified.get()) {
 			downloadCompiler(context, path, tempPath, compiler);
 		}
@@ -651,6 +652,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			lastModified = Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);
 		} catch (final IOException ex) {
 			context.error("Error downloading compiler from https://dsl-platform.com");
+			context.error("Try specifying alternative compiler location.");
 			context.error(ex);
 			throw new ExitException();
 		}
@@ -659,7 +661,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			throw new ExitException();
 		}
 		if (!compiler.setLastModified(lastModified)) {
-			context.error("Unable to set matching last modified date");
+			context.warning("Unable to set matching last modified date");
 		}
 		context.put(INSTANCE, compiler.getAbsolutePath());
 	}

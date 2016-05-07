@@ -116,7 +116,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 				.with(Migration.INSTANCE)
 				.with(Force.INSTANCE)
 				.with(Download.INSTANCE)
-				.with(Prompt.INSTANCE);
+				.with(DisablePrompt.INSTANCE);
 
 		if (this.applySql) context.with(ApplyMigration.INSTANCE);
 

@@ -27,7 +27,7 @@ public enum SqlPath implements CompileParameter {
 				final File sqlPath = new File(value);
 				if (!sqlPath.exists()) {
 					if (!context.contains(Force.INSTANCE)) {
-						context.error("SQL path provided (" + sqlPath.getAbsolutePath() + ") but doesn't exists.");
+						context.warning("SQL path provided (" + sqlPath.getAbsolutePath() + ") but doesn't exists.");
 						if (!context.canInteract()) {
 							context.error("Specify existing path or remove parameter to use temporary folder.");
 							return false;

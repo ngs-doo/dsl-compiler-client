@@ -67,7 +67,7 @@ public class CompileCsClient implements BuildAction {
 			}
 		});
 		if (zip != null && found.length == 0) {
-			context.error(name + " dependencies not found in: " + libDeps.getAbsolutePath());
+			context.warning(name + " dependencies not found in: " + libDeps.getAbsolutePath());
 			if (!context.contains(Download.INSTANCE)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place " + name + " files in specified folder.");

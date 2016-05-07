@@ -44,15 +44,14 @@ public abstract class Utils {
 				context.show("Upstream version: " + sdf.format(latest));
 			} else {
 				if (latest == 0) {
-					context.show(name + " not found at DSL Platform website.");
+					context.warning(name + " not found at DSL Platform website.");
 				} else {
 					context.show("Upstream version: " + sdf.format(latest));
 				}
 			}
 			return Either.success(latest);
 		} catch (UnknownHostException ex) {
-			context.show("Unable to check for " + file + " on DSL Platform.");
-			return Either.success(current);
+			return Either.fail("Unable to check for " + file + " on DSL Platform.", ex);
 		} catch (IOException ex) {
 			return Either.fail(ex);
 		}
@@ -164,7 +163,7 @@ public abstract class Utils {
 				}
 			}
 			if (retry > 0) {
-				context.log("Retrying download... from " + remoteUrl);
+				context.warning("Retrying download... from " + remoteUrl);
 				return unpackZip(context, path, remoteUrl, new ArrayList<File>(), retry - 1);
 			}
 			throw io;

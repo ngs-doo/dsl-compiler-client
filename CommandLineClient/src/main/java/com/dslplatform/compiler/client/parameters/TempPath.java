@@ -25,14 +25,15 @@ public enum TempPath implements CompileParameter {
 		return context.load(CACHE_NAME);
 	}
 
-	public static File getTempRootPath(final Context context) {
+	public static File getTempRootPath(final Context context) throws ExitException {
 		File temp = context.load(CACHE_NAME);
 		if (temp == null) {
 			if (prepareSystemTempPath(context)) {
 				temp = context.load(CACHE_NAME);
 			}
 			if (temp == null) {
-				throw new RuntimeException("Unable to setup temporary path");
+				context.error("Unable to setup temporary path");
+				throw new ExitException();
 			}
 		}
 		return context.contains(INSTANCE) ? temp : temp.getParentFile();
@@ -105,9 +106,9 @@ public enum TempPath implements CompileParameter {
 				final File[] tempFiles = path.listFiles();
 				if (tempFiles != null && tempFiles.length > 0) {
 					if (!context.contains(Force.INSTANCE)) {
-						context.error("Temporary path contains files: " + path.getAbsolutePath());
+						context.warning("Temporary path contains files: " + path.getAbsolutePath());
 						if (!context.canInteract()) {
-							context.error("Please manage the path you have assigned as temporary.");
+							context.error("Please manage the path you have assigned as temporary or use force option for automatic cleanup.");
 							return false;
 						}
 						final String delete = context.ask("Delete files in temporary path? (y/N):");

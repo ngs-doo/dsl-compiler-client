@@ -153,7 +153,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 				.with(this.compileParametersParsed)
 				.with(Force.INSTANCE)
 				.with(Download.INSTANCE)
-				.with(Prompt.INSTANCE)
+				.with(DisablePrompt.INSTANCE)
 				.with(Settings.Option.SOURCE_ONLY);
 
 		List<CompileParameter> params = Main.initializeParameters(context, ".");
