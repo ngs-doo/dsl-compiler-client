@@ -181,7 +181,7 @@ namespace DDDLanguage
 				{
 					var path = pi.FileNames[1];
 					var name = path.StartsWith(LibraryInfo.BasePath) ? path.Substring(LibraryInfo.BasePath.Length) : path;
-					dsls.Add(name, File.ReadAllText(path));
+					dsls.Add(name.Replace("\\", "/"), File.ReadAllText(path));
 				}
 				if (pi.ProjectItems != null)
 					GatherCurrentDsl(pi.ProjectItems, dsls);
@@ -403,9 +403,9 @@ namespace DDDLanguage
 			var sb = new StringBuilder();
 			sb.Append("target=").Append(info.Target).Append(info.Database.Major).Append('.').Append(info.Database.Minor);
 			if (!string.IsNullOrEmpty(db.VarraySize))
-				sb.Append("varray=").Append(db.VarraySize);
+				sb.Append(" varray=").Append(db.VarraySize);
 			if (!string.IsNullOrEmpty(db.GrantRole))
-				sb.Append("role=").Append(db.GrantRole);
+				sb.Append(" role=").Append(db.GrantRole);
 			string tempFile = null;
 			if (info.Dsl != null && info.Dsl.Count > 0)
 			{
