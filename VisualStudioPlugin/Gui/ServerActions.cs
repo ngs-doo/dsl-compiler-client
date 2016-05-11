@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.OracleClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,6 +9,7 @@ using System.Xml.Linq;
 using EnvDTE;
 using Ionic.Zip;
 using Npgsql;
+using Oracle.ManagedDataAccess.Client;
 
 namespace DDDLanguage
 {
@@ -340,7 +340,8 @@ namespace DDDLanguage
 			CompileTargets targets,
 			DatabaseInfo postgresDb,
 			DatabaseInfo oracleDb,
-			bool unsafeMigration)
+			bool confirmedPostgres,
+			bool confirmedOracle)
 		{
 			try
 			{
@@ -356,11 +357,7 @@ namespace DDDLanguage
 					var result = RunMigration(dbInfo, postgresDb, dsls);
 					if (!result.Success)
 						return Either<string>.Fail(result.Error);
-					ProcessMigrationStream(
-						unsafeMigration,
-						result.Value,
-						postgresDb,
-						ApplyPostgresMigration);
+					ProcessMigrationStream(confirmedPostgres || !postgresDb.ConfirmUnsafe, result.Value, postgresDb, ApplyPostgresMigration);
 				}
 				if (oracleDb.CompileMigration)
 				{
@@ -368,7 +365,7 @@ namespace DDDLanguage
 					var result = RunMigration(dbInfo, oracleDb, dsls);
 					if (!result.Success)
 						return Either<string>.Fail(result.Error);
-					ProcessMigrationStream(false, result.Value, oracleDb, null);
+					ProcessMigrationStream(confirmedOracle || !oracleDb.ConfirmUnsafe, result.Value, oracleDb, ApplyOracleMigration);
 				}
 				return Either.Success(Compiler.RootPath);
 			}
@@ -516,7 +513,7 @@ namespace DDDLanguage
 			}
 			catch (OracleException ex)
 			{
-				if (ex.Code != 942)
+				if (ex.ErrorCode != 942)
 					throw new ApplicationException(@"Unable to read Oracle info.
 Error: " + ex.Message, ex);
 			}
@@ -554,24 +551,66 @@ Error: " + ex.Message, ex);
 			return new DbInfo { Target = "postgres", Dsl = new Dictionary<string, string>(), Compiler = null, Database = postgresVersion };
 		}
 
-		private static void ApplyPostgresMigration(Stream stream, bool force, DatabaseInfo dbInfo)
+		private static void CheckForce(Stream stream)
 		{
-			if (!force)
-			{
-				var changes = ExtractChanges(stream);
-				if (changes.Any(it => it.Type == SchemaChange.ChangeType.Remove || it.Type == SchemaChange.ChangeType.Unknown))
-					throw new ApplicationException(@"Objects in database will be removed.
+			var changes = ExtractChanges(stream);
+			if (changes.Any(it => it.Type == SchemaChange.ChangeType.Remove || it.Type == SchemaChange.ChangeType.Unknown))
+				throw new ApplicationException(@"Objects in database will be removed.
 Since database safe mode is enabled, destructible migration can't be performed.
 Modifications:
 " + string.Join(Environment.NewLine, changes.Select(it => it.Description)));
-				stream.Position = 0;
-			}
+			stream.Position = 0;
+		}
+
+		private static void ApplyPostgresMigration(Stream stream, bool force, DatabaseInfo dbInfo)
+		{
+			if (!force)
+				CheckForce(stream);
 			using (var conn = new Npgsql.NpgsqlConnection(dbInfo.ConnectionString))
 			{
 				conn.Open();
 				var com = new Npgsql.NpgsqlCommand(stream);
 				com.Connection = conn;
 				com.ExecuteNonQuery();
+				conn.Close();
+			}
+		}
+
+		private static void ApplyOracleMigration(Stream stream, bool force, DatabaseInfo dbInfo)
+		{
+			if (!force)
+				CheckForce(stream);
+			using (var conn = new OracleConnection(dbInfo.ConnectionString))
+			{
+				var com = conn.CreateCommand();
+				conn.Open();
+				var sr = new StreamReader(stream, Encoding.UTF8);
+				string lastLine = sr.ReadLine();
+				if (lastLine == "/*MIGRATION_DESCRIPTION")
+				{
+					do
+					{
+						lastLine = sr.ReadLine();
+						if (sr.EndOfStream)
+							break;
+					} while (lastLine != "MIGRATION_DESCRIPTION*/");
+				}
+				var sb = new StringBuilder();
+				do
+				{
+					lastLine = sr.ReadLine();
+					if (lastLine == "/")
+					{
+						com.CommandText = sb.ToString().Trim();
+						if (com.CommandText.Length > 0)
+							com.ExecuteNonQuery();
+						sb.Clear();
+					}
+					else if (sb.Length > 0 || !string.IsNullOrWhiteSpace(lastLine)) sb.AppendLine(lastLine);
+				} while (!sr.EndOfStream);
+				com.CommandText = sb.ToString().Trim();
+				if (com.CommandText.Length > 0)
+					com.ExecuteNonQuery();
 				conn.Close();
 			}
 		}

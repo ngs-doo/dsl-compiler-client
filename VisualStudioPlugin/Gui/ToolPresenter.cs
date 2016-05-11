@@ -157,10 +157,13 @@ namespace DDDLanguage
 
 		enum CompilationStep
 		{
-			Starting,
-			PostgresDiff,
-			OracleDiff,
-			PostgresConfirmation,
+			Starting = 0,
+			PostgresDiff = 1,
+			OracleDiff = 4,
+			ConfirmedPostgres = 8,
+			ConfirmedOracle = 16,
+			PostgresConfirmation = 32,
+			OracleConfirmation = 64,
 			Done
 		}
 
@@ -173,19 +176,30 @@ namespace DDDLanguage
 		private void StepThroughCompilation()
 		{
 			CloseDialog();
-			if (CurrentStep == CompilationStep.Starting && PostgresDb.CompileMigration
-				&& (PostgresDb.DiffBefore || PostgresDb.ConfirmUnsafe))
+			if (CurrentStep == CompilationStep.Starting && PostgresDb.CompileMigration && PostgresDb.DiffBefore)
 			{
 				CurrentStep = CompilationStep.PostgresDiff;
 				DiffDatabase(ServerActions.PostgresDiff, PostgresDb, "Postgres");
 			}
-			else if (CurrentStep == CompilationStep.PostgresDiff && OracleDb.CompileMigration
-				&& (OracleDb.DiffBefore || OracleDb.ConfirmUnsafe))
+			else if ((CurrentStep == CompilationStep.Starting || ((CurrentStep & CompilationStep.PostgresDiff) != 0)) && OracleDb.CompileMigration && OracleDb.DiffBefore)
 			{
 				CurrentStep = CompilationStep.OracleDiff;
 				DiffDatabase(ServerActions.OracleDiff, OracleDb, "Oracle");
 			}
-			else CompileDsl(CurrentStep != CompilationStep.Starting);
+			else
+			{
+				if ((CurrentStep & CompilationStep.PostgresDiff) != 0
+					|| (CurrentStep & CompilationStep.PostgresConfirmation) != 0)
+				{
+					CurrentStep = CurrentStep | CompilationStep.ConfirmedPostgres;
+				}
+				if ((CurrentStep & CompilationStep.OracleDiff) != 0
+					|| (CurrentStep & CompilationStep.OracleConfirmation) != 0)
+				{
+					CurrentStep = CurrentStep | CompilationStep.ConfirmedOracle;
+				}
+				CompileDsl((CurrentStep & CompilationStep.ConfirmedPostgres) != 0, (CurrentStep & CompilationStep.ConfirmedOracle) != 0);
+			}
 		}
 
 		private void DiffDatabase(
@@ -206,15 +220,11 @@ namespace DDDLanguage
 					Message = hasUnsafe ? "Confirm unsafe changes" : "Confirm changes";
 					ChangeMessage();
 				}
-				else if (dbInfo.ConfirmUnsafe)
-				{
-					Message = "No unsafe changes found";
-					ChangeMessage();
-				}
 				else
 				{
-					Message = "No changes found";
+					Message = dbInfo.ConfirmUnsafe ? "No unsafe changes found" : "No changes found";
 					ChangeMessage();
+					StepThroughCompilation();
 				}
 			});
 		}
@@ -360,28 +370,25 @@ namespace DDDLanguage
 			DialogWindow.ShowDialog();
 		}
 
-		private void CompileDsl(bool unsafeMigration)
+		private void CompileDsl(bool confirmedPostgres, bool confirmedOracle)
 		{
 			TryAction(
 				"Compiling DSL ...",
-				() => ServerActions.Compile(DTE, Targets, PostgresDb, OracleDb, unsafeMigration))
+				() => ServerActions.Compile(DTE, Targets, PostgresDb, OracleDb, confirmedPostgres, confirmedOracle))
 			.ContinueWith(t =>
 			{
 				if (t.Exception == null && !t.Result.Success && t.Result.Error.Contains("Objects in database will be removed"))
 				{
-					CurrentStep = CompilationStep.PostgresConfirmation;
 					Message = "Confirm unsafe migration";
-					//TODO: currently this can only happen for Postgres
-					var diff = ServerActions.PostgresDiff(DTE, DslCompiler, PostgresDb);
-					if (diff.Success)
+					if (PostgresDb.CompileMigration && (CurrentStep & CompilationStep.ConfirmedPostgres) == 0)
 					{
-						ChangeMessage();
-						ShowDiff(diff.Value.DbChanges, diff.Value.OldDsl, diff.Value.NewDsl, "Confirm unsafe changes");
+						CurrentStep = CompilationStep.PostgresConfirmation;
+						DiffDatabase(ServerActions.PostgresDiff, PostgresDb, "Postgres");
 					}
 					else
 					{
-						Message = diff.Error;
-						ChangeMessage();
+						CurrentStep = CompilationStep.OracleConfirmation;
+						DiffDatabase(ServerActions.OracleDiff, OracleDb, "Oracle");
 					}
 				}
 				else
@@ -606,7 +613,8 @@ namespace DDDLanguage
 			var hasChanges = changes.Any(it => it.Modified != DiffModel.ModificationType.NotModified);
 			DbChanges = dbChanges;
 			DslDiff = changes.ToArray();
-			LastTool.Dispatcher.BeginInvoke((Action)(() => CreateDiffWindow(title)));
+			if (hasChanges)
+				LastTool.Dispatcher.BeginInvoke((Action)(() => CreateDiffWindow(title)));
 			return hasChanges;
 		}
 

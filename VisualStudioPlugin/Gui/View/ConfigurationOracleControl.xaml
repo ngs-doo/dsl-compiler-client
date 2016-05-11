@@ -79,10 +79,10 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
             <StackPanel Orientation="Vertical">
                 <CheckBox Content="Diff before compile" IsChecked="{Binding OracleDb.DiffBefore}" 
                     ToolTip="Recommended value: checked" />
-                <!--CheckBox Content="Confirm unsafe changes" IsChecked="{Binding OracleConfirmUnsafe}" 
-                    ToolTip="Recommended value: checked" /-->
-                <!--CheckBox Content="Apply migration" IsChecked="{Binding OracleApplyMigration}" 
-                    ToolTip="Recommended value: unchecked" /-->
+                <CheckBox Content="Confirm unsafe changes" IsChecked="{Binding OracleDb.ConfirmUnsafe}" 
+                    ToolTip="Recommended value: checked" />
+                <CheckBox Content="Apply migration" IsChecked="{Binding OracleDb.ApplyMigration}" 
+                    ToolTip="Recommended value: unchecked" />
             </StackPanel>
             <Separator />
             <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
