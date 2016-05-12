@@ -399,6 +399,7 @@ namespace DDDLanguage
 		{
 			var sb = new StringBuilder();
 			sb.Append("target=").Append(info.Target).Append(info.Database.Major).Append('.').Append(info.Database.Minor);
+			sb.Append(" previous-compiler=").Append(info.Compiler.ToString());
 			if (!string.IsNullOrEmpty(db.VarraySize))
 				sb.Append(" varray=").Append(db.VarraySize);
 			if (!string.IsNullOrEmpty(db.GrantRole))
