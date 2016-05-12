@@ -7,11 +7,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DDD for DSL Platform")]
-[assembly: AssemblyDescription("Visual studio plugin for DSL Platform")]
+[assembly: AssemblyDescription("Visual Studio plugin for DSL Platform")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("N.G.S.")]
 [assembly: AssemblyProduct("DDD for DSL Platform")]
-[assembly: AssemblyCopyright("Copyright © N.G.S. 2014")]
+[assembly: AssemblyCopyright("Copyright © N.G.S. 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
@@ -28,8 +28,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 
-[assembly: AssemblyVersion("1.0.3.*")]
-[assembly: AssemblyFileVersion("1.0.3.0")]
+[assembly: AssemblyVersion("1.5.0.*")]
+[assembly: AssemblyFileVersion("1.5.0.0")]
 
 
 

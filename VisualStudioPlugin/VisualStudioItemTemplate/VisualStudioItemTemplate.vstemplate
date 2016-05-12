@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Domain Specification Language</Name>
+    <Description>Defined your models using DSL Platform language based on Domain-Driven Design</Description>
+    <Icon>VisualStudioItemTemplate.ico</Icon>
+    <TemplateID>e15cfb65-2c54-4bd6-a857-f9c4ba452b4a</TemplateID>
+    <ProjectType>CSharp</ProjectType>
+    <RequiredFrameworkVersion>4.0</RequiredFrameworkVersion>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <DefaultName>model.dsl</DefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="true">model.dsl</ProjectItem>
+  </TemplateContent>
+</VSTemplate>
