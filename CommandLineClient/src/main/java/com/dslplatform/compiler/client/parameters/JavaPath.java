@@ -44,13 +44,25 @@ public enum JavaPath implements CompileParameter {
 		}
 		if (envJH != null) {
 			final Either<String> homePath = Utils.findCommand(context, new File(envJH, "bin").getPath(), name, "Usage: " + name);
-			context.cache(CACHE_FILE_PREFIX + name, homePath.get());
-			return Either.success(homePath.get());
+			if (homePath.isSuccess()) {
+				context.cache(CACHE_FILE_PREFIX + name, homePath.get());
+				return Either.success(homePath.get());
+			} else {
+				context.warning("Invalid JAVA_HOME environment variable specified: " + envJH);
+			}
+		} else {
+			context.warning(name + " not found on PATH. JAVA_HOME environment variable not set.");
 		}
 		if (envJDK != null) {
 			final Either<String> homePath = Utils.findCommand(context, new File(envJDK, "bin").getPath(), name, "Usage: " + name);
-			context.cache(CACHE_FILE_PREFIX + name, homePath.get());
-			return Either.success(homePath.get());
+			if (homePath.isSuccess()) {
+				context.cache(CACHE_FILE_PREFIX + name, homePath.get());
+				return Either.success(homePath.get());
+			} else {
+				context.warning("Invalid JDK_HOME environment variable specified: " + envJDK);
+			}
+		} else {
+			context.warning(name + " not found on PATH. JDK_HOME environment variable not set.");
 		}
 		return Either.fail("Unable to find " + description + ". Add it to path or specify java compile option.");
 	}
