@@ -30,7 +30,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public static Map<String, String> compile(
 			final Context context,
 			final String target,
-			final List<Settings.Option> settings,
+			final List<String> settings,
 			final String namespace,
 			final String version,
 			final List<File> dsls) throws ExitException {
@@ -44,7 +44,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			arguments.add("version=" + version);
 		}
 		if (settings != null) {
-			for (final Settings.Option o : settings) {
+			for (final String o : settings) {
 				arguments.add("settings=" + o);
 			}
 		}

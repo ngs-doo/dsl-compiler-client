@@ -28,6 +28,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		NO_PREPARE_EXECUTE("no-prepare-execute", "Don't use PREPARE/EXECUTE statements in Postgres"),
 		MINIMAL_SERIALIZATION("minimal-serialization", "Minimize serialization output (omit default values)"),
 		LAZY_LOAD_WARNING("lazy-load-warning", "Inject warning when accessing lazy load property"),
+		URI_REFERENCE("uri-reference", "Helper method for setting reference through URI value"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes");
 
 		private final String value;
@@ -55,8 +56,13 @@ public enum Settings implements CompileParameter, ParameterParser {
 
 	private static final String CACHE_NAME = "settings_option_cache";
 
-	public static List<Option> get(final Context context) {
+	public static List<String> get(final Context context) {
 		return context.load(CACHE_NAME);
+	}
+
+	public static boolean hasSourceOnly(final Context context) {
+		final List<String> options = get(context);
+		return options != null && options.contains(Option.SOURCE_ONLY.value);
 	}
 
 	private static void listOptions(final Context context) {
@@ -105,15 +111,18 @@ public enum Settings implements CompileParameter, ParameterParser {
 			}
 			return true;
 		}
-		final List<Option> options = new ArrayList<Option>(settings.size());
+		final List<String> options = new ArrayList<String>(settings.size());
 		for(final String name : settings) {
 			final Option o = Option.from(name);
 			if (o == null) {
-				context.error("Unknown setting: " + name);
-				listOptions(context);
-				return false;
-			}
-			options.add(o);
+				if (!context.contains(Force.INSTANCE)) {
+					context.error("Unknown setting: " + name + ". If you wish to use this setting, enable force option.");
+					listOptions(context);
+					return false;
+				}
+				context.warning("Unknown setting: " + name + ". Adding it due to force option.");
+				options.add(name);
+			} else options.add(o.value);
 		}
 		context.cache(CACHE_NAME, options);
 		return true;
@@ -133,6 +142,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("DSL Platform compiler supports various compilation options for tweaking target library.\n");
 		sb.append("Some options are only available in some languages.\n");
+		sb.append("'Unsupported' settings can be passed using force option.\n");
 		sb.append("--------------------------------------------------\n");
 		for (final Option o : Option.values()) {
 			sb.append(o.value).append(" - ").append(o.description).append("\n");

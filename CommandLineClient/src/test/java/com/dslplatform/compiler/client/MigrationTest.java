@@ -13,47 +13,6 @@ import static org.junit.Assert.*;
 
 public class MigrationTest {
 
-	static class ContextMock extends Context {
-		public String message;
-		public boolean hasLog;
-		public boolean hasError;
-
-		@Override
-		public void show(final String... values) {
-			message = values[0];
-		}
-
-		@Override
-		public void log(final String value) {
-			hasLog = true;
-		}
-
-		@Override
-		public void log(final char[] value, final int len) {
-			hasLog = true;
-		}
-
-		@Override
-		public void error(final String value) {
-			hasError = true;
-		}
-
-		@Override
-		public void error(final Exception ex) {
-			hasError = true;
-		}
-
-		@Override
-		public boolean canInteract() {
-			return false;
-		}
-
-		@Override
-		public <T> T notify(final String action, final T target) {
-			return target;
-		}
-	}
-
 	static class MockMigration implements CompileParameter {
 
 		@Override
