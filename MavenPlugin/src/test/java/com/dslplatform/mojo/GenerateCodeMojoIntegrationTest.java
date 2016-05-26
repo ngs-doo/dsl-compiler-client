@@ -1,6 +1,5 @@
 package com.dslplatform.mojo;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.junit.After;
@@ -40,18 +39,6 @@ public class GenerateCodeMojoIntegrationTest extends AbstractMojoTestCase {
 		TestUtils.assertDir(sourcesPath + "/MojoTestModule");
 		TestUtils.assertFile(sourcesPath + "/MojoTestModule/Guards.java");
 		TestUtils.assertFile(sourcesPath + "/MojoTestModule/MojoTestAggregate.java");
-/*		TestUtils.assertDir(sourcesPath + "/MojoTestModule/converters");
-		TestUtils.assertFile(sourcesPath + "/MojoTestModule/converters/MojoTestAggregateConverter.java");
-		TestUtils.assertFile(sourcesPath + "/Boot.java");*/
-
-		//File servicesDir = new File(mojo.getServicesManifest());
-		//TestUtils.assertDir(servicesDir.getAbsolutePath());
-
-		//File servicesFile = new File(servicesDir, "org.revenj.extensibility.SystemAspect");
-		//TestUtils.assertFile(servicesFile.getAbsolutePath());
-
-		//String namespace = mojo.getNamespace();
-		//assertEquals(namespace != null ? namespace + ".Boot" : "Boot", FileUtils.readFileToString(servicesFile));
 
 		String[] settings = mojo.getOptions();
 		assertEquals(null, settings);

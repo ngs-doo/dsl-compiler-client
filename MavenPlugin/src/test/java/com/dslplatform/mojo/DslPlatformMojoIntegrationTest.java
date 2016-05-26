@@ -1,7 +1,6 @@
 package com.dslplatform.mojo;
 
 import com.dslplatform.compiler.client.parameters.TempPath;
-import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.junit.*;
@@ -11,7 +10,6 @@ import ru.yandex.qatools.embed.service.PostgresEmbeddedService;
 
 import java.io.File;
 import java.sql.*;
-import java.util.Properties;
 
 @RunWith(JUnit4.class)
 public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
@@ -43,22 +41,13 @@ public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
 	}
 
 	@Test
-	public void testApplyMigration()
-			throws Exception {
+	public void testApplyMigration() throws Exception {
 		File pom = getTestFile("src/test/resources/properties-pom.xml");
 		assertNotNull(pom);
 		assertTrue(pom.exists());
 
 		DslPlatformMojo mojo = (DslPlatformMojo) lookupMojo(DslPlatformMojo.GOAL, pom);
 		assertNotNull(mojo);
-
-		Properties props = mojo.getProperties();
-		assertEquals("localhost:5429/dsl_platform_mojo_test_db?user=test_user&password=test_pass", props.getProperty("postgres"));
-		assertEquals("", props.getProperty("apply"));
-		assertEquals("src/test/resources/dsl-platform-mojo-test", props.getProperty("dsl"));
-		assertEquals("java_pojo", props.getProperty("target"));
-		assertEquals("", props.getProperty("source-only"));
-		//assertEquals("target/JAVA_POJO", props.getProperty("java_pojo"));
 
 		mojo.execute();
 

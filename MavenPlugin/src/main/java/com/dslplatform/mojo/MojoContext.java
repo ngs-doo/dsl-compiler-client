@@ -1,4 +1,4 @@
-package com.dslplatform.mojo.context;
+package com.dslplatform.mojo;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
@@ -9,32 +9,18 @@ import org.apache.maven.plugin.logging.Log;
 import java.util.List;
 import java.util.Map;
 
-public class MojoContext extends Context {
-	public final StringBuilder errorLog = new StringBuilder();
+class MojoContext extends Context {
+	final StringBuilder errorLog = new StringBuilder();
 
-	private final Log log;
+	final Log log;
 
-	public MojoContext(Log log) {
+	MojoContext(Log log) {
+		super(System.out);
 		this.log = log;
-	}
-
-	public MojoContext with(Targets.Option option) {
-		this.put(option.toString(), null);
-		return this;
-	}
-
-	public MojoContext with(Targets.Option option, String value) {
-		this.put(option.toString(), value);
-		return this;
 	}
 
 	public MojoContext with(Settings.Option option) {
 		this.put(option.toString(), null);
-		return this;
-	}
-
-	public MojoContext with(Settings.Option option, String value) {
-		this.put(option.toString(), value);
 		return this;
 	}
 

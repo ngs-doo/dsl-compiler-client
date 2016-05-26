@@ -3,7 +3,7 @@ package com.dslplatform.compiler.client.json;
 import java.io.IOException;
 import java.util.*;
 
-public abstract class DslJson {
+public abstract class JSON {
 
 	private static Object deserializeObject(final JsonReader reader) throws IOException {
 		switch (reader.last()) {

@@ -15,11 +15,19 @@ public class Context implements Closeable {
 	private final Map<String, String> parameters = new HashMap<String, String>();
 	private final Map<String, Object> cache = new HashMap<String, Object>();
 
-	private PrintStream console = AnsiConsole.out();
+	private PrintStream console;
 
 	private boolean withLog;
 	private boolean noPrompt;
 	private boolean withColor = true;
+
+	public Context() {
+		this(AnsiConsole.out());
+	}
+
+	protected Context(PrintStream console) {
+		this.console = console;
+	}
 
 	public void put(final CompileParameter parameter, final String value) {
 		if (parameter instanceof DisablePrompt) {

@@ -1,19 +1,12 @@
 package com.dslplatform.mojo;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Main;
 import com.dslplatform.compiler.client.parameters.*;
-import com.dslplatform.mojo.context.MojoContext;
-import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Mojo(name = SqlMigrationMojo.GOAL)
 public class SqlMigrationMojo extends AbstractMojo {
@@ -40,13 +33,11 @@ public class SqlMigrationMojo extends AbstractMojo {
 	@Parameter(property = "applySql", defaultValue = "false")
 	private boolean applySql;
 
-	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
-	private Map<Settings.Option, String> flagsParsed = new HashMap<Settings.Option, String>();
+	@Parameter(property = "plugins", defaultValue = ".")
+	private String plugins;
 
 	public void setCompiler(String value) {
-		if (value == null) return;
 		this.compiler = value;
-		compileParametersParsed.put(DslCompiler.INSTANCE, value);
 	}
 
 	public String getCompiler() {
@@ -54,9 +45,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 	}
 
 	public void setDsl(String value) {
-		if (value == null) return;
 		this.dsl = value;
-		compileParametersParsed.put(DslPath.INSTANCE, value);
 	}
 
 	public String getDsl() {
@@ -64,9 +53,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 	}
 
 	public void setSql(String value) {
-		if (value == null) return;
 		this.sql = value;
-		compileParametersParsed.put(SqlPath.INSTANCE, value);
 	}
 
 	public String getSql() {
@@ -74,9 +61,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 	}
 
 	public void setPostgres(String value) {
-		if (value == null) return;
 		this.postgres = value;
-		compileParametersParsed.put(PostgresConnection.INSTANCE, value);
 	}
 
 	public String getPostgres() {
@@ -84,9 +69,7 @@ public class SqlMigrationMojo extends AbstractMojo {
 	}
 
 	public void setOracle(String value) {
-		if (value == null) return;
 		this.oracle = value;
-		compileParametersParsed.put(OracleConnection.INSTANCE, value);
 	}
 
 	public String getOracle() {
@@ -97,34 +80,41 @@ public class SqlMigrationMojo extends AbstractMojo {
 		this.applySql = applySql;
 	}
 
+	public boolean getApplySql() {
+		return applySql;
+	}
+
+	public void setPlugins(String value) {
+		this.plugins = value;
+	}
+
+	public String getPlugins() {
+		return plugins;
+	}
+
 	public MojoContext getContext() {
 		return context;
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		Utils.cleanupParameters(this.compileParametersParsed);
-		// TODO: Default values
-		Utils.sanitizeDirectories(this.compileParametersParsed);
-
+		if (sql != null && sql.length() > 0) {
+			String sqlPath = Utils.createDirIfNotExists(sql);
+			this.context.put(SqlPath.INSTANCE, sqlPath);
+		}
 		if (oracle == null && postgres == null) {
 			throw new MojoExecutionException("Neither Oracle or Postgres jdbc url specified. Please specify one, for example: <postgres>localhost/database?user=postgres</postgres>");
 		}
-
-		this.context
-				.with(this.flagsParsed)
-				.with(this.compileParametersParsed)
-				.with(Migration.INSTANCE)
-				.with(Force.INSTANCE)
-				.with(Download.INSTANCE)
-				.with(DisablePrompt.INSTANCE);
+		if (postgres != null) {
+			this.context.put(PostgresConnection.INSTANCE, postgres);
+		}
+		if (oracle != null) {
+			this.context.put(OracleConnection.INSTANCE, oracle);
+		}
+		this.context.with(Migration.INSTANCE);
 
 		if (this.applySql) context.with(ApplyMigration.INSTANCE);
 
-		List<CompileParameter> params = Main.initializeParameters(context, ".");
-
-		if (!Main.processContext(context, params)) {
-			throw new MojoExecutionException(context.errorLog.toString());
-		}
+		Utils.runCompiler(context, plugins, dsl, compiler);
 
 		context.close();
 	}

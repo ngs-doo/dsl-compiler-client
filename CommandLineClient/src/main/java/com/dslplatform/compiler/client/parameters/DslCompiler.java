@@ -1,7 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.json.DslJson;
+import com.dslplatform.compiler.client.json.JSON;
 import org.w3c.dom.*;
 
 import java.io.*;
@@ -278,7 +278,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					os.write(buf, 0, read);
 				}
 				os.flush();
-				return Either.success(new ParseResult(DslJson.readMap(os.getBuffer(), os.size())));
+				return Either.success(new ParseResult(JSON.readMap(os.getBuffer(), os.size())));
 			} catch (IOException e) {
 				return Either.fail(e.getMessage());
 			}
@@ -698,6 +698,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public String getDetailedDescription() {
 		return "DSL Platform compiler.\n" +
 				"Requires .NET/Mono to run.\n" +
+				"It is available for download at: https://compiler.dsl-platform.com:8443/platform/download/dsl-compiler.zip\n" +
 				"\n" +
 				"Example:\n" +
 				"\tcompiler\n" +

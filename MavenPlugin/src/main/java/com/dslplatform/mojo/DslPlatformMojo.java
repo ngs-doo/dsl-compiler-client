@@ -2,9 +2,6 @@ package com.dslplatform.mojo;
 
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Main;
-import com.dslplatform.compiler.client.parameters.*;
-import com.dslplatform.mojo.context.MojoContext;
-import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -13,11 +10,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
-import java.util.Properties;
 
 @Mojo(name = DslPlatformMojo.GOAL)
 public class DslPlatformMojo extends AbstractMojo {
@@ -30,9 +24,10 @@ public class DslPlatformMojo extends AbstractMojo {
 	private MavenProject project;
 
 	@Parameter(required = true)
-	private Properties properties;
+	private String properties;
 
-	private String propertiesAbsolutePath;
+	@Parameter(property = "plugins", defaultValue = ".")
+	private String plugins;
 
 	public MavenProject getProject() {
 		return project;
@@ -42,30 +37,20 @@ public class DslPlatformMojo extends AbstractMojo {
 		this.project = project;
 	}
 
-	public Properties getProperties() {
+	public String getProperties() {
 		return properties;
 	}
 
-	public void setProperties(String path) {
-		propertiesAbsolutePath = Utils.resourceAbsolutePath(path);
-		getLog().info("Setting properties from file: " + propertiesAbsolutePath);
-		try {
-			if (propertiesAbsolutePath != null) {
-				properties = new Properties();
-				properties.load(new FileInputStream(propertiesAbsolutePath));
-
-			}
-		} catch (IOException e) {
-			this.properties = null;
-		}
+	public void setProperties(String value) {
+		this.properties = value;
 	}
 
-	public String getPropertiesAbsolutePath() {
-		return propertiesAbsolutePath;
+	public void setPlugins(String value) {
+		this.plugins = value;
 	}
 
-	public void setPropertiesAbsolutePath(String propertiesAbsolutePath) {
-		this.propertiesAbsolutePath = propertiesAbsolutePath;
+	public String getPlugins() {
+		return plugins;
 	}
 
 	public MojoContext getContext() {
@@ -74,13 +59,26 @@ public class DslPlatformMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
-		if (this.properties == null) {
-			throw new MojoExecutionException("The given properties file not found: " + propertiesAbsolutePath);
+		if (this.properties == null || this.properties.length() == 0) {
+			throw new MojoExecutionException("The properties file not specified");
+		}
+		String path = Utils.resourceAbsolutePath(this.properties);
+		if (path == null) {
+			throw new MojoExecutionException("Specified properties file not found: " + properties);
+		}
+		this.context.put("properties", path);
+
+		if (plugins == null || plugins.length() == 0) {
+			plugins = ".";
+		}
+		File pluginsFile = new File(plugins);
+		if (!pluginsFile.exists()) {
+			throw new MojoExecutionException("Specified plugins path not found: " + pluginsFile.getAbsolutePath());
+		} else if (!pluginsFile.isDirectory()) {
+			throw new MojoExecutionException("Please specify path to directory, not a specific file: " + pluginsFile.getAbsolutePath());
 		}
 
-		this.context.with(new PropertiesFile(new ArrayList<CompileParameter>()), propertiesAbsolutePath);
-
-		List<CompileParameter> params = Main.initializeParameters(context, ".");
+		List<CompileParameter> params = Main.initializeParameters(context, pluginsFile.getAbsolutePath());
 
 		if (!Main.processContext(context, params)) {
 			throw new MojoExecutionException(context.errorLog.toString());

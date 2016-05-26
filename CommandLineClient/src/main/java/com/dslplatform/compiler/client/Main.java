@@ -227,8 +227,6 @@ public class Main {
 		context.show("\tproperties=development.props download");
 	}
 
-	private static final Properties versionInfo = new Properties();
-
 	private static String getVersionInfo(final String section) {
 		try {
 			final Enumeration<URL> resources = Main.class.getClassLoader().getResources("META-INF/MANIFEST.MF");

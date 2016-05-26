@@ -1,16 +1,11 @@
 package com.dslplatform.compiler.client;
 
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -64,7 +59,7 @@ public abstract class Utils {
 		while ((len = stream.read(buffer)) != -1) {
 			baos.write(buffer, 0, len);
 		}
-		return new String(baos.toByteArray(), "UTF-8");
+		return baos.toString("UTF-8");
 	}
 
 	public static Either<String> readFile(final File file) {
@@ -201,11 +196,7 @@ public abstract class Utils {
 			final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			return Either.success(dBuilder.parse(stream));
-		} catch (IOException ex) {
-			return Either.fail(ex);
-		} catch (ParserConfigurationException ex) {
-			return Either.fail(ex);
-		} catch (SAXException ex) {
+		} catch (Exception ex) {
 			return Either.fail(ex);
 		}
 	}

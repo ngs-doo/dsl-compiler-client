@@ -1,10 +1,6 @@
 package com.dslplatform.mojo;
 
-import com.dslplatform.compiler.client.CompileParameter;
-import com.dslplatform.compiler.client.Main;
 import com.dslplatform.compiler.client.parameters.*;
-import com.dslplatform.mojo.context.MojoContext;
-import com.dslplatform.mojo.utils.Utils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -14,10 +10,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Mojo(name = GenerateCodeMojo.GOAL)
 public class GenerateCodeMojo extends AbstractMojo {
@@ -52,9 +44,8 @@ public class GenerateCodeMojo extends AbstractMojo {
 	@Parameter(property = "options")
 	private String[] options;
 
-	private Targets.Option targetParsed;
-	private Map<CompileParameter, String> compileParametersParsed = new HashMap<CompileParameter, String>();
-	private List<Settings.Option> settingsParsed = new ArrayList<Settings.Option>();
+	@Parameter(property = "plugins", defaultValue = ".")
+	private String plugins;
 
 	public MavenProject getProject() {
 		return project;
@@ -65,9 +56,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 	}
 
 	public void setCompiler(String value) {
-		if (value == null) return;
 		this.compiler = value;
-		compileParametersParsed.put(DslCompiler.INSTANCE, value);
 	}
 
 	public String getCompiler() {
@@ -91,9 +80,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 	}
 
 	public void setTarget(String value) {
-		if (value == null) return;
 		this.target = value;
-		this.targetParsed = Utils.targetOptionFrom(value);
 	}
 
 	public String getTarget() {
@@ -101,9 +88,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 	}
 
 	public void setDsl(String value) {
-		if (value == null) return;
 		this.dsl = value;
-		compileParametersParsed.put(DslPath.INSTANCE, value);
 	}
 
 	public String getDsl() {
@@ -112,7 +97,6 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 	public void setNamespace(String value) {
 		this.namespace = value;
-		compileParametersParsed.put(Namespace.INSTANCE, value);
 	}
 
 	public String getNamespace() {
@@ -121,17 +105,18 @@ public class GenerateCodeMojo extends AbstractMojo {
 
 	public void setOptions(String[] value) {
 		this.options = value;
-		this.settingsParsed = new ArrayList<Settings.Option>(options.length);
-		for (String setting : options) {
-			Settings.Option option = Utils.settingsOptionFrom(setting);
-			if (option != null) {
-				this.settingsParsed.add(option);
-			}
-		}
 	}
 
 	public String[] getOptions() {
 		return options;
+	}
+
+	public void setPlugins(String value) {
+		this.plugins = value;
+	}
+
+	public String getPlugins() {
+		return plugins;
 	}
 
 	public MojoContext getContext() {
@@ -139,39 +124,37 @@ public class GenerateCodeMojo extends AbstractMojo {
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		Utils.cleanupParameters(this.compileParametersParsed);
-		// TODO: Default values
-		Utils.sanitizeDirectories(this.compileParametersParsed);
-
-		if (targetParsed == null) {
+		if (target == null || target.length() == 0) {
 			throw new MojoExecutionException("Target not specified. Please specify target, for example: <target>revenj.java</target>");
 		}
-
-		this.context
-				.with(this.targetParsed)
-				.with(this.settingsParsed)
-				.with(this.compileParametersParsed)
-				.with(Force.INSTANCE)
-				.with(Download.INSTANCE)
-				.with(DisablePrompt.INSTANCE)
-				.with(Settings.Option.SOURCE_ONLY);
-
-		List<CompileParameter> params = Main.initializeParameters(context, ".");
-
-		if (!Main.processContext(context, params)) {
-			throw new MojoExecutionException(context.errorLog.toString());
-		} else {
-			// Copy generated sources
-			copyGeneratedSources(context);
-			registerServices(context);
-			// This supposedly adds generated sources to maven compile classpath:
-			project.addCompileSourceRoot(this.generatedSources);
+		Targets.Option parsedTarget = Utils.targetOptionFrom(target);
+		if (parsedTarget == null) {
+			throw new MojoExecutionException("Invalid target specified: " + target);
 		}
+		context.put(Targets.INSTANCE, parsedTarget.toString());
+
+		if (namespace != null && namespace.length() > 0) {
+			context.put(Namespace.INSTANCE, namespace);
+		}
+
+		String formattedSettings = Utils.parseSettings(this.options, context.log);
+		if (formattedSettings != null && formattedSettings.length() > 0) {
+			context.put(Settings.INSTANCE, formattedSettings);
+		}
+
+		this.context.with(Settings.Option.SOURCE_ONLY);
+
+		Utils.runCompiler(context, plugins, dsl, compiler);
+
+		copyGeneratedSources(context, parsedTarget);
+		registerServices(context);
+		// This supposedly adds generated sources to maven compile classpath:
+		project.addCompileSourceRoot(this.generatedSources);
 
 		context.close();
 	}
 
-	protected void registerServices(MojoContext context) throws MojoExecutionException {
+	private void registerServices(MojoContext context) throws MojoExecutionException {
 		String namespace = context.get(Namespace.INSTANCE);
 		String service = namespace == null || namespace.length() == 0 ? "Boot" : namespace + ".Boot";
 		File boot = new File(generatedSources, service.replace(".", File.pathSeparator) + ".java");
@@ -182,12 +165,10 @@ public class GenerateCodeMojo extends AbstractMojo {
 		}
 	}
 
-	private void copyGeneratedSources(MojoContext context) throws MojoExecutionException {
+	private void copyGeneratedSources(MojoContext context, Targets.Option parsedTarget) throws MojoExecutionException {
 		File tmpPath = TempPath.getTempProjectPath(context);
-		File generatedSources = new File(tmpPath.getAbsolutePath(), targetParsed.name());
+		File generatedSources = new File(tmpPath.getAbsolutePath(), parsedTarget.name());
 		Utils.createDirIfNotExists(this.generatedSources);
 		Utils.copyFolder(generatedSources, new File(this.generatedSources), context);
 	}
-
-
 }
