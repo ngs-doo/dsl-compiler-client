@@ -9,6 +9,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
@@ -81,27 +83,6 @@ abstract class Utils {
 		return null;
 	}
 
-	static void sanitizeDirectories(Map<CompileParameter, String> compileParametersParsed) throws MojoExecutionException {
-		for (Map.Entry<CompileParameter, String> kv : compileParametersParsed.entrySet()) {
-			CompileParameter cp = kv.getKey();
-			String value = kv.getValue();
-			if (cp instanceof TempPath) {
-				compileParametersParsed.put(cp, createDirIfNotExists(value));
-			}
-		}
-	}
-
-	static void cleanupParameters(Map<CompileParameter, String> compileParametersParsed) {
-		// Disallow custom temp path
-		Iterator<Map.Entry<CompileParameter, String>> it = compileParametersParsed.entrySet().iterator();
-		while (it.hasNext()) {
-			// Disallow custom temp path
-			if (TempPath.INSTANCE.equals(it.next().getKey())) {
-				it.remove();
-			}
-		}
-	}
-
 	static void copyFolder(final File sources, final File target, final Context context) throws MojoExecutionException {
 		for (final String fn : sources.list()) {
 			final File sf = new File(sources, fn);
@@ -130,6 +111,20 @@ abstract class Utils {
 			com.dslplatform.compiler.client.Utils.saveFile(context, file, contents);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Error writing to file: " + file.getAbsolutePath() + ", contents: " + contents, e);
+		}
+	}
+
+	static void appendToFile(Context context, File file, String contents) throws MojoExecutionException {
+		if (!file.exists()) {
+			writeToFile(context, file, contents);
+		} else {
+			try {
+				FileWriter fw = new FileWriter(file, true);
+				fw.append(contents);
+				fw.close();
+			} catch (IOException e) {
+				throw new MojoExecutionException("Error appending to file: " + file.getAbsolutePath() + ", contents: " + contents, e);
+			}
 		}
 	}
 

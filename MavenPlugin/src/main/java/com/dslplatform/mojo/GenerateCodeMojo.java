@@ -161,7 +161,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 		if (boot.exists()) {
 			Utils.createDirIfNotExists(this.servicesManifest);
 			File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
-			Utils.writeToFile(context, servicesRegistration, service);
+			Utils.appendToFile(context, servicesRegistration, service);
 		}
 	}
 
