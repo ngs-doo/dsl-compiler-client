@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 class ScalaCompilation {
 
@@ -18,6 +19,7 @@ class ScalaCompilation {
 			final File libraries,
 			final File source,
 			final File output,
+			final Map<String, List<String>> services,
 			final Context context) {
 		if (output.exists() && !output.isDirectory()) {
 			if (!output.delete()) {
@@ -88,7 +90,7 @@ class ScalaCompilation {
 			return Either.fail(compilation.output);
 		}
 		final String compilationOutput = compilation.output;
-		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, classOut, output, null);
+		final Either<Utils.CommandResult> tryArchive = JavaPath.makeArchive(context, classOut, output, services);
 		if (!tryArchive.isSuccess()) {
 			return Either.fail(tryArchive.whyNot());
 		}

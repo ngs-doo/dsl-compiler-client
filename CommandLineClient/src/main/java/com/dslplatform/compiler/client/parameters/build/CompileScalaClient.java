@@ -37,7 +37,7 @@ public class CompileScalaClient implements BuildAction {
 		final File libDeps = Dependencies.getDependencies(context, name, library);
 		final String customJar = context.get(library);
 		final File model = new File(customJar != null ? customJar : jar);
-		final Either<String> compilation = ScalaCompilation.compile(library, libDeps, sources, model, context);
+		final Either<String> compilation = ScalaCompilation.compile(library, libDeps, sources, model, null, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during " + name + " library compilation.");
 			context.error(compilation.whyNot());
