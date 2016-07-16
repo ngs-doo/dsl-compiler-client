@@ -72,8 +72,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true),
 		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true),
-		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala"), true),
-		REVENJ_SCALA_POSTGRES("scala_server_postgres", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("scala_server_postgres", "revenj-scala"), true),
+		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala", "revenj-core_2.11"), true),
+		REVENJ_SCALA_POSTGRES("scala_server_postgres", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("scala_server_postgres", "revenj-scala", "revenj-core_2.11"), true),
 		SCALA_SERVER_ORACLE("scala_server_oracle", "Scala server (Oracle)", ".scala", new CompileScalaClient("Scala server (Oracle)", "scala-poso", "scala_server_oracle", null, "./generated-scala-oracle.jar"), true);
 
 		private final String value;
