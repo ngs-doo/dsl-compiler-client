@@ -12,7 +12,7 @@ private[sbt] object Actions {
       case Some(target) => target
       case _ =>
         logger.error("Unable to find target: " + name)
-        logger.error("List of known targets:")
+        logger.error("List of known targets: ")
         Targets.Option.values() foreach { it => logger.error(it.toString) }
         throw new RuntimeException("Unable to find target: " + name)
     }
@@ -82,6 +82,7 @@ private[sbt] object Actions {
     if (apply) ctx.put(ApplyMigration.INSTANCE, "")
     if (force) ctx.put(Force.INSTANCE, "")
     ctx.put(SqlPath.INSTANCE, output.getPath)
+    ctx.put(Migration.INSTANCE, "")
     executeContext(dsl, compiler, plugins, latest, ctx)
   }
 
@@ -97,7 +98,7 @@ private[sbt] object Actions {
       if (eqInd == -1) {
         ctx.put(cmd, null)
       } else {
-        ctx.put(cmd.substring(0, eqInd), cmd.substring(eqInd))
+        ctx.put(cmd.substring(0, eqInd), cmd.substring(eqInd + 1))
       }
     }
     executeContext(dsl, compiler, plugins, latest = false, ctx)
