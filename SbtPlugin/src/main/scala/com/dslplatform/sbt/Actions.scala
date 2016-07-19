@@ -1,6 +1,7 @@
 package com.dslplatform.sbt
 
 import java.io.File
+import java.nio.file.{Files, Path, StandardCopyOption}
 
 import com.dslplatform.compiler.client.Main
 import com.dslplatform.compiler.client.parameters.{Settings, _}
@@ -49,11 +50,11 @@ private[sbt] object Actions {
                      namespace: String = "",
                      settings: Seq[Settings.Option] = Nil,
                      latest: Boolean = true): Unit = {
+    //TODO: remove only non-existing files
     if (output.exists()) {
-      output.listFiles().foreach(_.delete())
-    } else {
-      output.mkdirs()
+      output.delete()
     }
+    output.mkdirs()
     val ctx = new DslContext(logger)
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
@@ -63,8 +64,24 @@ private[sbt] object Actions {
     settings.foreach(it => ctx.put(it.toString, ""))
     executeContext(dsl, compiler, plugins, latest, ctx)
     val generated = new File(TempPath.getTempProjectPath(ctx), target.name)
-    generated.listFiles().foreach(it => it.renameTo(new File(output, it.getName)))
+    //TODO: copy only changed/new files
+    deepCopy(generated.toPath, output.toPath)
     logger.info("Source for " + target + " created in " + output.getPath)
+  }
+
+  private def deepCopy(from: Path, to: Path): Unit = {
+    if (from.toFile.isDirectory) {
+      if (!to.toFile.exists()) {
+        to.toFile.mkdirs()
+      }
+      from.toFile.list foreach { it =>
+        val source = new File(from.toFile, it)
+        val target = new File(to.toFile, it)
+        deepCopy(source.toPath, target.toPath)
+      }
+    } else {
+      Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+    }
   }
 
   def dbMigration(logger: Logger,
