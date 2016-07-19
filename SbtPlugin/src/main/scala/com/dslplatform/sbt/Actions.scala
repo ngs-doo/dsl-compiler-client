@@ -7,7 +7,9 @@ import com.dslplatform.compiler.client.Main
 import com.dslplatform.compiler.client.parameters.{Settings, _}
 import sbt.Logger
 
-private[sbt] object Actions {
+import scala.collection.mutable.ArrayBuffer
+
+object Actions {
   def findTarget(logger: Logger, name: String): Targets.Option = {
     Targets.Option.values().find(it => it.toString.equals(name)) match {
       case Some(target) => target
@@ -28,7 +30,7 @@ private[sbt] object Actions {
                      namespace: String = "",
                      settings: Seq[Settings.Option] = Nil,
                      dependencies: Option[File] = None,
-                     latest: Boolean = true): Unit = {
+                     latest: Boolean = true): File = {
     val ctx = new DslContext(logger)
     ctx.put(target.toString, output.getAbsolutePath)
     if (namespace.nonEmpty) {
@@ -39,6 +41,7 @@ private[sbt] object Actions {
       ctx.put("dependency:" + target.toString, dependencies.get.getAbsolutePath)
     }
     executeContext(dsl, compiler, plugins, latest, ctx)
+    output
   }
 
   def generateSource(logger: Logger,
@@ -49,7 +52,7 @@ private[sbt] object Actions {
                      compiler: String = "",
                      namespace: String = "",
                      settings: Seq[Settings.Option] = Nil,
-                     latest: Boolean = true): Unit = {
+                     latest: Boolean = true): Seq[File] = {
     //TODO: remove only non-existing files
     if (output.exists()) {
       output.delete()
@@ -65,11 +68,13 @@ private[sbt] object Actions {
     executeContext(dsl, compiler, plugins, latest, ctx)
     val generated = new File(TempPath.getTempProjectPath(ctx), target.name)
     //TODO: copy only changed/new files
-    deepCopy(generated.toPath, output.toPath)
+    val files = new ArrayBuffer[File]()
+    deepCopy(generated.toPath, output.toPath, files)
     logger.info("Source for " + target + " created in " + output.getPath)
+    files.result()
   }
 
-  private def deepCopy(from: Path, to: Path): Unit = {
+  private def deepCopy(from: Path, to: Path, files: ArrayBuffer[File]): Unit = {
     if (from.toFile.isDirectory) {
       if (!to.toFile.exists()) {
         to.toFile.mkdirs()
@@ -77,10 +82,11 @@ private[sbt] object Actions {
       from.toFile.list foreach { it =>
         val source = new File(from.toFile, it)
         val target = new File(to.toFile, it)
-        deepCopy(source.toPath, target.toPath)
+        deepCopy(source.toPath, target.toPath, files)
       }
     } else {
       Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+      files += to.toFile
     }
   }
 

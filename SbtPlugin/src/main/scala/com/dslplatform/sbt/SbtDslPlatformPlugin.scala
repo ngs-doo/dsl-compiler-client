@@ -6,11 +6,13 @@ import com.dslplatform.compiler.client.parameters.Targets
 import com.dslplatform.compiler.client.parameters.Settings
 import sbt.complete.Parsers
 
+import scala.collection.mutable.ArrayBuffer
+
 object SbtDslPlatformPlugin extends AutoPlugin {
 
   object autoImport {
     val dslLibrary = inputKey[Unit]("Compile DSL into a compiled jar ready for usage.")
-    val dslSource = inputKey[Unit]("Compile DSL into generated source ready for usage.")
+    val dslSource = inputKey[Seq[File]]("Compile DSL into generated source ready for usage.")
     val dslMigrate = inputKey[Unit]("Create an SQL migration file based on difference from DSL in project and in the target database.")
     val dslExecute = inputKey[Unit]("Execute custom DSL compiler command")
 
@@ -73,7 +75,7 @@ Example: dslLibrary revenj.scala path_to_jar""")
     },
     dslSource := {
       val args = Parsers.spaceDelimited("<arg>").parsed
-      def generate(dslTarget: Targets.Option, targetPath: File): Unit = {
+      def generate(dslTarget: Targets.Option, targetPath: File): Seq[File] = {
         Actions.generateSource(
           streams.value.log,
           dslTarget,
@@ -85,12 +87,13 @@ Example: dslLibrary revenj.scala path_to_jar""")
           dslSettings.value,
           dslLatest.value)
       }
+      val buffer = new ArrayBuffer[File]()
       if (args.isEmpty) {
         if (dslSources.value.isEmpty) throw new RuntimeException("""dslSources is empty.
 Either define dslSources in build.sbt or provide target argument (eg. revenj.scala).
 Usage example: dslSource revenj.scala path_to_folder""")
         dslSources.value foreach { case (targetArg, targetOutput) =>
-          generate(targetArg, targetOutput)
+          buffer ++= generate(targetArg, targetOutput)
         }
       } else if (args.length > 2) {
         throw new RuntimeException("Too many arguments. Usage example: dslSource revenj.scala path_to_folder")
@@ -103,8 +106,9 @@ Either define it in dslSources or provide explicit output path.
 Example: dslLibrary revenj.scala path_to_folder""")
         }
         val targetOutput = if (args.length == 2) new File(args.last) else predefinedOutput.get
-        generate(targetArg, targetOutput)
+        buffer ++= generate(targetArg, targetOutput)
       }
+      buffer
     },
     dslMigrate := {
       def migrate(pg: Boolean, jdbc: String): Unit = {
