@@ -175,8 +175,12 @@ object Actions {
       }
     }
     loader.close()
-    val oldServices = manifests.listFiles().filter(_.getName.startsWith("net.revenj.patterns.DomainEventHandler%"))
-    oldServices foreach { _.delete() }
+    if (manifests.exists()) {
+      val oldServices = manifests.listFiles().filter(_.getName.startsWith("net.revenj.patterns.DomainEventHandler%"))
+      oldServices foreach {
+        _.delete()
+      }
+    }
     if (handlers.nonEmpty) {
       logger.info("Saving manifests to " + manifests.getAbsolutePath)
       handlers foreach { case (k, vals) =>
