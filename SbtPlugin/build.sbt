@@ -3,9 +3,12 @@ sbtPlugin := true
 organization := "com.dslplatform"
 name := "sbt-dsl-platform"
 
-version := "0.2"
+version := "0.2.1"
 
-libraryDependencies += "com.dslplatform" % "dsl-clc" % "1.7.2"
+libraryDependencies ++= Seq(
+  "com.dslplatform" % "dsl-clc" % "1.7.2",
+  "org.clapper" %% "classutil" % "1.0.12"
+)
 
 publishMavenStyle := false
 bintrayRepository := "sbt-dsl-platform"

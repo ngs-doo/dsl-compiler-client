@@ -1,12 +1,16 @@
 package com.dslplatform.sbt
 
-import java.io.File
+import java.io.{File, FileOutputStream}
+import java.net.{URLClassLoader, URLEncoder}
 import java.nio.file.{Files, Path, StandardCopyOption}
 
 import com.dslplatform.compiler.client.Main
 import com.dslplatform.compiler.client.parameters.{Settings, _}
+import net.revenj.patterns.DomainEventHandler
+import org.clapper.classutil.ClassFinder
 import sbt.Logger
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 object Actions {
@@ -137,5 +141,54 @@ object Actions {
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
     Main.processContext(ctx, params)
+  }
+
+  private def gatherSubfolders(file: File, subfolders: mutable.HashSet[File]) : Unit = {
+    subfolders.add(file)
+    file.listFiles.filter(_.isDirectory) foreach { f =>
+      if (subfolders.add(f)) {
+        gatherSubfolders(f, subfolders)
+      }
+    }
+  }
+
+  def scanEventHandlers(logger: Logger, classes: File, manifests: File, classLoader: Option[ClassLoader] = None): Seq[File] = {
+    logger.info("Scanning for events in " + classes.getAbsolutePath)
+    val folders = new scala.collection.mutable.HashSet[File]
+    val implementations =
+      ClassFinder(Seq(classes)).getClasses()
+        .withFilter(it => it.isConcrete && it.implements("net.revenj.patterns.DomainEventHandler"))
+        .map(_.name)
+    gatherSubfolders(classes, folders)
+    val loader = new URLClassLoader(folders.map(_.toURI.toURL).toArray, classLoader.getOrElse(classOf[DomainEventHandler[_]].getClassLoader))
+    val handlers = new mutable.HashMap[String, ArrayBuffer[String]]()
+    implementations foreach { name =>
+      try {
+        val manifest = Class.forName(name, false, loader)
+        manifest.getGenericInterfaces.filter(_.getTypeName.startsWith("net.revenj.patterns.DomainEventHandler<")).foreach { m =>
+          val handler = handlers.getOrElseUpdate(URLEncoder.encode(m.getTypeName, "UTF-8"), new ArrayBuffer[String]())
+          handler += name
+        }
+      } catch {
+        case x: Throwable =>
+          logger.error("unable to load " + name + ". error: " + x)
+      }
+    }
+    loader.close()
+    val oldServices = manifests.listFiles().filter(_.getName.startsWith("net.revenj.patterns.DomainEventHandler%"))
+    oldServices foreach { _.delete() }
+    if (handlers.nonEmpty) {
+      logger.info("Saving manifests to " + manifests.getAbsolutePath)
+      handlers foreach { case (k, vals) =>
+        val file = new File(manifests, k)
+        if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
+          logger.error("Error creating folder: " + file.getParentFile.getAbsolutePath)
+        }
+        val fos = new FileOutputStream(file)
+        fos.write(vals.mkString("\n").getBytes("UTF-8"))
+        fos.close()
+      }
+    }
+    handlers.keySet.map(k => new File(manifests, k)).toSeq
   }
 }
