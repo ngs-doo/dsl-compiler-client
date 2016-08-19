@@ -4,6 +4,7 @@ import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.parameters.DotNet;
+import com.dslplatform.compiler.client.parameters.Force;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -25,6 +26,12 @@ class DotNetCompilation {
 			}
 		} else if (output.exists() && output.isDirectory()) {
 			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
+		}
+		if (output.getParentFile() != null && !output.getParentFile().exists()) {
+			context.show("Output folder not found. Will create one in: " + output.getParent());
+			if (!output.getParentFile().mkdirs()) {
+				return Either.fail("Unable to create output folder for: " + output.getAbsolutePath());
+			}
 		}
 		final Either<String> tryCompiler = force32Bit ? DotNet.findCompiler(context, true) : DotNet.findCompiler(context);
 		if (!tryCompiler.isSuccess()) {

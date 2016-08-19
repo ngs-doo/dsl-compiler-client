@@ -9,7 +9,10 @@ import org.fusesource.jansi.Ansi.Color
 import sbt.Logger
 
 private[sbt] class DslContext(logger: Logger) extends Context {
-  if (!logger.ansiCodesSupported) {
+
+  private var inColor = logger.ansiCodesSupported
+
+  if (!inColor) {
     put(DisableColors.INSTANCE, "")
   }
 
@@ -22,7 +25,7 @@ private[sbt] class DslContext(logger: Logger) extends Context {
   }
 
   override def log(value: String): Unit = {
-    if (logger.ansiCodesSupported) {
+    if (inColor) {
       logger.debug(Context.inColor(Color.YELLOW, value))
     } else {
       logger.debug(value)
@@ -34,7 +37,7 @@ private[sbt] class DslContext(logger: Logger) extends Context {
   }
 
   override def warning(value: String): Unit = {
-    if (logger.ansiCodesSupported) {
+    if (inColor) {
       logger.warn(Context.inColor(Color.MAGENTA, value))
     } else {
       logger.warn(value)
@@ -51,7 +54,7 @@ private[sbt] class DslContext(logger: Logger) extends Context {
   }
 
   override def error(value: String): Unit = {
-    if (logger.ansiCodesSupported) {
+    if (inColor) {
       logger.error(Context.inColor(Color.RED, value))
     } else {
       logger.error(value)
@@ -67,16 +70,26 @@ private[sbt] class DslContext(logger: Logger) extends Context {
     }
   }
 
+  private def askSafe(question: String, color: Color): Unit = {
+    if (inColor) {
+      try {
+        print(Ansi.ansi.fgBright(color).bold.a(question + " ").boldOff.reset.toString)
+      } catch {
+        case _: NoSuchMethodError =>
+          inColor = false
+          print(question + " ")
+      }
+    } else print(question + " ")
+  }
+
   override def ask(question: String): String = {
-    if (logger.ansiCodesSupported) print(Ansi.ansi.fgBright(Color.DEFAULT).bold.a(question + " ").boldOff.reset.toString)
-    else print(question + " ")
+    askSafe(question, Color.DEFAULT)
     val reader = new jline.console.ConsoleReader()
     reader.readLine()
   }
 
   override def askSecret(question: String): Array[Char] = {
-    if (logger.ansiCodesSupported) print(Ansi.ansi.fgBright(Color.CYAN).bold.a(question + " ").boldOff.reset.toString)
-    else print(question + " ")
+    askSafe(question, Color.CYAN)
     val reader = new jline.console.ConsoleReader()
     reader.readLine('*').toCharArray
   }

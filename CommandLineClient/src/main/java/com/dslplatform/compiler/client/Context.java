@@ -144,21 +144,26 @@ public class Context implements Closeable {
 		return System.console() != null && !noPrompt;
 	}
 
-	public String ask(final String question) {
+	private void askSafe(final String question, final Color color) {
 		if (withColor) {
-			write(console, false, Ansi.ansi().fgBright(Color.DEFAULT).bold().a(question + " ").boldOff().reset().toString());
-		} else {
-			write(console, false, question + " ");
+			try {
+				write(console, false, Ansi.ansi().fgBright(color).bold().a(question + " ").boldOff().reset().toString());
+				return;
+			} catch (NoSuchMethodError ignore) {
+				warning("Incompatible jansi found on classpath. Reverting to no-color");
+				withColor = false;
+			}
 		}
+		write(console, false, question + " ");
+	}
+
+	public String ask(final String question) {
+		askSafe(question, Color.DEFAULT);
 		return System.console().readLine();
 	}
 
 	public char[] askSecret(final String question) {
-		if (withColor) {
-			write(console, false, Ansi.ansi().fgBright(Color.CYAN).bold().a(question + " ").boldOff().reset().toString());
-		} else {
-			write(console, false, question + " ");
-		}
+		askSafe(question, Color.CYAN);
 		return System.console().readPassword();
 	}
 

@@ -49,7 +49,7 @@ class JavaCompilation {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		if (externalJars.length == 0) {
+		if (externalJars == null || externalJars.length == 0) {
 			return Either.fail("Unable to find dependencies in: " + libraries.getAbsolutePath());
 		}
 

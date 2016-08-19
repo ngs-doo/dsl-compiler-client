@@ -3,6 +3,7 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.Force;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -29,7 +30,7 @@ public class CompileRevenjNet implements BuildAction {
 				return name.toLowerCase().endsWith(".dll");
 			}
 		});
-		if (found.length == 0) {
+		if (found == null || found.length == 0) {
 			context.error("Revenj.NET dependencies not found in: " + revenjDeps.getAbsolutePath());
 			return downloadFromGithub(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
 		}

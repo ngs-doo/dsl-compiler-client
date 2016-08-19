@@ -28,6 +28,12 @@ class ScalaCompilation {
 		} else if (output.exists() && output.isDirectory()) {
 			return Either.fail("Expecting to find file. Found folder at: " + output.getAbsolutePath());
 		}
+		if (output.getParentFile() != null && !output.getParentFile().exists()) {
+			context.show("Output folder not found. Will create one in: " + output.getParent());
+			if (!output.getParentFile().mkdirs()) {
+				return Either.fail("Unable to create output folder for: " + output.getAbsolutePath());
+			}
+		}
 		final Either<String> tryCompiler = ScalaPath.findCompiler(context);
 		if (!tryCompiler.isSuccess()) {
 			return Either.fail(tryCompiler.whyNot());
@@ -46,7 +52,7 @@ class ScalaCompilation {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		if (externalJars.length == 0) {
+		if (externalJars == null || externalJars.length == 0) {
 			return Either.fail("Unable to find dependencies in: " + libraries.getAbsolutePath());
 		}
 
@@ -65,8 +71,9 @@ class ScalaCompilation {
 		scalacArguments.add(classPath.toString());
 		context.notify("SCALAC", scalacArguments);
 		List<String> sources = Utils.listSources(source, context, ".scala");
-		if (sources.isEmpty())
+		if (sources.isEmpty()) {
 			return Either.fail("Unable to find Scala generated sources in: " + source.getAbsolutePath());
+		}
 		scalacArguments.addAll(sources);
 		context.show("Running scalac for " + output.getName());
 		final Either<Utils.CommandResult> execCompile = Utils.runCommand(context, scalac, source, scalacArguments);
