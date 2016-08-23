@@ -29,7 +29,8 @@ public enum Dependencies implements CompileParameter {
 			final String zip,
 			final boolean check) throws ExitException {
 		final File dependencies;
-		if (context.contains("dependency:" + library)) {
+		final boolean hasFolderSpecified = context.contains("dependency:" + library);
+		if (hasFolderSpecified) {
 			dependencies = new File(context.get("dependency:" + library));
 		} else {
 			final String depsParam = context.get(INSTANCE);
@@ -42,7 +43,9 @@ public enum Dependencies implements CompileParameter {
 			}
 		} else if (check && context.contains(Download.INSTANCE)) {
 			final Either<Long> modified = Utils.lastModified(context, zip, name, dependencies.lastModified());
-			if (modified.isSuccess() && dependencies.lastModified() != modified.get()) {
+			if (hasFolderSpecified && modified.isSuccess() && dependencies.lastModified() != modified.get()) {
+				context.show("Custom dependency folder specified for " + name + ". Skipping update for: " + dependencies.getAbsolutePath());
+			} else if (modified.isSuccess() && dependencies.lastModified() != modified.get()) {
 				context.show("Different dependencies found in: " + dependencies.getAbsolutePath());
 				if (context.contains(Force.INSTANCE) || context.canInteract()) {
 					if (context.contains(Force.INSTANCE)) {
