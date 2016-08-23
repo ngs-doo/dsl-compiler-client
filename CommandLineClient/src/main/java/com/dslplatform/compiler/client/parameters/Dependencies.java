@@ -43,12 +43,12 @@ public enum Dependencies implements CompileParameter {
 		} else if (check && context.contains(Download.INSTANCE)) {
 			final Either<Long> modified = Utils.lastModified(context, zip, name, dependencies.lastModified());
 			if (modified.isSuccess() && dependencies.lastModified() != modified.get()) {
-				context.show("Outdated dependencies found in: " + dependencies.getAbsolutePath());
+				context.show("Different dependencies found in: " + dependencies.getAbsolutePath());
 				if (context.contains(Force.INSTANCE) || context.canInteract()) {
 					if (context.contains(Force.INSTANCE)) {
-						context.show("Due to force option, outdated dependencies will be removed.");
+						context.show("Due to force option, different dependencies will be removed.");
 					} else {
-						final String input = context.ask("Clear outdated dependencies for " + name + " (y/N):");
+						final String input = context.ask("Clear different dependencies for " + name + " (y/N):");
 						if (!"y".equalsIgnoreCase(input)) {
 							return dependencies;
 						}
@@ -60,9 +60,11 @@ public enum Dependencies implements CompileParameter {
 						throw new ExitException();
 					}
 				} else {
-					context.show("Unable to interact; skipping clearing old dependencies.");
+					context.show("Unable to interact; skipping clearing different dependencies.");
 					context.show("Use force parameter to automatically force latest dependency download.");
 				}
+			} else if (!modified.isSuccess()) {
+				context.warning(modified.whyNot());
 			}
 		}
 		return dependencies;

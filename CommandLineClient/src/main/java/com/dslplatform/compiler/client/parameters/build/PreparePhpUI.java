@@ -16,7 +16,9 @@ public class PreparePhpUI extends PrepareSources {
 
 	// @TODO: temp fix for missing .php extensions, should be removed when fixed in the compiler
 	private void fixMissingExtensions(final File sources, final Context context) {
-		for (final String fn : sources.list()) {
+		final String[] children = sources.list();
+		if (children == null) return;
+		for (final String fn : children) {
 			final File sf = new File(sources, fn);
 			if (sf.isFile() && !sf.getName().endsWith(".twig")) {
 				if (!sf.renameTo(new File(sources, fn.concat(".php")))) {

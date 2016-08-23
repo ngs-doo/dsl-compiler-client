@@ -44,7 +44,9 @@ public class PrepareSources implements BuildAction {
 	}
 
 	private void copyFolder(final File sources, final File target, final Context context) throws ExitException {
-		for (final String fn : sources.list()) {
+		final String[] children = sources.list();
+		if (children == null) return;
+		for (final String fn : children) {
 			final File sf = new File(sources, fn);
 			final File tf = new File(target, fn);
 			if (sf.isDirectory()) {

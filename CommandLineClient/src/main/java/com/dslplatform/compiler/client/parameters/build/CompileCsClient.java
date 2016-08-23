@@ -66,7 +66,7 @@ public class CompileCsClient implements BuildAction {
 				return name.toLowerCase().endsWith(".dll");
 			}
 		});
-		if (zip != null && found.length == 0) {
+		if (zip != null && (found == null || found.length == 0)) {
 			context.warning(name + " dependencies not found in: " + libDeps.getAbsolutePath());
 			if (!context.contains(Download.INSTANCE)) {
 				if (!context.canInteract()) {

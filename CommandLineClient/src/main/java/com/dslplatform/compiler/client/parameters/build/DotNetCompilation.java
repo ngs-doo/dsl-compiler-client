@@ -4,7 +4,6 @@ import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.Utils;
 import com.dslplatform.compiler.client.parameters.DotNet;
-import com.dslplatform.compiler.client.parameters.Force;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -55,8 +54,10 @@ class DotNetCompilation {
 		for (final String r : references) {
 			arguments.add(escapeChar + "r:" + r);
 		}
-		for (final String d : dependencies) {
-			arguments.add(escapeChar + "r:" + d);
+		if (dependencies != null) {
+			for (final String d : dependencies) {
+				arguments.add(escapeChar + "r:" + d);
+			}
 		}
 		arguments.add(escapeChar + "lib:" + libraries.getAbsolutePath());
 		arguments.add(escapeChar + "warn:0");

@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 import com.dslplatform.compiler.client.parameters.Download;
-import com.dslplatform.compiler.client.parameters.Force;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;

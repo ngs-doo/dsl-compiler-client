@@ -32,12 +32,14 @@ public class Main {
 				return file.getPath().toLowerCase().endsWith(".jar");
 			}
 		});
-		final List<URL> urls = new ArrayList<URL>(jars.length);
-		for (final File j : jars) {
-			try {
-				urls.add(j.toURI().toURL());
-			} catch (MalformedURLException ex) {
-				context.error(ex);
+		final List<URL> urls = new ArrayList<URL>(jars != null ? jars.length : 0);
+		if (jars != null) {
+			for (final File j : jars) {
+				try {
+					urls.add(j.toURI().toURL());
+				} catch (MalformedURLException ex) {
+					context.error(ex);
+				}
 			}
 		}
 		final URLClassLoader ucl = new URLClassLoader(urls.toArray(new URL[urls.size()]));
@@ -53,6 +55,7 @@ public class Main {
 				if (close != null) {
 					close.invoke(ucl);
 				}
+			} catch (NoSuchMethodError ignore) {
 			} catch (Exception ignore) {
 			}
 		}

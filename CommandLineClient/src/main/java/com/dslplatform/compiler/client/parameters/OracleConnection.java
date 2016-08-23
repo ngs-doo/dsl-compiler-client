@@ -259,12 +259,13 @@ public enum OracleConnection implements CompileParameter {
 		} catch (ClassNotFoundException ex) {
 			context.warning("Error loading Oracle driver (oracle.jdbc.OracleDriver). Will look into alternative locations ...");
 			final File loc = new File(".");
-			final List<File> jars = new ArrayList<File>(Arrays.asList(loc.listFiles(new FileFilter() {
+			final File[] foundFiles = loc.listFiles(new FileFilter() {
 				public boolean accept(File file) {
 					final String name = file.getName().toLowerCase();
 					return name.startsWith("ojdbc") && name.endsWith(".jar");
 				}
-			})));
+			});
+			final List<File> jars = foundFiles == null ? new ArrayList<File>(0) : new ArrayList<File>(Arrays.asList(foundFiles));
 			if (jars.size() == 0) {
 				final String envOH = System.getenv("ORACLE_HOME");
 				if (envOH != null) {

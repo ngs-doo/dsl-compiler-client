@@ -76,12 +76,12 @@ public enum Download implements CompileParameter {
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-		if (found.length == 0) {
+		if (found == null || found.length == 0) {
 			if (zip == null && libraries.length == 0) {
 				context.log("No dependencies defined for: " + name);
 				return true;
 			}
-			context.error(name + " not found in: " + dependencies.getAbsolutePath());
+			context.warning(name + " not found in: " + dependencies.getAbsolutePath());
 			if (!context.contains(INSTANCE)) {
 				if (!context.canInteract()) {
 					context.error("Download option not enabled. Enable download option, change dependencies path or place " + name + " files in specified folder.");
@@ -110,6 +110,8 @@ public enum Download implements CompileParameter {
 				if (!dependencies.setLastModified(lastModified.get())) {
 					context.warning("Unable to set last modified info on: " + dependencies.getAbsolutePath());
 				}
+			} else {
+				context.warning("Failed to check dependency version for: " + dependencies.getAbsolutePath());
 			}
 		}
 		return true;

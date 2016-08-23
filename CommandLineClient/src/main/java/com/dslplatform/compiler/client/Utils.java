@@ -99,7 +99,9 @@ public abstract class Utils {
 	}
 
 	private static void findFiles(final Context context, final File path, final List<File> foundFiles, final List<String> extensions) {
-		for (final String fn : path.list()) {
+		final String[] files = path.list();
+		if (files == null) return;
+		for (final String fn : files) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
 				findFiles(context, f, foundFiles, extensions);
@@ -356,7 +358,9 @@ public abstract class Utils {
 
 	private static void deletePathAndRetry(final File path, final int retry) throws IOException {
 		try {
-			for (final String fn : path.list()) {
+			final String[] files = path.list();
+			if (files == null) return;
+			for (final String fn : files) {
 				final File f = new File(path, fn);
 				if (f.isDirectory()) {
 					deletePath(f);
@@ -379,15 +383,18 @@ public abstract class Utils {
 	}
 
 	private static void findNonEmptyDirs(final File path, final List<File> foundFiles, final String extension) {
-		if (path.listFiles(new FilenameFilter() {
+		final File[] files = path.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.endsWith(extension);
 			}
-		}).length > 0) {
+		});
+		if (files != null && files.length > 0) {
 			foundFiles.add(path);
 		}
-		for (final String fn : path.list()) {
+		final String[] content = path.list();
+		if (content == null) return;
+		for (final String fn : content) {
 			final File f = new File(path, fn);
 			if (f.isDirectory()) {
 				findNonEmptyDirs(f, foundFiles, extension);
