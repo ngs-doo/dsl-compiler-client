@@ -31,7 +31,8 @@ public class DslLexerParser extends Lexer {
 
 	private boolean forceRefresh;
 	private boolean waitingForSync;
-	private String lastDsl;
+	private long delayUntil;
+	private String lastDsl = "";
 	private final List<AST> ast = new ArrayList<AST>();
 	private int position = 0;
 
@@ -41,6 +42,26 @@ public class DslLexerParser extends Lexer {
 		if (project != null && file != null) {
 			psiFile = PsiManager.getInstance(project).findFile(file);
 			document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+			if (tokenParser == null) {
+				Thread waitForSetup = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							int i = 0;
+							while (i < 600 && tokenParser == null) {
+								Thread.sleep(1000);
+								i++;
+							}
+							if (application != null) {
+								application.invokeLater(scheduleRefresh);
+							}
+						} catch (Throwable ignore) {
+						}
+					}
+				});
+				waitForSetup.setDaemon(true);
+				waitForSetup.start();
+			}
 		} else {
 			psiFile = null;
 			document = null;
@@ -113,11 +134,25 @@ public class DslLexerParser extends Lexer {
 	private static DslCompiler.TokenParser tokenParser;
 
 	static {
-		Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
-		DslContext context = new DslContext(logger);
+		final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
+		final DslContext context = new DslContext(logger);
 		context.put(Download.INSTANCE, null);
+		Thread setup = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					setupCompiler(logger, context);
+				} catch (Throwable e) {
+					logger.error(e.getMessage());
+				}
+			}
+		});
+		setup.start();
+	}
+
+	private static void setupCompiler(Logger logger, DslContext context) {
 		if (!Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE))) {
-			logger.warn("Unable to setup DSL command line client");
+			logger.warn("Unable to setup DSL Platform client");
 		}
 		final String path = context.get(DslCompiler.INSTANCE);
 		if (path == null) {
@@ -166,7 +201,7 @@ public class DslLexerParser extends Lexer {
 					newAst.add(new AST(c, linesTotal[c.line - 1] + c.column, c.value.length()));
 			}
 		}
-		if (newAst.size() == 0 && dsl.length() > 0) {
+		if (newAst.size() == 0) {
 			newAst.add(new AST(null, 0, dsl.length()));
 		}
 		fixupAndReposition(dsl, newAst, start);
@@ -174,6 +209,7 @@ public class DslLexerParser extends Lexer {
 	}
 
 	private void fixupAndReposition(String dsl, List<AST> newAst, int start) {
+		lastDsl = dsl;
 		int cur = 0;
 		int index = 0;
 		while (index < newAst.size()) {
@@ -193,6 +229,7 @@ public class DslLexerParser extends Lexer {
 			}
 		}
 		synchronized (ast) {
+			position = 0;
 			ast.clear();
 			ast.addAll(newAst);
 			for (int i = 0; i < ast.size(); i++) {
@@ -201,7 +238,6 @@ public class DslLexerParser extends Lexer {
 					return;
 				}
 			}
-			position = 0;
 		}
 	}
 
@@ -231,11 +267,14 @@ public class DslLexerParser extends Lexer {
 		@Override
 		public void run() {
 			try {
-				String currentDsl;
+				String currentDsl = null;
 				do {
-					Thread.sleep(300);
+					Thread.sleep(100);
+					if (System.currentTimeMillis() < delayUntil) {
+						continue;
+					}
 					currentDsl = application.runReadAction(obtainLatestDsl);
-				} while (!currentDsl.equals(lastDsl));
+				} while (currentDsl == null || !currentDsl.equals(lastDsl));
 				waitingForSync = false;
 				application.invokeLater(scheduleRefresh);
 			} catch (Exception ignore) {
@@ -246,17 +285,29 @@ public class DslLexerParser extends Lexer {
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
 		final String dsl = charSequence.toString();
-		lastDsl = dsl;
+		final boolean differentDsl = !dsl.equals(lastDsl);
 		if (project == null || forceRefresh || ast.size() == 0 && dsl.length() > 0) {
 			analyze(dsl, start);
-		} else {
+			forceRefresh = false;
+		} else if (differentDsl) {
+			final String actualDsl;
+			if (start == end && dsl.length() == 0 && psiFile != null) {
+				actualDsl = psiFile.getText();
+				if (actualDsl.equals(lastDsl)) {
+					position = 0;
+					return;
+				}
+			} else actualDsl = dsl;
 			List<AST> newAst = new ArrayList<AST>(1);
-			newAst.add(new AST(null, 0, dsl.length()));
-			fixupAndReposition(dsl, newAst, start);
+			newAst.add(new AST(null, 0, actualDsl.length()));
+			fixupAndReposition(actualDsl, newAst, start);
+			delayUntil = System.currentTimeMillis() + 300;
 			if (!waitingForSync && project.isOpen() && psiFile != null) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
 			}
+		} else if (start == 0 && end == dsl.length()) {
+			position = 0;
 		}
 	}
 
