@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -499,10 +500,19 @@ namespace DDDLanguage
 				{
 					var com = conn.CreateCommand();
 					conn.Open();
-					com.CommandText = "SELECT dsls, version FROM (SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC) sq WHERE ROWNUM <= 1";
 					if (!Version.TryParse(conn.ServerVersion, out oracleVersion))
 						oracleVersion = new Version(10, 2);
-					var dr = com.ExecuteReader();
+					IDataReader dr;
+					try
+					{
+						com.CommandText = "SELECT dsls, version FROM (SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC) sq WHERE ROWNUM <= 1";
+						dr = com.ExecuteReader();
+					}
+					catch
+					{
+						com.CommandText = "SELECT dsls, version FROM (SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC) sq WHERE ROWNUM <= 1";
+						dr = com.ExecuteReader();
+					}
 					if (dr.Read())
 					{
 						var dsl = ConvertHstore(dr.GetString(0));
@@ -532,8 +542,17 @@ Error: " + ex.Message, ex);
 					conn.Open();
 					if (!Version.TryParse(conn.ServerVersion, out postgresVersion))
 						postgresVersion = new Version(9, 3);
-					com.CommandText = "SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1";
-					var dr = com.ExecuteReader();
+					IDataReader dr;
+					try
+					{
+						com.CommandText = "SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1";
+						dr = com.ExecuteReader();
+					}
+					catch
+					{
+						com.CommandText = "SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1";
+						dr = com.ExecuteReader();
+					}
 					if (dr.Read())
 					{
 						var dsl = ConvertHstore(dr.GetString(0));

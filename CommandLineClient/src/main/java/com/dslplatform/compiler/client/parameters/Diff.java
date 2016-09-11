@@ -154,7 +154,7 @@ public enum Diff implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		return "Provide diff on changed DSL files. For fast confirmation of changes done before creating new library models or SQL migrations.\n" +
-				"Diff requires read-only access to -NGS- schema in Postgres/Oracle database where previously applied DSL is stored.\n" +
+				"Diff requires read-only access to -DSL- schema in Postgres/Oracle database where previously applied DSL is stored.\n" +
 				"To disable diff confirmation, use no prompt parameter.";
 	}
 }

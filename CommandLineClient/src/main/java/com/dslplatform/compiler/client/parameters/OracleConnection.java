@@ -80,7 +80,7 @@ public enum OracleConnection implements CompileParameter {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
 							"SELECT COUNT(*) FROM sys.all_tables t\n" +
-									"WHERE t.OWNER = '-NGS-' AND t.TABLE_NAME = 'DATABASE_MIGRATION'");
+									"WHERE (t.OWNER = '-DSL-' OR t.OWNER = '-NGS-') AND t.TABLE_NAME = 'DATABASE_MIGRATION'");
 			final boolean hasTable = migrationExist.next() && migrationExist.getLong(1) > 0;
 			migrationExist.close();
 			if (!hasTable) {
@@ -90,16 +90,22 @@ public enum OracleConnection implements CompileParameter {
 				return emptyResult;
 			}
 		} catch (SQLException ex) {
-			context.error("Error checking for migration table in -NGS- schema");
+			context.error("Error checking for migration table in -DSL- schema");
 			context.error(ex);
 			cleanup(conn, context);
 			throw new ExitException();
 		}
 		try {
-			final ResultSet lastMigration =
-					stmt.executeQuery("SELECT sq.Dsls, sq.Version\n" +
-							"FROM (SELECT m.Dsls, m.Version FROM \"-NGS-\".Database_Migration m ORDER BY m.Ordinal DESC) sq\n" +
-							"WHERE RowNum = 1");
+			ResultSet lastMigration;
+			try {
+				lastMigration = stmt.executeQuery("SELECT sq.Dsls, sq.Version\n" +
+						"FROM (SELECT m.Dsls, m.Version FROM \"-DSL-\".Database_Migration m ORDER BY m.Ordinal DESC) sq\n" +
+						"WHERE RowNum = 1");
+			}catch (Throwable ignore) {
+				lastMigration = stmt.executeQuery("SELECT sq.Dsls, sq.Version\n" +
+						"FROM (SELECT m.Dsls, m.Version FROM \"-NGS-\".Database_Migration m ORDER BY m.Ordinal DESC) sq\n" +
+						"WHERE RowNum = 1");
+			}
 			final String lastDsl;
 			final String compiler;
 			if (lastMigration.next()) {
@@ -118,7 +124,7 @@ public enum OracleConnection implements CompileParameter {
 				return result;
 			}
 		} catch (SQLException ex) {
-			context.error("Error loading previous DSL from migration table in -NGS- schema");
+			context.error("Error loading previous DSL from migration table in -DSL- schema");
 			context.error(ex);
 			cleanup(conn, context);
 			throw new ExitException();

@@ -74,7 +74,7 @@ public enum PostgresConnection implements CompileParameter {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
 							"SELECT EXISTS(SELECT 1 FROM pg_tables " +
-									"WHERE schemaname = '-NGS-' AND tablename = 'database_migration')");
+									"WHERE (schemaname = '-DSL-' OR schemaname = '-NGS-') AND tablename = 'database_migration')");
 			final boolean hasTable = migrationExist.next() && migrationExist.getBoolean(1);
 			migrationExist.close();
 			if (!hasTable) {
@@ -84,14 +84,18 @@ public enum PostgresConnection implements CompileParameter {
 				return emptyResult;
 			}
 		} catch (SQLException ex) {
-			context.error("Error checking for migration table in -NGS- schema");
+			context.error("Error checking for migration table in -DSL- schema");
 			context.error(ex);
 			cleanup(conn, context);
 			throw new ExitException();
 		}
 		try {
-			final ResultSet lastMigration =
-					stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
+			ResultSet lastMigration;
+			try {
+				lastMigration = stmt.executeQuery("SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1");
+			} catch (Throwable ignore) {
+				lastMigration = stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
+			}
 			final String lastDsl;
 			final String compiler;
 			if (lastMigration.next()) {
@@ -110,7 +114,7 @@ public enum PostgresConnection implements CompileParameter {
 				return result;
 			}
 		} catch (SQLException ex) {
-			context.error("Error loading previous DSL from migration table in -NGS- schema");
+			context.error("Error loading previous DSL from migration table in -DSL- schema");
 			context.error(ex);
 			cleanup(conn, context);
 			throw new ExitException();
