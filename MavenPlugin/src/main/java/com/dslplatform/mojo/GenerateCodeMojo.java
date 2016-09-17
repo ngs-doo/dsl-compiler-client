@@ -1,5 +1,6 @@
 package com.dslplatform.mojo;
 
+import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.parameters.*;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -161,7 +162,16 @@ public class GenerateCodeMojo extends AbstractMojo {
 		if (boot.exists()) {
 			Utils.createDirIfNotExists(this.servicesManifest);
 			File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
-			Utils.appendToFile(context, servicesRegistration, service);
+			Either<String> content = com.dslplatform.compiler.client.Utils.readFile(servicesRegistration);
+			boolean empty = !content.isSuccess() || content.get().isEmpty();
+			if (empty) {
+				Utils.appendToFile(context, servicesRegistration, service);
+			} else if (!(service.equals(content.get())
+					|| content.get().startsWith(service + "\n")
+					|| content.get().contains("\n" + service + "\n")
+					|| content.get().endsWith("\n" + service))) {
+				Utils.appendToFile(context, servicesRegistration, "\n" + service);
+			}
 		}
 	}
 
