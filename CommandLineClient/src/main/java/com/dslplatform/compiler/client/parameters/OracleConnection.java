@@ -203,8 +203,13 @@ public enum OracleConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			context.warning("Error connecting to the database.");
-			context.warning(e);
+			if (context.canInteract()) {
+				context.warning("Error connecting to the database.");
+				context.warning(e);
+			} else {
+				context.error("Error connecting to the database.");
+				context.error(e);
+			}
 			if (e.getErrorCode() == 12514) {
 				context.error("Oracle database not found. Please create database before using clc or check if correct connection string was provided");
 				return false;

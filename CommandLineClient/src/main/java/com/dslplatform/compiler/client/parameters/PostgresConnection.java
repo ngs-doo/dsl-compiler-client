@@ -3,12 +3,9 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import org.postgresql.PGProperty;
 import org.postgresql.core.*;
-import org.postgresql.core.v3.*;
 import org.postgresql.util.*;
 
-import javax.net.SocketFactory;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.*;
@@ -132,17 +129,18 @@ public enum PostgresConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		PGStream pgStream = null;
-		ProtocolConnection connection = null;
 		try {
 			try {
 				String server = parts[0];
 				String database = parts[1].indexOf('?') == -1 ? parts[1] : parts[1].substring(0, parts[1].indexOf('?'));
 				String[] info = server.split(":");
 				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
-				int timeout = PGProperty.CONNECT_TIMEOUT.getInt(props) * 1000;
-
-				pgStream = new PGStream(SocketFactory.getDefault(), hostSpec, timeout);
-				connection = DslConnectionFactory.openConnection(pgStream, database, props);
+				Properties parsed = org.postgresql.Driver.parseURL(connectionString, props);
+				if (parsed == null) {
+					context.error("Invalid jdbcUrl provided: " + connectionString);
+					throw new ExitException();
+				}
+				pgStream = PostgresConnectionFactory.openConnection(hostSpec, parsed.getProperty("user"), parsed.getProperty("password"), database, props);
 			} catch (Exception e) {
 				context.error("Error opening connection to " + connectionString);
 				context.error(e);
@@ -155,10 +153,48 @@ public enum PostgresConnection implements CompileParameter {
 				pgStream.SendInteger4(5 + sqlBytes.length);
 				pgStream.Send(sqlBytes);
 				pgStream.SendChar(0);
-				pgStream.flush();
-				checkResponse(pgStream, context);
+				final PGStream stream = pgStream;
+				final boolean[] isDone = new boolean[1];
+				Thread waitResp = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							stream.flush();
+							checkResponse(stream, context);
+						} catch (Exception ex) {
+							context.error(ex);
+						}
+						isDone[0] = true;
+					}
+				});
+				waitResp.start();
+				waitResp.join(100);
+				int timeout = 0;
+				while (!isDone[0] && timeout < 600) {
+					timeout += 1;
+					waitResp.join(1000);
+					if (timeout == 10) {
+						context.warning("Query execution is taking a long time...");
+					} else  if (timeout % 10 == 0) {
+						context.warning("Still waiting...");
+					}
+					if (!isDone[0] && (timeout % 30 == 0) && context.canInteract()) {
+						String response = context.ask("Abort executing query [y/N]?");
+						if ("y".equalsIgnoreCase(response)) {
+							if (!isDone[0]) {
+								context.error("Canceled SQL script execution");
+								throw new ExitException();
+							}
+						}
+					}
+				}
 				final long endAt = System.currentTimeMillis();
-				context.log("Script executed in " + (endAt - startAt) + "ms");
+				if (isDone[0]) {
+					context.log("Script executed in " + (endAt - startAt) + "ms");
+				} else {
+					context.error("Failed to execute script. Timeout out waiting.");
+					throw new ExitException();
+				}
 			} catch (Exception ex) {
 				context.error("Error executing SQL script");
 				context.error(ex);
@@ -168,12 +204,6 @@ public enum PostgresConnection implements CompileParameter {
 			try {
 				if (pgStream != null) {
 					pgStream.close();
-				}
-			} catch (Exception ignore) {
-			}
-			try {
-				if (connection != null) {
-					connection.close();
 				}
 			} catch (Exception ignore) {
 			}
@@ -195,12 +225,6 @@ public enum PostgresConnection implements CompileParameter {
 					pgStream.ReceiveString(len - 5);
 					pgStream.ReceiveChar();
 					break;
-				case 'D':
-					try {
-						pgStream.ReceiveTupleV3();
-					} catch (OutOfMemoryError ignore) {
-					}
-					break;
 				case 'E':
 					int lenE = pgStream.ReceiveInteger4();
 					String totalMessage = pgStream.ReceiveString(lenE - 4);
@@ -221,8 +245,8 @@ public enum PostgresConnection implements CompileParameter {
 					context.log(warningMsg.getMessage());
 					break;
 				default:
-					int lenSkip = pgStream.ReceiveInteger4();
-					pgStream.Skip(lenSkip - 4);
+					int skipLen = pgStream.ReceiveInteger4();
+					pgStream.Skip(skipLen - 4);
 					break;
 			}
 		} while (true);
@@ -263,8 +287,13 @@ public enum PostgresConnection implements CompileParameter {
 			stmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			context.warning("Error connecting to the database.");
-			context.warning(e);
+			if (context.canInteract()) {
+				context.warning("Error connecting to the database.");
+				context.warning(e);
+			} else {
+				context.error("Error connecting to the database.");
+				context.error(e);
+			}
 			final boolean dbDoesntExists = "3D000".equals(e.getSQLState());
 			final boolean dbMissingPassword = "08004".equals(e.getSQLState());
 			final boolean dbWrongPassword = "28P01".equals(e.getSQLState());

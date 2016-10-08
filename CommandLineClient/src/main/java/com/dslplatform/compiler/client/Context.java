@@ -141,7 +141,7 @@ public class Context implements Closeable {
 	}
 
 	public boolean canInteract() {
-		return System.console() != null && !noPrompt;
+		return !noPrompt && System.console() != null;
 	}
 
 	private void askSafe(final String question, final Color color) {
