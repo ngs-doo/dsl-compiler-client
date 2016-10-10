@@ -182,6 +182,10 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		private Process process;
 		private long startedOn;
 
+		public int getPort() {
+			return port;
+		}
+
 		TokenParser(final Context context, final File compiler, final int port, final Process process) {
 			this.context = context;
 			this.compiler = compiler;

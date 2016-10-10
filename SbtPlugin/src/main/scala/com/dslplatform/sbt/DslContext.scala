@@ -3,32 +3,39 @@ package com.dslplatform.sbt
 import java.io.{PrintWriter, StringWriter}
 
 import com.dslplatform.compiler.client.Context
-import com.dslplatform.compiler.client.parameters.{DisableColors, LogOutput}
+import com.dslplatform.compiler.client.parameters.{DisableColors, DisablePrompt, LogOutput}
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
 import sbt.Logger
 
-private[sbt] class DslContext(logger: Logger) extends Context {
+private[sbt] class DslContext(logger: Option[Logger]) extends Context {
 
-  private var inColor = logger.ansiCodesSupported
+  private var inColor = logger.isDefined && logger.get.ansiCodesSupported
 
   if (!inColor) {
     put(DisableColors.INSTANCE, "")
+  }
+  if (logger.isEmpty) {
+    put(DisablePrompt.INSTANCE, "")
   }
 
   private lazy val withLog = contains(LogOutput.INSTANCE)
 
   override def show(values: String*): Unit = {
-    for (v <- values) {
-      logger.info(v)
+    if (logger.isDefined) {
+      for (v <- values) {
+        logger.get.info(v)
+      }
     }
   }
 
   override def log(value: String): Unit = {
-    if (inColor) {
-      logger.debug(Context.inColor(Color.YELLOW, value))
-    } else {
-      logger.debug(value)
+    if (logger.isDefined) {
+      if (inColor) {
+        logger.get.debug(Context.inColor(Color.YELLOW, value))
+      } else {
+        logger.get.debug(value)
+      }
     }
   }
 
@@ -37,10 +44,12 @@ private[sbt] class DslContext(logger: Logger) extends Context {
   }
 
   override def warning(value: String): Unit = {
-    if (inColor) {
-      logger.warn(Context.inColor(Color.MAGENTA, value))
-    } else {
-      logger.warn(value)
+    if (logger.isDefined) {
+      if (inColor) {
+        logger.get.warn(Context.inColor(Color.MAGENTA, value))
+      } else {
+        logger.get.warn(value)
+      }
     }
   }
 
@@ -54,10 +63,12 @@ private[sbt] class DslContext(logger: Logger) extends Context {
   }
 
   override def error(value: String): Unit = {
-    if (inColor) {
-      logger.error(Context.inColor(Color.RED, value))
-    } else {
-      logger.error(value)
+    if (logger.isDefined) {
+      if (inColor) {
+        logger.get.error(Context.inColor(Color.RED, value))
+      } else {
+        logger.get.error(value)
+      }
     }
   }
 

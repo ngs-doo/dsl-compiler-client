@@ -20,6 +20,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslLibraries = settingKey[Map[Targets.Option, File]]("Compile libraries to specified outputs)")
     val dslSources = settingKey[Map[Targets.Option, File]]("Generate sources to specified folders)")
     val dslCompiler = settingKey[String]("Path to custom dsl-compiler.exe or port to running instance (requires .NET/Mono)")
+    val dslServerMode = settingKey[Boolean]("Talk with DSL compiler in server mode (will be faster)")
     val dslPostgres = settingKey[String]("JDBC-like connection string to the Postgres database")
     val dslOracle = settingKey[String]("JDBC-like connection string to the Oracle database")
     val dslApplyMigration = settingKey[Boolean]("Apply SQL migration directly to the database")
@@ -59,6 +60,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           dslDslPath.value,
           dslPlugins.value,
           dslCompiler.value,
+          dslServerMode.value,
           dslNamespace.value,
           dslSettings.value,
           targetDeps,
@@ -97,6 +99,7 @@ Example: dslLibrary revenj.scala path_to_jar""")
           dslDslPath.value,
           dslPlugins.value,
           dslCompiler.value,
+          dslServerMode.value,
           dslNamespace.value,
           dslSettings.value,
           dslLatest.value)
@@ -198,6 +201,7 @@ Example: dslLibrary revenj.scala path_to_folder""")
           dslDslPath.value,
           dslPlugins.value,
           dslCompiler.value,
+          dslServerMode.value,
           dslApplyMigration.value,
           dslForce.value,
           dslLatest.value)
@@ -218,12 +222,14 @@ Example: dslLibrary revenj.scala path_to_folder""")
         dslDslPath.value,
         dslPlugins.value,
         dslCompiler.value,
+        dslServerMode.value,
         args)
     },
 
     dslLibraries := Map.empty,
     dslSources := Map.empty,
     dslCompiler := "",
+    dslServerMode := false,
     dslPostgres := "",
     dslOracle := "",
     dslApplyMigration := false,
@@ -234,6 +240,16 @@ Example: dslLibrary revenj.scala path_to_folder""")
     dslSqlPath := baseDirectory.value / "sql",
     dslLatest := true,
     dslForce := false,
-    dslPlugins := Some(baseDirectory.value)
+    dslPlugins := Some(baseDirectory.value),
+    onLoad := {
+      if (dslServerMode.value) {
+        Actions.setupServerMode(None, dslCompiler.value)
+      }
+      onLoad.value
+    },
+    onUnload := {
+      Actions.stopServerMode()
+      onUnload.value
+    }
   )
 }
