@@ -18,41 +18,118 @@ import scala.util.Random
 
 object Actions {
 
-  private case class ServerInfo(port: Int, process: Process, logger: Option[Logger])
+  private case class ServerInfo(port: Int, process: Option[Process])
 
   private var serverInfo: Option[ServerInfo] = None
 
-  def setupServerMode(logger: Option[Logger], compiler: String): Unit = {
+  private def trySocket(port: Int): Option[Socket] = {
+    val isIp4 = InetAddress.getLoopbackAddress.isInstanceOf[Inet4Address]
     try {
-      val path = {
-        if (compiler == null || compiler.isEmpty) {
-          logger.foreach(_.info("Downloading latest DSL compiler since compiler path is not specified."))
-          val downloadCtx = new DslContext(logger)
-          downloadCtx.put(Download.INSTANCE, "")
-          if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
-            logger.foreach(_.warn("Unable to setup DSL Platform client"))
-          }
-          downloadCtx.get(DslCompiler.INSTANCE)
-        } else compiler
-      }
-      if (path == null || path.isEmpty) {
-        logger.foreach(_.error("Unable to setup dsl-compiler.exe. Please check if Mono/.NET is installed and available on path."))
-      } else {
-        if (new File(path).exists()) {
-          val rnd = new Random
-          val value = 40000 + rnd.nextInt(20000)
-          logger.foreach(_.info(s"Starting DSL Platform compiler found at: $path on port: $value"))
-          val serverCtx = new DslContext(logger)
-          val process = startServerMode(serverCtx, path, value)
-          serverInfo = Some(ServerInfo(value, process, logger))
-        } else {
-          logger.foreach(_.error(s"Unable to find specified dsl-compiler at $path"))
+      Some(new Socket(if (isIp4) "127.0.0.1" else "::1", port))
+    } catch {
+      case _: Throwable =>
+        try {
+          Some(new Socket(if (isIp4) "::1" else "127.0.0.1", port))
+        } catch {
+          case _: Throwable =>
+            None
         }
+    }
+  }
+
+  def setupServerMode(compiler: String, logger: Option[Logger], port: Option[Int]): Unit = {
+    if (serverInfo.isEmpty) {
+      try {
+        val livePort = {
+          if (port.nonEmpty) {
+            trySocket(port.get) match {
+              case Some(socket) =>
+                try {
+                  socket.close()
+                } catch {
+                  case _: Throwable =>
+                }
+                port
+              case _ =>
+                None
+            }
+          } else None
+        }
+        if (livePort.isDefined) {
+          serverInfo = Some(ServerInfo(livePort.get, None))
+        } else {
+          val path = {
+            if (compiler == null || compiler.isEmpty) {
+              logger.foreach(_.info("Downloading latest DSL compiler since compiler path is not specified."))
+              val downloadCtx = new DslContext(logger)
+              downloadCtx.put(Download.INSTANCE, "")
+              if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
+                logger.foreach(_.warn("Unable to setup DSL Platform client"))
+              }
+              downloadCtx.get(DslCompiler.INSTANCE)
+            } else compiler
+          }
+          if (path == null || path.isEmpty) {
+            logger.foreach(_.error("Unable to setup dsl-compiler.exe. Please check if Mono/.NET is installed and available on path."))
+          } else {
+            if (new File(path).exists()) {
+              val rnd = new Random
+              val value = port.getOrElse(40000 + rnd.nextInt(20000))
+              logger.foreach(_.info(s"Starting DSL Platform compiler found at: $path on port: $value"))
+              val serverCtx = new DslContext(logger)
+              val process = startServerMode(serverCtx, path, value)
+              serverInfo = Some(ServerInfo(value, Some(process)))
+            } else {
+              logger.foreach(_.error(s"Unable to find specified dsl-compiler at $path"))
+            }
+          }
+        }
+      } catch {
+        case ex: Throwable =>
+          logger.foreach(_.error(ex.getMessage))
+      }
+    }
+  }
+
+  private def startServerMode(context: DslContext, compiler: String, port: Int): Process = {
+    val arguments = new util.ArrayList[String]
+    arguments.add(compiler)
+    arguments.add("server-mode")
+    arguments.add("port=" + port)
+    try {
+      if (InetAddress.getLoopbackAddress.isInstanceOf[Inet4Address]) {
+        arguments.add("ip=v4")
       }
     } catch {
-      case ex: Throwable =>
-        logger.foreach(_.error(ex.getMessage))
+      case ignore: UnknownHostException =>
     }
+    try {
+      val procId = ManagementFactory.getRuntimeMXBean.getName.split("@")(0)
+      arguments.add("parent=" + procId)
+    } catch {
+      case ignore: Exception =>
+    }
+    if (!Utils.isWindows) {
+      val mono = Mono.findMono(context)
+      if (mono.isSuccess) arguments.add(0, mono.get)
+      else throw new RuntimeException("Mono is required to run DSL compiler. Mono not detected or specified.")
+    }
+    val pb = new ProcessBuilder(arguments)
+    pb.start
+  }
+
+  private def stopServerMode(logger: Option[Logger]): Unit = {
+    serverInfo match {
+      case Some(si) if si.process.isDefined =>
+        try {
+          si.process.get.destroy()
+        } catch {
+          case ex: Throwable =>
+            logger.foreach(_.error(ex.getMessage))
+        }
+      case _ =>
+    }
+    serverInfo = None
   }
 
   def compileLibrary(
@@ -63,6 +140,7 @@ object Actions {
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
+    serverPort: Option[Int] = None,
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
     dependencies: Option[File] = None,
@@ -77,7 +155,7 @@ object Actions {
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
     }
-    executeContext(dsl, compiler, serverMode, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
     output
   }
 
@@ -89,6 +167,7 @@ object Actions {
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
+    serverPort: Option[Int] = None,
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
     latest: Boolean = true): Seq[File] = {
@@ -110,7 +189,7 @@ object Actions {
       ctx.put(Namespace.INSTANCE, namespace)
     }
     settings.foreach(it => ctx.put(it.toString, ""))
-    executeContext(dsl, compiler, serverMode, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
     val generated = new File(TempPath.getTempProjectPath(ctx), target.name)
     val files = new ArrayBuffer[File]()
     deepCopy(generated.toPath, output.toPath, files)
@@ -165,6 +244,7 @@ object Actions {
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
+    serverPort: Option[Int] = None,
     apply: Boolean = false,
     force: Boolean = false,
     latest: Boolean = true): Unit = {
@@ -175,7 +255,7 @@ object Actions {
     if (force) ctx.put(Force.INSTANCE, "")
     ctx.put(SqlPath.INSTANCE, output.getPath)
     ctx.put(Migration.INSTANCE, "")
-    executeContext(dsl, compiler, serverMode, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
   }
 
   def execute(
@@ -184,6 +264,7 @@ object Actions {
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
+    serverPort: Option[Int] = None,
     arguments: Seq[String]): Unit = {
 
     val ctx = new DslContext(Some(logger))
@@ -196,81 +277,73 @@ object Actions {
         ctx.put(cmd.substring(0, eqInd), cmd.substring(eqInd + 1))
       }
     }
-    executeContext(dsl, compiler, serverMode, plugins, latest = false, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverPort, plugins, latest = false, ctx, logger)
   }
 
-  private def startServerMode(context: DslContext, compiler: String, port: Int): Process = {
-    val arguments = new util.ArrayList[String]
-    arguments.add(compiler)
-    arguments.add("server-mode")
-    arguments.add("port=" + port)
-    try {
-      if (InetAddress.getLocalHost.isInstanceOf[Inet4Address]) {
-        arguments.add("ip=v4")
-      }
-    } catch {
-      case ignore: UnknownHostException =>
+  private def executeContext(dsl: File, compiler: String, serverMode: Boolean, serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
+    ctx.put(DslPath.INSTANCE, dsl.getPath)
+    val startedNow = {
+      if (serverMode) {
+        if (serverInfo.flatMap(_.process).exists(t => !t.isAlive)) {
+          logger.warn("Dead DSL Platform process detected. Will try restart...")
+          val port = serverInfo.get.port
+          stopServerMode(Some(logger))
+          setupServerMode(compiler, Some(logger), Some(port))
+          true
+        } else if (serverInfo.isEmpty) {
+          setupServerMode(compiler, Some(logger), serverPort)
+          true
+        } else false
+      } else false
     }
-    try {
-      val procId = ManagementFactory.getRuntimeMXBean.getName.split("@")(0)
-      arguments.add("parent=" + procId)
-    } catch {
-      case ignore: Exception =>
-    }
-    if (!Utils.isWindows) {
-      val mono = Mono.findMono(context)
-      if (mono.isSuccess) arguments.add(0, mono.get)
-      else throw new RuntimeException("Mono is required to run DSL compiler. Mono not detected or specified.")
-    }
-    val pb = new ProcessBuilder(arguments)
-    pb.start
-  }
-
-  def stopServerMode(): Unit = {
-    serverInfo match {
-      case Some(si) =>
-        try {
-          si.process.destroy()
-        } catch {
-          case ex: Throwable =>
-            si.logger.foreach(_.error(ex.getMessage))
+    (serverMode, serverInfo) match {
+      case (true, Some(info)) =>
+        ctx.put(DslCompiler.INSTANCE, info.port.toString)
+      case (true, _) =>
+        logger.warn("DSL Platform server mode specified, but server not running. Will try process invocation")
+        if (compiler.nonEmpty) {
+          ctx.put(DslCompiler.INSTANCE, compiler)
         }
       case _ =>
-    }
-    serverInfo = None
-  }
-
-  private def executeContext(dsl: File, compiler: String, serverMode: Boolean, plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
-    ctx.put(DslPath.INSTANCE, dsl.getPath)
-    if (serverMode) {
-      if (serverInfo.isDefined && !serverInfo.get.process.isAlive) {
-        logger.warn("Dead DSL Platform process detected. Will try restart...")
-        stopServerMode()
-      }
-      if (serverInfo.isEmpty) {
-        setupServerMode(Some(logger), compiler)
-      }
-    }
-    if (serverMode && serverInfo.isEmpty) {
-      logger.warn("Server mode specified, but server not running. Will try process invocation")
-      if (compiler.nonEmpty) {
-        ctx.put(DslCompiler.INSTANCE, compiler)
-      }
-    } else if (serverMode) {
-      ctx.put(DslCompiler.INSTANCE, serverInfo.get.port.toString)
-    } else if (compiler.nonEmpty && (!serverMode || serverInfo.isEmpty)) {
-      ctx.put(DslCompiler.INSTANCE, compiler)
+        if (compiler.nonEmpty && (!serverMode || serverInfo.isEmpty)) {
+          ctx.put(DslCompiler.INSTANCE, compiler)
+        }
     }
     if (!serverMode && latest) {
       ctx.put(Download.INSTANCE, "")
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
     if (!Main.processContext(ctx, params)) {
-      if (serverMode && serverInfo.nonEmpty) {
-        logger.warn("Will retry without server mode...")
+      (serverMode, serverInfo) match {
+        case (true, Some(info)) =>
+        logger.warn("Will retry DSL compilation without server mode...")
         ctx.put(DslCompiler.INSTANCE, if (compiler.nonEmpty) compiler else "")
         Main.processContext(ctx, params)
+        if (!startedNow) {
+          tryRestart(logger, info, compiler)
+        }
+        case _ =>
       }
+    }
+  }
+
+  private def tryRestart(logger: Logger, info: ServerInfo, compiler: String): Unit = {
+    logger.warn("Checking DSL Platform server state and trying restart...")
+    trySocket(info.port) match {
+      case Some(socket) =>
+        try {
+          logger.warn(s"Shutting down server on ${info.port}")
+          socket.getOutputStream.write("shutdown\n".getBytes("UTF-8"))
+          socket.close()
+        } catch {
+          case ex: Throwable =>
+            logger.warn(s"Error shutting down DSL Platform server: ${ex.getMessage}")
+        }
+        stopServerMode(Some(logger))
+      case _ =>
+        logger.warn(s"DSL Platform server not responding on ${info.port}")
+        stopServerMode(Some(logger))
+        setupServerMode(compiler, Some(logger), Some(info.port))
     }
   }
 
