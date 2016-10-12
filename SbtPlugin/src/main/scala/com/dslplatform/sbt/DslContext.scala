@@ -62,7 +62,14 @@ private[sbt] class DslContext(logger: Option[Logger]) extends Context {
     }
   }
 
+  private var lastError = ""
+  def isParseError = {
+    lastError.startsWith("Error parsing dsl in script") ||
+      lastError.startsWith("Error in") && lastError.contains(" near line ") && lastError.contains(" and column ")
+  }
+
   override def error(value: String): Unit = {
+    lastError = value
     if (logger.isDefined) {
       if (inColor) {
         logger.get.error(Context.inColor(Color.RED, value))

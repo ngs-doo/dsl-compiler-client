@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.6</version>
+  <version>0.7</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -10,7 +10,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Working async syntax highlighting. Latest DSL-CLC (v1.7.0)
+      Loading issue resolved. Latest DSL-CLC (v1.8.0)
     ]]>
   </change-notes>
 

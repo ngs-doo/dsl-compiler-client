@@ -313,7 +313,7 @@ object Actions {
       ctx.put(Download.INSTANCE, "")
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
-    if (!Main.processContext(ctx, params)) {
+    if (!Main.processContext(ctx, params) && !ctx.isParseError) {
       (serverMode, serverInfo) match {
         case (true, Some(info)) =>
         logger.warn("Will retry DSL compilation without server mode...")
