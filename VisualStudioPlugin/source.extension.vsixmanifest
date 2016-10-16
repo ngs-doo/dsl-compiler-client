@@ -35,11 +35,11 @@
         <Edition>Community</Edition>
         <Edition>VST_All</Edition>
       </VisualStudio>
-      <VisualStudio Version="15.0">
+      <!--VisualStudio Version="15.0">
         <Edition>Pro</Edition>
         <Edition>Community</Edition>
         <Edition>VST_All</Edition>
-      </VisualStudio>
+      </VisualStudio-->
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>
