@@ -525,7 +525,7 @@ namespace DDDLanguage
 			}
 			catch (OracleException ex)
 			{
-				if (ex.ErrorCode != 942)
+				if (ex.Number != 942)
 					throw new ApplicationException(@"Unable to read Oracle info.
 Error: " + ex.Message, ex);
 			}
