@@ -226,10 +226,12 @@ object Actions {
       }
     }
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
-      scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies)
+      scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
+      Seq(scanSystemAspects(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
-      scanEventHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies)
+      scanEventHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
+      Seq(scanSystemAspects(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
     } else {
       Nil
     }
@@ -402,5 +404,30 @@ object Actions {
       }
     }
     handlers.keySet.map(k => new File(manifests, k)).toSeq
+  }
+
+  private def scanSystemAspects(logger: Logger, folders: Seq[File], manifests: File, target: String): File = {
+    logger.info(s"""Scanning for $target aspects in ${folders.mkString(", ")}""")
+    val implementations =
+      ClassFinder(folders).getClasses()
+        .withFilter(it => it.isConcrete && it.implements(target))
+        .map(_.name)
+        .distinct
+    logger.debug(s"""Number of matching implementations: ${implementations.size}""")
+    if (manifests.exists()) {
+      val oldServices = manifests.listFiles().filter(_.getName.startsWith(s"$target%"))
+      oldServices foreach {
+        _.delete()
+      }
+    }
+    logger.info(s"Saving manifests to ${manifests.getAbsolutePath}")
+    val file = new File(manifests, target)
+    if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
+      logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
+    }
+    val fos = new FileOutputStream(file)
+    fos.write(implementations.mkString("\n").getBytes("UTF-8"))
+    fos.close()
+    file
   }
 }
