@@ -51,7 +51,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
 
   override lazy val projectSettings = Seq(
-    dslLibrary := {
+    dslLibrary in Compile := {
       val args = Parsers.spaceDelimited("<arg>").parsed
       def compile(dslTarget: Targets.Option, targetPath: File, targetDeps: Option[File]): Unit = {
         Actions.compileLibrary(
@@ -66,7 +66,48 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           dslNamespace.value,
           dslSettings.value,
           targetDeps,
-          dependencyClasspath.value,
+          (dependencyClasspath in Compile).value,
+          dslLatest.value)
+      }
+      if (args.isEmpty) {
+        if (dslLibraries.value.isEmpty) throw new RuntimeException("""dslLibraries is empty.
+Either define dslLibraries in build.sbt or provide target argument (eg. revenj.scala).
+Usage example: dslLibrary revenj.scala path_to_jar""")
+        dslLibraries.value foreach { case (targetArg, targetOutput) =>
+          val targetDeps = dslDependencies.value.get(targetArg)
+          compile(targetArg, targetOutput, targetDeps)
+        }
+      } else if (args.length > 2) {
+        throw new RuntimeException("Too many arguments. Usage example: dslLibrary revenj.scala path_to_jar")
+      } else {
+        val targetArg = findTarget(streams.value.log, args.head)
+        val predefinedOutput = dslLibraries.value.get(targetArg)
+        if (args.length == 1 && predefinedOutput.isEmpty) {
+          throw new RuntimeException(s"""dslLibraries does not contain definition for $targetArg.
+Either define it in dslLibraries or provide explicit output path.
+Example: dslLibrary revenj.scala path_to_jar""")
+        }
+        val targetOutput = if (args.length == 2) new File(args.last) else predefinedOutput.get
+        val targetDeps = dslDependencies.value.get(targetArg)
+        compile(targetArg, targetOutput, targetDeps)
+      }
+    },
+    dslLibrary in Test := {
+      val args = Parsers.spaceDelimited("<arg>").parsed
+      def compile(dslTarget: Targets.Option, targetPath: File, targetDeps: Option[File]): Unit = {
+        Actions.compileLibrary(
+          streams.value.log,
+          dslTarget,
+          targetPath,
+          dslDslPath.value,
+          dslPlugins.value,
+          dslCompiler.value,
+          dslServerMode.value,
+          dslServerPort.value,
+          dslNamespace.value,
+          dslSettings.value,
+          targetDeps,
+          (dependencyClasspath in Test).value,
           dslLatest.value)
       }
       if (args.isEmpty) {

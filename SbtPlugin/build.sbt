@@ -3,7 +3,7 @@ sbtPlugin := true
 organization := "com.dslplatform"
 name := "sbt-dsl-platform"
 
-version := "0.3.3"
+version := "0.3.4"
 
 libraryDependencies ++= Seq(
   "com.dslplatform" % "dsl-clc" % "1.8.2",
