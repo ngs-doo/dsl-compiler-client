@@ -162,15 +162,20 @@ public class GenerateCodeMojo extends AbstractMojo {
 		if (boot.exists()) {
 			Utils.createDirIfNotExists(this.servicesManifest);
 			File servicesRegistration = new File(servicesManifest, SERVICES_FILE);
+			context.show("Boot file exists. Creating META-INF resources in:" + servicesRegistration.getAbsolutePath());
 			Either<String> content = com.dslplatform.compiler.client.Utils.readFile(servicesRegistration);
 			boolean empty = !content.isSuccess() || content.get().isEmpty();
 			if (empty) {
+				context.log("File empty. Appending...");
 				Utils.appendToFile(context, servicesRegistration, service);
 			} else if (!(service.equals(content.get())
-					|| content.get().startsWith(service + "\n")
-					|| content.get().contains("\n" + service + "\n")
+					|| content.get().startsWith(service + "\n") || content.get().startsWith(service + "\r")
+					|| content.get().contains("\n" + service + "\n") || content.get().contains("\n" + service + "\r")
 					|| content.get().endsWith("\n" + service))) {
+				context.log("File not empty but missing service. Appending...");
 				Utils.appendToFile(context, servicesRegistration, "\n" + service);
+			} else {
+				context.log("File already contains service.");
 			}
 		}
 	}
@@ -178,6 +183,7 @@ public class GenerateCodeMojo extends AbstractMojo {
 	private void copyGeneratedSources(MojoContext context, Targets.Option parsedTarget) throws MojoExecutionException {
 		File tmpPath = TempPath.getTempProjectPath(context);
 		File generatedSources = new File(tmpPath.getAbsolutePath(), parsedTarget.name());
+		context.show("Copying generated files from " + generatedSources.getAbsolutePath() + " to " + this.generatedSources);
 		Utils.createDirIfNotExists(this.generatedSources);
 		Utils.copyFolder(generatedSources, new File(this.generatedSources), context);
 	}
