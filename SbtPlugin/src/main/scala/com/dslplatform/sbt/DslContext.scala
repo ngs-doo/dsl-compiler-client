@@ -88,7 +88,11 @@ private[sbt] class DslContext(logger: Option[Logger]) extends Context {
     }
   }
 
+  private var askedQuestion = false
+  def hasInteracted = askedQuestion
+
   private def askSafe(question: String, color: Color): Unit = {
+    askedQuestion = true
     if (inColor) {
       try {
         print(Ansi.ansi.fgBright(color).bold.a(question + " ").boldOff.reset.toString)

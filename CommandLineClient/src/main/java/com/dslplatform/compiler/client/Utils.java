@@ -26,6 +26,9 @@ public abstract class Utils {
 			context.log("Checking last modified info for " + file + ".zip from DSL Platform...");
 			final HttpURLConnection connection = (HttpURLConnection) server.openConnection();
 			connection.setRequestMethod("HEAD");
+			//60 seconds timeout to prevent handing if case of site issues
+			connection.setConnectTimeout(30 * 1000);
+			connection.setReadTimeout(30 * 1000);
 			final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			final long latest = connection.getLastModified();
 			if (latest == 0 && connection.getResponseCode() == -1) {
@@ -129,6 +132,8 @@ public abstract class Utils {
 			final int retry) throws IOException {
 		try {
 			final URLConnection connection = remoteUrl.openConnection();
+			//60 seconds timeout to prevent handing if case of site issues
+			connection.setConnectTimeout(60 * 1000);
 			final long lastModified = connection.getLastModified();
 			final InputStream response = connection.getInputStream();
 			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));

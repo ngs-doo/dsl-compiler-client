@@ -66,6 +66,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           dslNamespace.value,
           dslSettings.value,
           targetDeps,
+          dependencyClasspath.value,
           dslLatest.value)
       }
       if (args.isEmpty) {

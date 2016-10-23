@@ -144,6 +144,7 @@ object Actions {
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
     dependencies: Option[File] = None,
+    classPath: Classpath,
     latest: Boolean = true): File = {
 
     val ctx = new DslContext(Some(logger))
@@ -154,8 +155,27 @@ object Actions {
     settings.foreach(it => ctx.put(it.toString, ""))
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
+      executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
+    } else {
+      val tmpFolder = Files.createTempDirectory("dsl-clc")
+      try {
+        classPath foreach { it =>
+          ctx.log(s"Copying ${it.data} to $tmpFolder")
+          Files.copy(it.data.toPath, new File(tmpFolder.toFile, it.data.getName).toPath)
+        }
+        ctx.put(s"dependency:$target", tmpFolder.toFile.getAbsolutePath)
+        executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
+      } finally {
+        try {
+          if (!tmpFolder.toFile.delete()) {
+            ctx.log(s"Failed to delete ${tmpFolder.toFile}")
+            tmpFolder.toFile.deleteOnExit()
+          }
+        } catch {
+          case _: Throwable =>
+        }
+      }
     }
-    executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
     output
   }
 
@@ -315,7 +335,7 @@ object Actions {
       ctx.put(Download.INSTANCE, "")
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
-    if (!Main.processContext(ctx, params) && !ctx.isParseError) {
+    if (!Main.processContext(ctx, params) && !ctx.isParseError && !ctx.hasInteracted) {
       (serverMode, serverInfo) match {
         case (true, Some(info)) =>
         logger.warn("Will retry DSL compilation without server mode...")

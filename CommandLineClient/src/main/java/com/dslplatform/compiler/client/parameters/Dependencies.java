@@ -34,7 +34,7 @@ public enum Dependencies implements CompileParameter {
 			dependencies = new File(context.get("dependency:" + library));
 		} else {
 			final String depsParam = context.get(INSTANCE);
-			dependencies = new File(depsParam != null ? depsParam : "./", library);
+			dependencies = new File(depsParam != null ? depsParam : "./", library.replace('.', '_'));
 		}
 		if (!dependencies.exists()) {
 			if (!dependencies.mkdirs()) {
