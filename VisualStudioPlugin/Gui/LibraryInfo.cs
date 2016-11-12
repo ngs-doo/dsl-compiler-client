@@ -89,7 +89,6 @@ namespace DDDLanguage
 		public bool MinimalSerialization { get; set; }
 		public bool NoPrepareExecute { get; set; }
 		public bool Legacy { get; set; }
-		public bool NoHelpers { get; set; }
 		public string Namespace { get; set; }
 
 		public static bool PathExists(string relative)
@@ -159,7 +158,6 @@ Please download dependencies before running compilation" : string.Empty);
 				MinimalSerialization = MinimalSerialization,
 				NoPrepareExecute = NoPrepareExecute,
 				Legacy = Legacy,
-				NoHelpers = NoHelpers,
 				Namespace = Namespace
 			};
 		}
@@ -179,7 +177,6 @@ Please download dependencies before running compilation" : string.Empty);
 				&& other.MinimalSerialization == this.MinimalSerialization
 				&& other.NoPrepareExecute == this.NoPrepareExecute
 				&& other.Legacy == this.Legacy
-				&& other.NoHelpers == this.NoHelpers
 				&& other.Namespace == this.Namespace;
 		}
 	}

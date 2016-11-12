@@ -98,8 +98,6 @@ namespace DDDLanguage
 				sb.Append(" settings=no-prepare-execute");
 			if (target.Legacy)
 				sb.Append(" settings=legacy");
-			if (target.NoHelpers)
-				sb.Append(" settings=no-helpers");
 			sb.Append(" format=xml");
 			var result = Compiler.CompileDsl(sb, dsls, null, cms => XElement.Load(cms));
 			if (result.Success)
