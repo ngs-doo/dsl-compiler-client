@@ -20,7 +20,11 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 </DockPanel.ToolTip>
                 <Button DockPanel.Dock="Right" Content="Download" Width="60"
                 Command="{Binding DownloadLibrary}" CommandParameter="Portable:dotnet_portable.zip" />
-                <TextBlock Text="Portable library" Margin="5"/>
+                <TextBlock Margin="5">
+                    <Hyperlink NavigateUri="https://github.com/ngs-doo/revenj/releases" RequestNavigate="Hyperlink_RequestNavigate">
+                        Revenj.NET portable library
+                    </Hyperlink>
+                </TextBlock>
             </DockPanel>
             <DockPanel Margin="5">
                 <TextBlock Text="Dll name" Width="120"/>
