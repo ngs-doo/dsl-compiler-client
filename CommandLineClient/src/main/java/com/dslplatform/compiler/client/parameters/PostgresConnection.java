@@ -4,9 +4,7 @@ import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
 import org.postgresql.core.*;
-import org.postgresql.util.*;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
@@ -122,45 +120,27 @@ public enum PostgresConnection implements CompileParameter {
 
 	public static void execute(final Context context, final String sql) throws ExitException {
 		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
-		String[] parts = context.get(INSTANCE).split("/");
-		Properties props = parse(connectionString);
-		if (props == null || parts.length < 2) {
-			context.error("Unable to parse connection properties");
+
+		Connection conn;
+		final BaseStatement stmt;
+		try {
+			conn = DriverManager.getConnection(connectionString);
+			stmt = (BaseStatement) conn.createStatement();
+		} catch (SQLException e) {
+			context.error("Error opening connection to " + connectionString);
+			context.error(e);
 			throw new ExitException();
 		}
-		PGStream pgStream = null;
+
 		try {
 			try {
-				String server = parts[0];
-				String database = parts[1].indexOf('?') == -1 ? parts[1] : parts[1].substring(0, parts[1].indexOf('?'));
-				String[] info = server.split(":");
-				HostSpec hostSpec = new HostSpec(info[0], info.length == 2 ? Integer.parseInt(info[1]) : 5432);
-				Properties parsed = org.postgresql.Driver.parseURL(connectionString, props);
-				if (parsed == null) {
-					context.error("Invalid jdbcUrl provided: " + connectionString);
-					throw new ExitException();
-				}
-				pgStream = PostgresConnectionFactory.openConnection(hostSpec, parsed.getProperty("user"), parsed.getProperty("password"), database, props);
-			} catch (Exception e) {
-				context.error("Error opening connection to " + connectionString);
-				context.error(e);
-				throw new ExitException();
-			}
-			try {
 				final long startAt = System.currentTimeMillis();
-				byte[] sqlBytes = sql.getBytes(UTF8);
-				pgStream.SendChar('Q');
-				pgStream.SendInteger4(5 + sqlBytes.length);
-				pgStream.Send(sqlBytes);
-				pgStream.SendChar(0);
-				final PGStream stream = pgStream;
 				final boolean[] isDone = new boolean[1];
 				Thread waitResp = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
-							stream.flush();
-							checkResponse(stream, context);
+							stmt.executeWithFlags(sql, QueryExecutor.QUERY_EXECUTE_AS_SIMPLE);
 						} catch (Exception ex) {
 							context.error(ex);
 						}
@@ -202,54 +182,10 @@ public enum PostgresConnection implements CompileParameter {
 			}
 		} finally {
 			try {
-				if (pgStream != null) {
-					pgStream.close();
-				}
+				conn.close();
 			} catch (Exception ignore) {
 			}
 		}
-	}
-
-	private static void checkResponse(PGStream pgStream, Context context) throws IOException {
-		do {
-			int c = pgStream.ReceiveChar();
-			switch (c) {
-				case 'A':
-					pgStream.ReceiveInteger4();
-					pgStream.ReceiveInteger4();
-					pgStream.ReceiveString();
-					pgStream.ReceiveString();
-					break;
-				case 'C':
-					int len = pgStream.ReceiveInteger4();
-					pgStream.ReceiveString(len - 5);
-					pgStream.ReceiveChar();
-					break;
-				case 'E':
-					int lenE = pgStream.ReceiveInteger4();
-					String totalMessage = pgStream.ReceiveString(lenE - 4);
-					ServerErrorMessage errorMsg = new ServerErrorMessage(totalMessage, 0);
-					throw new IOException(new PSQLException(errorMsg));
-				case 'I':
-					pgStream.ReceiveInteger4();
-					break;
-				case 'Z':
-					if (pgStream.ReceiveInteger4() != 5) {
-						throw new IOException("unexpected length of ReadyForQuery message");
-					}
-					return;
-				case 'N':
-					int lenN = pgStream.ReceiveInteger4();
-					String totalWarning = pgStream.ReceiveString(lenN - 4);
-					ServerErrorMessage warningMsg = new ServerErrorMessage(totalWarning, 0);
-					context.log(warningMsg.getMessage());
-					break;
-				default:
-					int skipLen = pgStream.ReceiveInteger4();
-					pgStream.Skip(skipLen - 4);
-					break;
-			}
-		} while (true);
 	}
 
 	private static void cleanup(final Connection conn, final Context context) {
