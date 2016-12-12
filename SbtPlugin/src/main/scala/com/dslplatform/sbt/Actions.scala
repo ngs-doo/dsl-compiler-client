@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
 import com.dslplatform.compiler.client.parameters.{Settings, _}
 import org.clapper.classutil.ClassFinder
 import sbt.Def.Classpath
-import sbt.Logger
+import sbt.{IO, Logger}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -197,7 +197,8 @@ object Actions {
       }
     } else {
       output.listFiles() foreach { f =>
-        if (!f.delete()) {
+        IO.delete(f)
+        if (f.exists()) {
           logger.warn(s"Failed to delete: ${f.getAbsolutePath}")
         }
       }
