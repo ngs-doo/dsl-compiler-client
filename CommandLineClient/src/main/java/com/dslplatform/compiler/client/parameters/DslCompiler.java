@@ -33,7 +33,8 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final List<String> settings,
 			final String namespace,
 			final String version,
-			final List<File> dsls) throws ExitException {
+			final List<File> dsls,
+			final String library) throws ExitException {
 		final Map<String, String> files = new HashMap<String, String>();
 		final List<String> arguments = new ArrayList<String>();
 		arguments.add("target=" + target);
@@ -47,6 +48,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			for (final String o : settings) {
 				arguments.add("settings=" + o);
 			}
+		}
+		if (library != null && library.length() > 0) {
+			arguments.add("library=" + library);
 		}
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());

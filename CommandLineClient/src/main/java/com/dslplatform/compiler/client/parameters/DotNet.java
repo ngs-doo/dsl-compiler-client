@@ -33,10 +33,10 @@ public enum DotNet implements CompileParameter {
 				}
 				return Either.fail("Unable to find csc.exe (.NET C# compiler). Add it to path or specify dotnet compile option.");
 			}
-			if (Utils.testCommand(context, "dmcs", "Mono", Collections.singletonList("--version"))) {
-				return Either.success("dmcs");
+			if (Utils.testCommand(context, "mcs", "Mono", Collections.singletonList("--version"))) {
+				return Either.success("mcs");
 			}
-			return Either.fail("Unable to find dmcs (Mono C# compiler). Add it to path or specify dotnet compile option.");
+			return Either.fail("Unable to find mcs (Mono C# compiler). Add it to path or specify dotnet compile option.");
 		}
 	}
 

@@ -138,6 +138,22 @@ public enum Targets implements CompileParameter, ParameterParser {
 					}
 					context.put("dependency:" + o.value, value);
 					return Either.success(true);
+				} else if (("libraries:" + o.value).equalsIgnoreCase(name) || ("library:" + o.value).equalsIgnoreCase(name)) {
+					if (value == null || value.length() == 0) {
+						return Either.fail("Target library parameter detected, but it's missing version as argument. Parameter: " + name);
+					}
+					context.put("library:" + o.value, value);
+					return Either.success(true);
+				} else if (("sources:" + o.value).equalsIgnoreCase(name) || ("source:" + o.value).equalsIgnoreCase(name)) {
+					if (value == null || value.length() == 0) {
+						return Either.fail("Target source parameter detected, but it's missing path as argument. Parameter: " + name);
+					}
+					final File path = new File(value);
+					if (path.exists() && !path.isDirectory()) {
+						return Either.fail("Target source path found, but it's not a directory. Parameter: " + name);
+					}
+					context.put("source:" + o.value, value);
+					return Either.success(true);
 				}
 			}
 		}
@@ -212,20 +228,39 @@ public enum Targets implements CompileParameter, ParameterParser {
 		compile(context, targets);
 	}
 
-	private void compile(Context context, List<Option> targets) throws ExitException {
+	public static String getTargetSourcePath(final Context context, Option target) throws ExitException {
+		final String custom = context.get("source:" + target.value);
+		if (custom != null && !custom.isEmpty()) {
+			final File file = new File(custom, target.name());
+			try {
+				if (file.exists()) {
+					Utils.deletePath(file);
+				}
+				return custom;
+			} catch (IOException e) {
+				context.error("Unable to clean target source folder: " + file.getAbsolutePath());
+				context.error(e);
+				throw new ExitException();
+			}
+		}
+		return TempPath.getTempProjectPath(context).getAbsolutePath();
+	}
+
+	private void compile(final Context context, final List<Option> targets) throws ExitException {
 		final List<File> dsls = DslPath.getDslPaths(context);
 		final List<String> settings = Settings.get(context);
-		final String temp = TempPath.getTempProjectPath(context).getAbsolutePath();
 		final boolean sourceOnly = Settings.hasSourceOnly(context);
 		for (final Option t : targets) {
-			Map<String, String> files =
+			final String temp = getTargetSourcePath(context, t);
+			final Map<String, String> files =
 					DslCompiler.compile(
 							context,
 							t.value,
 							settings,
 							context.get(Namespace.INSTANCE),
 							context.get(Version.INSTANCE),
-							dsls);
+							dsls,
+							context.get("library:" + t.value));
 			try {
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
 					final String fullName = t.name() + "/" + kv.getKey() + t.extension;
@@ -279,6 +314,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 		sb.append("DSL Platform converts DSL model to various target sources which are then locally compiled (if possible).\n\n");
 		sb.append("Custom output name can be specified with as -java_client=/home/model.jar,revenj=/home/revenj.dll\n\n");
 		sb.append("Custom dependency path can be specified as -dependencies:java_client=/home/java_libs\n\n");
+		sb.append("Library version can be passed to DSL Compiler with as -library:revenj.net=1.4.1\n\n");
+		sb.append("Custom source folder can be specified as -source:java_client=/tmp/java_src\n\n");
 		sb.append("This option specifies which target sources are available.\n");
 		sb.append("---------------------------------------------------------\n");
 		for (final Option o : Option.values()) {
