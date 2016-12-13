@@ -209,9 +209,13 @@ object Actions {
     if (namespace.nonEmpty) {
       ctx.put(Namespace.INSTANCE, namespace)
     }
+
+    val tempFolder = IO.createTemporaryDirectory
+    ctx.put("source:revenj.scala", tempFolder.getAbsolutePath)
+
     settings.foreach(it => ctx.put(it.toString, ""))
     executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
-    val generated = new File(TempPath.getTempProjectPath(ctx), target.name)
+    val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
     deepCopy(generated.toPath, output.toPath, files)
     logger.info(s"Source for $target created in ${output.getPath}")
