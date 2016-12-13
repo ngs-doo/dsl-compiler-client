@@ -34,7 +34,6 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslLatest = settingKey[Boolean]("Check for latest versions (dsl-compiler, libraries, etc...)")
     val dslForce = settingKey[Boolean]("Force actions without prompt (destructive migrations, missing folders, etc...)")
     val dslPlugins = settingKey[Option[File]]("Path to additional DSL plugins")
-    val dslTempFolder = taskKey[File]("Temporary folder for generated sources")
   }
 
   import autoImport._
@@ -88,7 +87,6 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Defaults.compileAnalysisSettings ++
     Defaults.packageTaskSettings(packageBin, Defaults.packageBinMappings) ++
     Seq(
-      dslTempFolder <<= dslTempDirectoryTask,
       sourceDirectories := Seq(),
       unmanagedSources := Seq(),
       managedSources <<= dslSourcesForLibrary,
@@ -129,12 +127,6 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         targetFolder / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
       }
     }
-
-  private def dslTempDirectoryTask = Def.task {
-    val tempDirectory = target.value / "dsl-temp"
-    IO.createDirectory(tempDirectory)
-    tempDirectory
-  }
 
   private def dslLibraryTask(config: Configuration) = Def.inputTask {
     val args = Parsers.spaceDelimited("<arg>").parsed
@@ -206,7 +198,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       throw new RuntimeException("dslLibraries is empty.")
 
     dslLibraries.value foreach { case (targetArg, _) =>
-      buffer ++= generate(targetArg, dslTempFolder.value / targetArg.name())
+      buffer ++= generate(targetArg, target.value / "dsl-temp" / targetArg.name())
     }
     buffer.toSeq
   }
