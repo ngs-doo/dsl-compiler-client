@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
 import com.dslplatform.compiler.client.parameters.{Settings, _}
 import org.clapper.classutil.ClassFinder
 import sbt.Def.Classpath
-import sbt.Logger
+import sbt.{IO, Logger}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -197,7 +197,8 @@ object Actions {
       }
     } else {
       output.listFiles() foreach { f =>
-        if (!f.delete()) {
+        IO.delete(f)
+        if (f.exists()) {
           logger.warn(s"Failed to delete: ${f.getAbsolutePath}")
         }
       }
@@ -208,11 +209,16 @@ object Actions {
     if (namespace.nonEmpty) {
       ctx.put(Namespace.INSTANCE, namespace)
     }
+
+    val tempFolder = IO.createTemporaryDirectory
+    ctx.put("source:" + target.toString, tempFolder.getAbsolutePath)
+
     settings.foreach(it => ctx.put(it.toString, ""))
     executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
-    val generated = new File(TempPath.getTempProjectPath(ctx), target.name)
+    val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
     deepCopy(generated.toPath, output.toPath, files)
+    IO.delete(tempFolder)
     logger.info(s"Source for $target created in ${output.getPath}")
     files.result()
   }
