@@ -4,7 +4,7 @@
     <groupId>com.dslplatform</groupId>
     <artifactId>dsl-platform-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0.2</version>
+    <version>1.1.0</version>
     <name>DSL Platform - Maven plugin</name>
     <url>https://github.com/ngs-doo/dsl-compiler-client</url>
     <description>A Maven plugin for interaction with DSL Platform command line client API (https://dsl-platform.com)</description>
@@ -63,7 +63,7 @@
         <dependency>
             <groupId>com.dslplatform</groupId>
             <artifactId>dsl-clc</artifactId>
-            <version>1.8.1</version>
+            <version>1.8.4</version>
         </dependency>
 
         <dependency>
