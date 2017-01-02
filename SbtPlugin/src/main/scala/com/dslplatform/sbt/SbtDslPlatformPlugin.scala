@@ -1,5 +1,7 @@
 package com.dslplatform.sbt
 
+import java.nio.file.Files
+
 import sbt._
 import Keys._
 import com.dslplatform.compiler.client.parameters.Targets
@@ -7,14 +9,12 @@ import com.dslplatform.compiler.client.parameters.Settings
 import sbt.Def.Initialize
 import sbt.complete.Parsers
 
-import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ArrayBuffer
 
 object SbtDslPlatformPlugin extends AutoPlugin {
 
   object autoImport {
     val dslLibrary = inputKey[Seq[Any]]("Compile DSL into a compiled jar ready for usage.")
-    //val dslLibrary = inputKey[Map[Targets.Option, File]]("Compile DSL into a compiled jar ready for usage.")
     val dslSource = inputKey[Seq[File]]("Compile DSL into generated source ready for usage.")
     val dslResource = inputKey[Seq[File]]("Scan code and create META-INF/services files for plugins.")
     val dslMigrate = inputKey[Unit]("Create an SQL migration file based on difference from DSL in project and in the target database.")
@@ -90,10 +90,12 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Defaults.compileAnalysisSettings ++
     Defaults.packageTaskSettings(packageBin, Defaults.packageBinMappings) ++
     Seq(
-      sourceDirectories := Seq(),
-      unmanagedSources := Seq(),
+      sourceDirectories := Nil,
+      unmanagedSources := Nil,
       managedSources <<= dslSourcesForLibrary,
+      managedResources <<= dslResourceForLibrary,
       sources <<= managedSources,
+      resources <<= managedResources,
       manipulateBytecode := compileIncremental.value,
       compileIncremental <<= Defaults.compileIncrementalTask tag (Tags.Compile, Tags.CPU),
       compileIncSetup <<= Defaults.compileIncSetupTask,
@@ -101,7 +103,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       classDirectory := crossTarget.value / (configuration.value.name + "-classes"),
       compileAnalysisFilename <<= compileAnalysisFilename in Compile,
       dependencyClasspath <<= Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile),
-      copyResources <<= Def.task { Seq() },
+      //copyResources <<= Def.task { Nil },
       products <<= Classpaths.makeProducts,
       packageOptions <<= Def.task { Seq(
         Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
@@ -144,14 +146,13 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         Def.task {
           val compiledLibrary = (packageBin in DslPlatform).value
 
-          if(targetPath.getName.endsWith(".jar")) {
+          if(targetPath.getName.toLowerCase.endsWith(".jar")) {
             IO.copyFile(compiledLibrary, targetPath)
-            log.info(s"Generated library for target ${dslTarget.name()} in $targetPath")
-
+            log.info(s"Generated library for target $dslTarget in $targetPath")
           } else {
             val targetFile = targetPath / compiledLibrary.getName
             IO.copyFile(compiledLibrary, targetFile)
-            log.info(s"Generated library for target ${dslTarget.name()} in directory $targetFile")
+            log.info(s"Generated library for target $dslTarget in directory $targetFile")
           }
         }
       } else {
@@ -168,10 +169,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
             dslNamespace.value,
             dslSettings.value,
             targetDeps,
-            (Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile)).value,
+            Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile).value,
             dslLatest.value)
 
-          log.info(s"Generated library for target ${dslTarget.name()} in $targetPath")
+          log.info(s"Generated library for target $dslTarget in $targetPath")
         }
       }
     }
@@ -228,6 +229,12 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       dslLatest.value)
 
     buffer.toSeq
+  }
+
+  private def dslResourceForLibrary = Def.task {
+    val file = resourceDirectory.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
+    Files.write(file.toPath, (if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot").getBytes("UTF-8"))
+    Seq(file)
   }
 
   private def dslSourceTask = Def.inputTask {

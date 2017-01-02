@@ -211,7 +211,7 @@ object Actions {
     }
 
     val tempFolder = IO.createTemporaryDirectory
-    ctx.put("source:" + target.toString, tempFolder.getAbsolutePath)
+    ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
     settings.foreach(it => ctx.put(it.toString, ""))
     executeContext(dsl, compiler, serverMode, serverPort, plugins, latest, ctx, logger)
@@ -312,13 +312,14 @@ object Actions {
     ctx.put(DslPath.INSTANCE, dsl.getPath)
     val startedNow = {
       if (serverMode) {
-        if (serverInfo.flatMap(_.process).exists(t => !t.isAlive)) {
+        val info = serverInfo
+        if (info.flatMap(_.process).exists(t => !t.isAlive)) {
           logger.warn("Dead DSL Platform process detected. Will try restart...")
-          val port = serverInfo.get.port
+          val port = info.get.port
           stopServerMode(Some(logger))
           setupServerMode(compiler, Some(logger), Some(port))
           true
-        } else if (serverInfo.isEmpty) {
+        } else if (info.isEmpty) {
           setupServerMode(compiler, Some(logger), serverPort)
           true
         } else false
