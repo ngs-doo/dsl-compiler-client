@@ -1,7 +1,5 @@
 package com.dslplatform.sbt
 
-import java.nio.file.Files
-
 import sbt._
 import Keys._
 import com.dslplatform.compiler.client.parameters.Targets
@@ -103,7 +101,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       classDirectory := crossTarget.value / (configuration.value.name + "-classes"),
       compileAnalysisFilename <<= compileAnalysisFilename in Compile,
       dependencyClasspath <<= Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile),
-      //copyResources <<= Def.task { Nil },
+      copyResources <<= Defaults.copyResourcesTask,
       products <<= Classpaths.makeProducts,
       packageOptions <<= Def.task { Seq(
         Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
@@ -233,7 +231,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
   private def dslResourceForLibrary = Def.task {
     val file = resourceDirectory.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
-    Files.write(file.toPath, (if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot").getBytes("UTF-8"))
+    IO.write(file, (if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot"), charset = IO.utf8)
     Seq(file)
   }
 
