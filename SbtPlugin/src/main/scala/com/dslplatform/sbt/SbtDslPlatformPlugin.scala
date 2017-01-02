@@ -4,14 +4,17 @@ import sbt._
 import Keys._
 import com.dslplatform.compiler.client.parameters.Targets
 import com.dslplatform.compiler.client.parameters.Settings
+import sbt.Def.Initialize
 import sbt.complete.Parsers
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.mutable.ArrayBuffer
 
 object SbtDslPlatformPlugin extends AutoPlugin {
 
   object autoImport {
-    val dslLibrary = inputKey[Unit]("Compile DSL into a compiled jar ready for usage.")
+    val dslLibrary = inputKey[Seq[Any]]("Compile DSL into a compiled jar ready for usage.")
+    //val dslLibrary = inputKey[Map[Targets.Option, File]]("Compile DSL into a compiled jar ready for usage.")
     val dslSource = inputKey[Seq[File]]("Compile DSL into generated source ready for usage.")
     val dslResource = inputKey[Seq[File]]("Scan code and create META-INF/services files for plugins.")
     val dslMigrate = inputKey[Unit]("Create an SQL migration file based on difference from DSL in project and in the target database.")
@@ -73,8 +76,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   )
 
   private lazy val dslTasks = Seq(
-    dslLibrary in Compile <<= dslLibraryTask(Compile),
-    dslLibrary in Test <<= dslLibraryTask(Test),
+    dslLibrary in Compile <<= dslLibraryInputTask(Compile),
+    dslLibrary in Test <<= dslLibraryInputTask(Test),
     dslSource <<= dslSourceTask,
     dslResource in Compile <<= dslResourceTask(Compile),
     dslResource in Test <<= dslResourceTask(Test),
@@ -120,49 +123,76 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   )
 
   private def artifactPathSetting(art: SettingKey[Artifact]) =
-    (dslLibraries, crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
-      (dslLibs, t, module, a, sv, sbv, toString) => {
-        val targetFolder = dslLibs.get(Targets.Option.REVENJ_SCALA).getOrElse(t)
+    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
+      (t, module, a, sv, sbv, toString) => {
         val dslArtifact = a.copy(name = a.name + "-dsl", classifier = None)
-        targetFolder / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
+        t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
       }
     }
 
-  private def dslLibraryTask(config: Configuration) = Def.inputTask {
-    val args = Parsers.spaceDelimited("<arg>").parsed
-    def compile(dslTarget: Targets.Option, targetPath: File, targetDeps: Option[File]): Unit = {
+  private def dslLibraryInputTask(config: Configuration): Initialize[InputTask[Seq[Any]]] = Def.inputTaskDyn {
+    import sbt.complete.Parsers.spaceDelimited
+    val args = spaceDelimited("<arg>").parsed
+    dslLibraryTask(config, args)
+  }
+
+  private def dslLibraryTask(config: Configuration, args: Seq[String]): Initialize[Task[Seq[Any]]] = Def.taskDyn {
+    val log = streams.value.log
+
+    def compileLibrary(dslTarget: Targets.Option, targetPath: File, targetDeps: Option[File]): Initialize[Task[Any]] = {
       if(dslTarget == Targets.Option.REVENJ_SCALA) {
-        (packageBin in DslPlatform).value
+        Def.task {
+          val compiledLibrary = (packageBin in DslPlatform).value
+
+          if(targetPath.getName.endsWith(".jar")) {
+            IO.copyFile(compiledLibrary, targetPath)
+            log.info(s"Generated library for target ${dslTarget.name()} in $targetPath")
+
+          } else {
+            val targetFile = targetPath / compiledLibrary.getName
+            IO.copyFile(compiledLibrary, targetFile)
+            log.info(s"Generated library for target ${dslTarget.name()} in directory $targetFile")
+          }
+        }
       } else {
-        Actions.compileLibrary(
-          streams.value.log,
-          dslTarget,
-          targetPath,
-          dslDslPath.value,
-          dslPlugins.value,
-          dslCompiler.value,
-          dslServerMode.value,
-          dslServerPort.value,
-          dslNamespace.value,
-          dslSettings.value,
-          targetDeps,
-          (Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile)).value,
-          dslLatest.value)
+        Def.task {
+          Actions.compileLibrary(
+            streams.value.log,
+            dslTarget,
+            targetPath,
+            dslDslPath.value,
+            dslPlugins.value,
+            dslCompiler.value,
+            dslServerMode.value,
+            dslServerPort.value,
+            dslNamespace.value,
+            dslSettings.value,
+            targetDeps,
+            (Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile)).value,
+            dslLatest.value)
+
+          log.info(s"Generated library for target ${dslTarget.name()} in $targetPath")
+        }
       }
     }
+
     if (args.isEmpty) {
       if (dslLibraries.value.isEmpty) throw new RuntimeException(
         """|dslLibraries is empty.
            |Either define dslLibraries in build.sbt or provide target argument (eg. revenj.scala).
            |Usage example: dslLibrary revenj.scala path_to_jar""".stripMargin)
 
-      dslLibraries.value foreach { case (targetArg, targetOutput) =>
-        val targetDeps = dslDependencies.value.get(targetArg)
-        compile(targetArg, targetOutput, targetDeps)
-      }
+        val allTargets = dslLibraries.value collect { case (targetArg, targetOutput) =>
+          val targetDeps = dslDependencies.value.get(targetArg)
+          compileLibrary(targetArg, targetOutput, targetDeps)
+        }
+
+      joinTasks(allTargets.toSeq)
+
     } else if (args.length > 2) {
       throw new RuntimeException("Too many arguments. Usage example: dslLibrary revenj.scala path_to_jar")
-    } else {
+    }
+    else {
       val targetArg = findTarget(streams.value.log, args.head)
       val predefinedOutput = dslLibraries.value.get(targetArg)
       if (args.length == 1 && predefinedOutput.isEmpty) {
@@ -173,33 +203,30 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       }
       val targetOutput = if (args.length == 2) new File(args.last) else predefinedOutput.get
       val targetDeps = dslDependencies.value.get(targetArg)
-      compile(targetArg, targetOutput, targetDeps)
+
+      joinTasks(Seq(compileLibrary(targetArg, targetOutput, targetDeps)))
     }
   }
 
+  def joinTasks(tasks: Seq[sbt.Def.Initialize[Task[Any]]]): sbt.Def.Initialize[Task[Seq[Any]]] = {
+    tasks.joinWith(_.join)
+  }
+
   private def dslSourcesForLibrary = Def.task {
-    def generate(dslTarget: Targets.Option, targetPath: File): Seq[File] = {
-      Actions.generateSource(
-        streams.value.log,
-        dslTarget,
-        targetPath,
-        dslDslPath.value,
-        dslPlugins.value,
-        dslCompiler.value,
-        dslServerMode.value,
-        dslServerPort.value,
-        dslNamespace.value,
-        dslSettings.value,
-        dslLatest.value)
-    }
-
     val buffer = new ArrayBuffer[File]()
-    if (dslLibraries.value.isEmpty)
-      throw new RuntimeException("dslLibraries is empty.")
+    buffer ++= Actions.generateSource(
+      streams.value.log,
+      Targets.Option.REVENJ_SCALA,
+      target.value / "dsl-temp" / Targets.Option.REVENJ_SCALA.name(),
+      dslDslPath.value,
+      dslPlugins.value,
+      dslCompiler.value,
+      dslServerMode.value,
+      dslServerPort.value,
+      dslNamespace.value,
+      dslSettings.value,
+      dslLatest.value)
 
-    dslLibraries.value foreach { case (targetArg, _) =>
-      buffer ++= generate(targetArg, target.value / "dsl-temp" / targetArg.name())
-    }
     buffer.toSeq
   }
 
