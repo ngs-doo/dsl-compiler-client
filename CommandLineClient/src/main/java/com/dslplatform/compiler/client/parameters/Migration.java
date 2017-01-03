@@ -111,24 +111,25 @@ public enum Migration implements CompileParameter {
 		}
 		final String script = migration.get();
 		final String sqlFileName = dbInfo.database.toLowerCase() + "-sql-migration-" + (new Date().getTime());
-		final File sqlFile = new File(path.getAbsolutePath(), sqlFileName + ".sql");
-		try {
-			Utils.saveFile(context, sqlFile, script);
-		} catch (IOException e) {
-			context.error("Error saving migration script to " + sqlFile.getAbsolutePath());
-			context.error(e);
-			throw new ExitException();
-		}
-		context.show("Migration saved to " + sqlFile.getAbsolutePath());
 		if (script.length() > 0) {
+			final File sqlFile = new File(path.getAbsolutePath(), sqlFileName + ".sql");
+			try {
+				Utils.saveFile(context, sqlFile, script);
+			} catch (IOException e) {
+				context.error("Error saving migration script to " + sqlFile.getAbsolutePath());
+				context.error(e);
+				throw new ExitException();
+			}
+			context.show("Migration saved to " + sqlFile.getAbsolutePath());
 			final String[] descriptions = extractDescriptions(script);
 			for (int i = 1; i < descriptions.length; i++) {
 				context.log(descriptions[i]);
 			}
+			context.cache(file, sqlFile);
 		} else {
 			context.show("No database changes detected.");
+			context.cache(file, new File("empty.sql"));
 		}
-		context.cache(file, sqlFile);
 	}
 
 	@Override

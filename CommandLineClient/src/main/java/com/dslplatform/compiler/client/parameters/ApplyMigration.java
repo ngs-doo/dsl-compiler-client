@@ -93,6 +93,10 @@ public enum ApplyMigration implements CompileParameter {
 	}
 
 	private static void applyMigrationScript(final Context context, final File file, final DB db) throws ExitException {
+		if ("empty.sql".equals(file.getName())) {
+			context.show("Nothing to apply.");
+			return;
+		}
 		final Either<String> trySql = Utils.readFile(file);
 		if (!trySql.isSuccess()) {
 			context.error("Error reading SQL migration file for " + db.getDName() + ".");
