@@ -396,7 +396,7 @@ object Actions {
     val urls = new scala.collection.mutable.HashSet[File]
     folders foreach { f => gatherSubfolders(f, urls) }
     urls ++= dependencies.map(_.data)
-    val loader = new URLClassLoader(urls.map(_.toURI.toURL).toArray)
+    val loader = new URLClassLoader(urls.map(_.toURI.toURL).toArray, Thread.currentThread().getContextClassLoader)
     val handlers = new mutable.HashMap[String, ArrayBuffer[String]]()
     implementations foreach { name =>
       try {
