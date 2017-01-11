@@ -6,6 +6,7 @@ import com.dslplatform.compiler.client.parameters.Targets
 import com.dslplatform.compiler.client.parameters.Settings
 import sbt.Def.Initialize
 import sbt.complete.Parsers
+import sbt.plugins.JvmPlugin
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -41,6 +42,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
   lazy val DslPlatform = config("dsl-platform") extend(Compile)
 
+  override def requires: Plugins = JvmPlugin
   override def projectConfigurations: Seq[Configuration] = Seq(DslPlatform)
 
   private def findTarget(logger: Logger, name: String): Targets.Option = {
@@ -90,27 +92,35 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Seq(
       sourceDirectories := Nil,
       unmanagedSources := Nil,
-      managedSources <<= dslSourcesForLibrary,
-      managedResources <<= dslResourceForLibrary,
-      sources <<= managedSources,
-      resources <<= managedResources,
+      sourceGenerators += dslSourcesForLibrary.taskValue,
+      resourceGenerators := Seq(dslResourceForLibrary.taskValue),
+      managedSources := Defaults.generate(sourceGenerators in DslPlatform).value,
+      managedResources := Defaults.generate(resourceGenerators in DslPlatform).value,
+      sources := (managedSources in DslPlatform).value,
+      resources := (managedResources in DslPlatform).value,
       manipulateBytecode := compileIncremental.value,
-      compileIncremental <<= Defaults.compileIncrementalTask tag (Tags.Compile, Tags.CPU),
-      compileIncSetup <<= Defaults.compileIncSetupTask,
-      compile <<= Defaults.compileTask,
+      compileIncremental := (Defaults.compileIncrementalTask tag (Tags.Compile, Tags.CPU)).value,
+      compileIncSetup := Defaults.compileIncSetupTask.value,
+      compile := Defaults.compileTask.value,
       classDirectory := crossTarget.value / (configuration.value.name + "-classes"),
-      compileAnalysisFilename <<= compileAnalysisFilename in Compile,
-      dependencyClasspath <<= Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile),
-      copyResources <<= Defaults.copyResourcesTask,
-      products <<= Classpaths.makeProducts,
-      packageOptions <<= Def.task { Seq(
-        Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
-        Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
-      )},
-      sbt.Keys.`package` := packageBin.value,
-      artifactPath in packageBin <<= artifactPathSetting(artifact in packageBin in DslPlatform)
+      compileAnalysisFilename := (compileAnalysisFilename in Compile).value,
+      dependencyClasspath := Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile).value,
+      copyResources := Defaults.copyResourcesTask.value,
+      products := Classpaths.makeProducts.value,
+      packageOptions := dslPackageOptions.value,
+      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform).value,
+      exportJars := true,
+      exportedProducts := Classpaths.exportProductsTask.value
+  )
+  ) ++ Seq(
+    dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
+    exportedProducts in Compile ++= (exportedProducts in DslPlatform).value
+  )
 
-    )
+  // When running `compile` from the command line interface, SBT is calling dsl-platform:compile, apparently because it
+  // it takes the latest definition of the task if no config is provided (like when using `compile:compile`).
+  private lazy val commandLineOrderingWorkaroundSettings = Seq(
+    compile := (compile in Compile).value
   )
 
   override lazy val projectSettings = dslDefaultSettings ++ dslTasks ++ dslCompilationSettings ++ Seq(
@@ -120,7 +130,13 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       }
       onLoad.value
     }
-  )
+  ) ++ commandLineOrderingWorkaroundSettings
+
+
+  private def dslPackageOptions = Def.task { Seq(
+    Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
+    Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
+  )}
 
   private def artifactPathSetting(art: SettingKey[Artifact]) =
     (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
@@ -211,12 +227,16 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     tasks.joinWith(_.join)
   }
 
+  private def sourcesForLibraryLocation = Def.setting {
+    target.value / "dsl-temp" / Targets.Option.REVENJ_SCALA.name()
+  }
+
   private def dslSourcesForLibrary = Def.task {
     val buffer = new ArrayBuffer[File]()
     buffer ++= Actions.generateSource(
       streams.value.log,
       Targets.Option.REVENJ_SCALA,
-      target.value / "dsl-temp" / Targets.Option.REVENJ_SCALA.name(),
+      sourcesForLibraryLocation.value,
       dslDslPath.value,
       dslPlugins.value,
       dslCompiler.value,
@@ -230,7 +250,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   }
 
   private def dslResourceForLibrary = Def.task {
-    val file = resourceDirectory.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
+    val file = resourceManaged.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
     IO.write(file, (if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot"), charset = IO.utf8)
     Seq(file)
   }
