@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
@@ -142,13 +143,13 @@
     <Compile Include="Classification\DddClassifier.cs" />
     <Compile Include="Classification\DddClassifierProvider.cs" />
     <Compile Include="Classification\DslClassifierProvider.cs" />
-    <Compile Include="Gui\ChunkedMemoryStream.cs" />
+    <Compile Include="ChunkedMemoryStream.cs" />
     <Compile Include="Gui\CompileTargets.cs" />
     <Compile Include="Gui\DatabaseInfo.cs" />
     <Compile Include="Gui\View\ConfigurationOracleControl.xaml.cs">
       <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Compiler.cs" />
+    <Compile Include="Compiler.cs" />
     <Compile Include="Gui\View\ConfigurationPocoControl.xaml.cs">
       <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
     </Compile>
@@ -178,7 +179,7 @@
     <Compile Include="Gui\DiffPlex\ScrollViewerSynchronizer.cs" />
     <Compile Include="Gui\DiffPlex\TextBoxDiffRenderer.cs" />
     <Compile Include="Gui\DiffPlex\WindowWidthConverter.cs" />
-    <Compile Include="Gui\Either.cs" />
+    <Compile Include="Either.cs" />
     <Compile Include="Gui\LibraryInfo.cs" />
     <Compile Include="Gui\SchemaChange.cs" />
     <Compile Include="Gui\ServerActions.cs" />
@@ -189,6 +190,7 @@
     <Compile Include="Gui\ToolWindow.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Gui\ToolPresenter.cs" />
+    <Compile Include="Intellisense\DddQuickInfo.cs" />
     <Compile Include="Outlining\DddOutliningTagger.cs" />
     <Compile Include="Outlining\DddOutliningTaggerProvider.cs" />
     <Compile Include="Outlining\Region.cs" />

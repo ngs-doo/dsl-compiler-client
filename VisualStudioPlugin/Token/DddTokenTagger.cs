@@ -10,8 +10,6 @@ namespace DDDLanguage
 	internal sealed class DddTokenTagger : ITagger<DddTokenTag>
 	{
 		private readonly ITextBuffer Buffer;
-		//TODO: replace with array
-		private readonly Dictionary<SyntaxType, DddTokenTag> DddTags;
 		private ITagSpan<DddTokenTag>[] Tags = new ITagSpan<DddTokenTag>[0];
 		private volatile bool Invalidated = true;
 		private readonly Timer Timer;
@@ -19,10 +17,6 @@ namespace DDDLanguage
 		internal DddTokenTagger(ITextBuffer buffer)
 		{
 			Buffer = buffer;
-			DddTags = new Dictionary<SyntaxType, DddTokenTag>();
-			DddTags[SyntaxType.Keyword] = new DddTokenTag(DddTokenTypes.Keyword);
-			DddTags[SyntaxType.Identifier] = new DddTokenTag(DddTokenTypes.Identifier);
-			DddTags[SyntaxType.StringQuote] = new DddTokenTag(DddTokenTypes.StringQuote);
 			this.Timer = new System.Threading.Timer(_ => Task.Factory.StartNew(ParseAndCache), null, -1, -1);
 			ParseAndCache();
 			Buffer.Changed += (s, ea) =>
@@ -54,14 +48,15 @@ namespace DDDLanguage
 				ITextSnapshotLine line = null;
 				for (int i = 0; i < tokens.Length; i++)
 				{
-					var t = tokens[i];
+					var d = tokens[i];
+					var t = d.Concept;
 					if (t.Line != previousLine)
 					{
 						line = snapshot.GetLineFromLineNumber(t.Line - 1);
 						previousLine = t.Line;
 					}
 					var span = new SnapshotSpan(snapshot, new Span(line.Start.Position + t.Column, t.Value.Length));
-					arr[i] = new TagSpan<DddTokenTag>(span, DddTags[t.Type]);
+					arr[i] = new TagSpan<DddTokenTag>(span, d);
 				}
 				if (!validDsl)
 				{

@@ -68,17 +68,30 @@ namespace DDDLanguage
 
 		private static readonly SyntaxConcept[] EmptyResult = new SyntaxConcept[0];
 
-		public static SyntaxConcept[] GetTokens(ITextSnapshot snapshot, out bool success)
+		public static DddTokenTag[] GetTokens(ITextSnapshot snapshot, out bool success)
 		{
 			var tokens = Parse(snapshot, out success);
-			var list = new List<SyntaxConcept>(tokens.Length / 3);
+			var list = new List<DddTokenTag>(tokens.Length / 3);
+			var stack = new Stack<DddTokenTag>();
+			DddTokenTag current = null;
 			for (int i = 0; i < tokens.Length; i++)
 			{
 				var t = tokens[i];
-				if (t.Type == SyntaxType.Keyword
+				if (t.Type == SyntaxType.RuleStart)
+				{
+					stack.Push(current = new DddTokenTag(current, t));
+				}
+				else if (t.Type == SyntaxType.RuleEnd)
+				{
+					stack.Pop();
+					current = stack.Count > 0 ? stack.Peek() : null;
+				}
+				else if (t.Type == SyntaxType.Keyword
 					|| t.Type == SyntaxType.Identifier
 					|| t.Type == SyntaxType.StringQuote)
-					list.Add(t);
+				{
+					list.Add(new DddTokenTag(current, t));
+				}
 			}
 			return list.ToArray();
 		}

@@ -212,6 +212,25 @@ namespace DDDLanguage
 			finally { CloseTcp(tcp); }
 		}
 
+		public static Either<string> LoadDescription(string rule)
+		{
+			TcpClient tcp = null;
+			try
+			{
+				tcp = ConnectToServer(false);
+				if (tcp == null)
+					tcp = ConnectToServer(true);
+				if (tcp == null)
+					return Either<string>.Fail("Unable to start DSL Platform compiler");
+				return SendRequest("description=" + rule, null, s => new StreamReader(s).ReadToEnd(), tcp);
+			}
+			catch (Exception ex)
+			{
+				return Either<string>.Fail(ex.Message);
+			}
+			finally { CloseTcp(tcp); }
+		}
+
 		private static void CloseTcp(TcpClient tcp)
 		{
 			if (tcp != null)
