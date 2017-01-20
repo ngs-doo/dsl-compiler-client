@@ -212,7 +212,7 @@ namespace DDDLanguage
 			finally { CloseTcp(tcp); }
 		}
 
-		public static Either<string> LoadDescription(string rule)
+		public static Either<T> Load<T>(string query, Func<ChunkedMemoryStream, T> extract)
 		{
 			TcpClient tcp = null;
 			try
@@ -221,12 +221,12 @@ namespace DDDLanguage
 				if (tcp == null)
 					tcp = ConnectToServer(true);
 				if (tcp == null)
-					return Either<string>.Fail("Unable to start DSL Platform compiler");
-				return SendRequest("description=" + rule, null, s => new StreamReader(s).ReadToEnd(), tcp);
+					return Either<T>.Fail("Unable to start DSL Platform compiler");
+				return SendRequest(query, null, extract, tcp);
 			}
 			catch (Exception ex)
 			{
-				return Either<string>.Fail(ex.Message);
+				return Either<T>.Fail(ex.Message);
 			}
 			finally { CloseTcp(tcp); }
 		}

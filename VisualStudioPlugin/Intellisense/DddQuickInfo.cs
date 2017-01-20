@@ -30,8 +30,6 @@ namespace DDDLanguage.Intellisense
 		private readonly ITextBuffer Buffer;
 		private bool IsDisposed = false;
 
-		private static readonly Dictionary<string, string> Descriptions = new Dictionary<string, string>();
-
 		public DddQuickInfoSource(ITextBuffer buffer, ITagAggregator<DddTokenTag> aggregator)
 		{
 			this.Aggregator = aggregator;
@@ -60,17 +58,13 @@ namespace DDDLanguage.Intellisense
 				if (t.Parent != null)
 				{
 					var rule = t.Parent.Concept.Value;
-					string desc;
-					if (Descriptions.TryGetValue(rule, out desc))
-						quickInfoContent.Add(desc);
-					else
+					var found = SyntaxParser.Find(rule);
+					if (found != null)
 					{
-						var tryDesc = Compiler.LoadDescription(rule);
-						if (tryDesc.Success)
-						{
-							Descriptions[rule] = tryDesc.Value;
-							quickInfoContent.Add(desc);
-						}
+						if (found.Description != null)
+							quickInfoContent.Add(found.Description + Environment.NewLine + "Grammar: " + found.Grammar);
+						else
+							quickInfoContent.Add("Grammar: " + found.Grammar);
 					}
 				}
 			}

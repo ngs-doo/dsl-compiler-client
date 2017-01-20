@@ -37,8 +37,60 @@ namespace DDDLanguage
 			[DataMember]
 			public List<SyntaxConcept> Tokens { get; set; }
 		}
+		[DataContract(Namespace = "")]
+		internal class RuleInfo
+		{
+			[DataMember]
+			public string Rule { get; set; }
+			[DataMember]
+			public string Grammar { get; set; }
+			[DataMember]
+			public string[] Children { get; set; }
+			[DataMember]
+			public string Description { get; set; }
+		}
 
-		private static readonly DataContractJsonSerializer Serializer = new DataContractJsonSerializer(typeof(ParseResult));
+		private static readonly DataContractJsonSerializer ParseSerializer = new DataContractJsonSerializer(typeof(ParseResult));
+		private static readonly DataContractJsonSerializer RuleSerializer = new DataContractJsonSerializer(typeof(RuleInfo[]));
+		private static readonly List<RuleInfo> Rules = new List<RuleInfo>();
+		private static readonly Dictionary<string, RuleInfo> RuleMap = new Dictionary<string, RuleInfo>();
+		public static RuleInfo[] AllRules
+		{
+			get
+			{
+				InitRules();
+				return Rules.ToArray();
+			}
+		}
+		public static RuleInfo Find(string rule)
+		{
+			if (string.IsNullOrEmpty(rule))
+				return null;
+			InitRules();
+			RuleInfo result;
+			if (RuleMap.TryGetValue(rule, out result))
+				return result;
+			return null;
+		}
+		private static void InitRules()
+		{
+			if (Rules.Count != 0)
+				return;
+			try
+			{
+				lock (Rules)
+				{
+					var either = Compiler.Load("format=json rules", cms => (RuleInfo[])RuleSerializer.ReadObject(cms));
+					if (either.Success && either.Value != null)
+					{
+						Rules.AddRange(either.Value);
+						foreach (var r in either.Value)
+							RuleMap[r.Rule] = r;
+					}
+				}
+			}
+			catch { }
+		}
 
 		private static SyntaxConcept[] Parse(ITextSnapshot snapshot, out bool success)
 		{
@@ -46,7 +98,7 @@ namespace DDDLanguage
 			sb.Append("format=json tokens=");
 			var dsl = snapshot.GetText();
 			sb.Append(Encoding.UTF8.GetByteCount(dsl));
-			var either = Compiler.CompileDsl(sb, null, dsl, cms => (ParseResult)Serializer.ReadObject(cms));
+			var either = Compiler.CompileDsl(sb, null, dsl, cms => (ParseResult)ParseSerializer.ReadObject(cms));
 			if (!either.Success)
 			{
 				success = false;
