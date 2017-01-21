@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
+    <Reference Include="Microsoft.VisualStudio.Editor" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
@@ -190,9 +191,10 @@
     <Compile Include="Gui\ToolWindow.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Gui\ToolPresenter.cs" />
+    <Compile Include="Intellisense\DddCompletitionController.cs" />
+    <Compile Include="Intellisense\DddCompletitionSource.cs" />
     <Compile Include="Intellisense\DddQuickInfo.cs" />
     <Compile Include="Outlining\DddOutliningTagger.cs" />
-    <Compile Include="Outlining\DddOutliningTaggerProvider.cs" />
     <Compile Include="Outlining\Region.cs" />
     <Compile Include="SyntaxConcept.cs" />
     <Compile Include="SyntaxParser.cs" />
@@ -210,9 +212,9 @@
       <DependentUpon>StatusControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="SyntaxType.cs" />
+    <Compile Include="Token\DddOutlineTag.cs" />
     <Compile Include="Token\DddTokenTag.cs" />
     <Compile Include="Token\DddTokenTagger.cs" />
-    <Compile Include="Token\DddTokenTagProvider.cs" />
     <Compile Include="Token\DddTokenTypes.cs" />
     <Compile Include="Gui\View\ToolContent.xaml.cs">
       <DependentUpon>ToolContent.xaml</DependentUpon>

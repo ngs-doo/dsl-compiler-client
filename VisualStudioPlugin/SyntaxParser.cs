@@ -48,6 +48,14 @@ namespace DDDLanguage
 			public string[] Children { get; set; }
 			[DataMember]
 			public string Description { get; set; }
+			public string DescriptionAndGrammar
+			{
+				get
+				{
+					if (string.IsNullOrEmpty(Description)) return "Grammar: " + Grammar;
+					return Description + Environment.NewLine + "Grammar: " + Grammar;
+				}
+			}
 		}
 
 		private static readonly DataContractJsonSerializer ParseSerializer = new DataContractJsonSerializer(typeof(ParseResult));

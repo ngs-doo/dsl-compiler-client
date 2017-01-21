@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DDDLanguage.Intellisense
+namespace DDDLanguage
 {
 	[Export(typeof(IQuickInfoSourceProvider))]
 	[ContentType("dsl")]
@@ -16,7 +16,7 @@ namespace DDDLanguage.Intellisense
 	class DddQuickInfo : IQuickInfoSourceProvider
 	{
 		[Import]
-		IBufferTagAggregatorFactoryService aggService = null;
+		private IBufferTagAggregatorFactoryService aggService = null;
 
 		public IQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
 		{
@@ -60,12 +60,7 @@ namespace DDDLanguage.Intellisense
 					var rule = t.Parent.Concept.Value;
 					var found = SyntaxParser.Find(rule);
 					if (found != null)
-					{
-						if (found.Description != null)
-							quickInfoContent.Add(found.Description + Environment.NewLine + "Grammar: " + found.Grammar);
-						else
-							quickInfoContent.Add("Grammar: " + found.Grammar);
-					}
+						quickInfoContent.Add(found.DescriptionAndGrammar);
 				}
 			}
 		}

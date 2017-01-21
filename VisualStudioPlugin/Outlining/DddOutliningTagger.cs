@@ -1,14 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Utilities;
 
 namespace DDDLanguage
 {
-	internal class DddOutliningTagger : ITagger<IOutliningRegionTag>
+	[Export(typeof(ITaggerProvider))]
+	[TagType(typeof(DddOutlineTag))]
+	[ContentType("ddd")]
+	[ContentType("dsl")]
+	internal sealed class DddOutliningTaggerProvider : ITaggerProvider
+	{
+		public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
+		{
+			Func<ITagger<T>> sc = () => new DddOutliningTagger(buffer) as ITagger<T>;
+			return buffer.Properties.GetOrCreateSingletonProperty<ITagger<T>>(sc);
+		}
+	}
+
+	internal class DddOutliningTagger : ITagger<DddOutlineTag>
 	{
 		private readonly ITextBuffer Buffer;
 		private ITextSnapshot Snapshot;
@@ -34,7 +48,7 @@ namespace DDDLanguage
 
 		public event EventHandler<SnapshotSpanEventArgs> TagsChanged = (s, ea) => { };
 
-		public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
+		public IEnumerable<ITagSpan<DddOutlineTag>> GetTags(NormalizedSnapshotSpanCollection spans)
 		{
 			if (spans.Count == 0)
 				yield break;
@@ -52,14 +66,10 @@ namespace DDDLanguage
 
 					var startPosition = startLine.Start.Position + region.StartOffset;
 					var len = Math.Min(endLine.End - 2 - startPosition, 1000);
-					var innerLines = currentSnapshot.GetText(startPosition + 1, len).Split('\n');
-					var maxSpace = innerLines.Take(10).Where(it => !string.IsNullOrWhiteSpace(it)).Min(it => it.Length - it.TrimStart().Length);
-					var innerText =
-						string.Join("\n", innerLines.Take(10).Select(it => string.IsNullOrWhiteSpace(it) ? string.Empty : it.Substring(maxSpace)))
-						+ (len > 999 || innerLines.Where(it => it.Length > 0).Count() > 10 ? Environment.NewLine + "..." : string.Empty);
-					yield return new TagSpan<IOutliningRegionTag>(
+					var innerText = currentSnapshot.GetText(startPosition + 1, len);
+					yield return new TagSpan<DddOutlineTag>(
 						new SnapshotSpan(startLine.Start + region.StartOffset, endLine.End),
-						new OutliningRegionTag(false, false, "{ ... }", innerText));
+						new DddOutlineTag(innerText, len, region.Rule, endLine.Start.Position + region.EndOffset + 1));
 				}
 			}
 		}
@@ -105,6 +115,7 @@ namespace DDDLanguage
 						currentLevel++;
 						currentRegion = new PartialRegion
 						{
+							Rule = t.Value,
 							Level = currentLevel,
 							StartLine = t.Line - 1,
 							StartOffset = t.Column,
@@ -123,10 +134,12 @@ namespace DDDLanguage
 						{
 							newRegions.Add(new Region
 							{
+								Rule = t.Value,
 								Level = currentLevel,
 								StartLine = currentRegion.StartLine,
 								StartOffset = currentRegion.StartOffset,
-								EndLine = t.Line - 1
+								EndLine = t.Line - 1,
+								EndOffset = t.Column - 1
 							});
 						}
 						lastInfo = currentLevel > 0 ? levelInfo[currentLevel - 1] : null;

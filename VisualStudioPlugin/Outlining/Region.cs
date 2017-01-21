@@ -2,6 +2,7 @@
 {
 	internal class PartialRegion
 	{
+		public string Rule;
 		public int StartLine;
 		public int StartOffset;
 		public int Level;
@@ -11,5 +12,6 @@
 	internal class Region : PartialRegion
 	{
 		public int EndLine;
+		public int EndOffset;
 	}
 }

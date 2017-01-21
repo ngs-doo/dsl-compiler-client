@@ -33,7 +33,10 @@ namespace DDDLanguage
 			foreach (var tagSpan in Aggregator.GetTags(spans))
 			{
 				var tagSpans = tagSpan.Span.GetSpans(spans[0].Snapshot);
-				yield return new TagSpan<ClassificationTag>(tagSpans[0], DddTags[tagSpan.Tag.Type]);
+				ClassificationTag ct;
+				if (DddTags.TryGetValue(tagSpan.Tag.Type, out ct))
+					yield return new TagSpan<ClassificationTag>(tagSpans[0], ct);
+				else continue;
 			}
 		}
 	}
