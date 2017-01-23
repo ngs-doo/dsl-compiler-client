@@ -630,7 +630,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				} else throw new ExitException();
 			}
 			context.show("Downloading DSL Platform compiler since it's not found in: " + compiler.getAbsolutePath());
-			downloadCompiler(context, path, tempPath, compiler);
+			downloadCompiler(context, path, tempPath, compiler, true);
 		} else {
 			if (!testCompiler(context, path)) {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
@@ -646,7 +646,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (!lastModified.isSuccess()) {
 			context.warning(lastModified.whyNot());
 		} else if (compiler.lastModified() != lastModified.get()) {
-			downloadCompiler(context, path, tempPath, compiler);
+			downloadCompiler(context, path, tempPath, compiler, false);
 		}
 	}
 
@@ -654,15 +654,22 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final Context context,
 			final File path,
 			final File tempPath,
-			final File compiler) throws ExitException {
+			final File compiler,
+			final boolean failOnError) throws ExitException {
 		final long lastModified;
 		try {
 			lastModified = Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);
 		} catch (final IOException ex) {
-			context.error("Error downloading compiler from https://dsl-platform.com");
-			context.error("Try specifying alternative compiler location.");
-			context.error(ex);
-			throw new ExitException();
+			if (failOnError) {
+				context.error("Error downloading compiler from https://dsl-platform.com");
+				context.error("Try specifying alternative compiler location.");
+				context.error(ex);
+				throw new ExitException();
+			} else {
+				context.warning("Error downloading compiler from https://dsl-platform.com");
+				context.warning("Skipping...");
+				return;
+			}
 		}
 		if (!testCompiler(context, compiler)) {
 			context.error("Specified compiler is invalid: " + path.getAbsolutePath());
