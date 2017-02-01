@@ -2,13 +2,13 @@ package com.dslplatform.sbt
 
 import sbt._
 import Keys._
-import com.dslplatform.compiler.client.parameters.Targets
-import com.dslplatform.compiler.client.parameters.Settings
+import com.dslplatform.compiler.client.parameters.{Settings, Targets, TempPath}
 import sbt.Def.Initialize
 import sbt.complete.Parsers
 import sbt.plugins.JvmPlugin
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Try
 
 object SbtDslPlatformPlugin extends AutoPlugin {
 
@@ -114,7 +114,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   )
   ) ++ Seq(
     dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
-    exportedProducts in Compile ++= (exportedProducts in DslPlatform).value
+    exportedProducts in Compile ++= (exportedProducts in DslPlatform).value,
+    unmanagedSourceDirectories in Compile += dslDslPath.value
   )
 
   // When running `compile` from the command line interface, SBT is calling dsl-platform:compile, apparently because it
@@ -227,27 +228,73 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     tasks.joinWith(_.join)
   }
 
-  private def sourcesForLibraryLocation = Def.setting {
-    target.value / "dsl-temp" / Targets.Option.REVENJ_SCALA.name()
+  private def dslTempFolder = Def.setting {
+    target.value / "dsl-temp"
+  }
+
+  private def createCompilerSettingsTempFile = Def.task {
+    val settingsFile = dslTempFolder.value / "dsl-settings.txt"
+    val settings = dslSettings.value.map(_.name).sorted.mkString("\n")
+
+    IO.write(settingsFile, settings)
+    settingsFile
+  }
+
+  private def findDslCompiler: Initialize[Task[File]] = Def.task {
+    def parsePort(in: String): Option[Int] = Try(Integer.parseInt(in)).filter(_ > 0).toOption
+
+    val fallBackCompiler = {
+      val workingDirectoryCompiler = new File("dsl-compiler.exe")
+      if(workingDirectoryCompiler.exists())
+        workingDirectoryCompiler
+      else {
+        val logger = streams.value.log
+        val tempPath = TempPath.getTempRootPath(new DslContext(Some(logger)))
+        new File(tempPath, "dsl-compiler.exe");
+      }
+    }
+
+    parsePort(dslCompiler.value)
+      .map(_ => fallBackCompiler)
+      .getOrElse(
+        if(dslCompiler.value.isEmpty)
+          fallBackCompiler
+        else {
+          val customCompilerPath = new File(dslCompiler.value)
+          if(!customCompilerPath.exists())
+            throw new RuntimeException(s"Unable to find the specified dslCompiler path: ${customCompilerPath.getAbsolutePath}")
+
+          customCompilerPath
+        }
+      )
   }
 
   private def dslSourcesForLibrary = Def.task {
-    val buffer = new ArrayBuffer[File]()
-    buffer ++= Actions.generateSource(
-      streams.value.log,
-      Targets.Option.REVENJ_SCALA,
-      sourcesForLibraryLocation.value,
-      dslDslPath.value,
-      dslPlugins.value,
-      dslCompiler.value,
-      dslServerMode.value,
-      dslServerPort.value,
-      dslNamespace.value,
-      dslSettings.value,
-      dslLatest.value)
+    def generateSource(inChanges: ChangeReport[File], outChanges: ChangeReport[File]): Set[File] = {
+      val buffer = new ArrayBuffer[File]()
+      buffer ++= Actions.generateSource(
+        streams.value.log,
+        Targets.Option.REVENJ_SCALA,
+        dslTempFolder.value / Targets.Option.REVENJ_SCALA.name(),
+        dslDslPath.value,
+        dslPlugins.value,
+        dslCompiler.value,
+        dslServerMode.value,
+        dslServerPort.value,
+        dslNamespace.value,
+        dslSettings.value,
+        dslLatest.value)
 
-    buffer.toSeq
+      buffer.toSet
+    }
+    
+    val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsTempFile.value :+ findDslCompiler.value
+    val dslSourceCache = target.value / "dsl-source-cache"
+    val cachedGenerator = FileFunction.cached(dslSourceCache)(inStyle = FilesInfo.hash, outStyle = FilesInfo.hash)(generateSource)
+
+    cachedGenerator(allDslFiles.toSet).toSeq
   }
+
 
   private def dslResourceForLibrary = Def.task {
     val file = resourceManaged.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
