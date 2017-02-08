@@ -68,7 +68,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		DOTNET_PORTABLE("dotnet_portable", ".NET portable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
 		DOTNET_WPF("wpf", ".NET WPF GUI", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
 		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
-		PHP_UI("php_ui", "PHP UI client", "", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
+		PHP_UI("php_ui", "PHP UI client", ".php", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true),
 		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true),
@@ -284,10 +284,12 @@ public enum Targets implements CompileParameter, ParameterParser {
 			final boolean escapeName,
 			final String name,
 			final String content) throws ExitException, IOException {
-		final String cleanName = name.replace(':', '_').replace('<', '_').replace('>', '_').replace('\\', '/');
-		final String nameOnly = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
+		final String cleanName = name.replace(':', '_').replace('<', '_').replace('>', '_');
+		final String nameOnly = cleanName.contains("\\")
+				? cleanName.substring(0, cleanName.lastIndexOf('\\'))
+				: cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
 		final File file = escapeName
-				? new File(temp, nameOnly.replace('.', '/') + cleanName.substring(nameOnly.length()))
+				? new File(temp, nameOnly.replace('.', '/').replace('\\', '/') + cleanName.substring(nameOnly.length()))
 				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
 		if (!parentPath.exists()) {

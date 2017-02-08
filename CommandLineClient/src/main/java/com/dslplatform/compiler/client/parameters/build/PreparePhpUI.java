@@ -20,9 +20,10 @@ public class PreparePhpUI extends PrepareSources {
 		if (children == null) return;
 		for (final String fn : children) {
 			final File sf = new File(sources, fn);
-			if (sf.isFile() && !sf.getName().endsWith(".twig")) {
-				if (!sf.renameTo(new File(sources, fn.concat(".php")))) {
-					context.error("Error renaming file " + sf.getAbsolutePath() + " to : " + sf.getName() + ".php");
+			if (sf.isFile() && sf.getName().endsWith(".twig.php")) {
+				final String twigOnly =  sf.getName().substring(0, sf.getName().length() - 4);
+				if (!sf.renameTo(new File(sf.getParentFile(), twigOnly))) {
+					context.error("Error renaming file " + sf.getAbsolutePath() + " to : " + twigOnly);
 				}
 			} else if (sf.isDirectory()) {
 				fixMissingExtensions(sf, context);
