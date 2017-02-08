@@ -5,7 +5,6 @@ import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
 import org.postgresql.core.*;
 
-import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
@@ -24,7 +23,6 @@ public enum PostgresConnection implements CompileParameter {
 	}
 
 	private static final String CACHE_NAME = "postgres_dsl_cache";
-	private static final Charset UTF8 = Charset.forName("UTF-8");
 
 	public static Map<String, String> getDatabaseDsl(final Context context) throws ExitException {
 		return getDatabaseDslAndVersion(context).dsl;

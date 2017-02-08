@@ -284,10 +284,10 @@ public enum Targets implements CompileParameter, ParameterParser {
 			final boolean escapeName,
 			final String name,
 			final String content) throws ExitException, IOException {
-		final String cleanName = name.replace(':', '_').replace('<', '_').replace('>', '_');
+		final String cleanName = name.replace(':', '_').replace('<', '_').replace('>', '_').replace('\\', '/');
 		final String nameOnly = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf('.')) : cleanName;
 		final File file = escapeName
-				? new File(temp, nameOnly.replace(".", "/").replace("\\", "/") + cleanName.substring(nameOnly.length()))
+				? new File(temp, nameOnly.replace('.', '/') + cleanName.substring(nameOnly.length()))
 				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
 		if (!parentPath.exists()) {
