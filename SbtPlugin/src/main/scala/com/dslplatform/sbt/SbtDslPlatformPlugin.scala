@@ -108,7 +108,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       copyResources := Defaults.copyResourcesTask.value,
       products := Classpaths.makeProducts.value,
       packageOptions := dslPackageOptions.value,
-      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform).value,
+      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform, dslLibraries).value,
       exportJars := true,
       exportedProducts := Classpaths.exportProductsTask.value
   )
@@ -139,11 +139,18 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
   )}
 
-  private def artifactPathSetting(art: SettingKey[Artifact]) =
-    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
-      (t, module, a, sv, sbv, toString) => {
+  private def artifactPathSetting(art: SettingKey[Artifact], targets: SettingKey[Map[Targets.Option, File]]) =
+    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName, targets) {
+      (t, module, a, sv, sbv, toString, tar) => {
         val dslArtifact = a.copy(name = a.name + "-dsl", classifier = None)
-        t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
+        tar.get(Targets.Option.REVENJ_SCALA) match {
+          case Some(f) if f.isDirectory =>
+              f / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
+          case Some(f) =>
+              f
+          case _ =>
+            t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
+        }
       }
     }
 
@@ -198,17 +205,16 @@ object SbtDslPlatformPlugin extends AutoPlugin {
            |Either define dslLibraries in build.sbt or provide target argument (eg. revenj.scala).
            |Usage example: dslLibrary revenj.scala path_to_jar""".stripMargin)
 
-        val allTargets = dslLibraries.value collect { case (targetArg, targetOutput) =>
-          val targetDeps = dslDependencies.value.get(targetArg)
-          compileLibrary(targetArg, targetOutput, targetDeps)
-        }
+      val allTargets = dslLibraries.value collect { case (targetArg, targetOutput) =>
+        val targetDeps = dslDependencies.value.get(targetArg)
+        compileLibrary(targetArg, targetOutput, targetDeps)
+      }
 
       joinTasks(allTargets.toSeq)
 
     } else if (args.length > 2) {
       throw new RuntimeException("Too many arguments. Usage example: dslLibrary revenj.scala path_to_jar")
-    }
-    else {
+    } else {
       val targetArg = findTarget(streams.value.log, args.head)
       val predefinedOutput = dslLibraries.value.get(targetArg)
       if (args.length == 1 && predefinedOutput.isEmpty) {
@@ -250,19 +256,20 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       else {
         val logger = streams.value.log
         val tempPath = TempPath.getTempRootPath(new DslContext(Some(logger)))
-        new File(tempPath, "dsl-compiler.exe");
+        new File(tempPath, "dsl-compiler.exe")
       }
     }
 
     parsePort(dslCompiler.value)
       .map(_ => fallBackCompiler)
       .getOrElse(
-        if(dslCompiler.value.isEmpty)
+        if(dslCompiler.value.isEmpty) {
           fallBackCompiler
-        else {
+        } else {
           val customCompilerPath = new File(dslCompiler.value)
-          if(!customCompilerPath.exists())
+          if(!customCompilerPath.exists()) {
             throw new RuntimeException(s"Unable to find the specified dslCompiler path: ${customCompilerPath.getAbsolutePath}")
+          }
 
           customCompilerPath
         }
@@ -298,7 +305,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
   private def dslResourceForLibrary = Def.task {
     val file = resourceManaged.value / "META-INF" / "services" / "net.revenj.extensibility.SystemAspect"
-    IO.write(file, (if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot"), charset = IO.utf8)
+    IO.write(file, if (dslNamespace.value.isEmpty) "Boot" else dslNamespace.value + ".Boot", charset = IO.utf8)
     Seq(file)
   }
 
