@@ -108,10 +108,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       copyResources := Defaults.copyResourcesTask.value,
       products := Classpaths.makeProducts.value,
       packageOptions := dslPackageOptions.value,
-      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform, dslLibraries).value,
+      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform).value,
       exportJars := true,
       exportedProducts := Classpaths.exportProductsTask.value
-  )
+    )
   ) ++ Seq(
     dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
     exportedProducts in Compile ++= (exportedProducts in DslPlatform).value,
@@ -139,18 +139,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
   )}
 
-  private def artifactPathSetting(art: SettingKey[Artifact], targets: SettingKey[Map[Targets.Option, File]]) =
-    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName, targets) {
-      (t, module, a, sv, sbv, toString, tar) => {
+  private def artifactPathSetting(art: SettingKey[Artifact]) =
+    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
+      (t, module, a, sv, sbv, toString) => {
         val dslArtifact = a.copy(name = a.name + "-dsl", classifier = None)
-        tar.get(Targets.Option.REVENJ_SCALA) match {
-          case Some(f) if f.isDirectory =>
-              f / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
-          case Some(f) =>
-              f
-          case _ =>
-            t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
-        }
+        t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
       }
     }
 
@@ -238,29 +231,21 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     target.value / "dsl-temp"
   }
 
-  private def createCompilerSettingsTempFile = Def.task {
-    val settingsFile = dslTempFolder.value / "dsl-settings.txt"
-    val settings = dslSettings.value.map(_.name).sorted.mkString("\n")
-
-    IO.write(settingsFile, settings)
-    settingsFile
-  }
-
-  private def findDslCompiler: Initialize[Task[File]] = Def.task {
+  private def createCompilerSettingsFingerprint: Initialize[Task[File]] = Def.task {
     def parsePort(in: String): Option[Int] = Try(Integer.parseInt(in)).filter(_ > 0).toOption
 
     val fallBackCompiler = {
       val workingDirectoryCompiler = new File("dsl-compiler.exe")
-      if(workingDirectoryCompiler.exists())
+      if(workingDirectoryCompiler.exists()) {
         workingDirectoryCompiler
-      else {
+      } else {
         val logger = streams.value.log
         val tempPath = TempPath.getTempRootPath(new DslContext(Some(logger)))
         new File(tempPath, "dsl-compiler.exe")
       }
     }
 
-    parsePort(dslCompiler.value)
+    val file = parsePort(dslCompiler.value)
       .map(_ => fallBackCompiler)
       .getOrElse(
         if(dslCompiler.value.isEmpty) {
@@ -274,6 +259,13 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           customCompilerPath
         }
       )
+
+    val fingerprintFile = dslTempFolder.value / "dsl-fingerprint.txt"
+    val settings = dslSettings.value.map(_.name).sorted.mkString("\n") + {
+      if (file.exists()) file.lastModified.toString else ""
+    }
+    IO.write(fingerprintFile, settings)
+    fingerprintFile
   }
 
   private def dslSourcesForLibrary = Def.task {
@@ -295,7 +287,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       buffer.toSet
     }
     
-    val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsTempFile.value :+ findDslCompiler.value
+    val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsFingerprint.value
     val dslSourceCache = target.value / "dsl-source-cache"
     val cachedGenerator = FileFunction.cached(dslSourceCache)(inStyle = FilesInfo.hash, outStyle = FilesInfo.hash)(generateSource)
 
