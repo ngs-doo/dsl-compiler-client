@@ -261,7 +261,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       )
 
     val fingerprintFile = dslTempFolder.value / "dsl-fingerprint.txt"
-    val settings = dslSettings.value.map(_.name).sorted.mkString("\n") + {
+    val settings = dslSettings.value.map(_.name).sorted.mkString("\n") + "\n" + {
       if (file.exists()) file.lastModified.toString else ""
     }
     IO.write(fingerprintFile, settings)

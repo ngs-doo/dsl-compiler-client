@@ -8,6 +8,7 @@ import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.DocumentRunnable;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
@@ -18,6 +19,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.rpc.CommandProcessor;
 
 import java.io.*;
 import java.util.*;
@@ -28,6 +30,8 @@ public class DslLexerParser extends Lexer {
 	private final PsiFile psiFile;
 	private final Document document;
 	private final Application application;
+	private final Runnable refreshAll;
+	private final Runnable scheduleRefresh;
 
 	private boolean forceRefresh;
 	private boolean waitingForSync;
@@ -62,9 +66,38 @@ public class DslLexerParser extends Lexer {
 				waitForSetup.setDaemon(true);
 				waitForSetup.start();
 			}
+			refreshAll = new DocumentRunnable(document, null) {
+				@Override
+				public void run() {
+					com.intellij.openapi.command.CommandProcessor.getInstance().runUndoTransparentAction(
+							new Runnable() {
+								@Override
+								public void run() {
+									document.setText(document.getText());
+								}
+							});
+				}
+			};
+			scheduleRefresh = new DocumentRunnable(document, null) {
+				@Override
+				public void run() {
+					forceRefresh = true;
+					application.runWriteAction(refreshAll);
+				}
+			};
 		} else {
 			psiFile = null;
 			document = null;
+			refreshAll = new Runnable() {
+				@Override
+				public void run() {
+				}
+			};
+			scheduleRefresh = new Runnable() {
+				@Override
+				public void run() {
+				}
+			};
 		}
 	}
 
@@ -240,21 +273,6 @@ public class DslLexerParser extends Lexer {
 			}
 		}
 	}
-
-	private final Runnable refreshAll = new DumbAwareRunnable() {
-		@Override
-		public void run() {
-			document.setText(document.getText());
-		}
-	};
-
-	private final Runnable scheduleRefresh = new DumbAwareRunnable() {
-		@Override
-		public void run() {
-			forceRefresh = true;
-			application.runWriteAction(refreshAll);
-		}
-	};
 
 	private final Computable<String> obtainLatestDsl = new Computable<String>() {
 		@Override
