@@ -177,9 +177,28 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		return ret;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static class RuleInfo {
+		public final String rule;
+		public final String grammar;
+		public final String[] children;
+		public final String description;
+
+		RuleInfo(Map<String, Object> json) {
+			this.rule = (String) json.get("Rule");
+			String gr = (String) json.get("Grammar");
+			ArrayList<String> ch = (ArrayList<String>) json.get("Children");
+			String de = (String) json.get("Description");
+			this.grammar = gr != null ? gr : "";
+			this.children = ch != null ? ch.toArray(new String[0]) : new String[0];
+			this.description = de != null ? de : "";
+		}
+	}
+
 	public static class TokenParser implements Closeable {
 		private final Context context;
 		private final File compiler;
+		private final Map<String, RuleInfo> rules = new HashMap<String, RuleInfo>();
 
 		private int port;
 		private Socket socket;
@@ -194,6 +213,32 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			this.context = context;
 			this.compiler = compiler;
 			setupMonitor(port, process, this);
+		}
+
+		public Either<RuleInfo> findRule(String name) {
+			if (name != null) {
+				if (rules.isEmpty()) {
+					try {
+						Socket sck = setupSocket();
+						if (sck == null) {
+							return Either.fail("Unable to setup socket.");
+						}
+						Either<List<RuleInfo>> newRules = loadRules(sck);
+						if (!newRules.isSuccess()) {
+							return Either.fail(newRules.whyNot());
+						}
+						for (RuleInfo ri : newRules.get()) {
+							rules.put(ri.rule, ri);
+						}
+					} catch (Exception ex) {
+						return Either.fail("Unable to load rules: " + ex.getMessage());
+					}
+				}
+				RuleInfo rule = rules.get(name);
+				if (rule != null) return Either.success(rule);
+				else Either.fail("Unknown rule: " + name);
+			}
+			return Either.fail("Rule name can't be null");
 		}
 
 		private void setupMonitor(final int port, final Process process, final TokenParser parser) {
@@ -257,6 +302,42 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			} catch (Exception ex) {
 				socketCleanup(true);
 				return Either.fail(ex);
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private Either<List<RuleInfo>> loadRules(final Socket socket) {
+			final String command = "format=json rules include-length keep-alive\n";
+			try {
+				final OutputStream sos = socket.getOutputStream();
+				sos.write(command.getBytes(UTF_8));
+				sos.flush();
+				final ByteStream os = getByteStream(context);
+				final byte[] buf = os.temp;
+				final InputStream is = socket.getInputStream();
+				int read = is.read(buf, 0, 4);
+				if (read != 4 || buf[0] != 'O') {
+					return Either.fail("Invalid response from server.");
+				}
+				read = is.read(buf, 0, 4);
+				if (read != 4) {
+					return Either.fail("Invalid response from server. Expecting length.");
+				}
+				int length = readInt(buf);
+				os.reset();
+				while (length > 0 && (read = is.read(buf)) > 0) {
+					length -= read;
+					os.write(buf, 0, read);
+				}
+				os.flush();
+				final List<Object> result = JSON.readList(os.getBuffer(), os.size());
+				final List<RuleInfo> rules = new ArrayList<RuleInfo>(result.size());
+				for (Object it : result) {
+					rules.add(new RuleInfo((Map<String, Object>) it));
+				}
+				return Either.success(rules);
+			} catch (IOException e) {
+				return Either.fail(e.getMessage());
 			}
 		}
 

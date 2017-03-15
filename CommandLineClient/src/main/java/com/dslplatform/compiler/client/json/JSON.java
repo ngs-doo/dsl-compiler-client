@@ -57,6 +57,12 @@ public abstract class JSON {
 		return deserializeMap(reader);
 	}
 
+	public static List<Object> readList(final byte[] input, final int length) throws IOException {
+		JsonReader reader = new JsonReader(input, length);
+		reader.getNextToken();
+		return deserializeList(reader);
+	}
+
 	private static LinkedHashMap<String, Object> deserializeMap(final JsonReader reader) throws IOException {
 		if (reader.last() != '{') {
 			throw new IOException("Expecting '{' at position " + reader.positionInStream() + ". Found " + (char) reader.last());
