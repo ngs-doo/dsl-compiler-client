@@ -723,7 +723,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	}
 
 	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
-		final Either<Long> lastModified = Utils.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
+		final Either<Long> lastModified = Download.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
 		if (!lastModified.isSuccess()) {
 			context.warning(lastModified.whyNot());
 		} else if (compiler.lastModified() != lastModified.get()) {
@@ -739,15 +739,16 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final boolean failOnError) throws ExitException {
 		final long lastModified;
 		try {
-			lastModified = Utils.downloadAndUnpack(context, "dsl-compiler", tempPath);
+			lastModified = Download.downloadAndUnpack(context, "dsl-compiler", tempPath);
 		} catch (final IOException ex) {
+			final String remoteUrl = Download.remoteUrl(context);
 			if (failOnError) {
-				context.error("Error downloading compiler from https://dsl-platform.com");
-				context.error("Try specifying alternative compiler location.");
+				context.error("Error downloading compiler from " + remoteUrl);
+				context.error("Try specifying alternative compiler or download location.");
 				context.error(ex);
 				throw new ExitException();
 			} else {
-				context.warning("Error downloading compiler from https://dsl-platform.com");
+				context.warning("Error downloading compiler from " + remoteUrl);
 				context.warning("Skipping...");
 				return;
 			}

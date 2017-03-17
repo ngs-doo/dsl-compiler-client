@@ -42,7 +42,7 @@ public enum Dependencies implements CompileParameter {
 				throw new ExitException();
 			}
 		} else if (check && context.contains(Download.INSTANCE)) {
-			final Either<Long> modified = Utils.lastModified(context, zip, name, dependencies.lastModified());
+			final Either<Long> modified = Download.lastModified(context, zip, name, dependencies.lastModified());
 			if (hasFolderSpecified && modified.isSuccess() && dependencies.lastModified() != modified.get()) {
 				context.show("Custom dependency folder specified for " + name + ". Skipping update for: " + dependencies.getAbsolutePath());
 			} else if (modified.isSuccess() && dependencies.lastModified() != modified.get()) {

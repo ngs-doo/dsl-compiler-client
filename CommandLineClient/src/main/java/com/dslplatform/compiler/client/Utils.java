@@ -13,57 +13,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public abstract class Utils {
-	private static final String DEFAULT_REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
-
-	private static String remoteUrl(final Context context) {
-		final String customURL = context.get(Download.INSTANCE);
-		if(customURL != null && !customURL.isEmpty()) {
-			return customURL;
-		} else {
-			return DEFAULT_REMOTE_URL;
-		}
-	}
-
-	public static long downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
-		final URL server = new URL(remoteUrl(context) + file + ".zip");
-		context.show("Downloading " + file + ".zip from DSL Platform...");
-		return unpackZip(context, path, server);
-	}
-
-	public static Either<Long> lastModified(final Context context, final String file, final String name, final long current) {
-		try {
-			final URL server = new URL(remoteUrl(context) + file + ".zip");
-			context.log("Checking last modified info for " + file + ".zip from DSL Platform...");
-			final HttpURLConnection connection = (HttpURLConnection) server.openConnection();
-			connection.setRequestMethod("HEAD");
-			//60 seconds timeout to prevent handing if case of site issues
-			connection.setConnectTimeout(30 * 1000);
-			connection.setReadTimeout(30 * 1000);
-			final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			final long latest = connection.getLastModified();
-			if (latest == 0 && connection.getResponseCode() == -1) {
-				return Either.fail("Unable to check " + file + " version on DSL Platform. Internet connection not available?");
-			}
-			if (current == latest && current != 0) {
-				context.show(name + " at latest version (" + sdf.format(latest) + ")");
-			} else if (current > 0 && latest > 0) {
-				context.show("Different version of " + name + " found at DSL Platform website.");
-				context.show("Local version: " + sdf.format(current));
-				context.show("Upstream version: " + sdf.format(latest));
-			} else {
-				if (latest == 0) {
-					context.warning(name + " not found at DSL Platform website.");
-				} else {
-					context.show("Upstream version: " + sdf.format(latest));
-				}
-			}
-			return Either.success(latest);
-		} catch (UnknownHostException ex) {
-			return Either.fail("Unable to check for " + file + " on DSL Platform.", ex);
-		} catch (IOException ex) {
-			return Either.fail(ex);
-		}
-	}
 
 	public static String read(final InputStream stream) throws IOException {
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
