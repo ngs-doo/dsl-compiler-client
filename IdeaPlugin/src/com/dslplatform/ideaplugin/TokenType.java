@@ -9,17 +9,17 @@ import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAtt
 
 public class TokenType extends IElementType {
 
-	public static final TextAttributesKey IDENTIFIER_KEY = createTextAttributesKey("IDENTIFIER", DefaultLanguageHighlighterColors.CONSTANT);
-	public static final TextAttributesKey KEYWORD_KEY = createTextAttributesKey("KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
-	public static final TextAttributesKey STRING_KEY = createTextAttributesKey("STRING", DefaultLanguageHighlighterColors.STRING);
+	static final TextAttributesKey IDENTIFIER_KEY = createTextAttributesKey("IDENTIFIER", DefaultLanguageHighlighterColors.CONSTANT);
+	static final TextAttributesKey KEYWORD_KEY = createTextAttributesKey("KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
+	static final TextAttributesKey STRING_KEY = createTextAttributesKey("STRING", DefaultLanguageHighlighterColors.STRING);
 
-	public static final TokenType KEYWORD = new TokenType(DslCompiler.SyntaxType.Keyword.name(), new TextAttributesKey[]{KEYWORD_KEY});
-	public static final TokenType IDENTIFIER = new TokenType(DslCompiler.SyntaxType.Identifier.name(), new TextAttributesKey[]{IDENTIFIER_KEY});
-	public static final TokenType STRING_QUOTE = new TokenType(DslCompiler.SyntaxType.StringQuote.name(), new TextAttributesKey[]{STRING_KEY});
-	public static final TokenType OTHER = new TokenType("other", new TextAttributesKey[0]);
-	public static final TokenType IGNORED = new TokenType("ignored", new TextAttributesKey[0]);
+	static final TokenType KEYWORD = new TokenType(DslCompiler.SyntaxType.Keyword.name(), new TextAttributesKey[]{KEYWORD_KEY});
+	static final TokenType IDENTIFIER = new TokenType(DslCompiler.SyntaxType.Identifier.name(), new TextAttributesKey[]{IDENTIFIER_KEY});
+	static final TokenType STRING_QUOTE = new TokenType(DslCompiler.SyntaxType.StringQuote.name(), new TextAttributesKey[]{STRING_KEY});
+	static final TokenType OTHER = new TokenType("other", new TextAttributesKey[0]);
+	static final TokenType IGNORED = new TokenType("ignored", new TextAttributesKey[0]);
 
-	public static TokenType from(DslCompiler.SyntaxType type) {
+	static TokenType from(DslCompiler.SyntaxType type) {
 		switch (type) {
 			case Keyword:
 				return KEYWORD;
@@ -32,8 +32,8 @@ public class TokenType extends IElementType {
 		}
 	}
 
-	public final String name;
-	public final TextAttributesKey[] attributes;
+	final String name;
+	final TextAttributesKey[] attributes;
 
 	private TokenType(String name, TextAttributesKey[] attributes) {
 		super(name, DomainSpecificationLanguage.INSTANCE);

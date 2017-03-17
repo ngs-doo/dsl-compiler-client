@@ -1,12 +1,10 @@
 package com.dslplatform.ideaplugin;
 
-import com.dslplatform.compiler.client.*;
-import com.dslplatform.compiler.client.parameters.Download;
-import com.dslplatform.compiler.client.parameters.DslCompiler;
+import com.dslplatform.compiler.client.Either;
 import com.intellij.lexer.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
 import com.intellij.openapi.project.DumbAwareRunnable;
@@ -19,9 +17,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.rpc.CommandProcessor;
 
-import java.io.*;
 import java.util.*;
 
 public class DslLexerParser extends Lexer {
@@ -32,6 +28,7 @@ public class DslLexerParser extends Lexer {
 	private final Application application;
 	private final Runnable refreshAll;
 	private final Runnable scheduleRefresh;
+	private final DslCompilerService dslService;
 
 	private boolean forceRefresh;
 	private boolean waitingForSync;
@@ -43,29 +40,18 @@ public class DslLexerParser extends Lexer {
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
 		this.application = ApplicationManager.getApplication();
+		this.dslService = ServiceManager.getService(DslCompilerService.class);
 		if (project != null && file != null) {
 			psiFile = PsiManager.getInstance(project).findFile(file);
 			document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
-			if (tokenParser == null) {
-				Thread waitForSetup = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							int i = 0;
-							while (i < 600 && tokenParser == null) {
-								Thread.sleep(1000);
-								i++;
-							}
-							if (application != null) {
-								application.invokeLater(scheduleRefresh);
-							}
-						} catch (Throwable ignore) {
-						}
+			dslService.callWhenReady(new Runnable() {
+				@Override
+				public void run() {
+					if (application != null) {
+						application.invokeLater(scheduleRefresh);
 					}
-				});
-				waitForSetup.setDaemon(true);
-				waitForSetup.start();
-			}
+				}
+			});
 			refreshAll = new DocumentRunnable(document, null) {
 				@Override
 				public void run() {
@@ -101,144 +87,8 @@ public class DslLexerParser extends Lexer {
 		}
 	}
 
-	static class AST {
-		public final DslCompiler.SyntaxConcept concept;
-		public final TokenType type;
-		public final int offset;
-		public final int length;
-
-		public AST(DslCompiler.SyntaxConcept concept, int offset, int length) {
-			this.concept = concept;
-			this.type = concept == null ? TokenType.IGNORED : TokenType.from(concept.type);
-			this.offset = offset;
-			this.length = length;
-		}
-	}
-
-	static class DslContext extends Context {
-
-		private final Logger logger;
-
-		public DslContext(Logger logger) {
-			this.logger = logger;
-		}
-
-		public void show(String... values) {
-			for (String v : values) {
-				logger.info(v);
-			}
-		}
-
-		public void log(String value) {
-			if (logger.isDebugEnabled()) {
-				logger.debug(value);
-			}
-		}
-
-		public void log(char[] value, int len) {
-			if (logger.isDebugEnabled()) {
-				logger.debug(new String(value, 0, len));
-			}
-		}
-
-		public void warning(String value) {
-			logger.warn(value);
-		}
-
-		public void warning(Exception ex) {
-			logger.warn(ex.getMessage());
-			if (logger.isDebugEnabled()) {
-				logger.debug(ex.toString());
-			}
-		}
-
-		public void error(String value) {
-			logger.warn(value);
-		}
-
-		public void error(Exception ex) {
-			logger.warn(ex.getMessage());
-			if (logger.isDebugEnabled()) {
-				logger.debug(ex.toString());
-			}
-		}
-	}
-
-	private static DslCompiler.TokenParser tokenParser;
-
-	static {
-		final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
-		final DslContext context = new DslContext(logger);
-		context.put(Download.INSTANCE, null);
-		Thread setup = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					setupCompiler(logger, context);
-				} catch (Throwable e) {
-					logger.error(e.getMessage());
-				}
-			}
-		});
-		setup.start();
-	}
-
-	private static void setupCompiler(Logger logger, DslContext context) {
-		if (!Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE))) {
-			logger.warn("Unable to setup DSL Platform client");
-		}
-		final String path = context.get(DslCompiler.INSTANCE);
-		if (path == null) {
-			logger.error("Unable to setup dsl-compiler.exe. Please check if Mono/.NET is installed and available on path.");
-		} else {
-			final File compiler = new File(path);
-			logger.info("DSL Platform compiler found at: " + compiler.getAbsolutePath());
-			Either<DslCompiler.TokenParser> trySetup = DslCompiler.setupServer(context, compiler);
-			if (trySetup.isSuccess()) {
-				tokenParser = trySetup.get();
-				Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							tokenParser.close();
-							tokenParser = null;
-						} catch (Exception ignore) {
-						}
-					}
-				}));
-			}
-		}
-	}
-
 	private AST getCurrent() {
 		return position >= 0 && position < ast.size() ? ast.get(position) : null;
-	}
-
-	private void analyze(String dsl, int start) {
-		List<DslCompiler.SyntaxConcept> parsed = dsl.length() > 0 && tokenParser != null
-				? parseTokens(dsl)
-				: new ArrayList<DslCompiler.SyntaxConcept>(0);
-		List<AST> newAst = new ArrayList<AST>(parsed.size() * 2);
-		String[] lines = dsl.split("\\n");
-		int[] linesTotal = new int[lines.length];
-		int runningTotal = 0;
-		for (int i = 0; i < lines.length; i++) {
-			linesTotal[i] = runningTotal;
-			runningTotal += lines[i].length() + 1;
-		}
-		for (DslCompiler.SyntaxConcept c : parsed) {
-			switch (c.type) {
-				case Identifier:
-				case Keyword:
-				case StringQuote:
-					newAst.add(new AST(c, linesTotal[c.line - 1] + c.column, c.value.length()));
-			}
-		}
-		if (newAst.size() == 0) {
-			newAst.add(new AST(null, 0, dsl.length()));
-		}
-		fixupAndReposition(dsl, newAst, start);
-		forceRefresh = false;
 	}
 
 	private void fixupAndReposition(String dsl, List<AST> newAst, int start) {
@@ -248,7 +98,7 @@ public class DslLexerParser extends Lexer {
 		while (index < newAst.size()) {
 			AST it = newAst.get(index);
 			if (it.offset > cur) {
-				newAst.add(index, new AST(null, cur, it.offset - cur));
+				newAst.add(index, new AST(null, cur, it.offset - cur, null));
 				index++;
 			}
 			cur = it.offset + it.length;
@@ -258,7 +108,7 @@ public class DslLexerParser extends Lexer {
 			AST last = newAst.get(newAst.size() - 1);
 			int width = last.offset + last.length;
 			if (width < dsl.length()) {
-				newAst.add(new AST(null, width, dsl.length() - width));
+				newAst.add(new AST(null, width, dsl.length() - width, null));
 			}
 		}
 		synchronized (ast) {
@@ -305,8 +155,19 @@ public class DslLexerParser extends Lexer {
 		final String dsl = charSequence.toString();
 		final boolean differentDsl = !dsl.equals(lastDsl);
 		if (project == null || forceRefresh || ast.size() == 0 && dsl.length() > 0) {
-			analyze(dsl, start);
-			forceRefresh = false;
+			Either<List<AST>> tryNewAst = dslService.analyze(dsl);
+			if (tryNewAst.isSuccess()) {
+				List<AST> newAst = tryNewAst.get();
+				if (newAst.size() == 0) {
+					newAst.add(new AST(null, 0, dsl.length(), null));
+				}
+				fixupAndReposition(dsl, newAst, start);
+				forceRefresh = false;
+			} else {
+				List<AST> newAst = new ArrayList<AST>(1);
+				newAst.add(new AST(null, 0, dsl.length(), null));
+				fixupAndReposition(dsl, newAst, start);
+			}
 		} else if (differentDsl) {
 			final String actualDsl;
 			if (start == end && dsl.length() == 0 && psiFile != null) {
@@ -317,7 +178,7 @@ public class DslLexerParser extends Lexer {
 				}
 			} else actualDsl = dsl;
 			List<AST> newAst = new ArrayList<AST>(1);
-			newAst.add(new AST(null, 0, actualDsl.length()));
+			newAst.add(new AST(null, 0, actualDsl.length(), null));
 			fixupAndReposition(actualDsl, newAst, start);
 			delayUntil = System.currentTimeMillis() + 300;
 			if (!waitingForSync && project.isOpen() && psiFile != null) {
@@ -329,20 +190,12 @@ public class DslLexerParser extends Lexer {
 		}
 	}
 
-	private static synchronized List<DslCompiler.SyntaxConcept> parseTokens(String dsl) {
-		Either<DslCompiler.ParseResult> result = tokenParser.parse(dsl);
-		if (!result.isSuccess() || result.get().tokens == null) {
-			return new ArrayList<DslCompiler.SyntaxConcept>(0);
-		}
-		return result.get().tokens;
-	}
-
 	static class OffsetPosition implements LexerPosition {
 
 		private final int offset;
 		private final int state;
 
-		public OffsetPosition(int offset, int state) {
+		OffsetPosition(int offset, int state) {
 			this.offset = offset;
 			this.state = state;
 		}
