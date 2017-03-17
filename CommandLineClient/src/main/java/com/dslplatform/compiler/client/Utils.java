@@ -1,5 +1,6 @@
 package com.dslplatform.compiler.client;
 
+import com.dslplatform.compiler.client.parameters.Download;
 import org.w3c.dom.Document;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -12,17 +13,26 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public abstract class Utils {
-	private static final String REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
+	private static final String DEFAULT_REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
+
+	private static String remoteUrl(final Context context) {
+		final String customURL = context.get(Download.INSTANCE);
+		if(customURL != null && !customURL.isEmpty()) {
+			return customURL;
+		} else {
+			return DEFAULT_REMOTE_URL;
+		}
+	}
 
 	public static long downloadAndUnpack(final Context context, final String file, final File path) throws IOException {
-		final URL server = new URL(REMOTE_URL + file + ".zip");
+		final URL server = new URL(remoteUrl(context) + file + ".zip");
 		context.show("Downloading " + file + ".zip from DSL Platform...");
 		return unpackZip(context, path, server);
 	}
 
 	public static Either<Long> lastModified(final Context context, final String file, final String name, final long current) {
 		try {
-			final URL server = new URL(REMOTE_URL + file + ".zip");
+			final URL server = new URL(remoteUrl(context) + file + ".zip");
 			context.log("Checking last modified info for " + file + ".zip from DSL Platform...");
 			final HttpURLConnection connection = (HttpURLConnection) server.openConnection();
 			connection.setRequestMethod("HEAD");

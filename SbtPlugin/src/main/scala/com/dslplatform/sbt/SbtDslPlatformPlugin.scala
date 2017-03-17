@@ -36,6 +36,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslLatest = settingKey[Boolean]("Check for latest versions (dsl-compiler, libraries, etc...)")
     val dslForce = settingKey[Boolean]("Force actions without prompt (destructive migrations, missing folders, etc...)")
     val dslPlugins = settingKey[Option[File]]("Path to additional DSL plugins")
+    val dslDownload = settingKey[Option[String]]("Download URL for a custom DSL compiler")
   }
 
   import autoImport._
@@ -72,7 +73,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslSqlPath := baseDirectory.value / "sql",
     dslLatest := true,
     dslForce := false,
-    dslPlugins := Some(baseDirectory.value)
+    dslPlugins := Some(baseDirectory.value),
+    dslDownload := None
   )
 
   private lazy val dslTasks = Seq(
@@ -127,7 +129,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   override lazy val projectSettings = dslDefaultSettings ++ dslTasks ++ dslCompilationSettings ++ Seq(
     onLoad := {
       if (dslServerMode.value) {
-        Actions.setupServerMode(dslCompiler.value, None, dslServerPort.value)
+        Actions.setupServerMode(dslCompiler.value, None, dslDownload.value, dslServerPort.value)
       }
       onLoad.value
     }
@@ -180,6 +182,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
             dslPlugins.value,
             dslCompiler.value,
             dslServerMode.value,
+            dslDownload.value,
             dslServerPort.value,
             dslNamespace.value,
             dslSettings.value,
@@ -279,6 +282,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslPlugins.value,
         dslCompiler.value,
         dslServerMode.value,
+        dslDownload.value,
         dslServerPort.value,
         dslNamespace.value,
         dslSettings.value,
@@ -286,7 +290,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
       buffer.toSet
     }
-    
+
     val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsFingerprint.value
     val dslSourceCache = target.value / "dsl-source-cache"
     val cachedGenerator = FileFunction.cached(dslSourceCache)(inStyle = FilesInfo.hash, outStyle = FilesInfo.hash)(generateSource)
@@ -312,6 +316,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslPlugins.value,
         dslCompiler.value,
         dslServerMode.value,
+        dslDownload.value,
         dslServerPort.value,
         dslNamespace.value,
         dslSettings.value,
@@ -389,6 +394,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslPlugins.value,
         dslCompiler.value,
         dslServerMode.value,
+        dslDownload.value,
         dslServerPort.value,
         dslApplyMigration.value,
         dslForce.value,
@@ -412,6 +418,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       dslPlugins.value,
       dslCompiler.value,
       dslServerMode.value,
+      dslDownload.value,
       dslServerPort.value,
       args)
   }
