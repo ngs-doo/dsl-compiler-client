@@ -62,7 +62,7 @@ object Actions {
             if (compiler == null || compiler.isEmpty) {
               logger.foreach(_.info("Downloading latest DSL compiler since compiler path is not specified."))
               val downloadCtx = new DslContext(logger)
-              downloadCtx.put(Download.INSTANCE, url.getOrElse(null))
+              downloadCtx.put(Download.INSTANCE, url.getOrElse(""))
               if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
                 logger.foreach(_.warn("Unable to setup DSL Platform client"))
               }

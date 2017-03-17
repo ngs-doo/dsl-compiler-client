@@ -16,9 +16,9 @@ public abstract class Utils {
 	private static final String DEFAULT_REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
 
 	private static String remoteUrl(final Context context) {
-		String customURL = context.get(Download.INSTANCE);
+		final String customURL = context.get(Download.INSTANCE);
 		if(customURL != null && !customURL.isEmpty()) {
-			return context.get(Download.INSTANCE);
+			return customURL;
 		} else {
 			return DEFAULT_REMOTE_URL;
 		}
