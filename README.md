@@ -6,7 +6,7 @@ It also supports automated database migrations for Postgres and Oracle.
 It's premise is to use Invasive software composition to write better software.
 By focusing on rich modeling supported on top of Object-relational databases development can be improved by automating creation and maintenance of various boilerplate found in today software development.
 
-###How DSL works
+### How DSL works
 
 Domain is described using various modeling building blocks, for example:
 
@@ -48,7 +48,7 @@ SQL migration is created by the compiler analysing differences between models, s
 
 DSL compiler acts as a developer in your team which does all the boring work you would need to do, while providing high quality and high performance parts of the system.
 
-###Getting started
+### Getting started
 
 Browse [dsl-platform](https://dsl-platform.com/) to get a feeling of supported DSL constructs. Compiler requires Mono/.NET on the system.
 
@@ -56,14 +56,14 @@ Think about your domain - DSL is designed to get out of the way while modeling. 
 
 Choose a language and a compatible open source library to write Android/.NET/PHP/Java applications on top of your model.
 
-###Supported libraries
+### Supported libraries
 
  * [Revenj](https://github.com/ngs-doo/revenj)
  * [DSL Java/Android client](https://github.com/ngs-doo/dsl-client-java)
  * [DSL PHP client](https://github.com/ngs-doo/dsl-client-php)
  * [DSL Scala client](https://github.com/ngs-doo/dsl-client-scala)
 
-###How to use
+### How to use
 
 Download dsl-clc.jar to your project folder and run it with java.
 
@@ -71,12 +71,12 @@ Download dsl-clc.jar to your project folder and run it with java.
 
 This will display all available options of the tool and examples on how to use it.
 
-###Compiled libraries
+### Compiled libraries
 
 This tool is used to produce a compiled library which you can use to implement custom behavior and business logic.
 While you can use generated code instead of compiled library, this behavior is highly discouraged.
 
-###Usage examples
+### Usage examples
 
 Compiling Java client library from DSL located in ./dsl folder (you will need Mono or .NET to use the compiler)
 
