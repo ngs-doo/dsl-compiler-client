@@ -24,7 +24,7 @@ public enum Download implements CompileParameter {
 		return null;
 	}
 
-	private static final String DEFAULT_REMOTE_URL = "https://compiler.dsl-platform.com:8443/platform/download/";
+	private static final String DEFAULT_REMOTE_URL = "https://tools.dsl-platform.com/";
 
 	public static String remoteUrl(final Context context) {
 		final String customURL = context.get(Download.INSTANCE);
