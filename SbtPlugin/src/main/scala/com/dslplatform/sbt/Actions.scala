@@ -255,11 +255,12 @@ object Actions {
     }
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
       scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
-      Seq(scanSystemAspects(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
+        scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
+        Seq(scanSystemAspects(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
       scanEventHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
-      Seq(scanSystemAspects(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
+        Seq(scanSystemAspects(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
     } else {
       Nil
     }
@@ -343,7 +344,7 @@ object Actions {
         }
     }
     if (!serverMode && latest) {
-      ctx.put(Download.INSTANCE, serverURL.getOrElse(null))
+      ctx.put(Download.INSTANCE, serverURL.getOrElse(""))
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
     if (!Main.processContext(ctx, params) && !ctx.isParseError && !ctx.hasInteracted) {
