@@ -790,7 +790,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	public String getDetailedDescription() {
 		return "DSL Platform compiler.\n" +
 				"Requires .NET/Mono to run.\n" +
-				"It is available for download at: https://compiler.dsl-platform.com:8443/platform/download/dsl-compiler.zip\n" +
+				"It is available for download at: https://tools.dsl-platform.com/dsl-compiler.zip\n" +
 				"\n" +
 				"Example:\n" +
 				"\tcompiler\n" +

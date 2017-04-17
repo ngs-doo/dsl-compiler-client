@@ -277,7 +277,7 @@ public enum Download implements CompileParameter {
 		return "Always download missing dependencies.\n" +
 				"Dependencies will be checked for latest version.\n" +
 				"Dependencies will be downloaded through Maven, DSL Platform website or custom URL specified.\n" +
-				"Custom download URL can be specified; default URL = https://compiler.dsl-platform.com:8443/platform/download/\n\n" +
+				"Custom download URL can be specified; default URL = https://tools.dsl-platform.com/\n\n" +
 				"Example:\n" +
 				"\tdownload\n" +
 				"\tdownload=http://company.domain/dsl-platform/";
