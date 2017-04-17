@@ -26,7 +26,7 @@ namespace DDDLanguage
 		{
 			try
 			{
-				var request = (HttpWebRequest)HttpWebRequest.Create("https://compiler.dsl-platform.com:8443/platform/download/" + zip);
+				var request = (HttpWebRequest)HttpWebRequest.Create("https://tools.dsl-platform.com/" + zip);
 				request.PreAuthenticate = true;
 				request.KeepAlive = false;
 				request.Method = "GET";
