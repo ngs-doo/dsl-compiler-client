@@ -101,13 +101,13 @@ object Actions {
         arguments.add("ip=v4")
       }
     } catch {
-      case ignore: UnknownHostException =>
+      case _: UnknownHostException =>
     }
     try {
       val procId = ManagementFactory.getRuntimeMXBean.getName.split("@")(0)
       arguments.add("parent=" + procId)
     } catch {
-      case ignore: Exception =>
+      case _: Exception =>
     }
     if (!Utils.isWindows) {
       val mono = Mono.findMono(context)
