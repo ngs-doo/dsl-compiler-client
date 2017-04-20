@@ -256,11 +256,13 @@ object Actions {
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
       scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
         scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
-        Seq(scanSystemAspects(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
+        Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.handlers.RequestBinding")) ++
+        Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.ServerCommand")) ++
+        Seq(scanPlugins(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
       scanEventHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
-        Seq(scanSystemAspects(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
+        Seq(scanPlugins(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
     } else {
       Nil
     }
@@ -438,8 +440,8 @@ object Actions {
     handlers.keySet.map(k => new File(manifests, k)).toSeq
   }
 
-  private def scanSystemAspects(logger: Logger, folders: Seq[File], manifests: File, target: String): File = {
-    logger.info(s"""Scanning for $target aspects in ${folders.mkString(", ")}""")
+  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, target: String): File = {
+    logger.info(s"""Scanning for $target plugins in ${folders.mkString(", ")}""")
     val implementations =
       ClassFinder(folders).getClasses()
         .withFilter(it => it.isConcrete && it.implements(target))
