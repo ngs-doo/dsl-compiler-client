@@ -30,7 +30,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslNamespace = settingKey[String]("Root namespace for target language")
     val dslSettings = settingKey[Seq[Settings.Option]]("Additional compilation settings")
     val dslDslPath = settingKey[File]("Path to DSL folder")
-    val dslResourcePath = settingKey[File]("Path to META-INF/services folder")
+    val dslResourcePath = settingKey[Option[File]]("Path to META-INF/services folder")
     val dslDependencies = settingKey[Map[Targets.Option, File]]("Library compilation requires various dependencies. Customize default paths to dependencies")
     val dslSqlPath = settingKey[File]("Output folder for SQL scripts")
     val dslLatest = settingKey[Boolean]("Check for latest versions (dsl-compiler, libraries, etc...)")
@@ -70,6 +70,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslSettings := Nil,
     dslDslPath := baseDirectory.value / "dsl",
     dslDependencies := Map.empty,
+    dslResourcePath := None,
     dslSqlPath := baseDirectory.value / "sql",
     dslLatest := true,
     dslForce := false,
@@ -351,10 +352,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   private def dslResourceTask(config: Configuration) = Def.inputTask {
     val args = Parsers.spaceDelimited("<arg>").parsed
     def generate(dslTarget: Targets.Option, targetPath: Option[File]): Seq[File] = {
+      streams.value.log(s"creating resources in $config")
       Actions.generateResources(
         streams.value.log,
         dslTarget,
-        targetPath.getOrElse((resourceDirectory in Compile).value / "META-INF" / "services"),
+        targetPath.getOrElse((resourceDirectory in config).value / "META-INF" / "services"),
         Seq((target in config).value),
         (dependencyClasspath in config).value)
     }
@@ -365,20 +367,25 @@ object SbtDslPlatformPlugin extends AutoPlugin {
            |Either define dslSources/dslLibraries in build.sbt or provide target argument (eg. revenj.scala).
            |Usage example: dslResource revenj.scala""".stripMargin)
       (dslSources.value.keys ++ dslLibraries.value.keys).toSet[Targets.Option] foreach { target =>
-        buffer ++= generate(target, None)
+        buffer ++= generate(target, dslResourcePath.value)
       }
     } else if (args.length > 2) {
-      throw new RuntimeException("Too many arguments. Usage example: dslSource revenj.scala path_to_meta_inf_services_folder")
+      throw new RuntimeException("Too many arguments. Usage example: dslResource revenj.scala path_to_meta_inf_services_folder")
     } else {
       val targetArg = findTarget(streams.value.log, args.head)
-      if (args.length == 1) {
+      if (args.length == 1 &&
+        dslResourcePath.value.isEmpty &&
+        targetArg != Targets.Option.REVENJ_SCALA && targetArg != Targets.Option.REVENJ_SCALA_POSTGRES &&
+        targetArg != Targets.Option.REVENJ_JAVA && targetArg != Targets.Option.REVENJ_JAVA_POSTGRES &&
+        targetArg != Targets.Option.REVENJ_SPRING) {
         throw new RuntimeException(
-          """|dslSources does not contain definition for $targetArg.
-             |Either define it in dslSources or provide explicit output path.
-             |Example: dslLibrary revenj.scala path_to_folder""".stripMargin)
+          s"""Missing path argument for dslResource on $targetArg.
+          |Only several targets use default META-INF/services path.
+          |Others need to provide an explicit path.
+          |Example: dslResource revenj.scala path_to_folder""".stripMargin)
       }
-      val targetOutput = if (args.length == 2) new File(args.last) else (resourceDirectory in config).value / "META-INF" / "services"
-      buffer ++= generate(targetArg, Some(targetOutput))
+      val targetOutput = if (args.length == 2) Some(new File(args.last)) else dslResourcePath.value
+      buffer ++= generate(targetArg, targetOutput)
     }
     buffer.toSeq
   }
