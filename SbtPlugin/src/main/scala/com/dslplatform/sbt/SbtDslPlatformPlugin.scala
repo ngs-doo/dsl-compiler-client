@@ -29,7 +29,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslApplyMigration = settingKey[Boolean]("Apply SQL migration directly to the database")
     val dslNamespace = settingKey[String]("Root namespace for target language")
     val dslSettings = settingKey[Seq[Settings.Option]]("Additional compilation settings")
-    val dslDslPath = settingKey[File]("Path to DSL folder")
+    val dslDslPath = settingKey[Seq[File]]("Path to DSL folder(s)")
     val dslResourcePath = settingKey[Option[File]]("Path to META-INF/services folder")
     val dslDependencies = settingKey[Map[Targets.Option, File]]("Library compilation requires various dependencies. Customize default paths to dependencies")
     val dslSqlPath = settingKey[File]("Output folder for SQL scripts")
@@ -68,7 +68,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslApplyMigration := false,
     dslNamespace := "",
     dslSettings := Nil,
-    dslDslPath := baseDirectory.value / "dsl",
+    dslDslPath := Seq(baseDirectory.value / "dsl"),
     dslDependencies := Map.empty,
     dslResourcePath := None,
     dslSqlPath := baseDirectory.value / "sql",
@@ -118,7 +118,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   ) ++ Seq(
     dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
     exportedProducts in Compile ++= (exportedProducts in DslPlatform).value,
-    unmanagedSourceDirectories in Compile += dslDslPath.value
+    unmanagedSourceDirectories in Compile ++= dslDslPath.value
   )
 
   // When running `compile` from the command line interface, SBT is calling dsl-platform:compile, apparently because it
@@ -265,8 +265,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       )
 
     val fingerprintFile = dslTempFolder.value / "dsl-fingerprint.txt"
-    val settings = dslSettings.value.map(_.name).sorted.mkString("\n") + "\n" + {
-      if (file.exists()) file.lastModified.toString else ""
+    val settings = {
+      dslSettings.value.map(_.name).sorted.mkString("\n") + "\n" +
+        (if (file.exists()) file.lastModified.toString else "") + "\n" +
+        dslCompiler + "\n" +
+        dslDownload.value.getOrElse("")
     }
     IO.write(fingerprintFile, settings)
     fingerprintFile

@@ -95,7 +95,7 @@ object Actions {
     val arguments = new util.ArrayList[String]
     arguments.add(compiler)
     arguments.add("server-mode")
-    arguments.add("port=" + port)
+    arguments.add(s"port=$port")
     try {
       if (InetAddress.getLoopbackAddress.isInstanceOf[Inet4Address]) {
         arguments.add("ip=v4")
@@ -105,7 +105,7 @@ object Actions {
     }
     try {
       val procId = ManagementFactory.getRuntimeMXBean.getName.split("@")(0)
-      arguments.add("parent=" + procId)
+      arguments.add(s"parent=$procId")
     } catch {
       case _: Exception =>
     }
@@ -136,7 +136,7 @@ object Actions {
     logger: Logger,
     target: Targets.Option,
     output: File,
-    dsl: File,
+    dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
@@ -184,7 +184,7 @@ object Actions {
     logger: Logger,
     target: Targets.Option,
     output: File,
-    dsl: File,
+    dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
@@ -273,7 +273,7 @@ object Actions {
     jdbcUrl: String,
     postgres: Boolean = true,
     output: File,
-    dsl: File,
+    dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
@@ -294,7 +294,7 @@ object Actions {
 
   def execute(
     logger: Logger,
-    dsl: File,
+    dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
     serverMode: Boolean = false,
@@ -315,8 +315,11 @@ object Actions {
     executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest = false, ctx, logger)
   }
 
-  private def executeContext(dsl: File, compiler: String, serverMode: Boolean, serverURL: Option[String], serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
-    ctx.put(DslPath.INSTANCE, dsl.getPath)
+  private def executeContext(dsls: Seq[File], compiler: String, serverMode: Boolean, serverURL: Option[String], serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
+    if (dsls.isEmpty) {
+      throw new RuntimeException(s"No DSL paths/files specified in dslDslPath setting")
+    }
+    ctx.put(DslPath.INSTANCE, dsls.mkString(File.pathSeparator))
     val startedNow = {
       if (serverMode) {
         val info = serverInfo
