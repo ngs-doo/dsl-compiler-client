@@ -34,9 +34,14 @@ public enum Download implements CompileParameter {
 		return DEFAULT_REMOTE_URL;
 	}
 
+	public static boolean isDefaultUrl(final Context context) {
+		final String remoteUrl = remoteUrl(context);
+		return DEFAULT_REMOTE_URL.equals(remoteUrl);
+	}
+
 	private static String websiteName(final Context context) {
 		final String remoteUrl = remoteUrl(context);
-		if (DEFAULT_REMOTE_URL.equals(remoteUrl)) {
+		if (isDefaultUrl(context)) {
 			return "DSL Platform";
 		}
 		return "custom url (" + remoteUrl + ")";

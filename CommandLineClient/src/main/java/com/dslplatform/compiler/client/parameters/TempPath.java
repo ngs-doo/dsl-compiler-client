@@ -48,7 +48,8 @@ public enum TempPath implements CompileParameter {
 					: parentFolder.getName();
 			final String rnd = UUID.randomUUID().toString();
 			final File temp = File.createTempFile(rnd, ".dsl-test");
-			final File dslPlatformPath = new File(temp.getParentFile().getAbsolutePath(), "DSL-Platform");
+			final String dslName = Download.isDefaultUrl(context) ? "DSL-Platform" : "DSL-Custom";
+			final File dslPlatformPath = new File(temp.getParentFile().getAbsolutePath(), dslName);
 			final File path = new File(dslPlatformPath, projectName);
 			if (!temp.delete()) {
 				context.error("Unable to remove temporary created file: " + temp.getAbsolutePath());

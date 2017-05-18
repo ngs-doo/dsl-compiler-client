@@ -2,10 +2,7 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.*;
 
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 
 public enum DslPath implements CompileParameter {
@@ -51,32 +48,37 @@ public enum DslPath implements CompileParameter {
 			}
 			context.put(INSTANCE, value = "./dsl");
 		}
-		final File dslPath = new File(value).getAbsoluteFile();
-		final List<File> dslFiles = dslPath.isFile()
-				? Collections.singletonList(dslPath)
-				: Utils.findFiles(context, dslPath, Arrays.asList(".dsl", ".ddd"));
+		final List<File> allDslFiles = new ArrayList<File>();
 		final Map<String, String> dslMap = new LinkedHashMap<String, String>();
-		final int pathLen = dslPath.getAbsolutePath().length();
-		for (final File file : dslFiles) {
-			if (!file.canRead()) {
-				context.error("Can't read DSL file: " + file.getName());
-				throw new ExitException();
-			}
-			try {
-				final byte[] bytes = new byte[(int) file.length()];
-				final DataInputStream dis = new DataInputStream(new FileInputStream(file));
-				dis.readFully(bytes);
-				dis.close();
-				final String relativeName = file.getAbsolutePath().substring(pathLen);
-				dslMap.put(relativeName, new String(bytes, "UTF-8"));
-			} catch (IOException ex) {
-				context.error("Error reading DSL file: " + file.getName());
-				context.error(ex);
-				throw new ExitException();
+		for (final String part : value.split(File.pathSeparator)) {
+			final File dslPath = new File(part).getAbsoluteFile();
+			final List<File> dslFiles = dslPath.isFile()
+					? Collections.singletonList(dslPath)
+					: Utils.findFiles(context, dslPath, Arrays.asList(".dsl", ".ddd"));
+			final int pathLen = dslPath.getAbsolutePath().length();
+			for (final File file : dslFiles) {
+				if (!file.canRead()) {
+					context.error("Can't read DSL file: " + file.getName());
+					throw new ExitException();
+				}
+				final Either<String> content = Utils.readFile(file);
+				if (content.isSuccess()) {
+					final String relativeName = file.getAbsolutePath().substring(pathLen);
+					if (dslMap.containsKey(relativeName)) {
+						context.warning("Duplicate DSL file specified: " + file.getAbsolutePath() + " from base path: " + part);
+					} else {
+						dslMap.put(relativeName, content.get());
+						allDslFiles.add(file);
+					}
+				} else {
+					context.error("Error reading DSL file: " + file.getName());
+					context.error(content.whyNot());
+					throw new ExitException();
+				}
 			}
 		}
 		context.cache(CACHE_MAP_NAME, dslMap);
-		context.cache(CACHE_FILE_NAME, dslFiles);
+		context.cache(CACHE_FILE_NAME, allDslFiles);
 	}
 
 	@Override
@@ -105,7 +107,7 @@ public enum DslPath implements CompileParameter {
 
 	@Override
 	public String getShortDescription() {
-		return "Path to DSL files";
+		return "Path(s) to DSL files";
 	}
 
 	@Override
@@ -115,6 +117,7 @@ public enum DslPath implements CompileParameter {
 				"Snapshot of DSL files will be saved to the database, for future comparison on database migrations.\n" +
 				"\n" +
 				"UTF-8 will be assumed for DSL files.\n" +
-				".dsl and .ddd extensions are supported.";
+				".dsl and .ddd extensions are supported.\n\n" +
+				"Multiple files/paths can be specified via path separator.";
 	}
 }

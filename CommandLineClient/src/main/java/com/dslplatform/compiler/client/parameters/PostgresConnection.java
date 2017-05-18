@@ -63,14 +63,22 @@ public enum PostgresConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		final DatabaseInfo emptyResult = new DatabaseInfo("Postgres", "", postgres, new HashMap<String, String>());
+		final boolean hasNewTable;
 		try {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
-							"SELECT EXISTS(SELECT 1 FROM pg_tables " +
-									"WHERE (schemaname = '-DSL-' OR schemaname = '-NGS-') AND tablename = 'database_migration')");
-			final boolean hasTable = migrationExist.next() && migrationExist.getBoolean(1);
+							"SELECT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = '-DSL-' AND tablename = 'database_migration') AS new_name, " +
+								"EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = '-NGS-' AND tablename = 'database_migration') AS old_name");
+			final boolean hasOldTable;
+			if (migrationExist.next()) {
+				hasNewTable = migrationExist.getBoolean(1);
+				hasOldTable = migrationExist.getBoolean(2);
+			} else {
+				hasNewTable = false;
+				hasOldTable = false;
+			}
 			migrationExist.close();
-			if (!hasTable) {
+			if (!hasNewTable && !hasOldTable) {
 				stmt.close();
 				conn.close();
 				context.cache(CACHE_NAME, emptyResult);
@@ -83,12 +91,9 @@ public enum PostgresConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		try {
-			ResultSet lastMigration;
-			try {
-				lastMigration = stmt.executeQuery("SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1");
-			} catch (Throwable ignore) {
-				lastMigration = stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
-			}
+			final ResultSet lastMigration = hasNewTable
+					?  stmt.executeQuery("SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1")
+					: stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
 			final String lastDsl;
 			final String compiler;
 			if (lastMigration.next()) {
@@ -134,13 +139,16 @@ public enum PostgresConnection implements CompileParameter {
 			try {
 				final long startAt = System.currentTimeMillis();
 				final boolean[] isDone = new boolean[1];
-				Thread waitResp = new Thread(new Runnable() {
+				final boolean[] hasErrors = new boolean[1];
+				final Thread waitResp = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
 							stmt.executeWithFlags(sql, QueryExecutor.QUERY_EXECUTE_AS_SIMPLE);
+							hasErrors[0] = false;
 						} catch (Exception ex) {
 							context.error(ex);
+							hasErrors[0] = true;
 						}
 						isDone[0] = true;
 					}
@@ -167,7 +175,10 @@ public enum PostgresConnection implements CompileParameter {
 					}
 				}
 				final long endAt = System.currentTimeMillis();
-				if (isDone[0]) {
+				if (hasErrors[0]) {
+					context.error("Error executing SQL script.");
+					throw new ExitException();
+				} else if (isDone[0]) {
 					context.log("Script executed in " + (endAt - startAt) + "ms");
 				} else {
 					context.error("Failed to execute script. Timeout out waiting.");
