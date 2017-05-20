@@ -13,12 +13,12 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>9.4.1212.jre6</version>
+			<version>42.1.1.jre6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.fusesource.jansi</groupId>
 			<artifactId>jansi</artifactId>
-			<version>1.11</version>
+			<version>1.16</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

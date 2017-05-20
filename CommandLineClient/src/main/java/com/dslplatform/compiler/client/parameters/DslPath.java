@@ -55,7 +55,8 @@ public enum DslPath implements CompileParameter {
 			final List<File> dslFiles = dslPath.isFile()
 					? Collections.singletonList(dslPath)
 					: Utils.findFiles(context, dslPath, Arrays.asList(".dsl", ".ddd"));
-			final int pathLen = dslPath.getAbsolutePath().length();
+			final File basePath = dslPath.isFile() ? dslPath.getParentFile() : dslPath;
+			final int pathLen = basePath.getAbsolutePath().length();
 			for (final File file : dslFiles) {
 				if (!file.canRead()) {
 					context.error("Can't read DSL file: " + file.getName());
@@ -65,7 +66,7 @@ public enum DslPath implements CompileParameter {
 				if (content.isSuccess()) {
 					final String relativeName = file.getAbsolutePath().substring(pathLen);
 					if (dslMap.containsKey(relativeName)) {
-						context.warning("Duplicate DSL file specified: " + file.getAbsolutePath() + " from base path: " + part);
+						context.warning("Duplicate DSL file specified: " + file.getAbsolutePath() + " (" + relativeName + ") from base path: " + basePath.getAbsolutePath() + " (" + part + ")");
 					} else {
 						dslMap.put(relativeName, content.get());
 						allDslFiles.add(file);
@@ -92,10 +93,12 @@ public enum DslPath implements CompileParameter {
 			}
 			context.put(INSTANCE, "./dsl");
 		} else {
-			final File dslPath = new File(value);
-			if (!dslPath.exists()) {
-				context.error("Provided DSL path (" + value + ") does not exists. Please provide valid path to DSL files");
-				return false;
+			for (final String part : value.split(File.pathSeparator)) {
+				final File dslPath = new File(part).getAbsoluteFile();
+				if (!dslPath.exists()) {
+					context.error("Provided DSL path (" + part + ") does not exists. Please provide valid path to DSL files");
+					return false;
+				}
 			}
 		}
 		return true;
