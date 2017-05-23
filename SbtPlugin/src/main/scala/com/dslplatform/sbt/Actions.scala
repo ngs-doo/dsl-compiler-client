@@ -37,7 +37,13 @@ object Actions {
     }
   }
 
-  def setupServerMode(compiler: String, logger: Option[Logger], url: Option[String], port: Option[Int]): Unit = {
+  def setupServerMode(compiler: String,
+                      logger: Option[Logger],
+                      url: Option[String],
+                      port: Option[Int],
+                      customTrustStore: Option[String]=None,
+                      customTrustStorePw: Option[String]=None): Unit = {
+
     if (serverInfo.isEmpty) {
       try {
         val livePort = {
@@ -63,8 +69,10 @@ object Actions {
               logger.foreach(_.info("Downloading latest DSL compiler since compiler path is not specified."))
               val downloadCtx = new DslContext(logger)
               downloadCtx.put(Download.INSTANCE, url.getOrElse(""))
-              if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
-                logger.foreach(_.warn("Unable to setup DSL Platform client"))
+              withCustomTrustStore(customTrustStore, customTrustStorePw) {
+                if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
+                  logger.foreach(_.warn("Unable to setup DSL Platform client"))
+                }
               }
               downloadCtx.get(DslCompiler.INSTANCE)
             } else compiler
@@ -146,7 +154,9 @@ object Actions {
     settings: Seq[Settings.Option] = Nil,
     dependencies: Option[File] = None,
     classPath: Classpath,
-    latest: Boolean = true): File = {
+    latest: Boolean = true,
+    customTrustStore: Option[String]=None,
+    customTrustStorePw: Option[String]=None): File = {
 
     val ctx = new DslContext(Some(logger))
     ctx.put(target.toString, output.getAbsolutePath)
@@ -156,7 +166,7 @@ object Actions {
     settings.foreach(it => ctx.put(it.toString, ""))
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
-      executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+      executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, customTrustStore, customTrustStorePw)
     } else {
       val tmpFolder = Files.createTempDirectory("dsl-clc")
       try {
@@ -165,7 +175,7 @@ object Actions {
           Files.copy(it.data.toPath, new File(tmpFolder.toFile, it.data.getName).toPath)
         }
         ctx.put(s"dependency:$target", tmpFolder.toFile.getAbsolutePath)
-        executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+        executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, customTrustStore, customTrustStorePw)
       } finally {
         try {
           if (!tmpFolder.toFile.delete()) {
@@ -192,7 +202,10 @@ object Actions {
     serverPort: Option[Int] = None,
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
-    latest: Boolean = true): Seq[File] = {
+    latest: Boolean = true,
+    customTrustStore: Option[String],
+    customTrustStorePw: Option[String]): Seq[File] = {
+
     if (!output.exists()) {
       if (!output.mkdirs()) {
         logger.warn(s"Failed creating output folder: ${output.getAbsolutePath}")
@@ -216,7 +229,7 @@ object Actions {
     ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
     settings.foreach(it => ctx.put(it.toString, ""))
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, customTrustStore, customTrustStorePw)
     val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
     deepCopy(generated.toPath, output.toPath, files)
@@ -281,7 +294,9 @@ object Actions {
     serverPort: Option[Int] = None,
     apply: Boolean = false,
     force: Boolean = false,
-    latest: Boolean = true): Unit = {
+    latest: Boolean = true,
+    customTrustStore: Option[String],
+    customTrustStorePw: Option[String]): Unit = {
 
     val ctx = new DslContext(Some(logger))
     if (postgres) ctx.put(PostgresConnection.INSTANCE, jdbcUrl) else ctx.put(OracleConnection.INSTANCE, jdbcUrl)
@@ -289,7 +304,7 @@ object Actions {
     if (force) ctx.put(Force.INSTANCE, "")
     ctx.put(SqlPath.INSTANCE, output.getPath)
     ctx.put(Migration.INSTANCE, "")
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, customTrustStore, customTrustStorePw)
   }
 
   def execute(
@@ -300,7 +315,9 @@ object Actions {
     serverMode: Boolean = false,
     serverURL: Option[String],
     serverPort: Option[Int] = None,
-    arguments: Seq[String]): Unit = {
+    arguments: Seq[String],
+    customTrustStore: Option[String],
+    customTrustStorePw: Option[String]): Unit = {
 
     val ctx = new DslContext(Some(logger))
     for (a <- arguments) {
@@ -312,10 +329,22 @@ object Actions {
         ctx.put(cmd.substring(0, eqInd), cmd.substring(eqInd + 1))
       }
     }
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest = false, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest = false, ctx, logger, customTrustStore, customTrustStorePw)
   }
 
-  private def executeContext(dsls: Seq[File], compiler: String, serverMode: Boolean, serverURL: Option[String], serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
+  private def executeContext(
+    dsls: Seq[File],
+    compiler: String,
+    serverMode: Boolean,
+    serverURL: Option[String],
+    serverPort: Option[Int],
+    plugins: Option[File],
+    latest: Boolean,
+    ctx: DslContext,
+    logger: Logger,
+    customTrustStore: Option[String],
+    customTrustStorePw: Option[String]): Unit = {
+
     if (dsls.isEmpty) {
       throw new RuntimeException(s"No DSL paths/files specified in dslDslPath setting")
     }
@@ -352,18 +381,22 @@ object Actions {
       ctx.put(Download.INSTANCE, serverURL.getOrElse(""))
     }
     val params = Main.initializeParameters(ctx, plugins.getOrElse(new File(".")).getPath)
-    if (!Main.processContext(ctx, params) && !ctx.isParseError && !ctx.hasInteracted) {
-      (serverMode, serverInfo) match {
-        case (true, Some(info)) =>
-        logger.warn("Will retry DSL compilation without server mode...")
-        ctx.put(DslCompiler.INSTANCE, if (compiler.nonEmpty) compiler else "")
-        Main.processContext(ctx, params)
-        if (!startedNow) {
-          tryRestart(logger, info, compiler, serverURL)
+
+    withCustomTrustStore(customTrustStore, customTrustStorePw) {
+      if (!Main.processContext(ctx, params) && !ctx.isParseError && !ctx.hasInteracted) {
+        (serverMode, serverInfo) match {
+          case (true, Some(info)) =>
+            logger.warn("Will retry DSL compilation without server mode...")
+            ctx.put(DslCompiler.INSTANCE, if (compiler.nonEmpty) compiler else "")
+            Main.processContext(ctx, params)
+            if (!startedNow) {
+              tryRestart(logger, info, compiler, serverURL)
+            }
+          case _ =>
         }
-        case _ =>
       }
     }
+
   }
 
   private def tryRestart(logger: Logger, info: ServerInfo, compiler: String, serverURL: Option[String]): Unit = {
@@ -466,5 +499,27 @@ object Actions {
     fos.write(implementations.mkString("\n").getBytes("UTF-8"))
     fos.close()
     file
+  }
+
+  private def withCustomTrustStore[R](trustStorePath: Option[String], trustStorePw: Option[String])(body: => R): R = {
+    val oldPathValue = System.getProperty("javax.net.ssl.trustStore")
+    val oldPwValue = System.getProperty("javax.net.ssl.trustStorePassword")
+
+    val customTS = for {
+      tpath <- trustStorePath if new File(tpath).exists()
+      tpw <- trustStorePw
+    } yield (tpath, tpw)
+
+    customTS fold {
+      body
+    } { case (path, pw) =>
+        System.setProperty("javax.net.ssl.trustStore", path)
+        System.setProperty("javax.net.ssl.trustStorePassword", pw)
+        val result = body
+        System.setProperty("javax.net.ssl.trustStore", oldPathValue)
+        System.setProperty("javax.net.ssl.trustStorePassword", oldPwValue)
+
+        result
+    }
   }
 }

@@ -37,6 +37,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslForce = settingKey[Boolean]("Force actions without prompt (destructive migrations, missing folders, etc...)")
     val dslPlugins = settingKey[Option[File]]("Path to additional DSL plugins")
     val dslDownload = settingKey[Option[String]]("Download URL for a custom DSL compiler")
+    val dslCustomTrustStore = settingKey[Option[String]]("Path to the custom trust store file")
+    val dslCustomTrustStorePw = settingKey[Option[String]]("Custom trust store file password")
   }
 
   import autoImport._
@@ -75,7 +77,9 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslLatest := true,
     dslForce := false,
     dslPlugins := Some(baseDirectory.value),
-    dslDownload := None
+    dslDownload := None,
+    dslCustomTrustStore := None,
+    dslCustomTrustStorePw := None
   )
 
   private lazy val dslTasks = Seq(
@@ -130,7 +134,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   override lazy val projectSettings = dslDefaultSettings ++ dslTasks ++ dslCompilationSettings ++ Seq(
     onLoad := {
       if (dslServerMode.value) {
-        Actions.setupServerMode(dslCompiler.value, None, dslDownload.value, dslServerPort.value)
+        Actions.setupServerMode(dslCompiler.value, None, dslDownload.value, dslServerPort.value, dslCustomTrustStore.value, dslCustomTrustStorePw.value)
       }
       onLoad.value
     }
@@ -189,7 +193,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
             dslSettings.value,
             targetDeps,
             Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile).value,
-            dslLatest.value)
+            dslLatest.value,
+            dslCustomTrustStore.value,
+            dslCustomTrustStorePw.value
+          )
 
           log.info(s"Generated library for target $dslTarget in $targetPath")
         }
@@ -290,7 +297,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslServerPort.value,
         dslNamespace.value,
         dslSettings.value,
-        dslLatest.value)
+        dslLatest.value,
+        dslCustomTrustStore.value,
+        dslCustomTrustStorePw.value
+      )
 
       buffer.toSet
     }
@@ -324,7 +334,9 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslServerPort.value,
         dslNamespace.value,
         dslSettings.value,
-        dslLatest.value)
+        dslLatest.value,
+        dslCustomTrustStore.value,
+        dslCustomTrustStorePw.value)
     }
     val buffer = new ArrayBuffer[File]()
     if (args.isEmpty) {
@@ -408,7 +420,9 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslServerPort.value,
         dslApplyMigration.value,
         dslForce.value,
-        dslLatest.value)
+        dslLatest.value,
+        dslCustomTrustStore.value,
+        dslCustomTrustStorePw.value)
     }
     if (dslPostgres.value.nonEmpty) {
       migrate(pg = true, dslPostgres.value)
@@ -430,6 +444,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       dslServerMode.value,
       dslDownload.value,
       dslServerPort.value,
-      args)
+      args,
+      dslCustomTrustStore.value,
+      dslCustomTrustStorePw.value)
   }
 }
