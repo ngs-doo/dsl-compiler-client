@@ -1,0 +1,33 @@
+Stacktrace:
+
+
+Native stacktrace:
+
+mono() [0x4accac]
+mono() [0x50451f]
+mono() [0x42a7c7]
+/lib/x86_64-linux-gnu/libpthread.so.0(+0xfcb0) [0x7f678b0d1cb0]
+mono() [0x61c48f]
+mono() [0x5cdfe6]
+mono() [0x5dd95a]
+mono() [0x5dd9bc]
+mono() [0x5d0ff4]
+mono() [0x5c7458]
+mono() [0x5c765f]
+mono() [0x5c8d6a]
+mono() [0x5c980a]
+mono() [0x5ccc15]
+mono() [0x5d2ab0]
+mono() [0x5dfb70]
+mono() [0x5dffeb]
+[0x4196f62e]
+Debug info from gdb:
+
+Could not attach to process.  If your uid matches the uid of the target process, check the setting of /proc/sys/kernel/yama/ptrace_scope, or try again as the root user.  For more details, see /etc/sysctl.d/10-ptrace.conf ptrace: Operation not permitted.
+No threads.
+
+=================================================================
+Got a SIGSEGV while executing native code. This usually indicates
+a fatal error in the mono runtime or one of the native libraries
+used by your application.
+=================================================================

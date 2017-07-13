@@ -535,23 +535,19 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final Context context,
 			final File compiler,
 			final List<String> arguments) throws ExitException {
-		final Either<Utils.CommandResult> result;
+		Either<Utils.CommandResult> result;
 		if (Utils.isWindows()) {
 			result = Utils.runCommand(context, compiler.getAbsolutePath(), compiler.getParentFile(), arguments);
 		} else {
 			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
-				final Either<Utils.CommandResult> firstTry = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
-				if (!firstTry.isSuccess()) {
-					context.warning("Running Mono failed. Mono is buggy, so retry is in order... in 1 second");
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException ignore) {
-					}
+				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
+				if(monoNativeFailure(result) && promptUserMonoRetry(context)) {
+					context.warning("Retrying in 1 second ...");
+					context.error(result.explainError());
+					sleep(1000);
 					result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
-				} else {
-					result = firstTry;
 				}
 			} else {
 				context.error("Mono is required to run DSL compiler. Mono not detected or specified.");
@@ -796,5 +792,54 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				"\tcompiler\n" +
 				"\tcompiler=/var/dsl-platform/dsl-compiler.exe\n" +
 				"\tcompiler=12345\n";
+	}
+
+	private static boolean promptUserMonoRetry(Context context) {
+		context.warning("Running the compiler failed due to a native Mono bug. ");
+		if(context.canInteract()) {
+			String answer = context.ask("Do you wish to retry [Y/n]?");
+			return answer != null && ("y".equalsIgnoreCase(answer.trim()) || answer.trim().isEmpty());
+		} else {
+			return true;
+		}
+	}
+
+	private static final String[] MONO_NATIVE_ERROR_SNIPPETS = {
+			"SIGSEGV",
+			"Native stacktrace:",
+			"mono() [0x",
+			"Debug info from gdb:",
+			"Invalid IL code"
+	};
+
+	/**
+	 * Checks if the output contains one of the regexes which could indicate
+	 * a recurring mono bug.
+	 */
+	static boolean monoNativeFailure(String output) {
+		if (output == null) {
+			return false;
+		} else {
+			for (String snippet : MONO_NATIVE_ERROR_SNIPPETS) {
+				if (output.contains(snippet)) return true;
+			}
+			return false;
+		}
+	}
+
+	static boolean monoNativeFailure(Either<Utils.CommandResult> result) {
+		if (result == null || !result.isSuccess()) {
+			return true;
+		} else {
+			Utils.CommandResult commandResult = result.get();
+			return monoNativeFailure(commandResult.output) || monoNativeFailure(commandResult.error);
+		}
+	}
+
+	private static void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException ignore) {
+		}
 	}
 }
