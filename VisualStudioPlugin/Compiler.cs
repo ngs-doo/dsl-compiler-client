@@ -97,7 +97,7 @@ namespace DDDLanguage
 		{
 			get
 			{
-				var path = Path.Combine(Path.GetTempPath(), "DSLPlatform");
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DSLPlatform");
 				if (!Directory.Exists(path))
 					Directory.CreateDirectory(path);
 				return path;
