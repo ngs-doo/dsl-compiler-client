@@ -365,6 +365,7 @@ namespace DDDLanguage
 			{
 				WriteInfo(Presenter.PostgresDb, pPropBag);
 				WriteInfo(Presenter.OracleDb, pPropBag);
+				WriteInfo(Presenter.PocoLibrary, pPropBag);
 				WriteInfo(Presenter.ClientLibrary, pPropBag);
 				WriteInfo(Presenter.PortableLibrary, pPropBag);
 				WriteInfo(Presenter.PhpLibrary, pPropBag);
