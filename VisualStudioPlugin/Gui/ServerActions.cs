@@ -118,7 +118,7 @@ namespace DDDLanguage
 			try
 			{
 				var db = getInfo(info);
-				var path = Path.Combine(Compiler.RootPath, db.Target + ".zip");
+				var path = Path.Combine(Compiler.TempPath, db.Target + ".zip");
 				using (var zip = new ZipFile())
 				{
 					foreach (var file in db.Dsl)
@@ -368,7 +368,7 @@ namespace DDDLanguage
 						return Either<string>.Fail(result.Error);
 					ProcessMigrationStream(confirmedOracle || !oracleDb.ConfirmUnsafe, result.Value, oracleDb, ApplyOracleMigration);
 				}
-				return Either.Success(Compiler.RootPath);
+				return Either.Success(Compiler.TempPath);
 			}
 			catch (Exception ex)
 			{
@@ -443,7 +443,7 @@ namespace DDDLanguage
 			var customPath = dbInfo.SqlScriptsPathExists;
 			var sqlPath = customPath
 				? Path.Combine(LibraryInfo.BasePath, dbInfo.SqlScriptsPath)
-				: Compiler.RootPath;
+				: Compiler.TempPath;
 			var name = dbInfo.Name + "-Migration-" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".sql";
 			if (dbInfo.ApplyMigration && applyMigration != null)
 			{
@@ -465,7 +465,7 @@ namespace DDDLanguage
 				SaveStreamToFile(sqlPath, name, stream);
 				System.Diagnostics.Process.Start(sqlPath);
 			}
-			return Compiler.RootPath;
+			return Compiler.TempPath;
 		}
 
 		class DbInfo

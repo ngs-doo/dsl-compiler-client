@@ -115,7 +115,8 @@ namespace DDDLanguage
 			Compile = new RelayCommand(CompileAction, CanCompile);
 			Parse =
 				new RelayCommand(
-					() => TryAction("Parsing DSL ...", () => ServerActions.Parse(DTE)).OnSuccess(m => { Message = m; ChangeMessage(); }));
+					() => TryAction("Parsing DSL ...", () => ServerActions.Parse(DTE)).OnSuccess(m => { Message = m; ChangeMessage(); }),
+					HasCompiler);
 			PostgresDiff = new RelayCommand(() => CreateDiffAction(ServerActions.PostgresDiff, PostgresDb), () => PostgresDb.CanDiff);
 			OracleDiff = new RelayCommand(() => CreateDiffAction(ServerActions.OracleDiff, OracleDb), () => OracleDb.CanDiff);
 			DownloadLibrary = new RelayCommand(arg => DonwloadLibraryAction(arg as string), () => true);
@@ -347,9 +348,14 @@ namespace DDDLanguage
 			CloseDialog();
 		}
 
+		public bool HasCompiler()
+		{
+			return DslCompiler != null && File.Exists(DslCompiler);
+		}
+
 		public bool CanCompile()
 		{
-			return DslCompiler != null && File.Exists(DslCompiler)
+			return HasCompiler()
 				&& (PocoLibrary.Compile
 				|| ClientLibrary.Compile || PortableLibrary.Compile
 				|| WpfLibrary.Compile
@@ -438,7 +444,7 @@ namespace DDDLanguage
 
 			if (DslCompiler == null)
 			{
-				var fp = Path.Combine(Compiler.RootPath, "dsl-compiler.exe");
+				var fp = Path.Combine(Compiler.CompilerPath, "dsl-compiler.exe");
 				if (File.Exists(fp))
 					DslCompiler = fp;
 			}
@@ -468,7 +474,7 @@ namespace DDDLanguage
 				oc = "dsl-compiler.exe";
 			if (!File.Exists(oc))
 			{
-				var fp = Path.Combine(Compiler.RootPath, oc);
+				var fp = Path.Combine(Compiler.CompilerPath, oc);
 				if (File.Exists(fp))
 					DslCompiler = fp;
 			}
@@ -534,10 +540,10 @@ namespace DDDLanguage
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
 				Compiler.Stop(false);
-				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
+				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.CompilerPath);
 				if (result.Success)
 				{
-					var newPath = Path.Combine(Compiler.RootPath, "dsl-compiler.exe");
+					var newPath = Path.Combine(Compiler.CompilerPath, "dsl-compiler.exe");
 					var fi = new FileInfo(newPath);
 					var asm = System.Reflection.AssemblyName.GetAssemblyName(newPath);
 					CompilerInfo = "Compiler: " + asm.Version;
@@ -562,11 +568,11 @@ namespace DDDLanguage
 				Message = "Downloading DSL compiler...";
 				ChangeMessage();
 				Compiler.Stop(false);
-				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.RootPath);
+				var result = ServerActions.DownloadZip("dsl-platform", "dsl-compiler.zip", Compiler.CompilerPath);
 				if (result.Success)
 				{
 					var old = DslCompiler;
-					DslCompiler = Path.Combine(Compiler.RootPath, "dsl-compiler.exe");
+					DslCompiler = Path.Combine(Compiler.CompilerPath, "dsl-compiler.exe");
 					CheckCompiler();
 					oldDslCompiler = old;
 				}

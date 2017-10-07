@@ -93,11 +93,22 @@ namespace DDDLanguage
 			return tcp;
 		}
 
-		public static string RootPath
+		public static string CompilerPath
 		{
 			get
 			{
 				var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DSLPlatform");
+				if (!Directory.Exists(path))
+					Directory.CreateDirectory(path);
+				return path;
+			}
+		}
+
+		public static string TempPath
+		{
+			get
+			{
+				var path = Path.Combine(Path.GetTempPath(), "DSLPlatform");
 				if (!Directory.Exists(path))
 					Directory.CreateDirectory(path);
 				return path;
