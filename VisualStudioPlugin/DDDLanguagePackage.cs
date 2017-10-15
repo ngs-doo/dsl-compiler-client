@@ -291,7 +291,7 @@ namespace DDDLanguage
 
 		private void WriteInfo(LibraryInfo info, IPropertyBag pBag)
 		{
-			var reference = new LibraryInfo(info.Type, null, null);
+			var reference = new LibraryInfo(info.Type, null, info.RequireDependencies, null);
 			object val;
 			if (reference.CompileOption != info.CompileOption)
 			{
@@ -352,6 +352,11 @@ namespace DDDLanguage
 			{
 				val = info.NoPrepareExecute.ToString();
 				pBag.Write(info.Type + ".NoPrepareExecute", ref val);
+			}
+			if (reference.MutableSnowflake != info.MutableSnowflake)
+			{
+				val = info.MutableSnowflake.ToString();
+				pBag.Write(info.Type + ".MutableSnowflake", ref val);
 			}
 		}
 

@@ -46,6 +46,7 @@ namespace DDDLanguage
 		public string Type { get; private set; }
 		public string Name { get; set; }
 		public string CompilerName { get; private set; }
+		public readonly bool RequireDependencies;
 		public string Extension { get; private set; }
 		public string[] References { get; private set; }
 
@@ -54,11 +55,13 @@ namespace DDDLanguage
 		public LibraryInfo(
 			string type,
 			string compilerName,
+			bool requireDependencies,
 			string[] references,
 			bool sourceOnly = false,
 			string extension = null)
 		{
 			Type = type;
+			this.RequireDependencies = requireDependencies;
 			if (sourceOnly)
 			{
 				Name = type;
@@ -88,6 +91,7 @@ namespace DDDLanguage
 		public bool UseUtc { get; set; }
 		public bool MinimalSerialization { get; set; }
 		public bool NoPrepareExecute { get; set; }
+		public bool MutableSnowflake { get; set; }
 		public bool Legacy { get; set; }
 		public string Namespace { get; set; }
 
@@ -113,6 +117,16 @@ Please create or specify target path where generated sources will be placed.";
 				}
 				var hasFiles = DependenciesExists
 					&& Directory.EnumerateFiles(DependenciesPath, "*.dll", SearchOption.TopDirectoryOnly).Any();
+				if (TargetExists && !RequireDependencies && string.IsNullOrEmpty(Dependencies))
+					return
+						"Library can be used. After compilation DLL will be copied to "
+						+ Target + " as " + Name + ".dll" + Environment.NewLine
+						+ "Dependency folder not specified";
+				if (TargetExists && !RequireDependencies && DependenciesExists)
+					return
+						"Library can be used. After compilation DLL will be copied to "
+						+ Target + " as " + Name + ".dll" + Environment.NewLine
+						+ "Dependency folder found in " + Dependencies;
 				if (TargetExists && DependenciesExists && hasFiles)
 					return
 						"Library can be used. After compilation DLL will be copied to "
@@ -138,14 +152,14 @@ Please download dependencies before running compilation" : string.Empty);
 					return TargetExists;
 				return !string.IsNullOrWhiteSpace(Name)
 					&& TargetExists
-					&& DependenciesExists
-					&& Directory.EnumerateFiles(DependenciesPath, "*.dll", SearchOption.TopDirectoryOnly).Any();
+					&& (!RequireDependencies
+						|| DependenciesExists && Directory.EnumerateFiles(DependenciesPath, "*.dll", SearchOption.TopDirectoryOnly).Any());
 			}
 		}
 
 		public LibraryInfo Clone()
 		{
-			return new LibraryInfo(Type, CompilerName, References, SourceOnly, Extension)
+			return new LibraryInfo(Type, CompilerName, RequireDependencies, References, SourceOnly, Extension)
 			{
 				CompileOption = CompileOption,
 				Name = Name,
@@ -157,6 +171,7 @@ Please download dependencies before running compilation" : string.Empty);
 				UseUtc = UseUtc,
 				MinimalSerialization = MinimalSerialization,
 				NoPrepareExecute = NoPrepareExecute,
+				MutableSnowflake = MutableSnowflake,
 				Legacy = Legacy,
 				Namespace = Namespace
 			};

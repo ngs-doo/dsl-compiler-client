@@ -53,6 +53,10 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Minimal serialization"
                 Margin="5"
                 ToolTip="Serialize only non-default properties"/>
+            <CheckBox IsChecked="{Binding Path=OracleLibrary.MutableSnowflake}" 
+                Content="Mutable snowflake"
+                Margin="5"
+                ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
             <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:revenj-core.zip" />
             <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:http-server.zip" />
             <Button Margin="2" Content="Download 32bit Oracle driver" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-32bit.zip" />

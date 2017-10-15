@@ -1,0 +1,17 @@
+{
+	"id": "DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de",
+	"version": "1.0",
+	"type": "Vsix",
+	"vsixId": "DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de",
+	"extensionDir": "[installdir]\\Common7\\IDE\\Extensions\\DDDLanguage",
+	"files": [{
+		"fileName": "/extension.vsixmanifest",
+		"sha256": "A95FC5B5D68D51968305B5CB7B69DA84EBCBB1ED383988385C8E6596C27B235D"
+	}],
+	"installSizes": {
+		"targetDrive": 847
+	},
+	"dependencies": {
+		"Microsoft.VisualStudio.Component.CoreEditor": "[11.0,16.0)"
+	}
+}

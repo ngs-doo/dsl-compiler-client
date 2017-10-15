@@ -39,13 +39,13 @@ namespace DDDLanguage
 		public CompileTargets()
 		{
 
-			PocoLibrary = new LibraryInfo("Poco", "dotnet_poco", PocoDependencies);
-			ClientLibrary = new LibraryInfo("Client", "dotnet_client", PocoDependencies);
-			PortableLibrary = new LibraryInfo("Portable", "dotnet_portable", new string[0]);
-			PhpSource = new LibraryInfo("Php", "php_client", new string[0], true, ".php");
-			WpfLibrary = new LibraryInfo("Wpf", "wpf", WpfDependencies);
-			PostgresLibrary = new LibraryInfo("Postgres", "dotnet_server_postgres", RevenjDependencies);
-			OracleLibrary = new LibraryInfo("Oracle", "dotnet_server_oracle", RevenjDependencies);
+			PocoLibrary = new LibraryInfo("Poco", "dotnet_poco", false, PocoDependencies);
+			ClientLibrary = new LibraryInfo("Client", "dotnet_client", true, PocoDependencies);
+			PortableLibrary = new LibraryInfo("Portable", "dotnet_portable", true, new string[0]);
+			PhpSource = new LibraryInfo("Php", "php_client", false, new string[0], true, ".php");
+			WpfLibrary = new LibraryInfo("Wpf", "wpf", true, WpfDependencies);
+			PostgresLibrary = new LibraryInfo("Postgres", "dotnet_server_postgres", true, RevenjDependencies);
+			OracleLibrary = new LibraryInfo("Oracle", "dotnet_server_oracle", true, RevenjDependencies);
 			Targets = new[] { PocoLibrary, ClientLibrary, PortableLibrary, PhpSource, WpfLibrary, PostgresLibrary, OracleLibrary };
 		}
 
@@ -98,6 +98,8 @@ namespace DDDLanguage
 				sb.Append(" settings=no-prepare-execute");
 			if (target.Legacy)
 				sb.Append(" settings=legacy");
+			if (target.MutableSnowflake)
+				sb.Append(" settings=mutable-snowflake");
 			sb.Append(" format=xml");
 			var result = Compiler.CompileDsl(sb, dsls, null, cms => XElement.Load(cms));
 			if (result.Success)
@@ -123,7 +125,7 @@ namespace DDDLanguage
 				{
 					if (!t.TargetExists)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " target folder: " + t.Target);
-					if (!t.SourceOnly && !t.DependenciesExists)
+					if (t.RequireDependencies && !t.DependenciesExists)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " dependencies folder: " + t.Dependencies);
 					var result = RunCompiler(CompilerPath, t, dsls);
 					if (!result.Success)
@@ -199,8 +201,8 @@ namespace DDDLanguage
 			if (!info.Compile) return;
 			var references =
 				info.References
-				.Concat(Directory.GetFiles(info.DependenciesPath, "*.dll"))
-				.Except(new[] { Path.Combine(info.DependenciesPath, info.Name + ".dll") });
+				.Concat(info.DependenciesExists ? Directory.GetFiles(info.DependenciesPath, "*.dll") : new string[0])
+				.Except(info.DependenciesExists ? new[] { Path.Combine(info.DependenciesPath, info.Name + ".dll") } : new string[0]);
 			var sources = files.Select(it => it.Value).ToArray();
 			var target = Path.Combine(info.TargetPath, info.Name + ".dll");
 			var assembly = Compiler.GenerateAssembly(target, sources, references);

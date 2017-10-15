@@ -38,6 +38,10 @@ Build C# classes based on DSL definition
                 Content="UTC time"
                 Margin="5"
                 ToolTip="DateTime will default to UTC instead of Local"/>
+            <CheckBox IsChecked="{Binding Path=PocoLibrary.MutableSnowflake}" 
+                Content="Mutable snowflake"
+                Margin="5"
+                ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
             <Separator />
             <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
             <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"

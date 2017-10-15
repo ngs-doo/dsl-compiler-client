@@ -59,6 +59,10 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Don't use PREPARE/EXECUTE"
                 Margin="5"
                 ToolTip="PREPARE/EXECUTE requires two roundtrips and can cause problems on servers behind some pooling tools"/>
+            <CheckBox IsChecked="{Binding Path=PostgresLibrary.MutableSnowflake}" 
+                Content="Mutable snowflake"
+                Margin="5"
+                ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
             <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:revenj-core.zip" />
             <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:http-server.zip" />
             <TextBlock Text="Connection string" Margin="5" />
