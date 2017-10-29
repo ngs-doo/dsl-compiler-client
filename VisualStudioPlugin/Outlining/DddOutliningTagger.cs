@@ -69,7 +69,7 @@ namespace DDDLanguage
 					var innerText = currentSnapshot.GetText(startPosition + 1, len);
 					yield return new TagSpan<DddOutlineTag>(
 						new SnapshotSpan(startLine.Start + region.StartOffset, endLine.End),
-						new DddOutlineTag(innerText, len, region.Rule, endLine.Start.Position + region.EndOffset + 1));
+						new DddOutlineTag(region.IsNested, innerText, len, region.Rule, endLine.Start.Position + region.EndOffset + 1));
 				}
 			}
 		}
@@ -130,18 +130,16 @@ namespace DDDLanguage
 						if (lastInfo.Level >= 0)
 							continue;
 						currentLevel--;
-						if (lastInfo.IsNested)
+						newRegions.Add(new Region
 						{
-							newRegions.Add(new Region
-							{
-								Rule = t.Value,
-								Level = currentLevel,
-								StartLine = currentRegion.StartLine,
-								StartOffset = currentRegion.StartOffset,
-								EndLine = t.Line - 1,
-								EndOffset = t.Column - 1
-							});
-						}
+							Rule = t.Value,
+							IsNested = lastInfo.IsNested,
+							Level = currentLevel,
+							StartLine = currentRegion.StartLine,
+							StartOffset = currentRegion.StartOffset,
+							EndLine = t.Line - 1,
+							EndOffset = t.Column - 1
+						});
 						lastInfo = currentLevel > 0 ? levelInfo[currentLevel - 1] : null;
 						if (lastInfo != null)
 							lastInfo.Level--;

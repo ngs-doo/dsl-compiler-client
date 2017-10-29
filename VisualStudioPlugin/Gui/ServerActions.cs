@@ -186,6 +186,9 @@ namespace DDDLanguage
 				}
 				if (pi.ProjectItems != null)
 					GatherCurrentDsl(pi.ProjectItems, dsls);
+				var subproject = pi.SubProject;
+				if (subproject != null && subproject.ProjectItems != null)
+					GatherCurrentDsl(subproject.ProjectItems, dsls);
 			}
 		}
 
@@ -211,6 +214,9 @@ namespace DDDLanguage
 				}
 				if (pi.ProjectItems != null)
 					LocateCurrentDsl(pi.ProjectItems, dsls);
+				var subproject = pi.SubProject;
+				if (subproject != null && subproject.ProjectItems != null)
+					LocateCurrentDsl(subproject.ProjectItems, dsls);
 			}
 		}
 

@@ -13,5 +13,6 @@
 	{
 		public int EndLine;
 		public int EndOffset;
+		public bool IsNested;
 	}
 }
