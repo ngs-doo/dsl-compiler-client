@@ -177,8 +177,9 @@ namespace DDDLanguage
 		{
 			foreach (ProjectItem pi in items)
 			{
-				if (pi.Name.EndsWith(".dsl", StringComparison.InvariantCultureIgnoreCase)
+				if ((pi.Name.EndsWith(".dsl", StringComparison.InvariantCultureIgnoreCase)
 					|| pi.Name.EndsWith(".ddd", StringComparison.InvariantCultureIgnoreCase))
+					&& pi.FileNames[1] != null)
 				{
 					var path = pi.FileNames[1];
 					var name = path.StartsWith(LibraryInfo.BasePath) ? path.Substring(LibraryInfo.BasePath.Length) : path;
@@ -207,8 +208,9 @@ namespace DDDLanguage
 		{
 			foreach (ProjectItem pi in items)
 			{
-				if (pi.Name.EndsWith(".dsl", StringComparison.InvariantCultureIgnoreCase)
+				if ((pi.Name.EndsWith(".dsl", StringComparison.InvariantCultureIgnoreCase)
 					|| pi.Name.EndsWith(".ddd", StringComparison.InvariantCultureIgnoreCase))
+					&& pi.FileNames[1] != null)
 				{
 					dsls.Add(pi.FileNames[1]);
 				}
