@@ -1,17 +1,17 @@
 {
 	"manifestVersion": "1.1",
 	"info": {
-		"id": "DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de,version=1.7.3",
+		"id": "DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de,version=1.7.4",
 		"manifestType": "Extension"
 	},
 	"packages": [{
 		"id": "Component.DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de",
-		"version": "1.7.3",
+		"version": "1.7.4",
 		"type": "Component",
 		"extension": true,
 		"dependencies": {
-			"DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de": "1.7.3",
-			"Microsoft.VisualStudio.Component.CoreEditor": "[11.0,16.0)"
+			"DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de": "1.7.4",
+			"Microsoft.VisualStudio.Component.CoreEditor": "[11.0,15.0)"
 		},
 		"localizedResources": [{
 			"language": "en-US",
@@ -21,7 +21,7 @@
 	},
 	{
 		"id": "DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de",
-		"version": "1.7.3",
+		"version": "1.7.4",
 		"type": "Vsix",
 		"payloads": [{
 			"fileName": "DDDLanguage.vsix"
