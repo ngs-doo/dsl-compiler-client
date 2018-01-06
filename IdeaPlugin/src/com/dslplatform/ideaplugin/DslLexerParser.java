@@ -111,6 +111,10 @@ public class DslLexerParser extends Lexer {
 				newAst.add(new AST(null, width, dsl.length() - width, null));
 			}
 		}
+		changeAst(start, newAst);
+	}
+
+	private void changeAst(int start, List<AST> newAst) {
 		synchronized (ast) {
 			position = 0;
 			ast.clear();
@@ -150,26 +154,37 @@ public class DslLexerParser extends Lexer {
 		}
 	};
 
+	private List<AST> lastParsedAnalysis;
+	private String lastParsedDsl;
+
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
-		if (project == null || project.isDisposed() || !project.isOpen() || psiFile == null || !psiFile.isValid()) return;
+		if (project != null && project.isDisposed()) return;
+		final boolean nonEditorPage = project == null || psiFile == null;
 		final String dsl = charSequence.toString();
-		final boolean differentDsl = !dsl.equals(lastDsl);
-		if (forceRefresh) {
-			Either<List<AST>> tryNewAst = dslService.analyze(dsl);
-			if (tryNewAst.isSuccess()) {
-				List<AST> newAst = tryNewAst.get();
-				if (newAst.size() == 0) {
-					newAst.add(new AST(null, 0, dsl.length(), null));
-				}
-				fixupAndReposition(dsl, newAst, start);
+		if (forceRefresh || nonEditorPage || ast.size() == 0) {
+			if (lastParsedAnalysis != null && dsl.equals(lastParsedDsl)) {
+				changeAst(start, lastParsedAnalysis);
+				lastDsl = lastParsedDsl;
 				forceRefresh = false;
 			} else {
-				List<AST> newAst = new ArrayList<AST>(1);
-				newAst.add(new AST(null, 0, dsl.length(), null));
-				fixupAndReposition(dsl, newAst, start);
+				Either<List<AST>> tryNewAst = dslService.analyze(dsl);
+				if (tryNewAst.isSuccess()) {
+					List<AST> newAst = tryNewAst.get();
+					if (newAst.size() == 0) {
+						newAst.add(new AST(null, 0, dsl.length(), null));
+					}
+					fixupAndReposition(dsl, newAst, start);
+					forceRefresh = false;
+					lastParsedAnalysis = newAst;
+					lastParsedDsl = dsl;
+				} else {
+					List<AST> newAst = new ArrayList<AST>(1);
+					newAst.add(new AST(null, 0, dsl.length(), null));
+					fixupAndReposition(dsl, newAst, start);
+				}
 			}
-		} else if (differentDsl || ast.size() == 0 && dsl.length() > 0) {
+		} else if (!dsl.equals(lastDsl) || ast.size() == 0 && dsl.length() > 0) {
 			final String actualDsl;
 			if (start == end && dsl.length() == 0) {
 				actualDsl = psiFile.getText();
@@ -197,7 +212,7 @@ public class DslLexerParser extends Lexer {
 			}
 			fixupAndReposition(actualDsl, newAst, start);
 			delayUntil = System.currentTimeMillis() + 300;
-			if (!waitingForSync && project.isOpen()) {
+			if (!waitingForSync && project != null && project.isOpen()) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
 			}

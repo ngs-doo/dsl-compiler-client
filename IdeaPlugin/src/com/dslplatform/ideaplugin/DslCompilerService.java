@@ -79,11 +79,11 @@ public class DslCompilerService {
 	}
 
 	Either<List<AST>> analyze(String dsl) {
-		if (tokenParser == null) return Either.fail("Token parser not ready");
 		if (dsl.trim().isEmpty()) {
 			List<AST> empty = new ArrayList<AST>(0);
 			return Either.success(empty);
 		}
+		if (tokenParser == null) return Either.fail("Token parser not ready");
 		Either<List<DslCompiler.SyntaxConcept>> tryParsed = parseTokens(dsl);
 		if (!tryParsed.isSuccess()) {
 			return Either.fail(tryParsed.explainError());
