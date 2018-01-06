@@ -152,9 +152,10 @@ public class DslLexerParser extends Lexer {
 
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
+		if (project == null || project.isDisposed() || !project.isOpen() || psiFile == null || !psiFile.isValid()) return;
 		final String dsl = charSequence.toString();
 		final boolean differentDsl = !dsl.equals(lastDsl);
-		if (project == null || forceRefresh || ast.size() == 0 && dsl.length() > 0) {
+		if (forceRefresh) {
 			Either<List<AST>> tryNewAst = dslService.analyze(dsl);
 			if (tryNewAst.isSuccess()) {
 				List<AST> newAst = tryNewAst.get();
@@ -168,20 +169,35 @@ public class DslLexerParser extends Lexer {
 				newAst.add(new AST(null, 0, dsl.length(), null));
 				fixupAndReposition(dsl, newAst, start);
 			}
-		} else if (differentDsl) {
+		} else if (differentDsl || ast.size() == 0 && dsl.length() > 0) {
 			final String actualDsl;
-			if (start == end && dsl.length() == 0 && psiFile != null) {
+			if (start == end && dsl.length() == 0) {
 				actualDsl = psiFile.getText();
 				if (actualDsl.equals(lastDsl)) {
 					position = 0;
 					return;
 				}
 			} else actualDsl = dsl;
-			List<AST> newAst = new ArrayList<AST>(1);
-			newAst.add(new AST(null, 0, actualDsl.length(), null));
+			List<AST> newAst = new ArrayList<AST>(ast.size());
+			int cur = 0;
+			int pos = start;
+			while(pos < dsl.length() && pos < lastDsl.length() && dsl.charAt(pos) == lastDsl.charAt(pos)) {
+				pos++;
+			}
+			while (cur < ast.size()) {
+				AST a = ast.get(cur);
+				if (a.offset + a.length < pos) {
+					newAst.add(a);
+				}
+				else break;
+				cur++;
+			}
+			if (pos < actualDsl.length()) {
+				newAst.add(new AST(null, pos, actualDsl.length(), null));
+			}
 			fixupAndReposition(actualDsl, newAst, start);
 			delayUntil = System.currentTimeMillis() + 300;
-			if (!waitingForSync && project.isOpen() && psiFile != null) {
+			if (!waitingForSync && project.isOpen()) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
 			}

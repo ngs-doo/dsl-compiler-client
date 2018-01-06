@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.9</version>
+  <version>0.9.1</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -10,7 +10,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-      Latest CLC (1.9.0)
+      Parsing improvements.
     ]]>
   </change-notes>
 

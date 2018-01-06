@@ -12,9 +12,11 @@ public class DslSyntaxHighlighter extends SyntaxHighlighterBase {
 	private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
 	private final DslLexerParser lexerParser;
+	public final VirtualFile virtualFile;
 
 	public DslSyntaxHighlighter(Project project, VirtualFile virtualFile) {
 		this.lexerParser = new DslLexerParser(project, virtualFile);
+		this.virtualFile = virtualFile;
 	}
 
 	@NotNull
