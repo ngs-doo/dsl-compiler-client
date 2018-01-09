@@ -59,6 +59,7 @@ public class DslLexerParser extends Lexer {
 							new Runnable() {
 								@Override
 								public void run() {
+									forceRefresh = true;
 									document.setText(document.getText());
 								}
 							});
@@ -67,7 +68,6 @@ public class DslLexerParser extends Lexer {
 			scheduleRefresh = new DocumentRunnable(document, null) {
 				@Override
 				public void run() {
-					forceRefresh = true;
 					application.runWriteAction(refreshAll);
 				}
 			};
@@ -139,14 +139,9 @@ public class DslLexerParser extends Lexer {
 		@Override
 		public void run() {
 			try {
-				String currentDsl = null;
 				do {
 					Thread.sleep(100);
-					if (System.currentTimeMillis() < delayUntil) {
-						continue;
-					}
-					currentDsl = application.runReadAction(obtainLatestDsl);
-				} while (currentDsl == null || !currentDsl.equals(lastDsl));
+				} while (System.currentTimeMillis() < delayUntil);
 				waitingForSync = false;
 				application.invokeLater(scheduleRefresh);
 			} catch (Exception ignore) {
@@ -184,7 +179,7 @@ public class DslLexerParser extends Lexer {
 					fixupAndReposition(dsl, newAst, start);
 				}
 			}
-		} else if (!dsl.equals(lastDsl) || ast.size() == 0 && dsl.length() > 0) {
+		} else if (!dsl.equals(lastDsl)) {
 			final String actualDsl;
 			if (start == end && dsl.length() == 0) {
 				actualDsl = psiFile.getText();
@@ -212,7 +207,7 @@ public class DslLexerParser extends Lexer {
 			}
 			fixupAndReposition(actualDsl, newAst, start);
 			delayUntil = System.currentTimeMillis() + 300;
-			if (!waitingForSync && project != null && project.isOpen()) {
+			if (!waitingForSync && project.isOpen()) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
 			}
