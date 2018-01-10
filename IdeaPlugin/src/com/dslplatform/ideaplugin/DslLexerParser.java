@@ -203,7 +203,7 @@ public class DslLexerParser extends Lexer {
 				cur++;
 			}
 			if (pos < actualDsl.length()) {
-				newAst.add(new AST(null, pos, actualDsl.length(), null));
+				newAst.add(new AST(null, pos, actualDsl.length() - pos, null));
 			}
 			fixupAndReposition(actualDsl, newAst, start);
 			delayUntil = System.currentTimeMillis() + 300;
