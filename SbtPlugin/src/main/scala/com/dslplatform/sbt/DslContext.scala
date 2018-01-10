@@ -6,9 +6,15 @@ import com.dslplatform.compiler.client.Context
 import com.dslplatform.compiler.client.parameters.{DisableColors, DisablePrompt, LogOutput}
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
-import sbt.Logger
+import sbt.{AbstractLogger, Level, Logger}
 
 private[sbt] class DslContext(logger: Option[Logger]) extends Context {
+
+  logger match {
+    case Some(x: AbstractLogger) if x.getLevel.id <= Level.Debug.id =>
+      put(LogOutput.INSTANCE, "")
+    case _ =>
+  }
 
   private var inColor = logger.isDefined && logger.get.ansiCodesSupported
 

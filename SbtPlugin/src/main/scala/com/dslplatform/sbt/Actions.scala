@@ -144,6 +144,7 @@ object Actions {
     serverPort: Option[Int] = None,
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
+    customSettings: Seq[String] = Nil,
     dependencies: Option[File] = None,
     classPath: Classpath,
     latest: Boolean = true): File = {
@@ -154,6 +155,9 @@ object Actions {
       ctx.put(Namespace.INSTANCE, namespace)
     }
     settings.foreach(it => ctx.put(it.toString, ""))
+    if (customSettings.nonEmpty) {
+      ctx.put(Settings.INSTANCE, customSettings.mkString(","))
+    }
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
       executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
@@ -192,6 +196,7 @@ object Actions {
     serverPort: Option[Int] = None,
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
+    customSettings: Seq[String] = Nil,
     latest: Boolean = true): Seq[File] = {
     if (!output.exists()) {
       if (!output.mkdirs()) {
@@ -216,6 +221,9 @@ object Actions {
     ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
     settings.foreach(it => ctx.put(it.toString, ""))
+    if (customSettings.nonEmpty) {
+      ctx.put(Settings.INSTANCE, customSettings.mkString(","))
+    }
     executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
     val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()

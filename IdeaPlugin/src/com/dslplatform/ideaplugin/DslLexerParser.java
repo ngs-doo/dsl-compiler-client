@@ -206,7 +206,7 @@ public class DslLexerParser extends Lexer {
 				newAst.add(new AST(null, pos, actualDsl.length() - pos, null));
 			}
 			fixupAndReposition(actualDsl, newAst, start);
-			delayUntil = System.currentTimeMillis() + 300;
+			delayUntil = System.currentTimeMillis() + 500;
 			if (!waitingForSync && project.isOpen()) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
