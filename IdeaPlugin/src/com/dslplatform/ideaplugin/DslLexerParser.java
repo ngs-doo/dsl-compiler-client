@@ -154,7 +154,7 @@ public class DslLexerParser extends Lexer {
 
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
-		if (project != null && project.isDisposed()) return;
+		if (project != null && project.isDisposed() || psiFile != null && psiFile.getLanguage() != DomainSpecificationLanguage.INSTANCE) return;
 		final boolean nonEditorPage = project == null || psiFile == null;
 		final String dsl = charSequence.toString();
 		if (forceRefresh || nonEditorPage || ast.size() == 0) {
