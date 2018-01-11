@@ -9,7 +9,6 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -23,6 +22,7 @@ import java.util.*;
 public class DslLexerParser extends Lexer {
 
 	private final Project project;
+	private final VirtualFile file;
 	private final PsiFile psiFile;
 	private final Document document;
 	private final Application application;
@@ -39,6 +39,7 @@ public class DslLexerParser extends Lexer {
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
+		this.file = file;
 		this.application = ApplicationManager.getApplication();
 		this.dslService = ServiceManager.getService(DslCompilerService.class);
 		if (project != null && file != null) {
@@ -128,13 +129,6 @@ public class DslLexerParser extends Lexer {
 		}
 	}
 
-	private final Computable<String> obtainLatestDsl = new Computable<String>() {
-		@Override
-		public String compute() {
-			return psiFile.getText();
-		}
-	};
-
 	private final Runnable waitForDslSync = new DumbAwareRunnable() {
 		@Override
 		public void run() {
@@ -182,7 +176,13 @@ public class DslLexerParser extends Lexer {
 		} else if (!dsl.equals(lastDsl)) {
 			final String actualDsl;
 			if (start == end && dsl.length() == 0) {
-				actualDsl = application.runReadAction(obtainLatestDsl);
+				if (psiFile.getLanguage() == DomainSpecificationLanguage.INSTANCE) {
+					actualDsl = psiFile.getText();
+				} else {
+					//TODO: for some reason IntelliJ is reporting file as PLAIN_TEXT and crashes when it tries to read it's content.
+					//let's cope with it by assuming temporary state of an empty content
+					actualDsl = dsl;
+				}
 				if (actualDsl.equals(lastDsl)) {
 					position = 0;
 					return;
