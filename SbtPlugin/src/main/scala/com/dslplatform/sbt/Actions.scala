@@ -157,6 +157,7 @@ object Actions {
     settings.foreach(it => ctx.put(it.toString, ""))
     if (customSettings.nonEmpty) {
       ctx.put(Settings.INSTANCE, customSettings.mkString(","))
+      ctx.put(Force.INSTANCE, "")
     }
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
@@ -223,6 +224,7 @@ object Actions {
     settings.foreach(it => ctx.put(it.toString, ""))
     if (customSettings.nonEmpty) {
       ctx.put(Settings.INSTANCE, customSettings.mkString(","))
+      ctx.put(Force.INSTANCE, "")
     }
     executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
     val generated = new File(tempFolder, target.name)
