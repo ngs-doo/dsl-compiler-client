@@ -7,7 +7,7 @@ version := "0.6.2"
 
 libraryDependencies ++= Seq(
   "com.dslplatform" % "dsl-clc" % "1.9.2",
-  "org.clapper" %% "classutil" % "1.0.12"
+  "org.clapper" %% "classutil" % "1.1.2"
 )
 
 publishMavenStyle := false

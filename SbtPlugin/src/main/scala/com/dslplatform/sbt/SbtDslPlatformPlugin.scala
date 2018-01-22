@@ -1,7 +1,7 @@
 package com.dslplatform.sbt
 
 import sbt._
-import Keys._
+import Keys.{scalaBinaryVersion, _}
 import com.dslplatform.compiler.client.parameters.{Settings, Targets, TempPath}
 import sbt.Def.Initialize
 import sbt.complete.Parsers
@@ -81,13 +81,13 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   )
 
   private lazy val dslTasks = Seq(
-    dslLibrary in Compile <<= dslLibraryInputTask(Compile),
-    dslLibrary in Test <<= dslLibraryInputTask(Test),
-    dslSource <<= dslSourceTask,
-    dslResource in Compile <<= dslResourceTask(Compile),
-    dslResource in Test <<= dslResourceTask(Test),
-    dslMigrate <<= dslMigrateTask,
-    dslExecute <<= dslExecuteTask
+    (dslLibrary in Compile) := dslLibraryInputTask(Compile).evaluated,
+    (dslLibrary in Test) := dslLibraryInputTask(Test).evaluated,
+    dslSource := dslSourceTask.evaluated,
+    (dslResource in Compile) := dslResourceTask(Compile).evaluated,
+    (dslResource in Test) := dslResourceTask(Test).evaluated,
+    dslMigrate := dslMigrateTask.inputTaskValue,
+    dslExecute := dslExecuteTask.inputTaskValue
   )
 
   private lazy val dslCompilationSettings = inConfig(DslPlatform)(
@@ -113,9 +113,18 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       copyResources := Defaults.copyResourcesTask.value,
       products := Classpaths.makeProducts.value,
       packageOptions := dslPackageOptions.value,
-      artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform).value,
-      exportJars := true,
-      exportedProducts := Classpaths.exportProductsTask.value
+      artifactPath in packageBin := {
+        val art = (artifact in packageBin in DslPlatform).value
+        val sv = (scalaVersion in artifactName).value
+        val sbv = (scalaBinaryVersion in artifactName).value
+
+        val dslArtifact = art.withName(art.name + "-dsl").withClassifier(None)
+
+        val newArtifactName = Artifact.artifactName(ScalaVersion(sv, sbv), projectID.value, dslArtifact)
+
+        crossTarget.value / newArtifactName asFile
+      },
+      exportJars := true
     )
   ) ++ Seq(
     dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
@@ -143,14 +152,6 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
     Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
   )}
-
-  private def artifactPathSetting(art: SettingKey[Artifact]) =
-    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
-      (t, module, a, sv, sbv, toString) => {
-        val dslArtifact = a.copy(name = a.name + "-dsl", classifier = None)
-        t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
-      }
-    }
 
   private def dslLibraryInputTask(config: Configuration): Initialize[InputTask[Seq[Any]]] = Def.inputTaskDyn {
     import sbt.complete.Parsers.spaceDelimited
@@ -242,11 +243,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     def parsePort(in: String): Option[Int] = Try(Integer.parseInt(in)).filter(_ > 0).toOption
 
     val fallBackCompiler = {
+      val logger = streams.value.log
       val workingDirectoryCompiler = new File("dsl-compiler.exe")
       if(workingDirectoryCompiler.exists()) {
         workingDirectoryCompiler
       } else {
-        val logger = streams.value.log
         val tempPath = TempPath.getTempRootPath(new DslContext(Some(logger)))
         new File(tempPath, "dsl-compiler.exe")
       }
@@ -280,7 +281,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   }
 
   private def dslSourcesForLibrary = Def.task {
-    def generateSource(inChanges: ChangeReport[File], outChanges: ChangeReport[File]): Set[File] = {
+    def generateSource: Set[File] = {
       val buffer = new ArrayBuffer[File]()
       buffer ++= Actions.generateSource(
         streams.value.log,
@@ -302,7 +303,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
     val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsFingerprint.value
     val dslSourceCache = target.value / "dsl-source-cache"
-    val cachedGenerator = FileFunction.cached(dslSourceCache)(inStyle = FilesInfo.hash, outStyle = FilesInfo.hash)(generateSource)
+    val cachedGenerator = FileFunction.cached(dslSourceCache, inStyle = FilesInfo.hash, outStyle = FilesInfo.hash){_ => generateSource}
 
     cachedGenerator(allDslFiles.toSet).toSeq
   }
