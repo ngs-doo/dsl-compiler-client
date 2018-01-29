@@ -97,7 +97,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Seq(
       sourceDirectories := Nil,
       unmanagedSources := Nil,
-      sourceGenerators += dslSourcesForLibrary.taskValue,
+      sourceGenerators in Compile += dslSourcesForLibrary.taskValue,
       resourceGenerators := Seq(dslResourceForLibrary.taskValue),
       managedSources := Defaults.generate(sourceGenerators in DslPlatform).value,
       managedResources := Defaults.generate(resourceGenerators in DslPlatform).value,
