@@ -544,9 +544,13 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
 				if(monoNativeFailure(result) && promptUserMonoRetry(context)) {
-					context.warning("Retrying in 1 second ...");
-					context.error(result.explainError());
-					sleep(1000);
+					context.warning("Retrying in 2 seconds ...");
+					context.error(result.whyNot());
+					try {
+						Thread.sleep(2000);
+					} catch (InterruptedException ignore) {
+						throw new ExitException();
+					}
 					result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
 				}
 			} else {
@@ -833,13 +837,6 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		} else {
 			Utils.CommandResult commandResult = result.get();
 			return monoNativeFailure(commandResult.output) || monoNativeFailure(commandResult.error);
-		}
-	}
-
-	private static void sleep(long millis) {
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException ignore) {
 		}
 	}
 }

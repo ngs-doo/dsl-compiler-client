@@ -3,7 +3,6 @@ package com.dslplatform.compiler.client.parameters;
 import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import org.postgresql.core.*;
 
 import java.sql.*;
 import java.util.*;
@@ -125,10 +124,12 @@ public enum PostgresConnection implements CompileParameter {
 		final String connectionString = "jdbc:postgresql://" + context.get(INSTANCE);
 
 		Connection conn;
-		final BaseStatement stmt;
+		final Statement stmt;
 		try {
-			conn = DriverManager.getConnection(connectionString);
-			stmt = (BaseStatement) conn.createStatement();
+			final Properties props = new Properties();
+			props.setProperty("preferQueryMode", "simple");
+			conn = DriverManager.getConnection(connectionString, props);
+			stmt = conn.createStatement();
 		} catch (SQLException e) {
 			context.error("Error opening connection to " + connectionString);
 			context.error(e);
@@ -140,17 +141,21 @@ public enum PostgresConnection implements CompileParameter {
 				final long startAt = System.currentTimeMillis();
 				final boolean[] isDone = new boolean[1];
 				final boolean[] hasErrors = new boolean[1];
+				final boolean[] waitingAnswer = new boolean[1];
 				final Thread waitResp = new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
-							stmt.executeWithFlags(sql, QueryExecutor.QUERY_EXECUTE_AS_SIMPLE);
+							stmt.execute(sql);
 							hasErrors[0] = false;
 						} catch (Exception ex) {
 							context.error(ex);
 							hasErrors[0] = true;
 						}
 						isDone[0] = true;
+						if (waitingAnswer[0]) {
+							context.show("Query finished while waiting for answer");
+						}
 					}
 				});
 				waitResp.start();
@@ -165,12 +170,13 @@ public enum PostgresConnection implements CompileParameter {
 						context.warning("Still waiting...");
 					}
 					if (!isDone[0] && (timeout % 30 == 0) && context.canInteract()) {
-						String response = context.ask("Abort executing query [y/N]?");
-						if ("y".equalsIgnoreCase(response)) {
-							if (!isDone[0]) {
-								context.error("Canceled SQL script execution");
-								throw new ExitException();
-							}
+						waitingAnswer[0] = true;
+						final String response = context.ask("Abort executing query [y/N]?");
+						waitingAnswer[0] = false;
+						if ("y".equalsIgnoreCase(response) && !isDone[0]) {
+							stmt.cancel();
+							context.error("Canceled SQL script execution");
+							throw new ExitException();
 						}
 					}
 				}

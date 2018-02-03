@@ -132,7 +132,10 @@ public class Context implements Closeable {
 	}
 
 	public void error(final Exception ex) {
-		error(ex.getMessage());
+		if (ex instanceof ExitException) return;
+		final String description = ex.getMessage();
+		if (description == null) error(ex.getClass().getName() + " error without description");
+		else error(description);
 		if (withLog) {
 			final StringWriter sw = new StringWriter();
 			ex.printStackTrace(new PrintWriter(sw));
