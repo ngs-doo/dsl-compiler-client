@@ -22,7 +22,6 @@ import java.util.*;
 public class DslLexerParser extends Lexer {
 
 	private final Project project;
-	private final VirtualFile file;
 	private final PsiFile psiFile;
 	private final Document document;
 	private final Application application;
@@ -39,12 +38,11 @@ public class DslLexerParser extends Lexer {
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
-		this.file = file;
 		this.application = ApplicationManager.getApplication();
 		this.dslService = ServiceManager.getService(DslCompilerService.class);
 		if (project != null && file != null) {
 			psiFile = PsiManager.getInstance(project).findFile(file);
-			document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+			document = psiFile != null ? PsiDocumentManager.getInstance(project).getDocument(psiFile) : null;
 			dslService.callWhenReady(new Runnable() {
 				@Override
 				public void run() {
@@ -61,7 +59,9 @@ public class DslLexerParser extends Lexer {
 								@Override
 								public void run() {
 									forceRefresh = true;
-									document.setText(document.getText());
+									if (document != null && document.isWritable()) {
+										document.setText(document.getText());
+									}
 								}
 							});
 				}
@@ -149,7 +149,7 @@ public class DslLexerParser extends Lexer {
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
 		if (project != null && project.isDisposed()) return;
-		final boolean nonEditorPage = project == null || psiFile == null;
+		final boolean nonEditorPage = project == null || psiFile == null || !document.isWritable();
 		final String dsl = charSequence.toString();
 		if (forceRefresh || nonEditorPage || ast.size() == 0) {
 			if (lastParsedAnalysis != null && dsl.equals(lastParsedDsl)) {
