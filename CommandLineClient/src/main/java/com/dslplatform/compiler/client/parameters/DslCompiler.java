@@ -543,8 +543,8 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			if (mono.isSuccess()) {
 				arguments.add(0, compiler.getAbsolutePath());
 				result = Utils.runCommand(context, mono.get(), compiler.getParentFile(), arguments);
-				if(monoNativeFailure(result) && promptUserMonoRetry(context)) {
-					context.warning("Retrying in 2 seconds ...");
+				if(!result.isSuccess() && promptUserMonoRetry(context)) {
+					context.warning("Retrying ...");
 					context.error(result.whyNot());
 					try {
 						Thread.sleep(2000);
@@ -621,6 +621,26 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		return Either.success(false);
 	}
 
+	public static File lookupDefaultPath(final Context context) throws ExitException {
+		final String home = System.getProperty("user.home");
+		if (home == null || home.isEmpty()) {
+			context.log("Variable user.home not found. Will fallback to temporary path");
+			return new File(TempPath.getTempRootPath(context), "dsl-compiler.exe");
+		}
+		final File homePath = new File(home);
+		if (!homePath.exists()) {
+			context.log("User home not found. Will fallback to temporary path");
+			return new File(TempPath.getTempRootPath(context), "dsl-compiler.exe");
+		}
+		final String dslName = Download.isDefaultUrl(context) ? ".DSL-Platform" : ".DSL-Custom";
+		final File compilerFolder = new File(homePath, dslName);
+		if (!compilerFolder.exists() && !compilerFolder.mkdirs()) {
+			context.warning("Error creating dsl compiler path in: " + compilerFolder.getAbsolutePath() + ". Will use temporary filter instead.");
+			return new File(TempPath.getTempRootPath(context), "dsl-compiler.exe");
+		}
+		return new File(compilerFolder, "dsl-compiler.exe");
+	}
+
 	@Override
 	public Either<Boolean> tryParse(final String name, final String value, final Context context) {
 		if ("compiler".equals(name)) {
@@ -683,13 +703,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					throw new ExitException();
 				}
 			}
-			final File tempPath = TempPath.getTempRootPath(context);
-			final File compiler = new File(tempPath, "dsl-compiler.exe");
+			final File compiler = lookupDefaultPath(context);
 			if (compiler.exists() && testCompiler(context, compiler)) {
 				if (isEmpty) {
 					if (context.contains(Download.INSTANCE)) {
 						context.show("Checking for latest compiler version due to download option");
-						checkForLatestVersion(context, path, tempPath, compiler);
+						checkForLatestVersion(context, path, compiler.getParentFile(), compiler);
 					}
 					context.put(INSTANCE, compiler.getAbsolutePath());
 					return true;
@@ -711,7 +730,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				} else throw new ExitException();
 			}
 			context.show("Downloading DSL Platform compiler since it's not found in: " + compiler.getAbsolutePath());
-			downloadCompiler(context, path, tempPath, compiler, true);
+			downloadCompiler(context, path, compiler.getParentFile(), compiler, true);
 		} else {
 			if (!testCompiler(context, path)) {
 				context.error("Specified compiler is invalid: " + path.getAbsolutePath());
@@ -722,24 +741,24 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		return true;
 	}
 
-	public static void checkForLatestVersion(Context context, File path, File tempPath, File compiler) throws ExitException {
+	public static void checkForLatestVersion(Context context, File path, File compilerPath, File compiler) throws ExitException {
 		final Either<Long> lastModified = Download.lastModified(context, "dsl-compiler", "dsl-compiler.exe", compiler.lastModified());
 		if (!lastModified.isSuccess()) {
 			context.warning(lastModified.whyNot());
 		} else if (compiler.lastModified() != lastModified.get()) {
-			downloadCompiler(context, path, tempPath, compiler, false);
+			downloadCompiler(context, path, compilerPath, compiler, false);
 		}
 	}
 
 	private static void downloadCompiler(
 			final Context context,
 			final File path,
-			final File tempPath,
+			final File compilerPath,
 			final File compiler,
 			final boolean failOnError) throws ExitException {
 		final long lastModified;
 		try {
-			lastModified = Download.downloadAndUnpack(context, "dsl-compiler", tempPath);
+			lastModified = Download.downloadAndUnpack(context, "dsl-compiler", compilerPath);
 		} catch (final IOException ex) {
 			final String remoteUrl = Download.remoteUrl(context);
 			if (failOnError) {
@@ -799,44 +818,12 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 	}
 
 	private static boolean promptUserMonoRetry(Context context) {
-		context.warning("Running the compiler failed due to a native Mono bug. ");
+		context.warning("Running the compiler failed... ");
 		if(context.canInteract()) {
 			String answer = context.ask("Do you wish to retry [Y/n]?");
 			return answer != null && ("y".equalsIgnoreCase(answer.trim()) || answer.trim().isEmpty());
 		} else {
 			return true;
-		}
-	}
-
-	private static final String[] MONO_NATIVE_ERROR_SNIPPETS = {
-			"SIGSEGV",
-			"Native stacktrace:",
-			"mono() [0x",
-			"Debug info from gdb:",
-			"Invalid IL code"
-	};
-
-	/**
-	 * Checks if the output contains one of the regexes which could indicate
-	 * a recurring mono bug.
-	 */
-	static boolean monoNativeFailure(String output) {
-		if (output == null) {
-			return false;
-		} else {
-			for (String snippet : MONO_NATIVE_ERROR_SNIPPETS) {
-				if (output.contains(snippet)) return true;
-			}
-			return false;
-		}
-	}
-
-	static boolean monoNativeFailure(Either<Utils.CommandResult> result) {
-		if (result == null || !result.isSuccess()) {
-			return true;
-		} else {
-			Utils.CommandResult commandResult = result.get();
-			return monoNativeFailure(commandResult.output) || monoNativeFailure(commandResult.error);
 		}
 	}
 }
