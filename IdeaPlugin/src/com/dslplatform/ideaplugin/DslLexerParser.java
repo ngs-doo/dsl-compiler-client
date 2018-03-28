@@ -52,7 +52,7 @@ public class DslLexerParser extends Lexer {
 					}
 				}
 			});
-			refreshAll = new DocumentRunnable(document, null) {
+			refreshAll = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
 					if (!isActive) return;
@@ -68,7 +68,7 @@ public class DslLexerParser extends Lexer {
 							});
 				}
 			};
-			scheduleRefresh = new DocumentRunnable(document, null) {
+			scheduleRefresh = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
 					if (isActive) {
@@ -188,12 +188,12 @@ public class DslLexerParser extends Lexer {
 			if (start == end && dsl.length() == 0) {
 				if (psiFile.getLanguage() == DomainSpecificationLanguage.INSTANCE) {
 					actualDsl = psiFile.getText();
+					if (actualDsl.equals(lastDsl)) {
+						position = 0;
+						return;
+					}
 				} else {
-					//TODO: for some reason IntelliJ is reporting file as PLAIN_TEXT and crashes when it tries to read it's content.
-					//let's cope with it by assuming temporary state of an empty content
-					actualDsl = dsl;
-				}
-				if (actualDsl.equals(lastDsl)) {
+					//IntelliJ is using hakish way to force refresh
 					position = 0;
 					return;
 				}
