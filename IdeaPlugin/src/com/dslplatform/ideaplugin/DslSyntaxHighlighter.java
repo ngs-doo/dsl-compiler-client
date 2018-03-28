@@ -19,6 +19,10 @@ public class DslSyntaxHighlighter extends SyntaxHighlighterBase {
 		this.virtualFile = virtualFile;
 	}
 
+	void stop() {
+		lexerParser.stop();
+	}
+
 	@NotNull
 	@Override
 	public Lexer getHighlightingLexer() {

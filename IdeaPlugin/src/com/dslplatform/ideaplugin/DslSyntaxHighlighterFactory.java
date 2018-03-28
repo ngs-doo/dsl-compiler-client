@@ -39,6 +39,7 @@ public class DslSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 		DslSyntaxHighlighter highlighter = highlighters.get(key);
 		if (highlighter == null || highlighter.virtualFile == null || !highlighter.virtualFile.isValid()
 				|| virtualFile != null && !virtualFile.equals(highlighter.virtualFile)) {
+			if (highlighter != null) highlighter.stop();
 			highlighter = new DslSyntaxHighlighter(project, virtualFile);
 			highlighters.put(key, highlighter);
 		}

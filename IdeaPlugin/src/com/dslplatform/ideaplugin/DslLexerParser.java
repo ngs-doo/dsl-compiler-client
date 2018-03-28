@@ -35,6 +35,7 @@ public class DslLexerParser extends Lexer {
 	private String lastDsl = "";
 	private final List<AST> ast = new ArrayList<AST>();
 	private int position = 0;
+	private boolean isActive = true;
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
@@ -46,7 +47,7 @@ public class DslLexerParser extends Lexer {
 			dslService.callWhenReady(new Runnable() {
 				@Override
 				public void run() {
-					if (application != null) {
+					if (application != null && isActive) {
 						application.invokeLater(scheduleRefresh);
 					}
 				}
@@ -54,12 +55,13 @@ public class DslLexerParser extends Lexer {
 			refreshAll = new DocumentRunnable(document, null) {
 				@Override
 				public void run() {
+					if (!isActive) return;
 					com.intellij.openapi.command.CommandProcessor.getInstance().runUndoTransparentAction(
 							new Runnable() {
 								@Override
 								public void run() {
 									forceRefresh = true;
-									if (document != null && document.isWritable()) {
+									if (isActive && document != null && document.isWritable()) {
 										document.setText(document.getText());
 									}
 								}
@@ -69,7 +71,9 @@ public class DslLexerParser extends Lexer {
 			scheduleRefresh = new DocumentRunnable(document, null) {
 				@Override
 				public void run() {
-					application.runWriteAction(refreshAll);
+					if (isActive) {
+						application.runWriteAction(refreshAll);
+					}
 				}
 			};
 		} else {
@@ -86,6 +90,10 @@ public class DslLexerParser extends Lexer {
 				}
 			};
 		}
+	}
+
+	void stop() {
+		isActive = false;
 	}
 
 	private AST getCurrent() {
@@ -137,7 +145,9 @@ public class DslLexerParser extends Lexer {
 					Thread.sleep(100);
 				} while (System.currentTimeMillis() < delayUntil);
 				waitingForSync = false;
-				application.invokeLater(scheduleRefresh);
+				if (isActive) {
+					application.invokeLater(scheduleRefresh);
+				}
 			} catch (Exception ignore) {
 			}
 		}
@@ -148,7 +158,7 @@ public class DslLexerParser extends Lexer {
 
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
-		if (project != null && project.isDisposed()) return;
+		if (project != null && project.isDisposed() || !isActive) return;
 		final boolean nonEditorPage = project == null || psiFile == null || !document.isWritable();
 		final String dsl = charSequence.toString();
 		if (forceRefresh || nonEditorPage || ast.size() == 0) {
