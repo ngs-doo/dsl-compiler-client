@@ -22,7 +22,6 @@ import java.util.*;
 public class DslLexerParser extends Lexer {
 
 	private final Project project;
-	private final VirtualFile file;
 	private final PsiFile psiFile;
 	private final Document document;
 	private final Application application;
@@ -36,40 +35,45 @@ public class DslLexerParser extends Lexer {
 	private String lastDsl = "";
 	private final List<AST> ast = new ArrayList<AST>();
 	private int position = 0;
+	private boolean isActive = true;
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
-		this.file = file;
 		this.application = ApplicationManager.getApplication();
 		this.dslService = ServiceManager.getService(DslCompilerService.class);
 		if (project != null && file != null) {
 			psiFile = PsiManager.getInstance(project).findFile(file);
-			document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+			document = psiFile != null ? PsiDocumentManager.getInstance(project).getDocument(psiFile) : null;
 			dslService.callWhenReady(new Runnable() {
 				@Override
 				public void run() {
-					if (application != null) {
+					if (application != null && isActive) {
 						application.invokeLater(scheduleRefresh);
 					}
 				}
 			});
-			refreshAll = new DocumentRunnable(document, null) {
+			refreshAll = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
+					if (!isActive) return;
 					com.intellij.openapi.command.CommandProcessor.getInstance().runUndoTransparentAction(
 							new Runnable() {
 								@Override
 								public void run() {
 									forceRefresh = true;
-									document.setText(document.getText());
+									if (isActive && document != null && document.isWritable()) {
+										document.setText(document.getText());
+									}
 								}
 							});
 				}
 			};
-			scheduleRefresh = new DocumentRunnable(document, null) {
+			scheduleRefresh = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
-					application.runWriteAction(refreshAll);
+					if (isActive) {
+						application.runWriteAction(refreshAll);
+					}
 				}
 			};
 		} else {
@@ -86,6 +90,10 @@ public class DslLexerParser extends Lexer {
 				}
 			};
 		}
+	}
+
+	void stop() {
+		isActive = false;
 	}
 
 	private AST getCurrent() {
@@ -137,7 +145,9 @@ public class DslLexerParser extends Lexer {
 					Thread.sleep(100);
 				} while (System.currentTimeMillis() < delayUntil);
 				waitingForSync = false;
-				application.invokeLater(scheduleRefresh);
+				if (isActive) {
+					application.invokeLater(scheduleRefresh);
+				}
 			} catch (Exception ignore) {
 			}
 		}
@@ -148,8 +158,8 @@ public class DslLexerParser extends Lexer {
 
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
-		if (project != null && project.isDisposed()) return;
-		final boolean nonEditorPage = project == null || psiFile == null;
+		if (project != null && project.isDisposed() || !isActive) return;
+		final boolean nonEditorPage = project == null || psiFile == null || !document.isWritable();
 		final String dsl = charSequence.toString();
 		if (forceRefresh || nonEditorPage || ast.size() == 0) {
 			if (lastParsedAnalysis != null && dsl.equals(lastParsedDsl)) {
@@ -178,12 +188,12 @@ public class DslLexerParser extends Lexer {
 			if (start == end && dsl.length() == 0) {
 				if (psiFile.getLanguage() == DomainSpecificationLanguage.INSTANCE) {
 					actualDsl = psiFile.getText();
+					if (actualDsl.equals(lastDsl)) {
+						position = 0;
+						return;
+					}
 				} else {
-					//TODO: for some reason IntelliJ is reporting file as PLAIN_TEXT and crashes when it tries to read it's content.
-					//let's cope with it by assuming temporary state of an empty content
-					actualDsl = dsl;
-				}
-				if (actualDsl.equals(lastDsl)) {
+					//IntelliJ is using hakish way to force refresh
 					position = 0;
 					return;
 				}

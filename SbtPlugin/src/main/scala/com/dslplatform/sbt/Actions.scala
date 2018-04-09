@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
 import com.dslplatform.compiler.client.parameters.{Settings, _}
 import org.clapper.classutil.ClassFinder
 import sbt.Def.Classpath
-import sbt.{IO, Logger}
+import sbt.{Attributed, File, IO, Logger}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -154,6 +154,7 @@ object Actions {
     if (namespace.nonEmpty) {
       ctx.put(Namespace.INSTANCE, namespace)
     }
+    addVersion(ctx, target, classPath)
     settings.foreach(it => ctx.put(it.toString, ""))
     if (customSettings.nonEmpty) {
       ctx.put(Settings.INSTANCE, customSettings.mkString(","))
@@ -198,6 +199,7 @@ object Actions {
     namespace: String = "",
     settings: Seq[Settings.Option] = Nil,
     customSettings: Seq[String] = Nil,
+    classPath: Classpath,
     latest: Boolean = true): Seq[File] = {
     if (!output.exists()) {
       if (!output.mkdirs()) {
@@ -214,6 +216,7 @@ object Actions {
     val ctx = new DslContext(Some(logger))
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
+    addVersion(ctx, target, classPath)
     if (namespace.nonEmpty) {
       ctx.put(Namespace.INSTANCE, namespace)
     }
@@ -233,6 +236,19 @@ object Actions {
     IO.delete(tempFolder)
     logger.info(s"Source for $target created in ${output.getPath}")
     files.result()
+  }
+
+  private def addVersion(ctx: DslContext, target: Targets.Option, classPath: Classpath) = {
+    val version = classPath.find { d =>
+      d.data.getAbsolutePath.contains("revenj-core")
+    }
+    version.foreach { v =>
+      val parts = v.data.getAbsolutePath.split("\\/".toCharArray)
+      val ind = parts.indexOf(parts.find(_.contains("revenj-core")).getOrElse(""))
+      if (ind < parts.length - 1) {
+        ctx.put(s"library:$target", parts(ind + 1))
+      }
+    }
   }
 
   private def deepCopy(from: Path, to: Path, files: ArrayBuffer[File]): Unit = {
@@ -264,14 +280,15 @@ object Actions {
       }
     }
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
-      scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
-        scanEventHandlers(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
+      scanHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
+        scanHandlers(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
+        scanHandlers(logger, folders, manifests, "net.revenj.patterns.ReportHandler", dependencies) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.handlers.RequestBinding")) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.ServerCommand")) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
-      scanEventHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
+      scanHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
         Seq(scanPlugins(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
     } else {
       Nil
@@ -405,7 +422,7 @@ object Actions {
     }
   }
 
-  private def scanEventHandlers(logger: Logger, folders: Seq[File], manifests: File, target: String, dependencies: Classpath): Seq[File] = {
+  private def scanHandlers(logger: Logger, folders: Seq[File], manifests: File, target: String, dependencies: Classpath): Seq[File] = {
     logger.info(s"""Scanning for $target events in ${folders.mkString(", ")}""")
     val implementations =
       ClassFinder(folders).getClasses()
@@ -423,7 +440,7 @@ object Actions {
         logger.debug(s"Loading: $name")
         val manifest = Class.forName(name, false, loader)
         manifest.getGenericInterfaces.filter(_.getTypeName.startsWith(s"$target<")).foreach { m =>
-          val handler = handlers.getOrElseUpdate(URLEncoder.encode(m.getTypeName, "UTF-8"), new ArrayBuffer[String]())
+          val handler = handlers.getOrElseUpdate(URLEncoder.encode(m.getTypeName.replace(" ", ""), "UTF-8"), new ArrayBuffer[String]())
           handler += name
         }
       } catch {

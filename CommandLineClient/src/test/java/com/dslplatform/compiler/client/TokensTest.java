@@ -15,6 +15,8 @@ public class TokensTest {
 	@Test
 	public void testTokensParsing() throws IOException, InterruptedException {
 		ContextMock context = new ContextMock();
+		context.put(Download.INSTANCE, "");
+		context.put(DslCompiler.INSTANCE, "");
 		assertTrue(Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE)));
 		String path = context.get(DslCompiler.INSTANCE);
 		assertNotNull(path);
@@ -41,6 +43,8 @@ public class TokensTest {
 	@Test
 	public void testRules() throws IOException, InterruptedException {
 		ContextMock context = new ContextMock();
+		context.put(Download.INSTANCE, "");
+		context.put(DslCompiler.INSTANCE, "");
 		assertTrue(Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE)));
 		String path = context.get(DslCompiler.INSTANCE);
 		assertNotNull(path);

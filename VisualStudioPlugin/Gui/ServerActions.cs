@@ -56,11 +56,12 @@ namespace DDDLanguage
 		{
 			try
 			{
+				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Ssl3 | (SecurityProtocolType)3072;
 				var latest = (HttpWebRequest)HttpWebRequest.Create("https://github.com/ngs-doo/revenj/releases/latest");
 				latest.KeepAlive = false;
 				latest.AllowAutoRedirect = false;
 				var redirect = (HttpWebResponse)latest.GetResponse();
-				var tag = "1.4.0";
+				var tag = "1.4.2";
 				if (redirect.StatusCode == HttpStatusCode.Redirect)
 				{
 					var location = redirect.GetResponseHeader("Location");
@@ -76,17 +77,28 @@ namespace DDDLanguage
 				string message;
 				try
 				{
+					if (ex.Response == null)
+					{
+						System.Diagnostics.Process.Start("https://github.com/ngs-doo/revenj/releases/latest");
+						throw new Exception("Unable to connect to Github. Please setup the project manually", ex);
+					}
 					var ct = ex.Response.Headers["Content-Type"] ?? string.Empty;
 					if (ct.StartsWith("application/xml"))
 						message = XElement.Load(ex.Response.GetResponseStream()).Value;
 					else
 						message = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
+					System.Diagnostics.Process.Start("https://github.com/ngs-doo/revenj/releases/latest");
 				}
 				catch
 				{
 					throw ex;
 				}
 				throw new Exception(message, ex);
+			}
+			catch
+			{
+				System.Diagnostics.Process.Start("https://github.com/ngs-doo/revenj/releases/latest");
+				throw;
 			}
 		}
 
