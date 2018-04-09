@@ -83,7 +83,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   private lazy val dslTasks = Seq(
     dslLibrary in Compile <<= dslLibraryInputTask(Compile),
     dslLibrary in Test <<= dslLibraryInputTask(Test),
-    dslSource <<= dslSourceTask,
+    dslSource in Compile <<= dslSourceTask(Compile),
+    dslSource in Test <<= dslSourceTask(Test),
     dslResource in Compile <<= dslResourceTask(Compile),
     dslResource in Test <<= dslResourceTask(Test),
     dslMigrate <<= dslMigrateTask,
@@ -295,6 +296,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslNamespace.value,
         dslSettings.value,
         dslCustomSettings.value,
+        managedClasspath.value,
         dslLatest.value)
 
       buffer.toSet
@@ -314,7 +316,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     Seq(file)
   }
 
-  private def dslSourceTask = Def.inputTask {
+  private def dslSourceTask(config: Configuration) = Def.inputTask {
     val args = Parsers.spaceDelimited("<arg>").parsed
     def generate(dslTarget: Targets.Option, targetPath: File): Seq[File] = {
       Actions.generateSource(
@@ -330,6 +332,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslNamespace.value,
         dslSettings.value,
         dslCustomSettings.value,
+        (dependencyClasspath in config).value,
         dslLatest.value)
     }
     val buffer = new ArrayBuffer[File]()
