@@ -1,9 +1,9 @@
 package com.dslplatform.sbt
 
+import sbt._
+import Keys._
 import com.dslplatform.compiler.client.parameters.{Settings, Targets, TempPath}
 import sbt.Def.Initialize
-import sbt.Keys._
-import sbt._
 import sbt.complete.Parsers
 import sbt.plugins.JvmPlugin
 
@@ -42,9 +42,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
   import autoImport._
 
-  lazy val DslPlatform = config("dsl-platform") extend(Compile)
+  lazy val DslPlatform = config("dsl-platform") extend (Compile)
 
   override def requires: Plugins = JvmPlugin
+
   override def projectConfigurations: Seq[Configuration] = Seq(DslPlatform)
 
   private def findTarget(logger: Logger, name: String): Targets.Option = {
@@ -81,13 +82,47 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   )
 
   private lazy val dslTasks = Seq(
-    (dslLibrary in Compile) := dslLibraryInputTask(Compile).evaluated,
-    (dslLibrary in Test) := dslLibraryInputTask(Test).evaluated,
-    dslSource := dslSourceTask(Compile).evaluated,
-    (dslResource in Compile) := dslResourceTask(Compile).evaluated,
-    (dslResource in Test) := dslResourceTask(Test).evaluated,
-    dslMigrate := dslMigrateTask.inputTaskValue,
-    dslExecute := dslExecuteTask.inputTaskValue
+    dslLibrary in Compile <<= dslLibraryInputTask(Compile),
+    dslLibrary in Test <<= dslLibraryInputTask(Test),
+    dslSource in Compile <<= dslSourceTask(Compile),
+    dslSource in Test <<= dslSourceTask(Test),
+    dslResource in Compile <<= dslResourceTask(Compile),
+    dslResource in Test <<= dslResourceTask(Test),
+    dslMigrate <<= dslMigrateTask,
+    dslExecute <<= dslExecuteTask
+  )
+
+  private def dslCompilationSettings = inConfig(DslPlatform)(
+    Defaults.compileInputsSettings ++
+      Defaults.compileAnalysisSettings ++
+      Defaults.packageTaskSettings(packageBin, Defaults.packageBinMappings) ++
+      Seq(
+        sourceDirectories := Nil,
+        unmanagedSources := Nil,
+        sourceGenerators += dslSourcesForLibrary.taskValue,
+        resourceGenerators := Seq(dslResourceForLibrary.taskValue),
+        managedSources := Defaults.generate(sourceGenerators in DslPlatform).value,
+        managedResources := Defaults.generate(resourceGenerators in DslPlatform).value,
+        sources := (managedSources in DslPlatform).value,
+        resources := (managedResources in DslPlatform).value,
+        manipulateBytecode := compileIncremental.value,
+        compileIncremental := (Defaults.compileIncrementalTask tag(Tags.Compile, Tags.CPU)).value,
+        compileIncSetup := Defaults.compileIncSetupTask.value,
+        compile := Defaults.compileTask.value,
+        classDirectory := crossTarget.value / (configuration.value.name + "-classes"),
+        compileAnalysisFilename := (compileAnalysisFilename in Compile).value,
+        dependencyClasspath := Classpaths.concat(managedClasspath in Compile, unmanagedClasspath in Compile).value,
+        copyResources := Defaults.copyResourcesTask.value,
+        products := Classpaths.makeProducts.value,
+        packageOptions := dslPackageOptions.value,
+        artifactPath in packageBin := artifactPathSetting(artifact in packageBin in DslPlatform).value,
+        exportJars := true,
+        exportedProducts := Classpaths.exportProductsTask.value
+      )
+  ) ++ Seq(
+    dependencyClasspath in Compile ++= (products in DslPlatform).value.classpath,
+    exportedProducts in Compile ++= (exportedProducts in DslPlatform).value,
+    unmanagedSourceDirectories in Compile ++= dslDslPath.value
   )
 
   // When running `compile` from the command line interface, SBT is calling dsl-platform:compile, apparently because it
@@ -96,7 +131,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     compile := (compile in Compile).value
   )
 
-  override lazy val projectSettings = dslDefaultSettings ++ dslTasks ++ Seq(
+  override def projectSettings = dslDefaultSettings ++ dslTasks ++ dslCompilationSettings ++ Seq(
     onLoad := {
       if (dslServerMode.value) {
         Actions.setupServerMode(dslCompiler.value, None, dslDownload.value, dslServerPort.value)
@@ -105,11 +140,18 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     }
   ) ++ commandLineOrderingWorkaroundSettings
 
-
   private def dslPackageOptions = Def.task { Seq(
     Package.addSpecManifestAttributes(name.value, version.value, organizationName.value),
     Package.addImplManifestAttributes(name.value, version.value, homepage.value, organization.value, organizationName.value)
   )}
+
+  private def artifactPathSetting(art: SettingKey[Artifact]) =
+    (crossTarget, projectID, art, scalaVersion in artifactName, scalaBinaryVersion in artifactName, artifactName) {
+      (t, module, a, sv, sbv, toString) => {
+        val dslArtifact = a.copy(name = a.name + "-dsl", classifier = None)
+        t / Artifact.artifactName(ScalaVersion(sv, sbv), module, dslArtifact) asFile
+      }
+    }
 
   private def dslLibraryInputTask(config: Configuration): Initialize[InputTask[Seq[Any]]] = Def.inputTaskDyn {
     import sbt.complete.Parsers.spaceDelimited
@@ -201,11 +243,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     def parsePort(in: String): Option[Int] = Try(Integer.parseInt(in)).filter(_ > 0).toOption
 
     val fallBackCompiler = {
-      val logger = streams.value.log
       val workingDirectoryCompiler = new File("dsl-compiler.exe")
       if(workingDirectoryCompiler.exists()) {
         workingDirectoryCompiler
       } else {
+        val logger = streams.value.log
         val tempPath = TempPath.getTempRootPath(new DslContext(Some(logger)))
         new File(tempPath, "dsl-compiler.exe")
       }
@@ -239,7 +281,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   }
 
   private def dslSourcesForLibrary = Def.task {
-    def generateSource: Set[File] = {
+    def generateSource(inChanges: ChangeReport[File], outChanges: ChangeReport[File]): Set[File] = {
       val buffer = new ArrayBuffer[File]()
       buffer ++= Actions.generateSource(
         streams.value.log,
@@ -262,7 +304,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
     val allDslFiles = (dslDslPath.value ** "*.dsl").get :+ createCompilerSettingsFingerprint.value
     val dslSourceCache = target.value / "dsl-source-cache"
-    val cachedGenerator = FileFunction.cached(dslSourceCache, inStyle = FilesInfo.hash, outStyle = FilesInfo.hash){_ => generateSource}
+    val cachedGenerator = FileFunction.cached(dslSourceCache)(inStyle = FilesInfo.hash, outStyle = FilesInfo.hash)(generateSource)
 
     cachedGenerator(allDslFiles.toSet).toSeq
   }
@@ -316,7 +358,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       val targetOutput = if (args.length == 2) new File(args.last) else predefinedOutput.get
       buffer ++= generate(targetArg, targetOutput)
     }
-    buffer
+    buffer.toSeq
   }
 
   private def dslResourceTask(config: Configuration) = Def.inputTask {
@@ -357,7 +399,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       val targetOutput = if (args.length == 2) Some(new File(args.last)) else dslResourcePath.value
       buffer ++= generate(targetArg, targetOutput)
     }
-    buffer
+    buffer.toSeq
   }
 
   private def dslMigrateTask = Def.inputTask {
