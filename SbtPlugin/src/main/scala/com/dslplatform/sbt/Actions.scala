@@ -3,7 +3,7 @@ package com.dslplatform.sbt
 import java.io.{File, FileOutputStream}
 import java.lang.management.ManagementFactory
 import java.net._
-import java.nio.file.{Files, Path, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util
 
 import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
@@ -201,6 +201,12 @@ object Actions {
     customSettings: Seq[String] = Nil,
     classPath: Classpath,
     latest: Boolean = true): Seq[File] = {
+    val cwd = Paths.get("").toAbsolutePath.toString
+    if (cwd == output.getCanonicalPath || !output.getCanonicalPath.startsWith(cwd)) {
+      logger.error("Output path must be at least one level below working directory")
+      return Seq.empty
+    }
+
     if (!output.exists()) {
       if (!output.mkdirs()) {
         logger.warn(s"Failed creating output folder: ${output.getAbsolutePath}")
@@ -213,6 +219,7 @@ object Actions {
         }
       }
     }
+
     val ctx = new DslContext(Some(logger))
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
