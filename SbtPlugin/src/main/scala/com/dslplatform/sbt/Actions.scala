@@ -280,15 +280,17 @@ object Actions {
       }
     }
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
-      scanHandlers(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
-        scanHandlers(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
-        scanHandlers(logger, folders, manifests, "net.revenj.patterns.ReportHandler", dependencies) ++
+      scanPlugins(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
+        scanPlugins(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
+        scanPlugins(logger, folders, manifests, "net.revenj.patterns.ReportAspect", dependencies) ++
+        scanPlugins(logger, folders, manifests, "net.revenj.patterns.PersistableRepositoryAspect", dependencies) ++
+        scanPlugins(logger, folders, manifests, "net.revenj.patterns.EventStoreAspect", dependencies) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.handlers.RequestBinding")) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.ServerCommand")) ++
         Seq(scanPlugins(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
-      scanHandlers(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
+      scanPlugins(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
         Seq(scanPlugins(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
     } else {
       Nil
@@ -422,7 +424,7 @@ object Actions {
     }
   }
 
-  private def scanHandlers(logger: Logger, folders: Seq[File], manifests: File, target: String, dependencies: Classpath): Seq[File] = {
+  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, target: String, dependencies: Classpath): Seq[File] = {
     logger.info(s"""Scanning for $target events in ${folders.mkString(", ")}""")
     val implementations =
       ClassFinder(folders).getClasses()
