@@ -1,16 +1,18 @@
 package com.dslplatform.sbt
 
-import com.dslplatform.compiler.client.parameters.{Settings, Targets}
+import com.dslplatform.compiler.client.parameters.{DslCompiler, Settings, Targets}
 import sbt.Keys._
 import sbt._
 import sbt.complete.Parsers
+
+import scala.util.Try
 
 object SbtDslPlatformPlugin extends AutoPlugin {
   override def requires = plugins.JvmPlugin
 
   object autoImport {
-    val dsl = taskKey[Seq[File]]("Compile DSL into appropriate targets (eg, scala source)")
-    val dslGenerate = taskKey[Seq[File]]("Compile DSL into appropriate targets (eg, scala source)")
+    val dsl = taskKey[Seq[File]]("Compile DSL into appropriate targets (e.g. Scala sources)")
+    val dslGenerate = taskKey[Seq[File]]("Compile DSL into appropriate targets (e.g. Scala sources)")
     val dslResource = inputKey[Seq[File]]("Scan code and create META-INF/services files for plugins")
     val dslMigrate = inputKey[Unit]("Create an SQL migration file based on difference from DSL in project and in the target database")
     val dslExecute = inputKey[Unit]("Execute custom DSL compiler command")
@@ -46,6 +48,41 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       sourceGenerators in Test += (dsl in Test).taskValue
     )
 
+  private def dslTempFolder = Def.setting {
+    target.value / "dsl-temp"
+  }
+
+  private def createCompilerSettingsFingerprint() = Def.task {
+    val logger = streams.value.log
+
+    def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
+
+    lazy val fallBackCompiler = DslCompiler.lookupDefaultPath(new DslContext(Some(logger)))
+
+    val file =
+      if (parsePort(dslCompiler.value) || dslCompiler.value.isEmpty) fallBackCompiler
+      else {
+        val customCompilerPath = new File(dslCompiler.value)
+        if (!customCompilerPath.exists())
+          logger.error(
+            s"Unable to find the specified dslCompiler path: ${customCompilerPath.getAbsolutePath}")
+
+        customCompilerPath
+      }
+
+    val fingerprintFile = dslTempFolder.value / "dsl-fingerprint.txt"
+    val settings = {
+      val values = dslSettings.value.map(_.name) ++ dslCustomSettings.value
+      values.sorted.mkString("\n") + "\n" +
+        (if (file.exists()) file.lastModified.toString else "") + "\n" +
+        dslCompiler.value + "\n" +
+        dslDownload.value.getOrElse("")
+    }
+
+    IO.write(fingerprintFile, settings)
+    fingerprintFile
+  }
+
   def baseDslSettings(scope: Configuration) = Seq(
     dsl := (dslGenerate in dsl).value,
     dslLibraries in dsl := Map.empty,
@@ -72,6 +109,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       val logger         = streams.value.log
       val depClassPath   = dependencyClasspath.value
       val cacheDirectory = streams.value.cacheDirectory
+      val settingsFile   = createCompilerSettingsFingerprint().value
 
       if (dslSources.value.isEmpty) {
         logger.error(s"$scope: dslSources must be set")
@@ -109,7 +147,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           .flatMap(_.listFiles().filter(it => it.getPath.endsWith(".dsl") || it.getPath.endsWith(".ddd")))
           .toSet
         logger.info(s"Found ${dslPathFiles.size} DSL files")
-        cached(dslPathFiles).toSeq
+        cached(dslPathFiles + settingsFile).toSeq
       }
     },
 
@@ -138,11 +176,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       if (dslPostgres.value.isEmpty && dslOracle.value.isEmpty)
         streams.value.log.error(s"$scope: JDBC connection string not defined for PostgreSQL or Oracle")
       else {
-        val jdbcs = {
-          (if (dslPostgres.value.nonEmpty) Some(dslPostgres.value) else None).toSeq ++
-            (if (dslOracle.value.nonEmpty) Some(dslOracle.value) else None).toSeq
-        }
-        jdbcs foreach { jdbc =>
+        val jdbcs =
+          (if (dslPostgres.value.nonEmpty) List(dslPostgres.value) else List()) ++
+          (if (dslOracle.value.nonEmpty) List(dslOracle.value) else List())
+
+        jdbcs.foreach { jdbc =>
           Actions.dbMigration(
             streams.value.log,
             jdbc,
