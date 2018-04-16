@@ -151,15 +151,7 @@ object Actions {
 
     val ctx = new DslContext(Some(logger))
     ctx.put(target.toString, output.getAbsolutePath)
-    if (namespace.nonEmpty) {
-      ctx.put(Namespace.INSTANCE, namespace)
-    }
-    addVersion(ctx, target, classPath)
-    settings.foreach(it => ctx.put(it.toString, ""))
-    if (customSettings.nonEmpty) {
-      ctx.put(Settings.INSTANCE, customSettings.mkString(","))
-      ctx.put(Force.INSTANCE, "")
-    }
+    addVersionAndSettings(ctx, target, classPath, settings, customSettings, namespace)
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
       executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
@@ -223,19 +215,11 @@ object Actions {
     val ctx = new DslContext(Some(logger))
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
-    addVersion(ctx, target, classPath)
-    if (namespace.nonEmpty) {
-      ctx.put(Namespace.INSTANCE, namespace)
-    }
 
     val tempFolder = IO.createTemporaryDirectory
     ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
-    settings.foreach(it => ctx.put(it.toString, ""))
-    if (customSettings.nonEmpty) {
-      ctx.put(Settings.INSTANCE, customSettings.mkString(","))
-      ctx.put(Force.INSTANCE, "")
-    }
+    addVersionAndSettings(ctx, target, classPath, settings, customSettings, namespace)
     executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
     val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
@@ -245,7 +229,14 @@ object Actions {
     files.result()
   }
 
-  private def addVersion(ctx: DslContext, target: Targets.Option, classPath: Classpath) = {
+  private def addVersionAndSettings(
+    ctx: DslContext,
+    target: Targets.Option,
+    classPath: Classpath,
+    settings: Seq[Settings.Option],
+    customSettings: Seq[String],
+    namespace: String
+  ) = {
     val version = classPath.find { d =>
       d.data.getAbsolutePath.contains("revenj-core")
     }
@@ -255,6 +246,14 @@ object Actions {
       if (ind < parts.length - 1) {
         ctx.put(s"library:$target", parts(ind + 1))
       }
+    }
+    if (namespace.nonEmpty) {
+      ctx.put(Namespace.INSTANCE, namespace)
+    }
+    settings.foreach(it => ctx.put(it.toString, ""))
+    if (customSettings.nonEmpty) {
+      ctx.put(Settings.INSTANCE, customSettings.mkString(","))
+      ctx.put(Force.INSTANCE, "")
     }
   }
 

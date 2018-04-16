@@ -9,8 +9,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   override def requires = plugins.JvmPlugin
 
   object autoImport {
-    val dsl = taskKey[Seq[File]]("Compile DSL into generated source ready for usage")
-    val dslGenerate = taskKey[Seq[File]]("Compile DSL into generated source ready for usage")
+    val dsl = taskKey[Seq[File]]("Compile DSL into appropriate targets (eg, scala source)")
+    val dslGenerate = taskKey[Seq[File]]("Compile DSL into appropriate targets (eg, scala source)")
     val dslResource = inputKey[Seq[File]]("Scan code and create META-INF/services files for plugins")
     val dslMigrate = inputKey[Unit]("Create an SQL migration file based on difference from DSL in project and in the target database")
     val dslExecute = inputKey[Unit]("Execute custom DSL compiler command")
@@ -106,7 +106,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         val dslPathFiles = dslDslPath
           .value
           .filter(_.exists())
-          .flatMap(_.listFiles().filter(_.getPath.endsWith(".dsl")))
+          .flatMap(_.listFiles().filter(it => it.getPath.endsWith(".dsl") || it.getPath.endsWith(".ddd")))
           .toSet
         logger.info(s"Found ${dslPathFiles.size} DSL files")
         cached(dslPathFiles).toSeq
@@ -121,8 +121,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         streams.value.log.error(s"$scope: dslResourcePath must be set")
         Seq()
       } else {
-        val targets = (dslSources.value.keys ++ dslLibraries.value.keys)
-          .toSet[Targets.Option]
+        val targets = (dslSources.value.keys ++ dslLibraries.value.keys).toSet
 
         targets.flatMap { tgt =>
           Actions.generateResources(
@@ -139,24 +138,26 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       if (dslPostgres.value.isEmpty && dslOracle.value.isEmpty)
         streams.value.log.error(s"$scope: JDBC connection string not defined for PostgreSQL or Oracle")
       else {
-        val jdbc =
-          if (dslPostgres.value.nonEmpty) dslPostgres.value
-          else dslOracle.value
-
-        Actions.dbMigration(
-          streams.value.log,
-          jdbc,
-          dslPostgres.value.nonEmpty,
-          dslSqlPath.value,
-          dslDslPath.value,
-          dslPlugins.value,
-          dslCompiler.value,
-          dslServerMode.value,
-          dslDownload.value,
-          dslServerPort.value,
-          dslApplyMigration.value,
-          dslForce.value,
-          dslLatest.value)
+        val jdbcs = {
+          (if (dslPostgres.value.nonEmpty) Some(dslPostgres.value) else None).toSeq ++
+            (if (dslOracle.value.nonEmpty) Some(dslOracle.value) else None).toSeq
+        }
+        jdbcs foreach { jdbc =>
+          Actions.dbMigration(
+            streams.value.log,
+            jdbc,
+            dslPostgres.value.nonEmpty,
+            dslSqlPath.value,
+            dslDslPath.value,
+            dslPlugins.value,
+            dslCompiler.value,
+            dslServerMode.value,
+            dslDownload.value,
+            dslServerPort.value,
+            dslApplyMigration.value,
+            dslForce.value,
+            dslLatest.value)
+        }
       }
     },
 
