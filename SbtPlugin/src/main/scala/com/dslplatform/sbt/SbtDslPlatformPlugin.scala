@@ -152,14 +152,17 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     },
 
     dslResource := {
-      if (dslSources.value.isEmpty && dslLibraries.value.isEmpty) {
-        streams.value.log.error(s"$scope: dslSources and/or dslLibraries must be set")
-        Seq()
-      } else if (dslResourcePath.value.isEmpty) {
+      if (dslResourcePath.value.isEmpty) {
         streams.value.log.error(s"$scope: dslResourcePath must be set")
         Seq()
       } else {
-        val targets = (dslSources.value.keys ++ dslLibraries.value.keys).toSet
+        val targets = {
+          val defined = (dslSources.value.keys ++ dslLibraries.value.keys).toSet
+          if (defined.isEmpty) {
+            streams.value.log.warn(s"$scope: dslSources and/or dslLibraries are not set. Assuming revenj.scala as target")
+            Set(Targets.Option.REVENJ_SCALA)
+          } else defined
+        }
 
         targets.flatMap { tgt =>
           Actions.generateResources(
