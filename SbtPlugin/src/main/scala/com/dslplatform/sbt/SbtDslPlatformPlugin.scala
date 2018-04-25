@@ -111,10 +111,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       val cacheDirectory = streams.value.cacheDirectory
       val settingsFile   = createCompilerSettingsFingerprint().value
 
-      if (dslSources.value.isEmpty) {
-        logger.error(s"$scope: dslSources must be set")
-        Seq()
-      } else {
+      if (dslSources.value.isEmpty) Seq()
+      else {
         val cached = FileFunction.cached(
           cacheDirectory / "dsl-generate",
           inStyle = FilesInfo.hash,
