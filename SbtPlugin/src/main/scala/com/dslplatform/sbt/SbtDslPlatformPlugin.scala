@@ -52,7 +52,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     target.value / "dsl-temp"
   }
 
-  private def createCompilerSettingsFingerprint() = Def.task {
+  private def createCompilerSettingsFingerprint(scope: Configuration) = Def.task {
     val logger = streams.value.log
 
     def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
@@ -70,7 +70,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         customCompilerPath
       }
 
-    val fingerprintFile = dslTempFolder.value / "dsl-fingerprint.txt"
+    // The DSL fingerprint may be different for each scope
+    val fingerprintFile = dslTempFolder.value / s"dsl-fingerprint-$scope.txt"
     val settings = {
       val values = dslSettings.value.map(_.name) ++ dslCustomSettings.value
       values.sorted.mkString("\n") + "\n" +
@@ -109,7 +110,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       val logger         = streams.value.log
       val depClassPath   = dependencyClasspath.value
       val cacheDirectory = streams.value.cacheDirectory
-      val settingsFile   = createCompilerSettingsFingerprint().value
+      val settingsFile   = createCompilerSettingsFingerprint(scope).value
 
       if (dslSources.value.isEmpty) Seq()
       else {
@@ -117,7 +118,9 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           cacheDirectory / "dsl-generate",
           inStyle = FilesInfo.hash,
           outStyle = FilesInfo.hash
-        ) { _: Set[File] =>
+        ) { changes: Set[File] =>
+          if (changes.nonEmpty) logger.info("Re-compiling DSL files...")
+
           dslSources.value.toList.flatMap { case (targetArg, targetOutput) =>
             Actions.generateSource(
               logger,
