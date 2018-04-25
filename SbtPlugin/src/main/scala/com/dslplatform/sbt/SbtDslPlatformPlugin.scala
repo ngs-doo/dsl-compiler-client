@@ -32,8 +32,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     val dslResourcePath = settingKey[Option[File]]("Path to META-INF/services folder")
     val dslDependencies = settingKey[Map[Targets.Option, File]]("Library compilation requires various dependencies. Customize default paths to dependencies")
     val dslSqlPath = settingKey[File]("Output folder for SQL scripts")
-    val dslLatest = settingKey[Boolean]("Check for latest versions (dsl-compiler, libraries, etc...)")
+    val dslLatest = settingKey[Boolean]("Check for latest versions (dsl-compiler, libraries, etc.)")
     val dslForce = settingKey[Boolean]("Force actions without prompt (destructive migrations, missing folders etc.)")
+    val dslVerbose = settingKey[Boolean]("Add additional log messages")
+    val dslAnsi = settingKey[Boolean]("Enable ANSI colours")
     val dslPlugins = settingKey[Option[File]]("Path to additional DSL plugins")
     val dslDownload = settingKey[Option[String]]("Download URL for a custom DSL compiler")
   }
@@ -57,7 +59,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
     def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
 
-    lazy val fallBackCompiler = DslCompiler.lookupDefaultPath(new DslContext(Some(logger)))
+    lazy val fallBackCompiler = DslCompiler.lookupDefaultPath(new DslContext(Some(logger), false, false))
 
     val file =
       if (parsePort(dslCompiler.value) || dslCompiler.value.isEmpty) fallBackCompiler
@@ -103,6 +105,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslSqlPath in dsl := baseDirectory.value / "sql",
     dslLatest in dsl := true,
     dslForce in dsl := false,
+    dslVerbose in dsl := false,
+    dslAnsi in dsl := true,
     dslPlugins in dsl := Some(baseDirectory.value),
     dslDownload in dsl := None
   ) ++ inTask(dsl)(Seq(
@@ -124,6 +128,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           dslSources.value.toList.flatMap { case (targetArg, targetOutput) =>
             Actions.generateSource(
               logger,
+              dslVerbose.value,
+              dslAnsi.value,
               targetArg,
               targetOutput,
               dslDslPath.value,
@@ -148,6 +154,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           .flatMap(_.listFiles().filter(it => it.getPath.endsWith(".dsl") || it.getPath.endsWith(".ddd")))
           .toSet
         logger.info(s"Found ${dslPathFiles.size} DSL files")
+
         cached(dslPathFiles + settingsFile).toSeq
       }
     },
@@ -187,6 +194,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         jdbcs.foreach { jdbc =>
           Actions.dbMigration(
             streams.value.log,
+            dslVerbose.value,
+            dslAnsi.value,
             jdbc,
             dslPostgres.value.nonEmpty,
             dslSqlPath.value,
@@ -206,6 +215,8 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslExecute := Def.inputTask {
       Actions.execute(
         streams.value.log,
+        dslVerbose.value,
+        dslAnsi.value,
         dslDslPath.value,
         dslPlugins.value,
         dslCompiler.value,
