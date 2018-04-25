@@ -37,7 +37,7 @@ object Actions {
     }
   }
 
-  def setupServerMode(compiler: String, logger: Option[Logger], url: Option[String], port: Option[Int]): Unit = {
+  def setupServerMode(compiler: String, logger: Option[Logger], verbose: Boolean, ansi: Boolean, url: Option[String], port: Option[Int]): Unit = {
     if (serverInfo.isEmpty) {
       try {
         val livePort = {
@@ -61,7 +61,7 @@ object Actions {
           val path = {
             if (compiler == null || compiler.isEmpty) {
               logger.foreach(_.info("Downloading latest DSL compiler since compiler path is not specified."))
-              val downloadCtx = new DslContext(logger)
+              val downloadCtx = new DslContext(logger, verbose, ansi)
               downloadCtx.put(Download.INSTANCE, url.getOrElse(""))
               if (!Main.processContext(downloadCtx, util.Arrays.asList[CompileParameter](Download.INSTANCE, DslCompiler.INSTANCE))) {
                 logger.foreach(_.warn("Unable to setup DSL Platform client"))
@@ -76,7 +76,7 @@ object Actions {
               val rnd = new Random
               val value = port.getOrElse(40000 + rnd.nextInt(20000))
               logger.foreach(_.info(s"Starting DSL Platform compiler found at: $path on port: $value"))
-              val serverCtx = new DslContext(logger)
+              val serverCtx = new DslContext(logger, verbose, ansi)
               val process = startServerMode(serverCtx, path, value)
               serverInfo = Some(ServerInfo(value, Some(process)))
             } else {
@@ -134,6 +134,8 @@ object Actions {
 
   def compileLibrary(
     logger: Logger,
+    verbose: Boolean,
+    ansi: Boolean,
     target: Targets.Option,
     output: File,
     dsl: Seq[File],
@@ -149,12 +151,12 @@ object Actions {
     classPath: Classpath,
     latest: Boolean = true): File = {
 
-    val ctx = new DslContext(Some(logger))
+    val ctx = new DslContext(Some(logger), verbose, ansi)
     ctx.put(target.toString, output.getAbsolutePath)
     addVersionAndSettings(ctx, target, classPath, settings, customSettings, namespace)
     if (dependencies.isDefined) {
       ctx.put(s"dependency:$target", dependencies.get.getAbsolutePath)
-      executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+      executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, verbose, ansi)
     } else {
       val tmpFolder = Files.createTempDirectory("dsl-clc")
       try {
@@ -163,7 +165,7 @@ object Actions {
           Files.copy(it.data.toPath, new File(tmpFolder.toFile, it.data.getName).toPath)
         }
         ctx.put(s"dependency:$target", tmpFolder.toFile.getAbsolutePath)
-        executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+        executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, verbose, ansi)
       } finally {
         try {
           if (!tmpFolder.toFile.delete()) {
@@ -180,6 +182,8 @@ object Actions {
 
   def generateSource(
     logger: Logger,
+    verbose: Boolean,
+    ansi: Boolean,
     target: Targets.Option,
     output: File,
     dsl: Seq[File],
@@ -212,7 +216,7 @@ object Actions {
       }
     }
 
-    val ctx = new DslContext(Some(logger))
+    val ctx = new DslContext(Some(logger), verbose, ansi)
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
 
@@ -220,7 +224,7 @@ object Actions {
     ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
     addVersionAndSettings(ctx, target, classPath, settings, customSettings, namespace)
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, verbose, ansi)
     val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
     deepCopy(generated.toPath, output.toPath, files)
@@ -305,6 +309,8 @@ object Actions {
 
   def dbMigration(
     logger: Logger,
+    verbose: Boolean,
+    ansi: Boolean,
     jdbcUrl: String,
     postgres: Boolean = true,
     output: File,
@@ -318,17 +324,19 @@ object Actions {
     force: Boolean = false,
     latest: Boolean = true): Unit = {
 
-    val ctx = new DslContext(Some(logger))
+    val ctx = new DslContext(Some(logger), verbose, ansi)
     if (postgres) ctx.put(PostgresConnection.INSTANCE, jdbcUrl) else ctx.put(OracleConnection.INSTANCE, jdbcUrl)
     if (apply) ctx.put(ApplyMigration.INSTANCE, "")
     if (force) ctx.put(Force.INSTANCE, "")
     ctx.put(SqlPath.INSTANCE, output.getPath)
     ctx.put(Migration.INSTANCE, "")
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, verbose, ansi)
   }
 
   def execute(
     logger: Logger,
+    verbose: Boolean,
+    ansi: Boolean,
     dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
@@ -337,7 +345,7 @@ object Actions {
     serverPort: Option[Int] = None,
     arguments: Seq[String]): Unit = {
 
-    val ctx = new DslContext(Some(logger))
+    val ctx = new DslContext(Some(logger), verbose, ansi)
     for (a <- arguments) {
       val cmd = if (a.startsWith("-") || a.startsWith("/")) a.substring(1) else a
       val eqInd = cmd.indexOf("=")
@@ -347,10 +355,10 @@ object Actions {
         ctx.put(cmd.substring(0, eqInd), cmd.substring(eqInd + 1))
       }
     }
-    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest = false, ctx, logger)
+    executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest = false, ctx, logger, verbose, ansi)
   }
 
-  private def executeContext(dsls: Seq[File], compiler: String, serverMode: Boolean, serverURL: Option[String], serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger): Unit = {
+  private def executeContext(dsls: Seq[File], compiler: String, serverMode: Boolean, serverURL: Option[String], serverPort: Option[Int], plugins: Option[File], latest: Boolean, ctx: DslContext, logger: Logger, verbose: Boolean, ansi: Boolean): Unit = {
     if (dsls.isEmpty) {
       throw new RuntimeException(s"No DSL paths/files specified in dslDslPath setting")
     }
@@ -362,10 +370,10 @@ object Actions {
           logger.warn("Dead DSL Platform process detected. Will try restart...")
           val port = info.get.port
           stopServerMode(Some(logger))
-          setupServerMode(compiler, Some(logger), serverURL, Some(port))
+          setupServerMode(compiler, Some(logger), verbose, ansi, serverURL, Some(port))
           true
         } else if (info.isEmpty) {
-          setupServerMode(compiler, Some(logger), serverURL, serverPort)
+          setupServerMode(compiler, Some(logger), verbose, ansi, serverURL, serverPort)
           true
         } else false
       } else false
@@ -394,14 +402,14 @@ object Actions {
         ctx.put(DslCompiler.INSTANCE, if (compiler.nonEmpty) compiler else "")
         Main.processContext(ctx, params)
         if (!startedNow) {
-          tryRestart(logger, info, compiler, serverURL)
+          tryRestart(logger, verbose, ansi, info, compiler, serverURL)
         }
         case _ =>
       }
     }
   }
 
-  private def tryRestart(logger: Logger, info: ServerInfo, compiler: String, serverURL: Option[String]): Unit = {
+  private def tryRestart(logger: Logger, verbose: Boolean, ansi: Boolean, info: ServerInfo, compiler: String, serverURL: Option[String]): Unit = {
     logger.warn("Checking DSL Platform server state and trying restart...")
     trySocket(info.port) match {
       case Some(socket) =>
@@ -417,7 +425,7 @@ object Actions {
       case _ =>
         logger.warn(s"DSL Platform server not responding on ${info.port}")
         stopServerMode(Some(logger))
-        setupServerMode(compiler, Some(logger), serverURL, Some(info.port))
+        setupServerMode(compiler, Some(logger), verbose, ansi, serverURL, Some(info.port))
     }
   }
 

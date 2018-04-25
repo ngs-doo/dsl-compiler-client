@@ -6,62 +6,48 @@ import com.dslplatform.compiler.client.Context
 import com.dslplatform.compiler.client.parameters.{DisableColors, DisablePrompt, LogOutput}
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
-import sbt.{AbstractLogger, Level, Logger}
+import sbt.Logger
 
-private[sbt] class DslContext(logger: Option[Logger]) extends Context {
-
-  logger match {
-    case Some(x: AbstractLogger) if x.getLevel.id <= Level.Debug.id =>
-      put(LogOutput.INSTANCE, "")
-    case _ =>
+private[sbt] class DslContext(logger : Option[Logger],
+                              verbose: Boolean,
+                              ansi   : Boolean) extends Context {
+  if (logger.isEmpty) put(DisablePrompt.INSTANCE, "")
+  else {
+    put(LogOutput.INSTANCE,"")
+    if (!ansi) put(DisableColors.INSTANCE, "")
   }
 
-  private var inColor = logger.isDefined && logger.get.ansiCodesSupported
-
-  if (!inColor) {
-    put(DisableColors.INSTANCE, "")
-  }
-  if (logger.isEmpty) {
-    put(DisablePrompt.INSTANCE, "")
-  }
-
-  private lazy val withLog = contains(LogOutput.INSTANCE)
-
-  override def show(values: String*): Unit = {
+  override def show(values: String*): Unit =
     if (logger.isDefined) {
       for (v <- values) {
         logger.get.info(v)
       }
     }
-  }
 
-  override def log(value: String): Unit = {
-    if (logger.isDefined) {
-      if (inColor) {
+  override def log(value: String): Unit =
+    if (logger.isDefined && verbose) {
+      if (ansi) {
         logger.get.debug(Context.inColor(Color.YELLOW, value))
       } else {
         logger.get.debug(value)
       }
     }
-  }
 
-  override def log(value: Array[Char], len: Int): Unit = {
+  override def log(value: Array[Char], len: Int): Unit =
     log(new String(value, 0, len))
-  }
 
-  override def warning(value: String): Unit = {
+  override def warning(value: String): Unit =
     if (logger.isDefined) {
-      if (inColor) {
+      if (ansi) {
         logger.get.warn(Context.inColor(Color.MAGENTA, value))
       } else {
         logger.get.warn(value)
       }
     }
-  }
 
   override def warning(ex: Exception): Unit = {
     warning(ex.getMessage)
-    if (withLog) {
+    if (logger.isDefined) {
       val sw = new StringWriter
       ex.printStackTrace(new PrintWriter(sw))
       warning(sw.toString)
@@ -70,16 +56,15 @@ private[sbt] class DslContext(logger: Option[Logger]) extends Context {
 
   private var lastError = ""
 
-  def isParseError = {
+  def isParseError: Boolean =
     lastError != null &&
-      (lastError.startsWith("Error parsing dsl in script") ||
-        lastError.startsWith("Error in") && lastError.contains(" near line ") && lastError.contains(" and column "))
-  }
+    (lastError.startsWith("Error parsing dsl in script") ||
+     lastError.startsWith("Error in") && lastError.contains(" near line ") && lastError.contains(" and column "))
 
   override def error(value: String): Unit = {
     lastError = value
     if (logger.isDefined) {
-      if (inColor) {
+      if (ansi) {
         logger.get.error(Context.inColor(Color.RED, value))
       } else {
         logger.get.error(value)
@@ -89,7 +74,7 @@ private[sbt] class DslContext(logger: Option[Logger]) extends Context {
 
   override def error(ex: Exception): Unit = {
     error(ex.getMessage)
-    if (withLog) {
+    if (logger.isDefined) {
       val sw = new StringWriter
       ex.printStackTrace(new PrintWriter(sw))
       error(sw.toString)
@@ -97,19 +82,12 @@ private[sbt] class DslContext(logger: Option[Logger]) extends Context {
   }
 
   private var askedQuestion = false
-  def hasInteracted = askedQuestion
+  def hasInteracted: Boolean = askedQuestion
 
   private def askSafe(question: String, color: Color): Unit = {
     askedQuestion = true
-    if (inColor) {
-      try {
-        print(Ansi.ansi.fgBright(color).bold.a(question + " ").boldOff.reset.toString)
-      } catch {
-        case _: NoSuchMethodError =>
-          inColor = false
-          print(question + " ")
-      }
-    } else print(question + " ")
+    if (!ansi) print(question + " ")
+    else print(Ansi.ansi.fgBright(color).bold.a(question + " ").boldOff.reset.toString)
   }
 
   override def ask(question: String): String = {
