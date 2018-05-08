@@ -151,7 +151,11 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         val dslPathFiles = dslDslPath
           .value
           .filter(_.exists())
-          .flatMap(_.listFiles().filter(it => it.getPath.endsWith(".dsl") || it.getPath.endsWith(".ddd")))
+          .flatMap{ p =>
+            io.PathFinder(p)
+              .globRecursive("*").get
+              .filter(it => it.getPath.endsWith(".dsl") || it.getPath.endsWith(".ddd"))
+          }
           .toSet
         logger.info(s"Found ${dslPathFiles.size} DSL files")
 
