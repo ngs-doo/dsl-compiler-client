@@ -56,11 +56,15 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
 		context.log("Compiling DSL to " + target + "...");
+		final long start = new Date().getTime();
 		final Either<byte[]> response = runCompiler(context, arguments);
 		if (!response.isSuccess()) {
 			context.error(response.whyNot());
 			throw new ExitException();
 		}
+		final long end = new Date().getTime();
+		context.show("Creating the source took " + (end - start) / 1000 + " second(s)");
+
 		final Either<Document> xml = Utils.readXml(new ByteArrayInputStream(response.get()));
 		if (!xml.isSuccess()) {
 			context.error(new String(response.get(), UTF_8));
@@ -635,7 +639,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		final String dslName = Download.isDefaultUrl(context) ? ".DSL-Platform" : ".DSL-Custom";
 		final File compilerFolder = new File(homePath, dslName);
 		if (!compilerFolder.exists() && !compilerFolder.mkdirs()) {
-			context.warning("Error creating dsl compiler path in: " + compilerFolder.getAbsolutePath() + ". Will use temporary filter instead.");
+			context.warning("Error creating dsl compiler path in: " + compilerFolder.getAbsolutePath() + ". Will use temporary folder instead.");
 			return new File(TempPath.getTempRootPath(context), "dsl-compiler.exe");
 		}
 		return new File(compilerFolder, "dsl-compiler.exe");

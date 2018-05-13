@@ -43,7 +43,7 @@ public enum DslPath implements CompileParameter {
 		String value = context.get(INSTANCE);
 		if (value == null) {
 			if (!(new File("./dsl").exists())) {
-				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exists");
+				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exist");
 				throw new ExitException();
 			}
 			context.put(INSTANCE, value = "./dsl");
@@ -88,7 +88,7 @@ public enum DslPath implements CompileParameter {
 		if (value == null) {
 			final File dslPath = new File("./dsl");
 			if (!dslPath.exists()) {
-				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exists");
+				context.error("DSL path not provided. Can't use default path (./dsl) since it doesn't exist");
 				return false;
 			}
 			context.put(INSTANCE, "./dsl");
@@ -96,7 +96,7 @@ public enum DslPath implements CompileParameter {
 			for (final String part : value.split(File.pathSeparator)) {
 				final File dslPath = new File(part).getAbsoluteFile();
 				if (!dslPath.exists()) {
-					context.error("Provided DSL path (" + part + ") does not exists. Please provide valid path to DSL files");
+					context.error("Provided DSL path (" + part + ") does not exist. Please provide valid path to DSL files");
 					return false;
 				}
 			}

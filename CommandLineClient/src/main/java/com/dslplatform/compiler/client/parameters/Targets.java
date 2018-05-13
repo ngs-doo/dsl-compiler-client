@@ -263,8 +263,15 @@ public enum Targets implements CompileParameter, ParameterParser {
 							dsls,
 							context.get("library:" + t.value));
 			try {
+				boolean hasFileWithExtension = false;
+				for (final String name : files.keySet()) {
+					if (name.endsWith(t.extension)) {
+						hasFileWithExtension = true;
+						break;
+					}
+				}
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
-					final String fullName = t.name() + "/" + kv.getKey() + t.extension;
+					final String fullName = t.name() + "/" + kv.getKey() + (hasFileWithExtension ? "" : t.extension);
 					saveFile(context, temp, t.convertToPath, fullName, kv.getValue());
 				}
 			} catch (IOException e) {

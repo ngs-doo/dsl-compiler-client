@@ -133,7 +133,10 @@ public enum ApplyMigration implements CompileParameter {
 		}
 		context.show("Applying migration...");
 		db.execute(context, sql);
-		if (file.renameTo(new File(file.getParentFile(), "applied-" + file.getName()))) {
+		final String customFile = context.get("sql:" + db.getDName().toLowerCase());
+		if (customFile != null && file.getName().equals(customFile)) {
+			context.show("Database migrated via: " + file.getAbsolutePath());
+		} else if (file.renameTo(new File(file.getParentFile(), "applied-" + file.getName()))) {
 			context.show("Database migrated and script renamed to: applied-" + file.getName());
 		} else {
 			context.show("Database migrated, but unable to rename script: " + file.getName());

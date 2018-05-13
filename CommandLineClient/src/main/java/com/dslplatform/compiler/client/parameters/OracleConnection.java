@@ -55,6 +55,10 @@ public enum OracleConnection implements CompileParameter {
 		if (cache != null) {
 			return cache;
 		}
+		final String previous = context.load("previous-sql:oracle");
+		if (previous != null) {
+			return extractDatabaseInfoFromMigration(context, previous);
+		}
 		final String value = context.get(INSTANCE);
 		final String connectionString = "jdbc:oracle:thin:" + value;
 		Connection conn;
@@ -131,6 +135,56 @@ public enum OracleConnection implements CompileParameter {
 		}
 		context.cache(CACHE_NAME, emptyResult);
 		return emptyResult;
+	}
+
+	static DatabaseInfo extractDatabaseInfoFromMigration(final Context context, final String previous) throws ExitException {
+		final String dbVersion = context.load("db-version:oracle");
+		final String pattern = "INSERT INTO \"-DSL-\".Database_Migration (Ordinal, Dsls, Version) VALUES(\"-DSL-\".DM_SEQ.nextval,";
+		final int persistInd = previous.lastIndexOf(pattern);
+		if (persistInd == -1) {
+			context.error("Unable to find INSERT INTO \"-DSL-\".Database_Migration in previous sql migration. Wrong file provided");
+			throw new ExitException();
+		}
+		final String lastDsl;
+		final int patternSimpleStart = previous.indexOf(pattern + " '");
+		final int patternComplexStart = previous.indexOf(pattern + " dsls, '");
+		final String afterPersist = previous.substring(persistInd);
+		final int compilerEnd = afterPersist.lastIndexOf('\'');
+		final int compilerStart = compilerEnd == -1 ? -1 : afterPersist.substring(0, compilerEnd - 1).lastIndexOf('\'');
+		final String compiler = compilerStart == -1 ? "" : afterPersist.substring(compilerStart + 1, compilerEnd);
+		if (compiler.length() == 0) {
+			context.error("Unable to find appropriate compiler info after INSERT INTO \"-DSL-\".Database_Migration in previous sql migration. Wrong file provided");
+			throw new ExitException();
+		} else if (patternSimpleStart >= 0) {
+			lastDsl = afterPersist.substring(pattern.length() + 2, compilerStart - 3);
+		} else if (patternComplexStart >= 0) {
+			final StringBuilder dsls = new StringBuilder();
+			int clobStart = previous.indexOf("dsls := '");
+			if (clobStart == -1) {
+				context.error("Unable to find appropriate dsls := in previous sql migration. Wrong file provided");
+				throw new ExitException();
+			}
+			clobStart += "dsls := '".length();
+			int clobEnd = previous.indexOf("dsls := dsls || '");
+			while (clobEnd != -1) {
+				final String part = previous.substring(clobStart, clobEnd);
+				final int scEnd = part.lastIndexOf('\'');
+				dsls.append(part, 0, scEnd);
+				clobStart = clobEnd + "dsls := dsls || '".length();
+				clobEnd = previous.indexOf("dsls := dsls || '", clobStart);
+			}
+			final String lastPart = previous.substring(clobStart, persistInd);
+			final int scEnd = lastPart.lastIndexOf('\'');
+			dsls.append(lastPart, 0, scEnd);
+			lastDsl = dsls.toString();
+		} else {
+			context.error("Unable to find appropriate INSERT INTO \"-DSL-\".Database_Migration in previous sql migration. Wrong file provided");
+			throw new ExitException();
+		}
+		final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl.replace("''", "'"), context);
+		final DatabaseInfo result = new DatabaseInfo("Oracle", compiler, dbVersion, dslMap);
+		context.cache(CACHE_NAME, result);
+		return result;
 	}
 
 	public static void execute(final Context context, final String sql) throws ExitException {

@@ -41,6 +41,10 @@ public enum PostgresConnection implements CompileParameter {
 		if (cache != null) {
 			return cache;
 		}
+		final String previous = context.load("previous-sql:postgres");
+		if (previous != null) {
+			return extractDatabaseInfoFromMigration(context, previous);
+		}
 		final String value = context.get(INSTANCE);
 		final String connectionString = "jdbc:postgresql://" + value;
 		Connection conn;
@@ -118,6 +122,29 @@ public enum PostgresConnection implements CompileParameter {
 		}
 		context.cache(CACHE_NAME, emptyResult);
 		return emptyResult;
+	}
+
+	static DatabaseInfo extractDatabaseInfoFromMigration(final Context context, final String previous) throws ExitException {
+		final String dbVersion = context.load("db-version:postgres");
+		final int persistInd = previous.lastIndexOf("SELECT \"-DSL-\".Persist_Concepts('");
+		final int notifyInd = previous.indexOf("SELECT pg_notify", persistInd + 1);
+		if (persistInd == -1 || notifyInd == -1) {
+			context.error("Unable to find 'Persist_Concepts' or SELECT pg_notify in previous sql migration. Wrong file provided");
+			throw new ExitException();
+		}
+		final String subset = previous.substring(persistInd + "SELECT \"-DSL-\".Persist_Concepts(".length() + 1, notifyInd - 2);
+		final String pattern = "\"', '\\x','";
+		final int lastNL = subset.lastIndexOf(pattern);
+		if (lastNL == -1) {
+			context.error("Invalid content detected in previous sql migration. Unable to find magic pattern: " + pattern);
+			throw new ExitException();
+		}
+		final String compiler = subset.substring(lastNL + pattern.length(), subset.lastIndexOf('\''));
+		final String lastDsl = subset.substring(0, lastNL + 1).replace("''", "'");
+		final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl, context);
+		final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, dbVersion, dslMap);
+		context.cache(CACHE_NAME, result);
+		return result;
 	}
 
 	public static void execute(final Context context, final String sql) throws ExitException {

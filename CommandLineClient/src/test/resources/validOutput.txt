@@ -1,3 +1,0 @@
-Usage: target=revenj.net settings=manual-json dsl=global-dsl-folder dsl=specific-dsl/extra-model.dsl
-Usage: target=java_client namespace=com.dslplatform.model settings=active-record settings=manual-json dsl=dsl-folder format=json
-Usage: target=postgres9.4 previous-dsl=applied.dsl dsl=global-dsl-folder dsl=specific-dsl/extra-model.dsl

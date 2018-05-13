@@ -90,7 +90,7 @@ public enum TempPath implements CompileParameter {
 				final File path = new File(value);
 				if (!path.exists()) {
 					if (!context.contains(Force.INSTANCE)) {
-						context.error("Temporary path provided (" + value + "), but doesn't exists. Please create it or use system path.");
+						context.error("Temporary path provided (" + value + "), but doesn't exist. Please create it or use system path.");
 						return false;
 					} else {
 						context.show("Due to force option enabled, creating temp folder in: " + path.getAbsolutePath());
