@@ -4,7 +4,7 @@
 	<groupId>com.dslplatform</groupId>
 	<artifactId>dsl-clc</artifactId>
 	<packaging>jar</packaging>
-	<version>1.9.5</version>
+	<version>1.9.6</version>
 	<name>DSL Platform - Compiler Command-Line Client</name>
 	<url>https://github.com/ngs-doo/dsl-compiler-client</url>
 	<description>Command line client for interaction with DSL Platform compiler (https://dsl-platform.com)</description>

@@ -55,6 +55,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
 		}
+		arguments.add("file-extension");
 		context.log("Compiling DSL to " + target + "...");
 		final long start = new Date().getTime();
 		final Either<byte[]> response = runCompiler(context, arguments);
