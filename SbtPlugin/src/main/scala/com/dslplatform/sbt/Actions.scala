@@ -10,7 +10,7 @@ import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
 import com.dslplatform.compiler.client.parameters.{Settings, _}
 import org.clapper.classutil.ClassFinder
 import sbt.Def.Classpath
-import sbt.{Attributed, File, IO, Logger}
+import sbt.{File, IO, Logger}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -240,7 +240,7 @@ object Actions {
     settings: Seq[Settings.Option],
     customSettings: Seq[String],
     namespace: String
-  ) = {
+  ): Unit = {
     val version = classPath.find { d =>
       d.data.getAbsolutePath.contains("revenj-core")
     }
@@ -290,18 +290,27 @@ object Actions {
       }
     }
     if (target == Targets.Option.REVENJ_SCALA || target == Targets.Option.REVENJ_SCALA_POSTGRES) {
-      scanPlugins(logger, folders, manifests, "net.revenj.patterns.DomainEventHandler", dependencies) ++
-        scanPlugins(logger, folders, manifests, "net.revenj.patterns.AggregateDomainEventHandler", dependencies) ++
-        scanPlugins(logger, folders, manifests, "net.revenj.patterns.ReportAspect", dependencies) ++
-        scanPlugins(logger, folders, manifests, "net.revenj.patterns.PersistableRepositoryAspect", dependencies) ++
-        scanPlugins(logger, folders, manifests, "net.revenj.patterns.EventStoreAspect", dependencies) ++
-        Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.handlers.RequestBinding")) ++
-        Seq(scanPlugins(logger, folders, manifests, "net.revenj.server.ServerCommand")) ++
-        Seq(scanPlugins(logger, folders, manifests, "net.revenj.extensibility.SystemAspect"))
+      scanPlugins(
+        logger,
+        folders,
+        manifests,
+        dependencies,
+        "net.revenj.patterns.DomainEventHandler",
+        "net.revenj.patterns.AggregateDomainEventHandler",
+        "net.revenj.patterns.ReportAspect",
+        "net.revenj.patterns.PersistableRepositoryAspect",
+        "net.revenj.patterns.EventStoreAspect").values.flatten.toSeq ++
+        scanPlugins(
+          logger,
+          folders,
+          manifests,
+          "net.revenj.server.handlers.RequestBinding",
+          "net.revenj.server.ServerCommand",
+          "net.revenj.extensibility.SystemAspect").values.toSeq
     } else if (target == Targets.Option.REVENJ_JAVA || target == Targets.Option.REVENJ_JAVA_POSTGRES
       || target == Targets.Option.REVENJ_SPRING) {
-      scanPlugins(logger, folders, manifests, "org.revenj.patterns.DomainEventHandler", dependencies) ++
-        Seq(scanPlugins(logger, folders, manifests, "org.revenj.extensibility.SystemAspect"))
+      scanPlugins(logger, folders, manifests, dependencies, "org.revenj.patterns.DomainEventHandler").values.flatten.toSeq ++
+        scanPlugins(logger, folders, manifests, "org.revenj.extensibility.SystemAspect").values.toSeq
     } else {
       Nil
     }
@@ -438,11 +447,11 @@ object Actions {
     }
   }
 
-  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, target: String, dependencies: Classpath): Seq[File] = {
-    logger.info(s"""Scanning for $target events in ${folders.mkString(", ")}""")
+  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, dependencies: Classpath, targets: String*): Map[String, Seq[File]] = {
+    logger.info(s"""Scanning for plugins in ${folders.mkString(", ")}""")
     val implementations =
       ClassFinder(folders).getClasses()
-        .withFilter(it => it.isConcrete && it.implements(target))
+        .withFilter(it => it.isConcrete && targets.exists(it.implements))
         .map(_.name)
         .distinct
     logger.debug(s"""Number of matching implementations: ${implementations.size}""")
@@ -450,14 +459,16 @@ object Actions {
     folders foreach { f => gatherSubfolders(f, urls) }
     urls ++= dependencies.map(_.data)
     val loader = new URLClassLoader(urls.map(_.toURI.toURL).toArray, Thread.currentThread().getContextClassLoader)
-    val handlers = new mutable.HashMap[String, ArrayBuffer[String]]()
+    val allHandlers = targets.toArray.map { it => it -> new mutable.HashMap[String, ArrayBuffer[String]]() }.toMap
     implementations foreach { name =>
       try {
         logger.debug(s"Loading: $name")
         val manifest = Class.forName(name, false, loader)
-        manifest.getGenericInterfaces.filter(_.getTypeName.startsWith(s"$target<")).foreach { m =>
-          val handler = handlers.getOrElseUpdate(URLEncoder.encode(m.getTypeName.replace(" ", ""), "UTF-8"), new ArrayBuffer[String]())
-          handler += name
+        allHandlers.foreach { case (target, handlers) =>
+          manifest.getGenericInterfaces.filter(_.getTypeName.startsWith(s"$target<")).foreach { m =>
+            val handler = handlers.getOrElseUpdate(URLEncoder.encode(m.getTypeName.replace(" ", ""), "UTF-8"), new ArrayBuffer[String]())
+            handler += name
+          }
         }
       } catch {
         case ex: Throwable =>
@@ -466,48 +477,56 @@ object Actions {
     }
     loader.close()
     if (manifests.exists()) {
-      val oldServices = manifests.listFiles().filter(_.getName.startsWith(s"$target%"))
-      oldServices foreach {
-        _.delete()
-      }
-    }
-    if (handlers.nonEmpty) {
-      logger.info(s"Saving manifests to ${manifests.getAbsolutePath}")
-      handlers foreach { case (k, vals) =>
-        val file = new File(manifests, k)
-        if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
-          logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
+      targets.foreach { target =>
+        val oldServices = manifests.listFiles().filter(_.getName.startsWith(s"$target%"))
+        oldServices foreach {
+          _.delete()
         }
-        val fos = new FileOutputStream(file)
-        fos.write(vals.mkString("\n").getBytes("UTF-8"))
-        fos.close()
       }
     }
-    handlers.keySet.map(k => new File(manifests, k)).toSeq
+    allHandlers.foreach { case (target, handlers) =>
+      if (handlers.nonEmpty) {
+        logger.info(s"Saving manifests for $target to ${manifests.getAbsolutePath}")
+        handlers foreach { case (k, vals) =>
+          val file = new File(manifests, k)
+          if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
+            logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
+          }
+          val fos = new FileOutputStream(file)
+          fos.write(vals.mkString("\n").getBytes("UTF-8"))
+          fos.close()
+        }
+      }
+    }
+    allHandlers.mapValues(_.keySet.map(k => new File(manifests, k)).toSeq)
   }
 
-  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, target: String): File = {
-    logger.info(s"""Scanning for $target plugins in ${folders.mkString(", ")}""")
+  private def scanPlugins(logger: Logger, folders: Seq[File], manifests: File, targets: String*): Map[String, File] = {
+    logger.info(s"""Scanning for plugins in ${folders.mkString(", ")}""")
     val implementations =
       ClassFinder(folders).getClasses()
-        .withFilter(it => it.isConcrete && it.implements(target))
+        .withFilter(it => it.isConcrete && targets.exists(it.implements))
         .map(_.name)
         .distinct
     logger.debug(s"""Number of matching implementations: ${implementations.size}""")
     if (manifests.exists()) {
-      val oldServices = manifests.listFiles().filter(_.getName.startsWith(s"$target%"))
-      oldServices foreach {
-        _.delete()
+      targets.foreach { target =>
+        val oldServices = manifests.listFiles().filter(_.getName.startsWith(s"$target%"))
+        oldServices foreach {
+          _.delete()
+        }
       }
     }
     logger.info(s"Saving manifests to ${manifests.getAbsolutePath}")
-    val file = new File(manifests, target)
-    if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
-      logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
-    }
-    val fos = new FileOutputStream(file)
-    fos.write(implementations.mkString("\n").getBytes("UTF-8"))
-    fos.close()
-    file
+    targets.map { target =>
+      val file = new File(manifests, target)
+      if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
+        logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
+      }
+      val fos = new FileOutputStream(file)
+      fos.write(implementations.mkString("\n").getBytes("UTF-8"))
+      fos.close()
+      target -> file
+    }.toMap
   }
 }
