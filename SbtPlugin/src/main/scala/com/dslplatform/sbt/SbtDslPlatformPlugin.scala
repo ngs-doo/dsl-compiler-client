@@ -54,17 +54,21 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     target.value / "dsl-temp"
   }
 
-  private def createCompilerSettingsFingerprint(scope: Configuration) = Def.task {
-    val logger = streams.value.log
-
+  private def createCompilerSettingsFingerprint(scope: Configuration,
+                                                logger: Logger,
+                                                dslCompiler: String,
+                                                dslDownload: Option[String],
+                                                dslTempFolder: File,
+                                                dslSettings: Seq[Settings.Option],
+                                                dslCustomSettings: Seq[String]): File = {
     def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
 
     lazy val fallBackCompiler = DslCompiler.lookupDefaultPath(new DslContext(Some(logger), false, false))
 
     val file =
-      if (parsePort(dslCompiler.value) || dslCompiler.value.isEmpty) fallBackCompiler
+      if (parsePort(dslCompiler) || dslCompiler.isEmpty) fallBackCompiler
       else {
-        val customCompilerPath = new File(dslCompiler.value)
+        val customCompilerPath = new File(dslCompiler)
         if (!customCompilerPath.exists())
           logger.error(
             s"Unable to find the specified dslCompiler path: ${customCompilerPath.getAbsolutePath}")
@@ -73,13 +77,13 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       }
 
     // The DSL fingerprint may be different for each scope
-    val fingerprintFile = dslTempFolder.value / s"dsl-fingerprint-$scope.txt"
+    val fingerprintFile = dslTempFolder / s"dsl-fingerprint-$scope.txt"
     val settings = {
-      val values = dslSettings.value.map(_.name) ++ dslCustomSettings.value
+      val values = dslSettings.map(_.name) ++ dslCustomSettings
       values.sorted.mkString("\n") + "\n" +
         (if (file.exists()) file.lastModified.toString else "") + "\n" +
-        dslCompiler.value + "\n" +
-        dslDownload.value.getOrElse("")
+        dslCompiler + "\n" +
+        dslDownload.getOrElse("")
     }
 
     IO.write(fingerprintFile, settings)
@@ -111,10 +115,12 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslDownload in dsl := None
   ) ++ inTask(dsl)(Seq(
     dslGenerate := {
-      val logger         = streams.value.log
+      val logger = streams.value.log
+
       val depClassPath   = dependencyClasspath.value
+      val tempFolder     = dslTempFolder.value
       val cacheDirectory = streams.value.cacheDirectory
-      val settingsFile   = createCompilerSettingsFingerprint(scope).value
+      val settings       = dslSettings.value
 
       if (dslSources.value.isEmpty) Seq()
       else {
@@ -158,8 +164,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           .filter(_.exists())
           .flatMap(recursiveListFiles)
           .toSet
-        logger.info(s"Found ${dslPathFiles.size} DSL files")
 
+        logger.info(s"Found ${dslPathFiles.size} DSL files")
+        val settingsFile = createCompilerSettingsFingerprint(
+          scope, logger, dslCompiler.value, dslDownload.value, tempFolder, settings, dslCustomSettings.value)
         cached(dslPathFiles + settingsFile).toSeq
       }
     },
