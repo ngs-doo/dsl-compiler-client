@@ -19,6 +19,10 @@ public class DslSyntaxHighlighter extends SyntaxHighlighterBase {
 		this.virtualFile = virtualFile;
 	}
 
+	boolean isDisposed() {
+		return lexerParser.isDisposed();
+	}
+
 	void stop() {
 		lexerParser.stop();
 	}

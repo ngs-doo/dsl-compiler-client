@@ -39,7 +39,8 @@ public class DslSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 		MapKey key = new MapKey(project, virtualFile != null ? virtualFile.getPath() + "/" + virtualFile.getName() : "");
 		DslSyntaxHighlighter highlighter = highlighters.get(key);
 		if (highlighter == null || highlighter.virtualFile == null || !highlighter.virtualFile.isValid()
-				|| virtualFile != null && !virtualFile.equals(highlighter.virtualFile)) {
+				|| virtualFile != null && !virtualFile.equals(highlighter.virtualFile)
+				|| highlighter.isDisposed()) {
 			if (highlighter != null) highlighter.stop();
 			highlighter = new DslSyntaxHighlighter(project, virtualFile);
 			highlighters.put(key, highlighter);

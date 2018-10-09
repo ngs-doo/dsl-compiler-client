@@ -96,6 +96,10 @@ public class DslLexerParser extends Lexer {
 		isActive = false;
 	}
 
+	boolean isDisposed() {
+		return project != null && project.isDisposed();
+	}
+
 	private AST getCurrent() {
 		return position >= 0 && position < ast.size() ? ast.get(position) : null;
 	}
