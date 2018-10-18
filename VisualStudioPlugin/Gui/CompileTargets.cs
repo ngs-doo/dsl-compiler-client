@@ -8,6 +8,53 @@ namespace DDDLanguage
 {
 	internal class CompileTargets
 	{
+		private static readonly Dictionary<string, string> NoDependencies = new Dictionary<string, string>();
+		private static readonly Dictionary<string, string> RevenjStandard = new Dictionary<string, string>() { { "revenj", "1.4.2" } };
+
+		private static readonly string[] PocoDependencies = new[] {
+			typeof(string).Assembly.Location,
+			typeof(System.Uri).Assembly.Location,
+			typeof(System.Linq.Enumerable).Assembly.Location,
+			typeof(System.Drawing.Color).Assembly.Location,
+			typeof(System.Xml.Linq.XElement).Assembly.Location,
+			typeof(System.Xml.XmlDocument).Assembly.Location,
+			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
+			typeof(System.Data.DataTable).Assembly.Location,
+			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
+			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location
+		};
+
+		private static readonly string[] WpfDependencies = new[] {
+			typeof(string).Assembly.Location,
+			typeof(System.Uri).Assembly.Location,
+			typeof(System.Linq.Enumerable).Assembly.Location,
+			typeof(System.Drawing.Color).Assembly.Location,
+			typeof(System.Xml.Linq.XElement).Assembly.Location,
+			typeof(System.Xml.XmlDocument).Assembly.Location,
+			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
+			typeof(System.Data.DataTable).Assembly.Location,
+			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
+			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location,
+			typeof(System.Windows.Window).Assembly.Location,
+			typeof(System.Xaml.XamlReader).Assembly.Location,
+			typeof(System.Windows.DependencyProperty).Assembly.Location,
+			typeof(System.Windows.UIElement).Assembly.Location
+		};
+
+		private static readonly string[] RevenjDependencies = new[] {
+			typeof(string).Assembly.Location,
+			typeof(System.Uri).Assembly.Location,
+			typeof(System.Data.DataTable).Assembly.Location,
+			typeof(System.Configuration.ConfigurationManager).Assembly.Location,
+			typeof(System.Linq.Enumerable).Assembly.Location,
+			typeof(System.Drawing.Color).Assembly.Location,
+			typeof(System.Xml.XmlDocument).Assembly.Location,
+			typeof(System.Xml.Linq.XElement).Assembly.Location,
+			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
+			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
+			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location
+		};
+
 		private string dslCompiler;
 		public string CompilerPath
 		{
@@ -20,32 +67,31 @@ namespace DDDLanguage
 		}
 
 		private LibraryInfo oldPocoLibrary;
-		public readonly LibraryInfo PocoLibrary;
+		public static readonly LibraryInfo PocoLibraryDefault = new LibraryInfo("Poco", "dotnet_poco", false, PocoDependencies, NoDependencies, BuildTypes.LegacyDotNet, ".cs", BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
+		public readonly LibraryInfo PocoLibrary = PocoLibraryDefault.Clone();
 		private LibraryInfo oldClientLibrary;
-		public readonly LibraryInfo ClientLibrary;
+		public static readonly LibraryInfo ClientLibraryDefault = new LibraryInfo("Client", "dotnet_client", true, PocoDependencies, NoDependencies, BuildTypes.LegacyDotNet, ".cs");
+		public readonly LibraryInfo ClientLibrary = ClientLibraryDefault.Clone();
 		private LibraryInfo oldPortableLibrary;
-		public readonly LibraryInfo PortableLibrary;
+		public static readonly LibraryInfo PortableLibraryDefault = new LibraryInfo("Portable", "dotnet_portable", true, new string[0], NoDependencies, BuildTypes.LegacyDotNet, ".cs");
+		public readonly LibraryInfo PortableLibrary = PortableLibraryDefault.Clone();
 		private LibraryInfo oldPhpSource;
-		public readonly LibraryInfo PhpSource;
+		public static readonly LibraryInfo PhpSourceDefault = new LibraryInfo("Php", "php_client", false, new string[0], NoDependencies, BuildTypes.Source, ".php");
+		public readonly LibraryInfo PhpSource = PhpSourceDefault.Clone();
 		private LibraryInfo oldWpfLibrary;
-		public readonly LibraryInfo WpfLibrary;
+		public static readonly LibraryInfo WpfLibraryDefault = new LibraryInfo("Wpf", "wpf", true, WpfDependencies, NoDependencies, BuildTypes.LegacyDotNet, ".cs");
+		public readonly LibraryInfo WpfLibrary = WpfLibraryDefault.Clone();
 		private LibraryInfo oldPostgresLibrary;
-		public readonly LibraryInfo PostgresLibrary;
+		public static readonly LibraryInfo PostgresLibraryDefault = new LibraryInfo("Postgres", "dotnet_server_postgres", true, RevenjDependencies, RevenjStandard, BuildTypes.LegacyDotNet, ".cs", BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
+		public readonly LibraryInfo PostgresLibrary = PostgresLibraryDefault.Clone();
 		private LibraryInfo oldOracleLibrary;
-		public readonly LibraryInfo OracleLibrary;
+		public static readonly LibraryInfo OracleLibraryDefault = new LibraryInfo("Oracle", "dotnet_server_oracle", true, RevenjDependencies, NoDependencies, BuildTypes.LegacyDotNet, ".cs");
+		public readonly LibraryInfo OracleLibrary = OracleLibraryDefault.Clone();
 
-		private LibraryInfo[] Targets;
+		private readonly LibraryInfo[] Targets;
 
 		public CompileTargets()
 		{
-
-			PocoLibrary = new LibraryInfo("Poco", "dotnet_poco", false, PocoDependencies);
-			ClientLibrary = new LibraryInfo("Client", "dotnet_client", true, PocoDependencies);
-			PortableLibrary = new LibraryInfo("Portable", "dotnet_portable", true, new string[0]);
-			PhpSource = new LibraryInfo("Php", "php_client", false, new string[0], true, ".php");
-			WpfLibrary = new LibraryInfo("Wpf", "wpf", true, WpfDependencies);
-			PostgresLibrary = new LibraryInfo("Postgres", "dotnet_server_postgres", true, RevenjDependencies);
-			OracleLibrary = new LibraryInfo("Oracle", "dotnet_server_oracle", true, RevenjDependencies);
 			Targets = new[] { PocoLibrary, ClientLibrary, PortableLibrary, PhpSource, WpfLibrary, PostgresLibrary, OracleLibrary };
 		}
 
@@ -125,15 +171,12 @@ namespace DDDLanguage
 				{
 					if (!t.TargetExists)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " target folder: " + t.Target);
-					if (t.RequireDependencies && !t.DependenciesExists)
+					if (t.RequireDependenciesLegacy && !t.DependenciesExists)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " dependencies folder: " + t.Dependencies);
 					var result = RunCompiler(CompilerPath, t, dsls);
 					if (!result.Success)
 						return Either<List<string>>.Fail(result.Error);
-					if (t.SourceOnly)
-						CopySource(t, result.Value, false);
-					else
-						Compile(t, result.Value, false);
+					ProcessResult(t, result.Value, false);
 					compiled.Add(t.Type);
 				}
 			}
@@ -142,13 +185,13 @@ namespace DDDLanguage
 
 		public void CompileAll(Dictionary<string, string> files)
 		{
-			Compile(PocoLibrary, files, true);
-			Compile(ClientLibrary, files, true);
-			Compile(PortableLibrary, files, true);
-			Compile(WpfLibrary, files, true);
-			CopySource(PhpSource, files, true);
-			Compile(PostgresLibrary, files, true);
-			Compile(OracleLibrary, files, true);
+			ProcessResult(PocoLibrary, files, true);
+			ProcessResult(ClientLibrary, files, true);
+			ProcessResult(PortableLibrary, files, true);
+			ProcessResult(WpfLibrary, files, true);
+			ProcessResult(PhpSource, files, true);
+			ProcessResult(PostgresLibrary, files, true);
+			ProcessResult(OracleLibrary, files, true);
 		}
 
 		private void CopySource(LibraryInfo info, Dictionary<string, string> files, bool filter)
@@ -159,17 +202,18 @@ namespace DDDLanguage
 				 let name = filter ? f.Key.Substring(1) : f.Key + info.Extension
 				 select new { Key = name, f.Value })
 				.ToDictionary(it => it.Key, it => it.Value);
-			DumpToDisk(info.TargetPath, sources, 3);
+			DumpToDisk(info.TargetPath, sources, info.Extension, 3);
 		}
 
 		private static readonly char[] InvalidFileChars = Path.GetInvalidFileNameChars();
 
-		private static void DumpToDisk(string folder, Dictionary<string, string> files, int retries)
+		private static void DumpToDisk(string folder, Dictionary<string, string> files, string extension, int retries)
 		{
 			try
 			{
 				foreach (var f in Directory.GetFiles(folder))
-					File.Delete(f);
+					if (f.EndsWith(extension))
+						File.Delete(f);
 				foreach (var d in Directory.GetDirectories(folder))
 					Directory.Delete(d, true);
 				foreach (var kv in files)
@@ -180,7 +224,7 @@ namespace DDDLanguage
 						foreach (var ch in InvalidFileChars)
 							name = name.Replace(ch, '_');
 					}
-					var fp = Path.Combine(folder, kv.Key);
+					var fp = Path.Combine(folder, name);
 					var dir = Path.GetDirectoryName(fp);
 					if (!Directory.Exists(dir))
 						Directory.CreateDirectory(dir);
@@ -190,66 +234,34 @@ namespace DDDLanguage
 			catch
 			{
 				if (retries > 0)
-					DumpToDisk(folder, files, retries - 1);
+					DumpToDisk(folder, files, extension, retries - 1);
 				else
 					throw;
 			}
 		}
 
-		private void Compile(LibraryInfo info, Dictionary<string, string> files, bool filter)
+		private void ProcessResult(LibraryInfo info, Dictionary<string, string> files, bool filter)
 		{
-			if (!info.Compile) return;
-			var references =
-				info.References
-				.Concat(info.DependenciesExists ? Directory.GetFiles(info.DependenciesPath, "*.dll") : new string[0])
-				.Except(info.DependenciesExists ? new[] { Path.Combine(info.DependenciesPath, info.Name + ".dll") } : new string[0]);
-			var sources = files.Select(it => it.Value).ToArray();
+			if (info.BuildType == BuildTypes.Source)
+			{
+				CopySource(info, files, filter);
+				return;
+			}
 			var target = Path.Combine(info.TargetPath, info.Name + ".dll");
-			var assembly = Compiler.GenerateAssembly(target, sources, references);
+			if (info.BuildType == BuildTypes.LegacyDotNet)
+			{
+				var references =
+					info.ReferencesLegacy
+					.Concat(info.DependenciesExists ? Directory.GetFiles(info.DependenciesPath, "*.dll") : new string[0])
+					.Except(info.DependenciesExists ? new[] { Path.Combine(info.DependenciesPath, info.Name + ".dll") } : new string[0]);
+				var sources = files.Select(it => it.Value).ToArray();
+				Compiler.GenerateAssembly(target, sources, references);
+			}
+			else
+			{
+				var file = Compiler.BuildDotnet(info.Type, info.Name, info.ReferencesNew, files);
+				File.Copy(file, target, true);
+			}
 		}
-
-		private static readonly string[] PocoDependencies = new[] {
-			typeof(string).Assembly.Location,
-			typeof(System.Uri).Assembly.Location,
-			typeof(System.Linq.Enumerable).Assembly.Location,
-			typeof(System.Drawing.Color).Assembly.Location,
-			typeof(System.Xml.Linq.XElement).Assembly.Location,
-			typeof(System.Xml.XmlDocument).Assembly.Location,
-			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
-			typeof(System.Data.DataTable).Assembly.Location,
-			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
-			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location
-		};
-
-		private static readonly string[] WpfDependencies = new[] {
-			typeof(string).Assembly.Location,
-			typeof(System.Uri).Assembly.Location,
-			typeof(System.Linq.Enumerable).Assembly.Location,
-			typeof(System.Drawing.Color).Assembly.Location,
-			typeof(System.Xml.Linq.XElement).Assembly.Location,
-			typeof(System.Xml.XmlDocument).Assembly.Location,
-			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
-			typeof(System.Data.DataTable).Assembly.Location,
-			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
-			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location,
-			typeof(System.Windows.Window).Assembly.Location,
-			typeof(System.Xaml.XamlReader).Assembly.Location,
-			typeof(System.Windows.DependencyProperty).Assembly.Location,
-			typeof(System.Windows.UIElement).Assembly.Location
-		};
-
-		private static readonly string[] RevenjDependencies = new[] {
-			typeof(string).Assembly.Location,
-			typeof(System.Uri).Assembly.Location,
-			typeof(System.Data.DataTable).Assembly.Location,
-			typeof(System.Configuration.ConfigurationManager).Assembly.Location,
-			typeof(System.Linq.Enumerable).Assembly.Location,
-			typeof(System.Drawing.Color).Assembly.Location,
-			typeof(System.Xml.XmlDocument).Assembly.Location,
-			typeof(System.Xml.Linq.XElement).Assembly.Location,
-			typeof(System.ComponentModel.Composition.Primitives.Export).Assembly.Location,
-			typeof(System.Runtime.Serialization.DataContractAttribute).Assembly.Location,
-			typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location
-		};
 	}
 }

@@ -16,7 +16,13 @@ Build C# classes based on DSL definition
                 </DockPanel.ToolTip>
                 <TextBlock Text="Plain old C# objects" Margin="5"/>
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PocoLibrary.BuildVisibility}">
+                <Button Content="Build type" Width="120"
+                Command="{Binding ChangeBuild}" CommandParameter="Poco" />
+                <TextBox IsReadOnly="True" Text="{Binding Path=PocoLibrary.BuildType}" 
+                    ToolTip="Which build tool to use. Legacy .NET builds dll using old .NET Framework. Source just copies files to specified folder. Modern .NET build dll using dotnet CLI app" />
+            </DockPanel>
+            <DockPanel Margin="5" Visibility="{Binding Path=PocoLibrary.DllVisibility}">
                 <TextBlock Text="Dll name" Width="120"/>
                 <TextBox Text="{Binding Path=PocoLibrary.Name}"/>
             </DockPanel>
@@ -27,7 +33,7 @@ Build C# classes based on DSL definition
                     ToolTip="Target folder is used to place compiled library." 
                     Foreground="{Binding Path=PocoLibrary.TargetColor}"/>
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PocoLibrary.LegacyVisibility}">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Poco" />
                 <TextBox Text="{Binding Path=PocoLibrary.Dependencies}" 

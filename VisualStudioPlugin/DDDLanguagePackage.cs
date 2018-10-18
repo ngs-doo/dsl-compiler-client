@@ -181,7 +181,10 @@ namespace DDDLanguage
 		private void ReadInfo(LibraryInfo info, IPropertyBag pBag)
 		{
 			info.CompileOption = TryReadBool(info.Type + ".Compile", pBag);
-			if (!info.SourceOnly)
+			string buildType = TryReadString(info.Type + ".BuildType", pBag);
+			if (!string.IsNullOrEmpty(buildType))
+				info.BuildType = (BuildTypes)Enum.Parse(typeof(BuildTypes), buildType);
+			if (info.BuildType != BuildTypes.Source)
 				info.Name = TryReadString(info.Type + ".Name", pBag) ?? info.Name;
 			info.Target = TryReadString(info.Type + ".Target", pBag) ?? info.Target;
 			info.Dependencies = TryReadString(info.Type + ".Dependencies", pBag) ?? info.Dependencies;
@@ -289,14 +292,18 @@ namespace DDDLanguage
 			}
 		}
 
-		private void WriteInfo(LibraryInfo info, IPropertyBag pBag)
+		private void WriteInfo(LibraryInfo info, LibraryInfo reference, IPropertyBag pBag)
 		{
-			var reference = new LibraryInfo(info.Type, null, info.RequireDependencies, null);
 			object val;
 			if (reference.CompileOption != info.CompileOption)
 			{
 				val = info.CompileOption.ToString();
 				pBag.Write(info.Type + ".Compile", ref val);
+			}
+			if (reference.BuildType != info.BuildType)
+			{
+				val = info.BuildType.ToString();
+				pBag.Write(info.Type + ".BuildType", ref val);
 			}
 			if (reference.Name != info.Name)
 			{
@@ -370,13 +377,13 @@ namespace DDDLanguage
 			{
 				WriteInfo(Presenter.PostgresDb, pPropBag);
 				WriteInfo(Presenter.OracleDb, pPropBag);
-				WriteInfo(Presenter.PocoLibrary, pPropBag);
-				WriteInfo(Presenter.ClientLibrary, pPropBag);
-				WriteInfo(Presenter.PortableLibrary, pPropBag);
-				WriteInfo(Presenter.PhpLibrary, pPropBag);
-				WriteInfo(Presenter.WpfLibrary, pPropBag);
-				WriteInfo(Presenter.PostgresLibrary, pPropBag);
-				WriteInfo(Presenter.OracleLibrary, pPropBag);
+				WriteInfo(Presenter.PocoLibrary, CompileTargets.PocoLibraryDefault, pPropBag);
+				WriteInfo(Presenter.ClientLibrary, CompileTargets.ClientLibraryDefault, pPropBag);
+				WriteInfo(Presenter.PortableLibrary, CompileTargets.PortableLibraryDefault, pPropBag);
+				WriteInfo(Presenter.PhpLibrary, CompileTargets.PhpSourceDefault, pPropBag);
+				WriteInfo(Presenter.WpfLibrary, CompileTargets.WpfLibraryDefault, pPropBag);
+				WriteInfo(Presenter.PostgresLibrary, CompileTargets.PostgresLibraryDefault, pPropBag);
+				WriteInfo(Presenter.OracleLibrary, CompileTargets.OracleLibraryDefault, pPropBag);
 			}
 			catch
 			{

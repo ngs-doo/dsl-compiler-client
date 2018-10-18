@@ -25,7 +25,13 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     </Hyperlink>
                 </TextBlock>
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PostgresLibrary.BuildVisibility}">
+                <Button Content="Build type" Width="120"
+                Command="{Binding ChangeBuild}" CommandParameter="Postgres" />
+                <TextBox IsReadOnly="True" Text="{Binding Path=PostgresLibrary.BuildType}" 
+                    ToolTip="Which build tool to use. Legacy .NET builds dll using old .NET Framework. Source just copies files to specified folder. Modern .NET build dll using dotnet CLI app" />
+            </DockPanel>
+            <DockPanel Margin="5" Visibility="{Binding Path=PostgresLibrary.DllVisibility}">
                 <TextBlock Text="Dll name" Width="120"/>
                 <TextBox Text="{Binding Path=PostgresLibrary.Name}" />
             </DockPanel>
@@ -36,7 +42,7 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     ToolTip="Target folder is used to place compiled library."
                     Foreground="{Binding Path=PostgresLibrary.TargetColor}" />
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PostgresLibrary.LegacyVisibility}">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Postgres" />
                 <TextBox Text="{Binding Path=PostgresLibrary.Dependencies}" 
@@ -63,8 +69,12 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Mutable snowflake"
                 Margin="5"
                 ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
-            <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:revenj-core.zip" />
-            <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:http-server.zip" />
+            <Button Margin="2" Visibility="{Binding Path=PostgresLibrary.LegacyVisibility}"
+                    Content="Download Revenj.NET core library" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:revenj-core.zip" />
+            <Button Margin="2" Visibility="{Binding Path=PostgresLibrary.DllVisibility}"
+                    Content="Download Revenj.NET HTTP server" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:http-server.zip" />
             <TextBlock Text="Connection string" Margin="5" />
             <TextBox Text="{Binding PostgresDb.ConnectionString}" Margin="5" 
                         ToolTip="Example connection string: server=localhost;database=revenj;user=postgres;password=secret" />

@@ -18,15 +18,19 @@ Libraries consist from several files which you can download from server or compi
 DSL Platform libraries are BSD licensed and source is available on GitHub.
                     </TextBlock>
                 </DockPanel.ToolTip>
-                <Button DockPanel.Dock="Right" Content="Download" Width="60"
-                Command="{Binding DownloadLibrary}" CommandParameter="Portable:dotnet_portable.zip" />
                 <TextBlock Margin="5">
                     <Hyperlink NavigateUri="https://github.com/ngs-doo/revenj/releases" RequestNavigate="Hyperlink_RequestNavigate">
                         Revenj.NET portable library
                     </Hyperlink>
                 </TextBlock>
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PortableLibrary.BuildVisibility}">
+                <Button Content="Build type" Width="120"
+                Command="{Binding ChangeBuild}" CommandParameter="Portable" />
+                <TextBox IsReadOnly="True" Text="{Binding Path=PortableLibrary.BuildType}" 
+                    ToolTip="Which build tool to use. Legacy .NET builds dll using old .NET Framework. Source just copies files to specified folder. Modern .NET build dll using dotnet CLI app" />
+            </DockPanel>
+            <DockPanel Margin="5" Visibility="{Binding Path=PortableLibrary.DllVisibility}">
                 <TextBlock Text="Dll name" Width="120"/>
                 <TextBox Text="{Binding Path=PortableLibrary.Name}" />
             </DockPanel>
@@ -37,7 +41,7 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     ToolTip="Target folder is used to place compiled library."
                     Foreground="{Binding Path=PortableLibrary.TargetColor}" />
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=PortableLibrary.LegacyVisibility}">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Portable" />
                 <TextBox Text="{Binding Path=PortableLibrary.Dependencies}" 
@@ -60,6 +64,9 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Mutable snowflake"
                 Margin="5"
                 ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
+            <Button Margin="2" Visibility="{Binding Path=PortableLibrary.LegacyVisibility}"
+                    Content="Download Revenj.NET portable library"
+                    Command="{Binding DownloadLibrary}" CommandParameter="Portable:dotnet_portable.zip" />
             <Separator />
             <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
             <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"

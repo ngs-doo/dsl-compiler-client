@@ -120,6 +120,7 @@
     <Compile Include="Classification\DddClassifierProvider.cs" />
     <Compile Include="Classification\DslClassifierProvider.cs" />
     <Compile Include="ChunkedMemoryStream.cs" />
+    <Compile Include="Gui\BuildTypes.cs" />
     <Compile Include="Gui\CompileTargets.cs" />
     <Compile Include="Gui\DatabaseInfo.cs" />
     <Compile Include="Gui\View\ConfigurationOracleControl.xaml.cs">
@@ -208,14 +209,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="catalog.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="manifest.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

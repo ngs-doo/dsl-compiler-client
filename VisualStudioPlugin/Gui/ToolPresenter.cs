@@ -45,6 +45,7 @@ namespace DDDLanguage
 		public ICommand OracleDiff { get; private set; }
 
 		public ICommand DownloadLibrary { get; private set; }
+		public ICommand ChangeBuild { get; private set; }
 		public ICommand ChangeTarget { get; private set; }
 		public ICommand ChangeDependencies { get; private set; }
 		public ICommand ChangePostgresSqlScripts { get; private set; }
@@ -120,6 +121,7 @@ namespace DDDLanguage
 			PostgresDiff = new RelayCommand(() => CreateDiffAction(ServerActions.PostgresDiff, PostgresDb), () => PostgresDb.CanDiff);
 			OracleDiff = new RelayCommand(() => CreateDiffAction(ServerActions.OracleDiff, OracleDb), () => OracleDb.CanDiff);
 			DownloadLibrary = new RelayCommand(arg => DonwloadLibraryAction(arg as string), () => true);
+			ChangeBuild = new RelayCommand(arg => ChangeBuildType(arg as string), () => true);
 			ChangeTarget = new RelayCommand(arg => ChangePathAction(arg as string, i => i.TargetPath, (i, p) => i.Target = p), () => true);
 			ChangeDependencies =
 				new RelayCommand(
@@ -274,6 +276,23 @@ namespace DDDLanguage
 				});
 			}
 			ChangeMessage();
+		}
+
+		private void ChangeBuildType(string arg)
+		{
+			var lib = Targets.ChooseLibrary(arg);
+			if (!lib.Success)
+			{
+				Message = lib.Error;
+				ChangeMessage();
+				return;
+			}
+			var info = lib.Value;
+			if (info.SupportedBuilds.Length < 2) return;
+			var current = info.SupportedBuilds.ToList().IndexOf(info.BuildType);
+			var next = info.SupportedBuilds[(current + 1) % info.SupportedBuilds.Length];
+			info.BuildType = next;
+			ChangeProperty(arg + "Library");
 		}
 
 		private void ChangePathAction(string arg, Func<LibraryInfo, string> getPath, Action<LibraryInfo, string> setPath)

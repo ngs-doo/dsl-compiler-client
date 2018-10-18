@@ -25,7 +25,13 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     </Hyperlink>
                 </TextBlock>
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=OracleLibrary.BuildVisibility}">
+                <Button Content="Build type" Width="120"
+                Command="{Binding ChangeBuild}" CommandParameter="Oracle" />
+                <TextBox IsReadOnly="True" Text="{Binding Path=OracleLibrary.BuildType}" 
+                    ToolTip="Which build tool to use. Legacy .NET builds dll using old .NET Framework. Source just copies files to specified folder. Modern .NET build dll using dotnet CLI app" />
+            </DockPanel>
+            <DockPanel Margin="5" Visibility="{Binding Path=OracleLibrary.DllVisibility}">
                 <TextBlock Text="Dll name" Width="120"/>
                 <TextBox Text="{Binding Path=OracleLibrary.Name}" />
             </DockPanel>
@@ -35,7 +41,7 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     ToolTip="Target folder is used to place compiled library."
                     Foreground="{Binding Path=OracleLibrary.TargetColor}" />
             </DockPanel>
-            <DockPanel Margin="5">
+            <DockPanel Margin="5" Visibility="{Binding Path=OracleLibrary.LegacyVisibility}">
                 <Button Content="Dependency path" Command="{Binding ChangeDependencies}" CommandParameter="Oracle" Width="120" />
                 <TextBox Text="{Binding Path=OracleLibrary.Dependencies}" 
                     ToolTip="Dependencies for specialized library are used during compilation process."
@@ -57,10 +63,18 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Mutable snowflake"
                 Margin="5"
                 ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
-            <Button Margin="2" Content="Download Revenj.NET core library" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:revenj-core.zip" />
-            <Button Margin="2" Content="Download Revenj.NET HTTP server" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:http-server.zip" />
-            <Button Margin="2" Content="Download 32bit Oracle driver" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-32bit.zip" />
-            <Button Margin="2" Content="Download 64bit Oracle driver" Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-64bit.zip" />
+            <Button Margin="2" Visibility="{Binding Path=OracleLibrary.LegacyVisibility}"
+                    Content="Download Revenj.NET core library" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:revenj-core.zip" />
+            <Button Margin="2" Visibility="{Binding Path=OracleLibrary.LegacyVisibility}"
+                    Content="Download Revenj.NET HTTP server" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:http-server.zip" />
+            <Button Margin="2" Visibility="{Binding Path=OracleLibrary.LegacyVisibility}"
+                    Content="Download 32bit Oracle driver" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-32bit.zip" />
+            <Button Margin="2" Visibility="{Binding Path=OracleLibrary.LegacyVisibility}"
+                    Content="Download 64bit Oracle driver" 
+                    Command="{Binding DownloadLibrary}" CommandParameter="Oracle:github-revenj:oracle-driver-64bit.zip" />
             <TextBlock Text="Connection string" Margin="5" />
             <TextBox Text="{Binding OracleDb.ConnectionString}" Margin="5" 
                         ToolTip="Example connection string: Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=xe)));User Id=revenj;Password=secret" />

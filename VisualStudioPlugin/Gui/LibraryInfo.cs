@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 
 namespace DDDLanguage
 {
 	internal class LibraryInfo : IEquatable<LibraryInfo>, ICloneable
 	{
-		internal bool SourceOnly { get; private set; }
 		internal bool CompileOption { get; set; }
 		public bool Compile
 		{
@@ -46,23 +47,28 @@ namespace DDDLanguage
 		public string Type { get; private set; }
 		public string Name { get; set; }
 		public string CompilerName { get; private set; }
-		public readonly bool RequireDependencies;
+		public readonly bool RequireDependenciesLegacy;
 		public string Extension { get; private set; }
-		public string[] References { get; private set; }
+		public string[] ReferencesLegacy { get; private set; }
+		public Dictionary<string, string> ReferencesNew { get; private set; }
 
 		public static string BasePath { get; set; }
+		public readonly BuildTypes[] SupportedBuilds;
 
 		public LibraryInfo(
 			string type,
 			string compilerName,
-			bool requireDependencies,
-			string[] references,
-			bool sourceOnly = false,
-			string extension = null)
+			bool requireDependenciesLegacy,
+			string[] referencesLegacy,
+			Dictionary<string, string> referencesNew,
+			BuildTypes buildType,
+			string extension,
+			params BuildTypes[] supportedBuilds)
 		{
 			Type = type;
-			this.RequireDependencies = requireDependencies;
-			if (sourceOnly)
+			this.SupportedBuilds = supportedBuilds;
+			this.RequireDependenciesLegacy = requireDependenciesLegacy;
+			if (buildType == BuildTypes.Source)
 			{
 				Name = type;
 				Target = type;
@@ -73,14 +79,19 @@ namespace DDDLanguage
 				Target = "lib";
 			}
 			CompilerName = compilerName;
-			References = references;
-			SourceOnly = sourceOnly;
+			ReferencesLegacy = referencesLegacy;
+			ReferencesNew = referencesNew;
 			Extension = extension;
+			this.BuildType = buildType;
 			Dependencies = Path.Combine("dependencies", type);
 			WithActiveRecord = WithHelperMethods = true;
 		}
 
 		public string TargetPath { get { return Path.Combine(BasePath, Target); } }
+		public BuildTypes BuildType { get; set; }
+		public Visibility BuildVisibility { get { return SupportedBuilds != null && SupportedBuilds.Length > 1 ? Visibility.Visible : Visibility.Collapsed; } }
+		public Visibility DllVisibility { get { return BuildType != BuildTypes.Source ? Visibility.Visible : Visibility.Collapsed; } }
+		public Visibility LegacyVisibility { get { return BuildType == BuildTypes.LegacyDotNet ? Visibility.Visible : Visibility.Collapsed; } }
 		public string DependenciesPath { get { return Path.Combine(BasePath, Dependencies); } }
 		public bool TargetExists { get { return PathExists(Target); } }
 		public bool DependenciesExists { get { return PathExists(Dependencies); } }
@@ -108,7 +119,7 @@ namespace DDDLanguage
 		{
 			get
 			{
-				if (SourceOnly)
+				if (BuildType == BuildTypes.Source)
 				{
 					if (TargetExists)
 						return "Source can be created. After compilation source will be placed to " + Target;
@@ -117,17 +128,21 @@ Please create or specify target path where generated sources will be placed.";
 				}
 				var hasFiles = DependenciesExists
 					&& Directory.EnumerateFiles(DependenciesPath, "*.dll", SearchOption.TopDirectoryOnly).Any();
-				if (TargetExists && !RequireDependencies && string.IsNullOrEmpty(Dependencies))
+				if (TargetExists && BuildType == BuildTypes.DotNetStandard)
+					return
+						"Library can be used. After compilation DLL will be copied to "
+						+ Target + " as " + Name + ".dll";
+				if (TargetExists && BuildType == BuildTypes.LegacyDotNet && !RequireDependenciesLegacy && string.IsNullOrEmpty(Dependencies))
 					return
 						"Library can be used. After compilation DLL will be copied to "
 						+ Target + " as " + Name + ".dll" + Environment.NewLine
 						+ "Dependency folder not specified";
-				if (TargetExists && !RequireDependencies && DependenciesExists)
+				if (TargetExists && BuildType == BuildTypes.LegacyDotNet && !RequireDependenciesLegacy && DependenciesExists)
 					return
 						"Library can be used. After compilation DLL will be copied to "
 						+ Target + " as " + Name + ".dll" + Environment.NewLine
 						+ "Dependency folder found in " + Dependencies;
-				if (TargetExists && DependenciesExists && hasFiles)
+				if (TargetExists && BuildType == BuildTypes.LegacyDotNet && DependenciesExists && hasFiles)
 					return
 						"Library can be used. After compilation DLL will be copied to "
 						+ Target + " as " + Name + ".dll" + Environment.NewLine
@@ -137,9 +152,9 @@ Please create or specify target path where generated sources will be placed.";
 Please specify DLL for compiled library from DSL model." + Environment.NewLine : string.Empty)
 					+ (TargetExists ? string.Empty : @"Target path not found. 
 Please create or specify target path from where compiled DLL will be referenced." + Environment.NewLine)
-					+ (DependenciesExists ? string.Empty : @"Dependency path not found. 
+					+ (DependenciesExists || BuildType == BuildTypes.DotNetStandard ? string.Empty : @"Dependency path not found. 
 Please create or specify dependency path for library and reference it from project.")
-					+ (DependenciesExists && !hasFiles ? "Dependencies not found if dependency folder: " + Dependencies + @"
+					+ ((DependenciesExists || BuildType == BuildTypes.DotNetStandard) && !hasFiles ? "Dependencies not found if dependency folder: " + Dependencies + @"
 Please download dependencies before running compilation" : string.Empty);
 			}
 		}
@@ -148,18 +163,18 @@ Please download dependencies before running compilation" : string.Empty);
 		{
 			get
 			{
-				if (SourceOnly)
+				if (BuildType == BuildTypes.Source || BuildType == BuildTypes.DotNetStandard)
 					return TargetExists;
 				return !string.IsNullOrWhiteSpace(Name)
 					&& TargetExists
-					&& (!RequireDependencies
+					&& (!RequireDependenciesLegacy
 						|| DependenciesExists && Directory.EnumerateFiles(DependenciesPath, "*.dll", SearchOption.TopDirectoryOnly).Any());
 			}
 		}
 
 		public LibraryInfo Clone()
 		{
-			return new LibraryInfo(Type, CompilerName, RequireDependencies, References, SourceOnly, Extension)
+			return new LibraryInfo(Type, CompilerName, RequireDependenciesLegacy, ReferencesLegacy, ReferencesNew, BuildType, Extension, SupportedBuilds)
 			{
 				CompileOption = CompileOption,
 				Name = Name,
@@ -192,7 +207,8 @@ Please download dependencies before running compilation" : string.Empty);
 				&& other.MinimalSerialization == this.MinimalSerialization
 				&& other.NoPrepareExecute == this.NoPrepareExecute
 				&& other.Legacy == this.Legacy
-				&& other.Namespace == this.Namespace;
+				&& other.Namespace == this.Namespace
+				&& other.BuildType == this.BuildType;
 		}
 	}
 }

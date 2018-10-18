@@ -115,6 +115,77 @@ namespace DDDLanguage
 			}
 		}
 
+		private static readonly char[] InvalidFileChars = Path.GetInvalidFileNameChars();
+
+		public static string BuildDotnet(string project, string output, Dictionary<string, string> dependencies, Dictionary<string, string> files)
+		{
+			var folder = Path.Combine(TempPath, project);
+			if (!Directory.Exists(folder))
+				Directory.CreateDirectory(folder);
+			else
+			{
+				foreach (var f in Directory.GetFiles(folder, "*.cs"))
+					File.Delete(f);
+			}
+			var outputName = output.IndexOf('/') == -1 ? output : output.Substring(output.LastIndexOf('/'));
+			var csproj = new StringBuilder(@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <PropertyGroup>
+	<TargetFramework>netstandard2.0</TargetFramework>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<AssemblyName>");
+			csproj.Append(outputName);
+			csproj.Append(@"</AssemblyName>
+	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>");
+			if (dependencies.Count != 0)
+			{
+				csproj.Append(@"  
+  <ItemGroup>");
+				foreach (var kv in dependencies)
+				{
+					csproj.AppendFormat(@"
+	<PackageReference Include=""{0}"" Version=""{1}"" />", kv.Key, kv.Value);
+				}
+				csproj.Append(@"  
+  </ItemGroup>
+");
+			}
+			csproj.Append(@"
+</Project>");
+			File.WriteAllText(Path.Combine(folder, project + ".csproj"), csproj.ToString());
+			foreach (var kv in files)
+			{
+				var name = kv.Key;
+				if (name.IndexOfAny(InvalidFileChars) != -1)
+				{
+					foreach (var ch in InvalidFileChars)
+						name = name.Replace(ch, '_');
+				}
+				File.WriteAllText(Path.Combine(folder, name + ".cs"), kv.Value);
+			}
+			var si = new ProcessStartInfo
+			{
+				FileName = "dotnet",
+				WorkingDirectory = folder,
+				Arguments = "build -c Release",
+				UseShellExecute = false
+			};
+			si.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+			var process = Process.Start(si);
+			try
+			{
+				process.WaitForExit();
+				if (process.ExitCode == 0)
+					return Path.Combine(Path.Combine(Path.Combine(folder, "bin"), "Release"), outputName + ".dll");
+				Process.Start(folder);
+				throw new ApplicationException(@"Error during compilation. Try running the project manually");
+			}
+			finally
+			{
+				process.Dispose();
+			}
+		}
+
 		public static string GenerateAssembly(
 			string assemblyPath,
 			string[] sources,
