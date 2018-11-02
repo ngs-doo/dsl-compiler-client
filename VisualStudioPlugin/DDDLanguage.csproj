@@ -145,6 +145,9 @@
     <Compile Include="Gui\View\ConfigurationPostgresControl.xaml.cs">
       <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Gui\View\ConfigurationTypescriptControl.xaml.cs">
+      <DependentUpon>ConfigurationTypescriptControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Gui\View\DiffControl.xaml.cs">
       <DependentUpon>DiffControl.xaml</DependentUpon>
     </Compile>
@@ -269,6 +272,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Gui\View\ConfigurationPostgresControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gui\View\ConfigurationTypescriptControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

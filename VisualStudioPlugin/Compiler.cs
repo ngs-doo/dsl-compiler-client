@@ -115,11 +115,11 @@ namespace DDDLanguage
 			}
 		}
 
-		private static readonly char[] InvalidFileChars = Path.GetInvalidFileNameChars();
+		private static readonly char[] InvalidFileChars = Path.GetInvalidFileNameChars().Except(new[] { '/' }).ToArray();
 
-		public static string BuildDotnet(string project, string output, Dictionary<string, string> dependencies, Dictionary<string, string> files)
+		public static string BuildDotnet(LibraryInfo library, string[] customDlls, Dictionary<string, string> files)
 		{
-			var folder = Path.Combine(TempPath, project);
+			var folder = Path.Combine(TempPath, library.Type);
 			if (!Directory.Exists(folder))
 				Directory.CreateDirectory(folder);
 			else
@@ -127,7 +127,7 @@ namespace DDDLanguage
 				foreach (var f in Directory.GetFiles(folder, "*.cs"))
 					File.Delete(f);
 			}
-			var outputName = output.IndexOf('/') == -1 ? output : output.Substring(output.LastIndexOf('/'));
+			var outputName = library.Name.IndexOf('/') == -1 ? library.Name : library.Name.Substring(library.Name.LastIndexOf('/'));
 			var csproj = new StringBuilder(@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
 	<TargetFramework>netstandard2.0</TargetFramework>
@@ -137,14 +137,22 @@ namespace DDDLanguage
 			csproj.Append(@"</AssemblyName>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>");
-			if (dependencies.Count != 0)
+			if (library.Nugets.Count != 0 || customDlls.Length != 0)
 			{
 				csproj.Append(@"  
   <ItemGroup>");
-				foreach (var kv in dependencies)
+				foreach (var n in library.Nugets)
 				{
 					csproj.AppendFormat(@"
-	<PackageReference Include=""{0}"" Version=""{1}"" />", kv.Key, kv.Value);
+	<PackageReference Include=""{0}"" Version=""{1}"" />", n.Project, n.Version);
+				}
+				foreach (var dll in customDlls)
+				{
+					var fullPath = Path.Combine(LibraryInfo.BasePath, dll);
+					csproj.AppendFormat(@"
+	<Reference Include=""{0}"">
+		<HintPath>{1}</HintPath>
+	</Reference>", Path.GetFileNameWithoutExtension(dll), fullPath);
 				}
 				csproj.Append(@"  
   </ItemGroup>
@@ -152,7 +160,7 @@ namespace DDDLanguage
 			}
 			csproj.Append(@"
 </Project>");
-			File.WriteAllText(Path.Combine(folder, project + ".csproj"), csproj.ToString());
+			File.WriteAllText(Path.Combine(folder, library.Type + ".csproj"), csproj.ToString());
 			foreach (var kv in files)
 			{
 				var name = kv.Key;

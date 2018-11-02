@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.Design;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using EnvDTE;
@@ -188,6 +189,16 @@ namespace DDDLanguage
 				info.Name = TryReadString(info.Type + ".Name", pBag) ?? info.Name;
 			info.Target = TryReadString(info.Type + ".Target", pBag) ?? info.Target;
 			info.Dependencies = TryReadString(info.Type + ".Dependencies", pBag) ?? info.Dependencies;
+			var nugets = TryReadString(info.Type + ".Nugets", pBag);
+			if (!string.IsNullOrWhiteSpace(nugets))
+			{
+				var values = nugets.Split(';');
+				info.Nugets = values.Select(it =>
+				{
+					var parts = it.Split(':');
+					return new LibraryInfo.Nuget { Project = parts[0], Version = parts[parts.Length - 1] };
+				}).ToList();
+			}
 			info.Namespace = TryReadString(info.Type + ".Namespace", pBag) ?? info.Namespace;
 			info.WithActiveRecord = TryReadBool(info.Type + ".ActiveRecord", pBag, info.WithActiveRecord);
 			info.WithHelperMethods = TryReadBool(info.Type + ".HelperMethods", pBag, info.WithHelperMethods);
@@ -209,6 +220,7 @@ namespace DDDLanguage
 				ReadInfo(Presenter.ClientLibrary, pPropBag);
 				ReadInfo(Presenter.PortableLibrary, pPropBag);
 				ReadInfo(Presenter.PhpLibrary, pPropBag);
+				ReadInfo(Presenter.TypescriptLibrary, pPropBag);
 				ReadInfo(Presenter.WpfLibrary, pPropBag);
 				ReadInfo(Presenter.PostgresLibrary, pPropBag);
 				ReadInfo(Presenter.OracleLibrary, pPropBag);
@@ -320,6 +332,11 @@ namespace DDDLanguage
 				val = info.Dependencies;
 				pBag.Write(info.Type + ".Dependencies", ref val);
 			}
+			if (!LibraryInfo.Nuget.Equal(info.Nugets, reference.Nugets))
+			{
+				val = string.Join(";", info.Nugets.Select(it => it.Project + ":" + it.Version));
+				pBag.Write(info.Type + ".Nugets", ref val);
+			}
 			if (reference.Namespace != info.Namespace)
 			{
 				val = info.Namespace;
@@ -381,6 +398,7 @@ namespace DDDLanguage
 				WriteInfo(Presenter.ClientLibrary, CompileTargets.ClientLibraryDefault, pPropBag);
 				WriteInfo(Presenter.PortableLibrary, CompileTargets.PortableLibraryDefault, pPropBag);
 				WriteInfo(Presenter.PhpLibrary, CompileTargets.PhpSourceDefault, pPropBag);
+				WriteInfo(Presenter.TypescriptLibrary, CompileTargets.TypescriptSourceDefault, pPropBag);
 				WriteInfo(Presenter.WpfLibrary, CompileTargets.WpfLibraryDefault, pPropBag);
 				WriteInfo(Presenter.PostgresLibrary, CompileTargets.PostgresLibraryDefault, pPropBag);
 				WriteInfo(Presenter.OracleLibrary, CompileTargets.OracleLibraryDefault, pPropBag);

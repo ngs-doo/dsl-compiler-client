@@ -50,7 +50,23 @@ namespace DDDLanguage
 		public readonly bool RequireDependenciesLegacy;
 		public string Extension { get; private set; }
 		public string[] ReferencesLegacy { get; private set; }
-		public Dictionary<string, string> ReferencesNew { get; private set; }
+		public List<Nuget> Nugets { get; set; }
+
+		public class Nuget
+		{
+			public string Project { get; set; }
+			public string Version { get; set; }
+			public Nuget Clone()
+			{
+				return new Nuget { Project = Project, Version = Version };
+			}
+
+			public static bool Equal(List<Nuget> left, List<Nuget> right)
+			{
+				if (left.Count != right.Count) return false;
+				return left.Zip(right, (l, r) => new { l, r }).All(kv => kv.l.Project == kv.r.Project && kv.l.Version == kv.r.Version);
+			}
+		}
 
 		public static string BasePath { get; set; }
 		public readonly BuildTypes[] SupportedBuilds;
@@ -60,7 +76,7 @@ namespace DDDLanguage
 			string compilerName,
 			bool requireDependenciesLegacy,
 			string[] referencesLegacy,
-			Dictionary<string, string> referencesNew,
+			List<Nuget> nugets,
 			BuildTypes buildType,
 			string extension,
 			params BuildTypes[] supportedBuilds)
@@ -80,7 +96,7 @@ namespace DDDLanguage
 			}
 			CompilerName = compilerName;
 			ReferencesLegacy = referencesLegacy;
-			ReferencesNew = referencesNew;
+			Nugets = nugets;
 			Extension = extension;
 			this.BuildType = buildType;
 			Dependencies = Path.Combine("dependencies", type);
@@ -92,6 +108,7 @@ namespace DDDLanguage
 		public Visibility BuildVisibility { get { return SupportedBuilds != null && SupportedBuilds.Length > 1 ? Visibility.Visible : Visibility.Collapsed; } }
 		public Visibility DllVisibility { get { return BuildType != BuildTypes.Source ? Visibility.Visible : Visibility.Collapsed; } }
 		public Visibility LegacyVisibility { get { return BuildType == BuildTypes.LegacyDotNet ? Visibility.Visible : Visibility.Collapsed; } }
+		public Visibility NetStandardVisibility { get { return BuildType == BuildTypes.DotNetStandard ? Visibility.Visible : Visibility.Collapsed; } }
 		public string DependenciesPath { get { return Path.Combine(BasePath, Dependencies); } }
 		public bool TargetExists { get { return PathExists(Target); } }
 		public bool DependenciesExists { get { return PathExists(Dependencies); } }
@@ -174,7 +191,7 @@ Please download dependencies before running compilation" : string.Empty);
 
 		public LibraryInfo Clone()
 		{
-			return new LibraryInfo(Type, CompilerName, RequireDependenciesLegacy, ReferencesLegacy, ReferencesNew, BuildType, Extension, SupportedBuilds)
+			return new LibraryInfo(Type, CompilerName, RequireDependenciesLegacy, ReferencesLegacy, Nugets.Select(it => it.Clone()).ToList(), BuildType, Extension, SupportedBuilds)
 			{
 				CompileOption = CompileOption,
 				Name = Name,
@@ -208,7 +225,8 @@ Please download dependencies before running compilation" : string.Empty);
 				&& other.NoPrepareExecute == this.NoPrepareExecute
 				&& other.Legacy == this.Legacy
 				&& other.Namespace == this.Namespace
-				&& other.BuildType == this.BuildType;
+				&& other.BuildType == this.BuildType
+				&& Nuget.Equal(other.Nugets, this.Nugets);
 		}
 	}
 }

@@ -33,6 +33,7 @@ namespace DDDLanguage
 		public LibraryInfo OracleLibrary { get { return Targets.OracleLibrary; } }
 		public LibraryInfo PostgresLibrary { get { return Targets.PostgresLibrary; } }
 		public LibraryInfo PhpLibrary { get { return Targets.PhpSource; } }
+		public LibraryInfo TypescriptLibrary { get { return Targets.TypescriptSource; } }
 
 		public DatabaseInfo PostgresDb { get; private set; }
 		public DatabaseInfo OracleDb { get; private set; }
@@ -55,6 +56,7 @@ namespace DDDLanguage
 		public ICommand ConfigureClient { get; private set; }
 		public ICommand ConfigurePortable { get; private set; }
 		public ICommand ConfigurePhp { get; private set; }
+		public ICommand ConfigureTypescript { get; private set; }
 		public ICommand ConfigureWpf { get; private set; }
 		public ICommand ConfigurePostgres { get; private set; }
 		public ICommand ConfigureOracle { get; private set; }
@@ -136,6 +138,7 @@ namespace DDDLanguage
 			ConfigureClient = new RelayCommand(() => OpenConfigurationAction(new ConfigurationClientControl()));
 			ConfigurePortable = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPortableControl()));
 			ConfigurePhp = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPhpControl()));
+			ConfigureTypescript = new RelayCommand(() => OpenConfigurationAction(new ConfigurationTypescriptControl()));
 			ConfigureWpf = new RelayCommand(() => OpenConfigurationAction(new ConfigurationWpfControl()));
 			ConfigurePostgres = new RelayCommand(() => OpenConfigurationAction(new ConfigurationPostgresControl()));
 			ConfigureOracle = new RelayCommand(() => OpenConfigurationAction(new ConfigurationOracleControl()));
@@ -379,6 +382,7 @@ namespace DDDLanguage
 				|| ClientLibrary.Compile || PortableLibrary.Compile
 				|| WpfLibrary.Compile
 				|| PhpLibrary.Compile
+				|| TypescriptLibrary.Compile
 				|| PostgresLibrary.Compile || OracleLibrary.Compile
 				|| PostgresDb.CompileMigration || OracleDb.CompileMigration);
 		}
