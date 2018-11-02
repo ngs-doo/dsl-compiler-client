@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="DDDLanguage.ConfigurationTypescriptControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="300">
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical" Margin="2">
+            <DockPanel>
+                <DockPanel.ToolTip>
+                    <TextBlock>
+                <Bold>Typescript source</Bold><LineBreak/>
+DSL Platform can create Typescript source code which.
+                    </TextBlock>
+                </DockPanel.ToolTip>
+                <TextBlock Margin="5">
+                    Typescript source
+                </TextBlock>
+            </DockPanel>
+            <DockPanel Margin="5">
+                <Button Content="Target directory" Command="{Binding ChangeTarget}" CommandParameter="Typescript" Width="120" />
+                <TextBox Text="{Binding Path=TypescriptLibrary.Target}" 
+                    ToolTip="Target folder where generated Typescript source should be placed."
+                    Foreground="{Binding Path=TypescriptLibrary.TargetColor}" />
+            </DockPanel>
+            <Separator />
+            <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
+            <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"
+                FontWeight="Bold" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

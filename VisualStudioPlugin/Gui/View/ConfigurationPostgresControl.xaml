@@ -42,13 +42,21 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     ToolTip="Target folder is used to place compiled library."
                     Foreground="{Binding Path=PostgresLibrary.TargetColor}" />
             </DockPanel>
-            <DockPanel Margin="5" Visibility="{Binding Path=PostgresLibrary.LegacyVisibility}">
+            <DockPanel Margin="5">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Postgres" />
                 <TextBox Text="{Binding Path=PostgresLibrary.Dependencies}" 
                     ToolTip="Dependencies for specialized library are used during compilation process."
                     Foreground="{Binding Path=PostgresLibrary.DependenciesColor}" />
             </DockPanel>
+            <DataGrid Visibility="{Binding Path=PostgresLibrary.NetStandardVisibility}"
+                      ItemsSource="{Binding Path=PostgresLibrary.Nugets}" 
+                      AutoGenerateColumns="False" CanUserAddRows="True" CanUserResizeColumns="True" CanUserDeleteRows="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Nuget package" Binding="{Binding Project}" Width="*"/>
+                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
             <CheckBox IsChecked="{Binding Path=PostgresLibrary.WithManualJson}" 
                 Content="Manual JSON"
                 Margin="5"
@@ -72,7 +80,7 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
             <Button Margin="2" Visibility="{Binding Path=PostgresLibrary.LegacyVisibility}"
                     Content="Download Revenj.NET core library" 
                     Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:revenj-core.zip" />
-            <Button Margin="2" Visibility="{Binding Path=PostgresLibrary.DllVisibility}"
+            <Button Margin="2" Visibility="{Binding Path=PostgresLibrary.LegacyVisibility}"
                     Content="Download Revenj.NET HTTP server" 
                     Command="{Binding DownloadLibrary}" CommandParameter="Postgres:github-revenj:http-server.zip" />
             <TextBlock Text="Connection string" Margin="5" />
