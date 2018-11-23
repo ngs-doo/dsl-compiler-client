@@ -117,7 +117,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslGenerate := {
       val logger = streams.value.log
 
-      val depClassPath   = dependencyClasspath.value
+      val depClassPath   = managedClasspath.value
       val tempFolder     = dslTempFolder.value
       val cacheDirectory = streams.value.cacheDirectory
       val settings       = dslSettings.value
