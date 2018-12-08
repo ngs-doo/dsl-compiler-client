@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.Text.Tagging;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class DddTokenTag : ITag
 	{

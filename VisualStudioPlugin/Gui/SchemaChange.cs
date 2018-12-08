@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Windows;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	[DataContract(Namespace = "")]
 	public struct SchemaChange

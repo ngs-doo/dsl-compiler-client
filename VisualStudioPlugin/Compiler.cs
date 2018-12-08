@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.CSharp;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal static class Compiler
 	{

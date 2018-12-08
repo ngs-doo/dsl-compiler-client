@@ -5,7 +5,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using Microsoft.VisualStudio.Text;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal static class SyntaxParser
 	{

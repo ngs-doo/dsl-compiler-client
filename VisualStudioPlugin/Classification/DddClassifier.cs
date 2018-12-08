@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal sealed class DddClassifier : ITagger<ClassificationTag>
 	{

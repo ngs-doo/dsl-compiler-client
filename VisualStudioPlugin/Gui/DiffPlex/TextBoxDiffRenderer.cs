@@ -9,7 +9,7 @@ using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class TextBoxDiffRenderer
 	{

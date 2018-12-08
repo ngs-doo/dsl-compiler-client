@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	public partial class ConfigurationPortableControl : UserControl
 	{

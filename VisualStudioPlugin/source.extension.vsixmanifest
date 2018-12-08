@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de">
-    <Name>DDD for DSL Platform</Name>
+  <Identifier Id="DSLPlatform..0c2dba72-d915-4d37-9379-2100b92042de">
+    <Name>DSL Platform</Name>
     <Author>N.G.S.</Author>
     <Version>1.8.0</Version>
-    <Description xml:space="preserve">Domain-Driven Design Language by DSL Platform</Description>
+    <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
     <Locale>1033</Locale>
     <MoreInfoUrl>https://dsl-platform.com</MoreInfoUrl>
     <License>License.txt</License>
@@ -36,6 +36,11 @@
         <Edition>VST_All</Edition>
       </VisualStudio>
       <VisualStudio Version="15.0">
+        <Edition>Pro</Edition>
+        <Edition>Community</Edition>
+        <Edition>VST_All</Edition>
+      </VisualStudio>
+      <VisualStudio Version="16.0">
         <Edition>Pro</Edition>
         <Edition>Community</Edition>
         <Edition>VST_All</Edition>

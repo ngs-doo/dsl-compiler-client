@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	[Export(typeof(IQuickInfoSourceProvider))]
 	[ContentType("dsl")]

@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	// Hack to stop TextBoxes resizing based on their value!
 	// I'm binding DiffPlexControl's Width to ActualWidth of Window. The problem is Window's ActualWidth is for about 30 pixels larger than I can use in application. This converter "fixes" it.

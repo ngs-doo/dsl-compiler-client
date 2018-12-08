@@ -1,7 +1,7 @@
 ﻿// PkgCmdID.cs
 // MUST match PkgCmdID.h
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	static class PkgCmdIDList
 	{

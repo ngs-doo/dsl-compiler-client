@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class CompileTargets
 	{
@@ -72,29 +74,120 @@ namespace DDDLanguage
 			}
 		}
 
+		private static Version RevenjServerVersion(LibraryInfo library)
+		{
+			Version version;
+			var nuget = library.Nugets.Find(it => it.Project == "revenj");
+			if (library.BuildType == BuildTypes.DotNetStandard && nuget != null && Version.TryParse(nuget.Version, out version))
+				return version;
+			if (!library.DependenciesExists) return null;
+			var file = Directory.GetFiles(library.DependenciesPath, "Revenj.Core.dll", SearchOption.TopDirectoryOnly);
+			if (file == null || file.Length != 1) return null;
+			var fvi = FileVersionInfo.GetVersionInfo(file[0]);
+			return new Version(fvi.FileVersion);
+		}
+		private static Version NoVersion(LibraryInfo library)
+		{
+			return null;
+		}
+
 		private LibraryInfo oldPocoLibrary;
-		public static readonly LibraryInfo PocoLibraryDefault = new LibraryInfo("Poco", "dotnet_poco", false, PocoDependencies, NoDependencies(), BuildTypes.LegacyDotNet, ".cs", BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard, BuildTypes.Source);
+		public static readonly LibraryInfo PocoLibraryDefault =
+			new LibraryInfo(
+				"Poco",
+				"dotnet_poco",
+				_ => null,
+				false,
+				PocoDependencies,
+				NoDependencies(),
+				BuildTypes.LegacyDotNet,
+				".cs",
+				BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
 		public readonly LibraryInfo PocoLibrary = PocoLibraryDefault.Clone();
 		private LibraryInfo oldClientLibrary;
-		public static readonly LibraryInfo ClientLibraryDefault = new LibraryInfo("Client", "dotnet_client", true, PocoDependencies, NoDependencies(), BuildTypes.LegacyDotNet, ".cs");
+		public static readonly LibraryInfo ClientLibraryDefault =
+			new LibraryInfo(
+				"Client",
+				"dotnet_client",
+				NoVersion,
+				true,
+				PocoDependencies,
+				NoDependencies(),
+				BuildTypes.LegacyDotNet,
+				".cs");
 		public readonly LibraryInfo ClientLibrary = ClientLibraryDefault.Clone();
 		private LibraryInfo oldPortableLibrary;
-		public static readonly LibraryInfo PortableLibraryDefault = new LibraryInfo("Portable", "dotnet_portable", true, new string[0], NoDependencies(), BuildTypes.LegacyDotNet, ".cs");
+		public static readonly LibraryInfo PortableLibraryDefault =
+			new LibraryInfo(
+				"Portable",
+				"dotnet_portable",
+				NoVersion,
+				true,
+				new string[0],
+				NoDependencies(),
+				BuildTypes.LegacyDotNet,
+				".cs");
 		public readonly LibraryInfo PortableLibrary = PortableLibraryDefault.Clone();
 		private LibraryInfo oldPhpSource;
-		public static readonly LibraryInfo PhpSourceDefault = new LibraryInfo("Php", "php_client", false, new string[0], NoDependencies(), BuildTypes.Source, ".php");
+		public static readonly LibraryInfo PhpSourceDefault =
+			new LibraryInfo(
+				"Php",
+				"php_client",
+				NoVersion,
+				false,
+				new string[0],
+				NoDependencies(),
+				BuildTypes.Source,
+				".php");
 		public readonly LibraryInfo PhpSource = PhpSourceDefault.Clone();
 		private LibraryInfo oldTypescriptSource;
-		public static readonly LibraryInfo TypescriptSourceDefault = new LibraryInfo("Typescript", "typescript", false, new string[0], NoDependencies(), BuildTypes.Source, string.Empty);
+		public static readonly LibraryInfo TypescriptSourceDefault =
+			new LibraryInfo(
+				"Typescript",
+				"typescript",
+				NoVersion,
+				false,
+				new string[0],
+				NoDependencies(),
+				BuildTypes.Source,
+				string.Empty);
 		public readonly LibraryInfo TypescriptSource = TypescriptSourceDefault.Clone();
 		private LibraryInfo oldWpfLibrary;
-		public static readonly LibraryInfo WpfLibraryDefault = new LibraryInfo("Wpf", "wpf", true, WpfDependencies, NoDependencies(), BuildTypes.LegacyDotNet, ".cs");
+		public static readonly LibraryInfo WpfLibraryDefault =
+			new LibraryInfo(
+				"Wpf",
+				"wpf",
+				NoVersion,
+				true,
+				WpfDependencies,
+				NoDependencies(),
+				BuildTypes.LegacyDotNet,
+				".cs");
 		public readonly LibraryInfo WpfLibrary = WpfLibraryDefault.Clone();
 		private LibraryInfo oldPostgresLibrary;
-		public static readonly LibraryInfo PostgresLibraryDefault = new LibraryInfo("Postgres", "dotnet_server_postgres", true, RevenjDependencies, RevenjStandard(), BuildTypes.LegacyDotNet, ".cs", BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard, BuildTypes.Source);
+		public static readonly LibraryInfo PostgresLibraryDefault =
+			new LibraryInfo(
+				"Postgres",
+				"dotnet_server_postgres",
+				RevenjServerVersion,
+				true,
+				RevenjDependencies,
+				RevenjStandard(),
+				BuildTypes.LegacyDotNet,
+				".cs",
+				BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
 		public readonly LibraryInfo PostgresLibrary = PostgresLibraryDefault.Clone();
 		private LibraryInfo oldOracleLibrary;
-		public static readonly LibraryInfo OracleLibraryDefault = new LibraryInfo("Oracle", "dotnet_server_oracle", true, RevenjDependencies, NoDependencies(), BuildTypes.LegacyDotNet, ".cs");
+		public static readonly LibraryInfo OracleLibraryDefault =
+			new LibraryInfo(
+				"Oracle",
+				"dotnet_server_oracle",
+				RevenjServerVersion,
+				true,
+				RevenjDependencies,
+				NoDependencies(),
+				BuildTypes.LegacyDotNet,
+				".cs");
 		public readonly LibraryInfo OracleLibrary = OracleLibraryDefault.Clone();
 
 		private readonly LibraryInfo[] Targets;
@@ -161,6 +254,9 @@ namespace DDDLanguage
 				sb.Append(" namespace=").Append(target.Namespace);
 			if (string.IsNullOrEmpty(target.Extension))
 				sb.Append(" file-extension");
+			var version = target.Version();
+			if (version != null)
+				sb.Append(" library:" + target.CompilerName + "=" + version.ToString());
 			sb.Append(" format=xml");
 			var result = Compiler.CompileDsl(sb, dsls, null, cms => XElement.Load(cms));
 			if (result.Success)

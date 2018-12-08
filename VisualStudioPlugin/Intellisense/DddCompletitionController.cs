@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DddLanguage
+namespace DSLPlatform
 {
 	[Export(typeof(IVsTextViewCreationListener))]
 	[ContentType("dsl")]

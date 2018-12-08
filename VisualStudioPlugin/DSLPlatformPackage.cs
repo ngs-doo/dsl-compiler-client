@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	/// <summary>
 	/// This is the class that implements the package exposed by this assembly.
@@ -32,8 +32,8 @@ namespace DDDLanguage
 	// This attribute registers a tool window exposed by this package.
 	[ProvideSolutionProps(SolutionPersistanceKey)]
 	[ProvideToolWindow(typeof(ToolWindow))]
-	[Guid(GuidList.guidDDDLanguagePkgString)]
-	public sealed class DDDLanguagePackage : Package, IVsPersistSolutionProps
+	[Guid(GuidList.guidDSLPlatformPkgString)]
+	public sealed class DSLPlatformPackage : Package, IVsPersistSolutionProps
 	{
 		private readonly ToolPresenter Presenter = new ToolPresenter();
 		public const string SolutionPersistanceKey = "DslPlatformSolutionProperties";
@@ -47,7 +47,7 @@ namespace DDDLanguage
 		/// not sited yet inside Visual Studio environment. The place to do all the other 
 		/// initialization is the Initialize method.
 		/// </summary>
-		public DDDLanguagePackage()
+		public DSLPlatformPackage()
 		{
 		}
 
@@ -69,15 +69,15 @@ namespace DDDLanguage
 			if (mcs != null)
 			{
 				// Create the command for the menu item.
-				CommandID menuCommandID = new CommandID(GuidList.guidDDDLanguageCmdSet, (int)PkgCmdIDList.cmdDslPlatformCmd);
+				CommandID menuCommandID = new CommandID(GuidList.guidDSLPlatformCmdSet, (int)PkgCmdIDList.cmdDslPlatformCmd);
 				MenuCommand menuItem = new MenuCommand(LoginDslPlatformWindow, menuCommandID);
 				mcs.AddCommand(menuItem);
 				// Create the command for the tool window
-				CommandID toolwndCommandID = new CommandID(GuidList.guidDDDLanguageCmdSet, (int)PkgCmdIDList.cmdDslPlatformTool);
+				CommandID toolwndCommandID = new CommandID(GuidList.guidDSLPlatformCmdSet, (int)PkgCmdIDList.cmdDslPlatformTool);
 				MenuCommand menuToolWin = new MenuCommand(ShowDslPlatformWindow, toolwndCommandID);
 				mcs.AddCommand(menuToolWin);
 
-				CommandID compileCommandID = new CommandID(GuidList.guidDDDLanguageCmdSet, (int)PkgCmdIDList.cmdCompileDslCmd);
+				CommandID compileCommandID = new CommandID(GuidList.guidDSLPlatformCmdSet, (int)PkgCmdIDList.cmdCompileDslCmd);
 				MenuItemCompile = new OleMenuCommand(CompileDsl, compileCommandID);
 				MenuItemCompile.BeforeQueryStatus += MenuItemCompile_BeforeQueryStatus;
 				MenuItemCompile.Visible = false;

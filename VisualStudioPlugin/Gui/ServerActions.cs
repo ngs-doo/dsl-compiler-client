@@ -12,7 +12,7 @@ using Ionic.Zip;
 using Npgsql;
 using Oracle.ManagedDataAccess.Client;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class ServerActions
 	{

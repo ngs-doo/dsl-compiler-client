@@ -3,7 +3,7 @@ using System.Windows.Media;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	/// <summary>
 	/// Defines an editor format for the OrdinaryClassification type that has a purple background

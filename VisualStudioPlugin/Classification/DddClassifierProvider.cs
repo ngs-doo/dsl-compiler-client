@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	[Export(typeof(ITaggerProvider))]
 	[ContentType("ddd")]

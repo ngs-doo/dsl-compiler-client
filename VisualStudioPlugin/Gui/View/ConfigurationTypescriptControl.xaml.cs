@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using System.Windows.Controls;
-using System.Windows.Navigation;
+﻿using System.Windows.Controls;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	public partial class ConfigurationTypescriptControl : UserControl
 	{

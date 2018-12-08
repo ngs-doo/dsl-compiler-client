@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	[DataContract(Namespace = "")]
 	internal class SyntaxConcept

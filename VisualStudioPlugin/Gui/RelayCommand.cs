@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class RelayCommand : ICommand
 	{

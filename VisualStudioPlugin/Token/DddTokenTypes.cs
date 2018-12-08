@@ -1,4 +1,4 @@
-﻿namespace DDDLanguage
+﻿namespace DSLPlatform
 {
 	internal enum DddTokenTypes
 	{

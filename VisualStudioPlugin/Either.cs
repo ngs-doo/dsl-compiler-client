@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	public struct Either<T>
 	{

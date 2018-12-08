@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	public partial class DiffPlexControl : UserControl
 	{

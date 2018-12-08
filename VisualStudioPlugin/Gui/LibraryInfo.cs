@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class LibraryInfo : IEquatable<LibraryInfo>, ICloneable
 	{
@@ -70,10 +70,13 @@ namespace DDDLanguage
 
 		public static string BasePath { get; set; }
 		public readonly BuildTypes[] SupportedBuilds;
+		private readonly Func<LibraryInfo, Version> DependenciesVersion;
+		public Version Version() { return DependenciesVersion(this); }
 
 		public LibraryInfo(
 			string type,
 			string compilerName,
+			Func<LibraryInfo, Version> dependenciesVersion,
 			bool requireDependenciesLegacy,
 			string[] referencesLegacy,
 			List<Nuget> nugets,
@@ -83,6 +86,7 @@ namespace DDDLanguage
 		{
 			Type = type;
 			this.SupportedBuilds = supportedBuilds;
+			this.DependenciesVersion = dependenciesVersion;
 			this.RequireDependenciesLegacy = requireDependenciesLegacy;
 			if (buildType == BuildTypes.Source)
 			{
@@ -191,7 +195,7 @@ Please download dependencies before running compilation" : string.Empty);
 
 		public LibraryInfo Clone()
 		{
-			return new LibraryInfo(Type, CompilerName, RequireDependenciesLegacy, ReferencesLegacy, Nugets.Select(it => it.Clone()).ToList(), BuildType, Extension, SupportedBuilds)
+			return new LibraryInfo(Type, CompilerName, DependenciesVersion, RequireDependenciesLegacy, ReferencesLegacy, Nugets.Select(it => it.Clone()).ToList(), BuildType, Extension, SupportedBuilds)
 			{
 				CompileOption = CompileOption,
 				Name = Name,

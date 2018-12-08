@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal static class OrdinaryClassificationDefinition
 	{

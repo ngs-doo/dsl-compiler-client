@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.Text.Tagging;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class DddOutlineTag : IOutliningRegionTag
 	{

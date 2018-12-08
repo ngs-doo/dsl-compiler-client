@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class ChunkedMemoryStream : Stream
 	{

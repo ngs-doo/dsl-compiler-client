@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	public partial class ToolContent : UserControl
 	{

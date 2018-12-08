@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.Shell;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
 	internal sealed class ProvideSolutionProps : RegistrationAttribute

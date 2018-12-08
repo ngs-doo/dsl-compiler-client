@@ -2,7 +2,7 @@
 using System.Text;
 using System.Windows.Media;
 
-namespace DDDLanguage
+namespace DSLPlatform
 {
 	internal class DatabaseInfo
 	{
