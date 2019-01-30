@@ -286,6 +286,22 @@ public enum Targets implements CompileParameter, ParameterParser {
 		}
 	}
 
+	private static void setupFolder(final Context context, final File path, int retry) throws ExitException, IOException {
+		if (path.exists()) return;
+		if (path.mkdirs()) return;
+		if (retry <= 0) {
+			context.error("Failed creating path for target file: " + path.getAbsolutePath());
+			throw new ExitException();
+		}
+		try {
+			context.warning("Failed creating path for target file: " + path.getAbsolutePath() + ". Retrying...");
+			Thread.sleep(100);
+		} catch (InterruptedException ex) {
+			throw new ExitException();
+		}
+		setupFolder(context, path, retry - 1);
+	}
+
 	private static void saveFile(
 			final Context context,
 			final String temp,
@@ -300,12 +316,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 				? new File(temp, nameOnly.replace('.', '/').replace('\\', '/') + cleanName.substring(nameOnly.length()))
 				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
-		if (!parentPath.exists()) {
-			if (!parentPath.mkdirs()) {
-				context.error("Failed creating path for target file: " + parentPath.getAbsolutePath());
-				throw new ExitException();
-			}
-		}
+		setupFolder(context, parentPath, 2);
 		if (!file.createNewFile()) {
 			context.error("Failed creating target file: " + file.getAbsolutePath());
 			throw new ExitException();
