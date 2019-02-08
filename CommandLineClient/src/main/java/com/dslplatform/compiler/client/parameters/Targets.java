@@ -71,6 +71,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		PHP_UI("php_ui", "PHP UI client", ".php", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
 		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true),
 		TYPESCRIPT("typescript", "Typescript", ".ts", new PrepareSources("typescript", "typescript", "Generated-Typescript"), false),
+		REACT("react", "React", ".ts", new PrepareSources("react", "react", "Generated-React"), false),
 		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true),
 		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala", "revenj-core_2.11"), true),
@@ -230,8 +231,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 		compile(context, targets);
 	}
 
-	public static String getTargetSourcePath(final Context context, Option target) throws ExitException {
-		final String custom = context.get("source:" + target.value);
+	public static String getTargetSourcePath(final Context context, boolean sourceOnly, Option target) throws ExitException {
+		final String sourceOutput = context.get("source:" + target.value);
+		final String custom = sourceOutput != null ? sourceOutput : sourceOnly ? context.get(target.value) : null;
 		if (custom != null && !custom.isEmpty()) {
 			final File file = new File(custom, target.name());
 			try {
@@ -253,7 +255,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final List<String> settings = Settings.get(context);
 		final boolean sourceOnly = Settings.hasSourceOnly(context);
 		for (final Option t : targets) {
-			final String temp = getTargetSourcePath(context, t);
+			final String temp = getTargetSourcePath(context, sourceOnly, t);
 			final Map<String, String> files =
 					DslCompiler.compile(
 							context,
@@ -287,7 +289,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		}
 	}
 
-	private static void setupFolder(final Context context, final File path, int retry) throws ExitException, IOException {
+	private static void setupFolder(final Context context, final File path, int retry) throws ExitException {
 		if (path.exists()) return;
 		if (path.mkdirs()) return;
 		if (retry <= 0) {
