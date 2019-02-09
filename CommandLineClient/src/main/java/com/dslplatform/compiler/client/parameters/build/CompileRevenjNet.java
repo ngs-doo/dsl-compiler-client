@@ -3,12 +3,15 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.Force;
+import com.dslplatform.compiler.client.parameters.Nuget;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
 
 public class CompileRevenjNet implements BuildAction {
 
@@ -22,16 +25,26 @@ public class CompileRevenjNet implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id, "dotnet-core", true);
-		final File[] found = revenjDeps.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".dll");
+		final Map<String, String> nugets = Nuget.getNugets(context);
+		if (nugets == null) {
+			final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id, "dotnet-core", true);
+			final File[] found = revenjDeps.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".dll");
+				}
+			});
+			if (found == null || found.length == 0) {
+				context.error("Revenj.NET dependencies not found in: " + revenjDeps.getAbsolutePath());
+				return downloadFromGithub(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
 			}
-		});
-		if (found == null || found.length == 0) {
-			context.error("Revenj.NET dependencies not found in: " + revenjDeps.getAbsolutePath());
-			return downloadFromGithub(context, "Revenj.NET", "revenj-core", additionalZip, revenjDeps);
+		} else if (!nugets.containsKey("revenj")) {
+			if (context.contains(Force.INSTANCE)) {
+				context.warning("No revenj dependency found in nuget. Compilation will most likely fail. Continuing due to force option");
+			} else {
+				context.error("No revenj dependency found in nuget. Unable to compile Revenj without revenj dependency. To force continue compilation regardless, specify force parameter");
+				return false;
+			}
 		}
 		return true;
 	}
@@ -51,12 +64,14 @@ public class CompileRevenjNet implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File revenjDeps = Dependencies.getDependencies(context, "Revenj.NET", id);
+		final Map<String, String> nugets = Nuget.getNugets(context);
+		final File revenjDeps = Dependencies.getDependenciesIf(context, "Revenj.NET", id, nugets == null);
 		final String customDll = context.get(id);
 		final File model = new File(customDll != null ? customDll : "./GeneratedModel.dll");
 		context.show("Compiling Revenj.NET library...");
-		final Either<String> compilation =
-				DotNetCompilation.compile(DEPENDENCIES, revenjDeps, sources, model, context, false);
+		final Either<String> compilation = nugets == null
+				? DotNetCompilation.compileLegacy(DEPENDENCIES, revenjDeps, sources, model, context, false)
+				: DotNetCompilation.compileNewDotnet(nugets, revenjDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during Revenj.NET library compilation.");
 			context.error(compilation.whyNot());
@@ -97,8 +112,8 @@ public class CompileRevenjNet implements BuildAction {
 			conn.connect();
 			final String tag;
 			if (conn.getResponseCode() != 302) {
-				context.warning("Error downloading " + name + " from GitHub. Will continue with tag 1.3.1. Expecting redirect. Got: " + conn.getResponseCode());
-				tag = "1.3.1";
+				context.warning("Error downloading " + name + " from GitHub. Will continue with tag 1.4.2. Expecting redirect. Got: " + conn.getResponseCode());
+				tag = "1.4.2";
 			} else {
 				final String redirect = conn.getHeaderField("Location");
 				tag = redirect.substring(redirect.lastIndexOf('/') + 1);

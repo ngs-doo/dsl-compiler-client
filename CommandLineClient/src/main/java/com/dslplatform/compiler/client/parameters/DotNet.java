@@ -14,19 +14,31 @@ public enum DotNet implements CompileParameter {
 
 	public static Either<String> findCompiler(final Context context) {
 		final boolean is32Bit = System.getProperty("os.arch").equals("x86");
-		return findCompiler(context, is32Bit);
+		return findCompiler(context, is32Bit ? CompilerVersion.Legacy32bit : CompilerVersion.Legacy64bit);
 	}
 
-	public static Either<String> findCompiler(final Context context, final boolean is32Bit) {
+	public enum CompilerVersion {
+		Legacy32bit,
+		Legacy64bit,
+		NewDotNet
+	}
+
+	public static Either<String> findCompiler(final Context context, final CompilerVersion compiler) {
 		if (context.contains(INSTANCE)) {
 			return Either.success(context.get(INSTANCE));
 		} else {
+			if (compiler == CompilerVersion.NewDotNet) {
+				if (Utils.testCommand(context, "dotnet", "Usage: dotnet")) {
+					return Either.success("dotnet.exe");
+				}
+				return Either.fail("Unable to find dotnet (New dotnet tooling). Add it to path or specify dotnet compile option.");
+			}
 			final boolean isWindows = Utils.isWindows();
 			if (isWindows) {
 				if (Utils.testCommand(context, "csc.exe", "Microsoft")) {
 					return Either.success("csc.exe");
 				}
-				final String framework = is32Bit ? "Framework" : "Framework64";
+				final String framework = compiler == CompilerVersion.Legacy32bit ? "Framework" : "Framework64";
 				final String msDotNet4 = System.getenv("WINDIR") + "\\Microsoft.NET\\" + framework + "\\v4.0.30319\\csc.exe";
 				if (Utils.testCommand(context, msDotNet4, "Microsoft")) {
 					return Either.success(msDotNet4);
@@ -67,6 +79,7 @@ public enum DotNet implements CompileParameter {
 	@Override
 	public String getDetailedDescription() {
 		return "To compile .NET libraries Mono/.NET compiler is required.\n" +
+				"When used without the nuget parameter, legacy csc compiler will be used. When nuget parameter is specified new dotnet tooling will be used.\n" +
 				"In Windows csc.exe is usually located in %WINDIR%\\Microsoft.NET\\Framework while on Linux mono is usually available via command line.\n" +
 				"If custom path is required this option can be used to specify it.\n" +
 				"\n" +

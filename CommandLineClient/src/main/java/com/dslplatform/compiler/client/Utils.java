@@ -267,6 +267,7 @@ public abstract class Utils {
 			commandAndArgs.add(command);
 			commandAndArgs.addAll(arguments);
 			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			pb.environment().put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 			logCommand(context, pb);
 			final Process compilation = pb.start();
 			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
@@ -290,6 +291,7 @@ public abstract class Utils {
 			commandAndArgs.add(command);
 			commandAndArgs.addAll(arguments);
 			final ProcessBuilder pb = new ProcessBuilder(commandAndArgs);
+			pb.environment().put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 			if (path != null) {
 				pb.directory(path);
 			}

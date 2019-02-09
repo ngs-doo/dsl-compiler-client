@@ -67,6 +67,7 @@ public class Main {
 			SqlPath.INSTANCE,
 			Download.INSTANCE,
 			Dependencies.INSTANCE,
+			Nuget.INSTANCE,
 			DotNet.INSTANCE,
 			Mono.INSTANCE,
 			TempPath.INSTANCE,

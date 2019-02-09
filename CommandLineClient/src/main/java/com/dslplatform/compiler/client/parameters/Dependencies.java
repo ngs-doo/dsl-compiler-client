@@ -22,6 +22,18 @@ public enum Dependencies implements CompileParameter {
 		return getDependencies(context, name, library, null, false);
 	}
 
+	public static File getDependenciesIf(final Context context, final String name, final String library, final boolean forceCheck) throws ExitException {
+		if (forceCheck) {
+			return getDependencies(context, name, library, null, false);
+		}
+		final boolean hasFolderSpecified = context.contains("dependency:" + library);
+		if (hasFolderSpecified) {
+			return new File(context.get("dependency:" + library));
+		}
+		final String depsParam = context.get(Dependencies.INSTANCE);
+		return new File(depsParam != null ? depsParam : "./", library.replace('.', '_'));
+	}
+
 	public static File getDependencies(
 			final Context context,
 			final String name,

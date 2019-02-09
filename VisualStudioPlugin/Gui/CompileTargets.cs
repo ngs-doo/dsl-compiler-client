@@ -256,7 +256,7 @@ namespace DSLPlatform
 				sb.Append(" file-extension");
 			var version = target.Version();
 			if (version != null)
-				sb.Append(" library:" + target.CompilerName + "=" + version.ToString());
+				sb.Append(" library=" + version.ToString());
 			sb.Append(" format=xml");
 			var result = Compiler.CompileDsl(sb, dsls, null, cms => XElement.Load(cms));
 			if (result.Success)

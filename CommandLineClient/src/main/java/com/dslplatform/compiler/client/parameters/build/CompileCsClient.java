@@ -3,9 +3,11 @@ package com.dslplatform.compiler.client.parameters.build;
 import com.dslplatform.compiler.client.*;
 import com.dslplatform.compiler.client.parameters.Dependencies;
 import com.dslplatform.compiler.client.parameters.Download;
+import com.dslplatform.compiler.client.parameters.Nuget;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Map;
 
 public class CompileCsClient implements BuildAction {
 
@@ -33,9 +35,13 @@ public class CompileCsClient implements BuildAction {
 
 	@Override
 	public boolean check(final Context context) throws ExitException {
+		final Map<String, String> nugets = Nuget.getNugets(context);
 		if(force32Bit && !Utils.isWindows()) {
 			context.error(name + " is only currently available on Windows.");
 			throw new ExitException();
+		}
+		if (nugets != null) {
+			return true;
 		}
 		for (int i = 0; i < dependencies.length; i++) {
 			if (dependencies[i].startsWith("gac/")) {
@@ -85,12 +91,14 @@ public class CompileCsClient implements BuildAction {
 
 	@Override
 	public void build(final File sources, final Context context) throws ExitException {
-		final File libDeps = Dependencies.getDependencies(context, name, library);
+		final Map<String, String> nugets = Nuget.getNugets(context);
+		final File libDeps = Dependencies.getDependenciesIf(context, name, library, nugets == null);
 		final String customDll = context.get(library);
 		final File model = new File(customDll != null ? customDll : dll);
 		context.show("Compiling " + name + " library...");
-		final Either<String> compilation =
-				DotNetCompilation.compile(dependencies, libDeps, sources, model, context, force32Bit);
+		final Either<String> compilation = nugets == null
+				? DotNetCompilation.compileLegacy(dependencies, libDeps, sources, model, context, force32Bit)
+				: DotNetCompilation.compileNewDotnet(nugets, libDeps, sources, model, context);
 		if (!compilation.isSuccess()) {
 			context.error("Error during " + name + " library compilation.");
 			context.error(compilation.whyNot());
