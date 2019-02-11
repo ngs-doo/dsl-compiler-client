@@ -45,18 +45,17 @@ namespace DSLPlatform
 			}
 		}
 
-		private static readonly Random Rnd = new Random();
-
 		public static void SetupServer(string dslCompiler)
 		{
 			if (!File.Exists(dslCompiler))
 				return;
 			DslCompiler = dslCompiler;
+			var rnd = new Random();
 			lock (sync)
 			{
 				if (RunningServer == null)
 				{
-					ServerPort = Rnd.Next(20000, 60000);
+					ServerPort = rnd.Next(20000, 60000);
 					RunningServer =
 						new System.Diagnostics.Process
 						{
@@ -186,7 +185,8 @@ namespace DSLPlatform
 				if (process.ExitCode == 0)
 					return Path.Combine(Path.Combine(Path.Combine(folder, "bin"), "Release"), outputName + ".dll");
 				Process.Start(folder);
-				throw new ApplicationException(@"Error during compilation. Try running the project manually");
+				throw new ApplicationException(string.Format(@"Error during compilation. Try running the project manually: 
+dotnet build ""{0}.csproj""", Path.Combine(folder, library.Type)));
 			}
 			finally
 			{

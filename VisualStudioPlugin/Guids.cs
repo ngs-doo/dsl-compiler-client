@@ -11,5 +11,9 @@ namespace DSLPlatform
 		public const string guidToolWindowPersistanceString = "80223397-d1f8-4d21-87d3-51f13e9ddabc";
 
 		public static readonly Guid guidDSLPlatformCmdSet = new Guid(guidDSLPlatformCmdSetString);
-	};
+	}
+	static class Constants
+	{
+		public const string vsProjectKindUnmodeled = "{67294A52-A4F0-11D2-AA88-00C04F688DDE}";
+	}
 }

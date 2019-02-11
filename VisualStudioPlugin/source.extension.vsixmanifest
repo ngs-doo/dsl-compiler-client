@@ -1,61 +1,26 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de">
-    <Name>DSL Platform</Name>
-    <Author>N.G.S.</Author>
-    <Version>1.8.0</Version>
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="DSLPlatform" Version="2.0" Language="en-US" Publisher="N.G.S." />
+    <DisplayName>DSLPlatform</DisplayName>
     <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
-    <Locale>1033</Locale>
-    <MoreInfoUrl>https://dsl-platform.com</MoreInfoUrl>
+    <MoreInfo>https://dsl-platform.com</MoreInfo>
     <License>License.txt</License>
-    <GettingStartedGuide>https://docs.dsl-platform.com</GettingStartedGuide>
+    <GettingStartedGuide>https://github.com/ngs-doo/dsl-compiler-client</GettingStartedGuide>
     <Icon>file.png</Icon>
     <PreviewImage>dsl.png</PreviewImage>
-    <SupportedProducts>
-      <VisualStudio Version="10.0">
-        <Edition>Pro</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="11.0">
-        <Edition>Pro</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="12.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="13.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="14.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <!--VisualStudio Version="15.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="16.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio-->
-    </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
-  </Identifier>
-  <References>
-    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
-      <Name>Visual Studio MPF</Name>
-    </Reference>
-  </References>
-  <Content>
-    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <MefComponent>|%CurrentProject%|</MefComponent>
-    <ItemTemplate>ItemTemplates</ItemTemplate>
-  </Content>
-</Vsix>
+    <Tags>DSL,DDD,Modeling</Tags>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[12.0, 16.0)" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="VisualStudioItemTemplate" d:TargetPath="|VisualStudioItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
+  </Assets>
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
+</PackageManifest>
