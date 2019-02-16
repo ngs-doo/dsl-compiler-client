@@ -153,16 +153,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           }.toSet
         }
 
-        def recursiveListFiles(f: File): Array[File] = {
-          val files = f.listFiles
-          files.filter(it => it.getName.endsWith(".dsl") || it.getName.endsWith(".ddd")) ++
-            files.filter(_.isDirectory).flatMap(recursiveListFiles)
-        }
-        // Index only *.dsl files
+        // Index only *.dsl and *.ddd files
         val dslPathFiles = dslDslPath
           .value
-          .filter(_.exists())
-          .flatMap(recursiveListFiles)
+          .flatMap(path => (path ** ("*.dsl" || "*.ddd")).get)
           .toSet
 
         logger.info(s"Found ${dslPathFiles.size} DSL files")
