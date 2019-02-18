@@ -61,7 +61,7 @@ namespace DSLPlatform
 				latest.KeepAlive = false;
 				latest.AllowAutoRedirect = false;
 				var redirect = (HttpWebResponse)latest.GetResponse();
-				var tag = "1.4.2";
+				var tag = "1.5.0";
 				if (redirect.StatusCode == HttpStatusCode.Redirect)
 				{
 					var location = redirect.GetResponseHeader("Location");

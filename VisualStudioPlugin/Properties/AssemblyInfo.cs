@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("N.G.S.")]
 [assembly: AssemblyProduct("DDD for DSL Platform")]
-[assembly: AssemblyCopyright("Copyright © N.G.S. 2018")]
+[assembly: AssemblyCopyright("Copyright © N.G.S. 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
@@ -28,8 +28,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
 
-[assembly: AssemblyVersion("1.8.1.*")]
-[assembly: AssemblyFileVersion("1.8.1.0")]
+[assembly: AssemblyVersion("1.8.2.*")]
+[assembly: AssemblyFileVersion("1.8.2.0")]
 
 
 

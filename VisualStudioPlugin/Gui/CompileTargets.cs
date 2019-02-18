@@ -16,7 +16,7 @@ namespace DSLPlatform
 		}
 		private static List<LibraryInfo.Nuget> RevenjStandard()
 		{
-			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.4.2" } });
+			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.5.0" } });
 		}
 
 		private static readonly string[] PocoDependencies = new[] {
@@ -77,7 +77,7 @@ namespace DSLPlatform
 		private static Version RevenjServerVersion(LibraryInfo library)
 		{
 			Version version;
-			var nuget = library.Nugets.Find(it => it.Project == "revenj");
+			var nuget = library.Nugets.Find(it => "revenj".Equals(it.Project, StringComparison.InvariantCultureIgnoreCase));
 			if (library.BuildType == BuildTypes.DotNetStandard && nuget != null && Version.TryParse(nuget.Version, out version))
 				return version;
 			if (!library.DependenciesExists) return null;
