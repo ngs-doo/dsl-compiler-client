@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "DSLPlatform.2010.csproj", "{8432A1B8-12AA-4DBC-AA95-CB8B91A2F1E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "2010\DSLPlatform.2010.csproj", "{8432A1B8-12AA-4DBC-AA95-CB8B91A2F1E5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualStudioItemTemplate", "VisualStudioItemTemplate\VisualStudioItemTemplate.vs2010.csproj", "{32628025-999C-4BC9-9496-DB92DB0A1B7F}"
 EndProject

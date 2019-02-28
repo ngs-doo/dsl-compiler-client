@@ -1,26 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
-  <Metadata>
-    <Identity Id="DSLPlatform" Version="2.0" Language="en-US" Publisher="N.G.S." />
-    <DisplayName>DSLPlatform</DisplayName>
-    <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
-    <MoreInfo>https://dsl-platform.com</MoreInfo>
-    <License>License.txt</License>
-    <GettingStartedGuide>https://github.com/ngs-doo/dsl-compiler-client</GettingStartedGuide>
-    <Icon>file.png</Icon>
-    <PreviewImage>dsl.png</PreviewImage>
-    <Tags>DSL,DDD,Modeling</Tags>
-  </Metadata>
-  <Installation>
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[12.0, 16.0)" />
-  </Installation>
-  <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
-  </Dependencies>
-  <Assets>
-    <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="VisualStudioItemTemplate" d:TargetPath="|VisualStudioItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
-  </Assets>
-  <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />
-  </Prerequisites>
+    <Metadata>
+        <Identity Id="DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de" Version="1.9.0" Language="en-US" Publisher="N.G.S." />
+        <DisplayName>DSL Platform</DisplayName>
+        <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
+        <MoreInfo>https://dsl-platform.com</MoreInfo>
+        <License>License.txt</License>
+        <GettingStartedGuide>https://github.com/ngs-doo/dsl-compiler-client</GettingStartedGuide>
+        <Icon>file.png</Icon>
+        <PreviewImage>dsl.png</PreviewImage>
+        <Tags>DSL,DDD,Modeling</Tags>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 17.0)" />
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+        <Dependency Id="Microsoft.VisualStudio.MPF.15.0" DisplayName="Visual Studio MPF 15.0" d:Source="Installed" Version="[15.0,17.0)" />
+    </Dependencies>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+        <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="VisualStudioItemTemplate" d:TargetPath="|VisualStudioItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
+        <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
+    </Assets>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
 </PackageManifest>

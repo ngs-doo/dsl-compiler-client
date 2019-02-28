@@ -3,11 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.10.0"
              mc:Ignorable="d" 
+             xmlns:local="clr-namespace:DSLPlatform"
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Background="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarOptionsBackgroundKey}}"
-          TextElement.Foreground="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextActiveKey}}">
+    <Grid Background="{DynamicResource {x:Static Member=local:VsColors.Background}}" 
+          TextElement.Foreground="{DynamicResource {x:Static local:VsColors.Foreground}}">
         <StackPanel Orientation="Vertical">
             <TextBlock Margin="10" HorizontalAlignment="Center" FontWeight="Bold" >DSL Platform</TextBlock>
             <TextBlock Margin="10" TextWrapping="Wrap" >

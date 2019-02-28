@@ -1,6 +1,5 @@
-﻿// Guids.cs
-// MUST match guids.h
-using System;
+﻿using System;
+using Microsoft.VisualStudio.Shell;
 
 namespace DSLPlatform
 {
@@ -12,8 +11,19 @@ namespace DSLPlatform
 
 		public static readonly Guid guidDSLPlatformCmdSet = new Guid(guidDSLPlatformCmdSetString);
 	}
+	static class PkgCmdIDList
+	{
+		public const int cmdDslPlatformCmd = 0x100;
+		public const int cmdDslPlatformTool = 0x101;
+		public const int cmdCompileDslCmd = 0x102;
+	}
 	static class Constants
 	{
 		public const string vsProjectKindUnmodeled = "{67294A52-A4F0-11D2-AA88-00C04F688DDE}";
+	}
+	public class VsColors
+	{
+		public static object Foreground { get { return VsBrushes.CommandBarTextActiveKey; } }
+		public static object Background { get { return VsBrushes.CommandBarOptionsBackgroundKey; } }
 	}
 }

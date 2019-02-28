@@ -1,0 +1,400 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8432A1B8-12AA-4DBC-AA95-CB8B91A2F1E5}</ProjectGuid>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DSLPlatform</RootNamespace>
+    <AssemblyName>DSLPlatform</AssemblyName>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Key.snk</AssemblyOriginatorKeyFile>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;VS2010</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DiffPlex">
+      <HintPath>..\Dependencies\DiffPlex.dll</HintPath>
+    </Reference>
+    <Reference Include="EnvDTE">
+      <HintPath>..\Dependencies\EnvDTE.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip.Reduced">
+      <HintPath>..\Dependencies\Ionic.Zip.Reduced.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualStudio.CoreUtility">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Editor">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Language.Intellisense.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.Interop.10.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Text.Data">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Text.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Text.Logic">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Text.Logic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Text.UI">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Text.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Text.UI.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.TextManager.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.10.0">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.10.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0">
+      <HintPath>..\Dependencies\Microsoft.VisualStudio.Shell.Immutable.10.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>..\Dependencies\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>..\Dependencies\Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="Oracle.ManagedDataAccess">
+      <HintPath>..\Dependencies\Oracle.ManagedDataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Classification\ClassificationFormat.cs">
+      <Link>Classification\ClassificationFormat.cs</Link>
+    </Compile>
+    <Compile Include="..\Classification\ClassificationType.cs">
+      <Link>Classification\ClassificationType.cs</Link>
+    </Compile>
+    <Compile Include="..\Classification\DddClassifier.cs">
+      <Link>Classification\DddClassifier.cs</Link>
+    </Compile>
+    <Compile Include="..\Classification\DddClassifierProvider.cs">
+      <Link>Classification\DddClassifierProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Classification\DslClassifierProvider.cs">
+      <Link>Classification\DslClassifierProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\ChunkedMemoryStream.cs" />
+    <Compile Include="..\Constants.cs">
+      <Link>Constants.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\BuildTypes.cs">
+      <Link>Gui\BuildTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\CompileTargets.cs">
+      <Link>Gui\CompileTargets.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DatabaseInfo.cs">
+      <Link>Gui\DatabaseInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationOracleControl.xaml.cs">
+      <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationOracleControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Compiler.cs" />
+    <Compile Include="..\Gui\View\ConfigurationPocoControl.xaml.cs">
+      <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationPocoControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationClientControl.xaml.cs">
+      <DependentUpon>ConfigurationClientControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationClientControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationPortableControl.xaml.cs">
+      <DependentUpon>ConfigurationPortableControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationPortableControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationPhpControl.xaml.cs">
+      <DependentUpon>ConfigurationPhpControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationPhpControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationWpfControl.xaml.cs">
+      <DependentUpon>ConfigurationWpfControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationWpfControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationPostgresControl.xaml.cs">
+      <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationPostgresControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ConfigurationTypescriptControl.xaml.cs">
+      <DependentUpon>ConfigurationTypescriptControl.xaml</DependentUpon>
+      <Link>Gui\View\ConfigurationTypescriptControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\DiffControl.xaml.cs">
+      <DependentUpon>DiffControl.xaml</DependentUpon>
+      <Link>Gui\View\DiffControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\DiffModel.cs">
+      <Link>Gui\DiffPlex\DiffModel.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\DiffPlexControl.xaml.cs">
+      <DependentUpon>DiffPlexControl.xaml</DependentUpon>
+      <Link>Gui\DiffPlex\DiffPlexControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\FontInfo.cs">
+      <Link>Gui\DiffPlex\FontInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\ScrollViewerSynchronizer.cs">
+      <Link>Gui\DiffPlex\ScrollViewerSynchronizer.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\TextBoxDiffRenderer.cs">
+      <Link>Gui\DiffPlex\TextBoxDiffRenderer.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\DiffPlex\WindowWidthConverter.cs">
+      <Link>Gui\DiffPlex\WindowWidthConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\Either.cs" />
+    <Compile Include="..\Gui\LibraryInfo.cs">
+      <Link>Gui\LibraryInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\SchemaChange.cs">
+      <Link>Gui\SchemaChange.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\ServerActions.cs">
+      <Link>Gui\ServerActions.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\AboutControl.xaml.cs">
+      <DependentUpon>AboutControl.xaml</DependentUpon>
+      <Link>Gui\View\AboutControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\RelayCommand.cs">
+      <Link>Gui\RelayCommand.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\ToolWindow.cs">
+      <Link>Gui\ToolWindow.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\ToolPresenter.cs">
+      <Link>Gui\ToolPresenter.cs</Link>
+    </Compile>
+    <Compile Include="..\Intellisense\DddCompletitionController.cs">
+      <Link>Intellisense\DddCompletitionController.cs</Link>
+    </Compile>
+    <Compile Include="..\Intellisense\DddCompletitionSource.cs">
+      <Link>Intellisense\DddCompletitionSource.cs</Link>
+    </Compile>
+    <Compile Include="..\Intellisense\DddQuickInfo.cs">
+      <Link>Intellisense\DddQuickInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Outlining\DddOutliningTagger.cs">
+      <Link>Outlining\DddOutliningTagger.cs</Link>
+    </Compile>
+    <Compile Include="..\Outlining\Region.cs">
+      <Link>Outlining\Region.cs</Link>
+    </Compile>
+    <Compile Include="..\SyntaxConcept.cs" />
+    <Compile Include="..\SyntaxParser.cs" />
+    <Compile Include="..\ProvideSolutionProps.cs" />
+    <Compile Include="..\GlobalSuppressions.cs" />
+    <Compile Include="..\DSLPlatformPackage.cs" />
+    <Compile Include="..\Properties\AssemblyInfo.cs" />
+    <Compile Include="..\Gui\View\StatusControl.xaml.cs">
+      <DependentUpon>StatusControl.xaml</DependentUpon>
+      <Link>Gui\View\StatusControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\SyntaxType.cs" />
+    <Compile Include="..\Token\DddOutlineTag.cs">
+      <Link>Token\DddOutlineTag.cs</Link>
+    </Compile>
+    <Compile Include="..\Token\DddTokenTag.cs">
+      <Link>Token\DddTokenTag.cs</Link>
+    </Compile>
+    <Compile Include="..\Token\DddTokenTagger.cs">
+      <Link>Token\DddTokenTagger.cs</Link>
+    </Compile>
+    <Compile Include="..\Token\DddTokenTypes.cs">
+      <Link>Token\DddTokenTypes.cs</Link>
+    </Compile>
+    <Compile Include="..\Gui\View\ToolContent.xaml.cs">
+      <DependentUpon>ToolContent.xaml</DependentUpon>
+      <Link>Gui\View\ToolContent.xaml.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="VSPackage.resx">
+      <MergeWithCTO>true</MergeWithCTO>
+      <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Key.snk">
+      <Link>Key.snk</Link>
+    </None>
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <VSCTCompile Include="DSLPlatform.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
+    </VSCTCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Images_32bit.bmp" />
+    <None Include="Resources\Images_24bit.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\dsl.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\file.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\License.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\Package.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\Gui\View\ConfigurationOracleControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Link>Gui\View\ConfigurationOracleControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationPocoControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationPocoControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationClientControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationClientControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationPortableControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationPortableControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationPhpControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationPhpControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationWpfControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationWpfControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationPostgresControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationPostgresControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ConfigurationTypescriptControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\View\ConfigurationTypescriptControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\DiffControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Link>Gui\View\DiffControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\DiffPlex\DiffPlexControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Link>Gui\DiffPlex\DiffPlexControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\AboutControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Link>Gui\View\AboutControl.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\ToolContent.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Link>Gui\View\ToolContent.xaml</Link>
+    </Page>
+    <Page Include="..\Gui\View\StatusControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Link>Gui\View\StatusControl.xaml</Link>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VisualStudioItemTemplate\VisualStudioItemTemplate.vs2010.csproj">
+      <Project>{32628025-999C-4BC9-9496-DB92DB0A1B7F}</Project>
+      <Name>VisualStudioItemTemplate</Name>
+      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <TemplateType>Item</TemplateType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <VSIXSubPath>ItemTemplates</VSIXSubPath>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <PropertyGroup>
+    <UseCodebase>true</UseCodebase>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <Extern href="stdidcmd.h" />
+  <Extern href="vsshlids.h" />
+  <Commands package="guidDSLPlatformPkg">
+    <Groups>
+      <Group guid="guidDSLPlatformCmdSet" id="SlnMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE" />
+      </Group>
+      <Group guid="guidDSLPlatformCmdSet" id="FilesMenuGroup" priority="0x0700">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
+      </Group>
+    </Groups>
+    <Buttons>
+      <Button guid="guidDSLPlatformCmdSet" id="cmdDslPlatformCmd" priority="0x0100" type="Button">
+        <Parent guid="guidDSLPlatformCmdSet" id="SlnMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <CommandName>cmdDslPlatformCmd</CommandName>
+          <ButtonText>DSL Platform</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDSLPlatformCmdSet" id="cmdDslPlatformTool" priority="0x0200" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <CommandName>cmdDslPlatformTool</CommandName>
+          <ButtonText>DSL Platform</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidDSLPlatformCmdSet" id="cmdCompileDslCmd" priority="0x0300" type="Button">
+        <Parent guid="guidDSLPlatformCmdSet" id="FilesMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdCompileDslCmd</CommandName>
+          <ButtonText>Compile DSL</ButtonText>
+        </Strings>
+      </Button>
+    </Buttons>
+    <Bitmaps>
+      <Bitmap guid="guidImages" href="Resources\Images_32bit.bmp" usedList="bmpPic1" />
+    </Bitmaps>
+  </Commands>
+  <Symbols>
+    <GuidSymbol name="guidDSLPlatformPkg" value="{c1c220fd-790d-4c27-a455-53b2e64586fe}" />
+    <GuidSymbol name="guidDSLPlatformCmdSet" value="{8b294211-e3cf-4b6a-b816-f5687414e4dd}">
+      <IDSymbol name="SlnMenuGroup" value="0x1020" />
+      <IDSymbol name="FilesMenuGroup" value="0x1021" />
+      <IDSymbol name="cmdDslPlatformCmd" value="0x0100" />
+      <IDSymbol name="cmdDslPlatformTool" value="0x0101" />
+      <IDSymbol name="cmdCompileDslCmd" value="0x0102" />
+    </GuidSymbol>
+    <GuidSymbol name="guidImages" value="{45618779-d6f3-4c17-a504-b68dba529ac4}">
+      <IDSymbol name="bmpPic1" value="1" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

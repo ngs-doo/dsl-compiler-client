@@ -16,7 +16,7 @@ namespace DSLPlatform
 		}
 		private static List<LibraryInfo.Nuget> RevenjStandard()
 		{
-			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.5.0" } });
+			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.5.1" } });
 		}
 
 		private static readonly string[] PocoDependencies = new[] {
