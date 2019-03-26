@@ -493,7 +493,7 @@ object Actions {
             logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
           }
           val fos = new FileOutputStream(file)
-          fos.write(vals.mkString("\n").getBytes("UTF-8"))
+          fos.write(vals.sorted.mkString("\n").getBytes("UTF-8"))
           fos.close()
         }
       }
