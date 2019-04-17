@@ -1,5 +1,6 @@
 package com.dslplatform.sbt
 
+import com.dslplatform.compiler.client.Utils
 import com.dslplatform.compiler.client.parameters.{DslCompiler, Settings, Targets}
 import sbt.Keys._
 import sbt._
@@ -54,13 +55,15 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     target.value / "dsl-temp"
   }
 
-  private def createCompilerSettingsFingerprint(scope: Configuration,
-                                                logger: Logger,
-                                                dslCompiler: String,
-                                                dslDownload: Option[String],
-                                                dslTempFolder: File,
-                                                dslSettings: Seq[Settings.Option],
-                                                dslCustomSettings: Seq[String]): File = {
+  private def createCompilerSettingsFingerprint(
+    scope: Configuration,
+    logger: Logger,
+    dslCompiler: String,
+    dslDownload: Option[String],
+    dslTempFolder: File,
+    dslSettings: Seq[Settings.Option],
+    dslCustomSettings: Seq[String]
+  ): File = {
     def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
 
     lazy val fallBackCompiler = DslCompiler.lookupDefaultPath(new DslContext(Some(logger), false, false))
@@ -85,8 +88,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         dslCompiler + "\n" +
         dslDownload.getOrElse("")
     }
-
-    IO.write(fingerprintFile, settings)
+    val oldValue = Utils.readFile(fingerprintFile)
+    if (!oldValue.isSuccess || settings != oldValue.get) {
+      IO.write(fingerprintFile, settings)
+    }
     fingerprintFile
   }
 
@@ -150,14 +155,15 @@ object SbtDslPlatformPlugin extends AutoPlugin {
               depClassPath,
               dslLatest.value
             ).map(_.getAbsoluteFile)
-          }.toSet
+          }.toIndexedSeq.sortBy(_.getAbsolutePath).toSet
         }
 
         // Index only *.dsl and *.ddd files
         val dslPathFiles = dslDslPath
           .value
           .flatMap(path => (path ** ("*.dsl" || "*.ddd")).get)
-          .toSet
+          .toIndexedSeq.sortBy(_.getAbsolutePath).toSet
+
 
         logger.info(s"Found ${dslPathFiles.size} DSL files")
         val settingsFile = createCompilerSettingsFingerprint(
