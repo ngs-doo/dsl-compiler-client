@@ -147,6 +147,12 @@ public enum Targets implements CompileParameter, ParameterParser {
 					}
 					context.put("library:" + o.value, value);
 					return Either.success(true);
+				} else if (("configuration:" + o.value).equalsIgnoreCase(name)) {
+					if (value == null || value.length() == 0) {
+						return Either.fail("Target library parameter detected, but it's missing configuration as argument. Parameter: " + name);
+					}
+					context.put("configuration:" + o.value, value);
+					return Either.success(true);
 				} else if (("sources:" + o.value).equalsIgnoreCase(name) || ("source:" + o.value).equalsIgnoreCase(name)) {
 					if (value == null || value.length() == 0) {
 						return Either.fail("Target source parameter detected, but it's missing path as argument. Parameter: " + name);
@@ -264,7 +270,8 @@ public enum Targets implements CompileParameter, ParameterParser {
 							context.get(Namespace.INSTANCE),
 							context.get(Version.INSTANCE),
 							dsls,
-							context.get("library:" + t.value));
+							context.get("library:" + t.value),
+							context.get("configuration:" + t.value));
 			try {
 				boolean hasFileWithExtension = false;
 				for (final String name : files.keySet()) {
