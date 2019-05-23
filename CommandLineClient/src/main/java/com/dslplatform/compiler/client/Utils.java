@@ -6,6 +6,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -187,8 +188,8 @@ public abstract class Utils {
 		private final StringBuilder output = new StringBuilder();
 		private IOException exception;
 
-		private ConsumeStream(final InputStream stream, final Context context) {
-			this.reader = new BufferedReader(new InputStreamReader(stream));
+		private ConsumeStream(final InputStream stream, final Context context, final Charset charset) {
+			this.reader = new BufferedReader(new InputStreamReader(stream, charset));
 			this.context = context;
 		}
 
@@ -197,11 +198,11 @@ public abstract class Utils {
 			this.context = null;
 		}
 
-		static ConsumeStream start(final InputStream stream, final Context context) {
+		static ConsumeStream start(final InputStream stream, final Context context, final Charset charset) {
 			if (stream == null) {
 				return new ConsumeStream();
 			}
-			final ConsumeStream cs = new ConsumeStream(stream, context);
+			final ConsumeStream cs = new ConsumeStream(stream, context, charset);
 			cs.start();
 			return cs;
 		}
@@ -238,18 +239,18 @@ public abstract class Utils {
 
 	public static Either<String> findCommand(final Context context, final String path, final String name, final String contains) {
 		final String simple = path != null ? new File(path, name).getAbsolutePath() : name;
-		if (testCommand(context, simple, contains, new ArrayList<String>())) {
+		if (testCommand(context, simple, contains)) {
 			context.log("Found " + name + " in " + simple);
 			return Either.success(simple);
 		}
 		if (isWindows()) {
 			final String bat = path != null ? new File(path, name + ".bat").getAbsolutePath() : name + ".bat";
-			if (testCommand(context, bat, contains, new ArrayList<String>())) {
+			if (testCommand(context, bat, contains)) {
 				context.log("Found " + name + " in " + bat);
 				return Either.success(bat);
 			}
 			final String cmd = path != null ? new File(path, name + ".cmd").getAbsolutePath() : name + ".cmd";
-			if (testCommand(context, cmd, contains, new ArrayList<String>())) {
+			if (testCommand(context, cmd, contains)) {
 				context.log("Found " + name + " in " + cmd);
 				return Either.success(cmd);
 			}
@@ -258,7 +259,7 @@ public abstract class Utils {
 	}
 
 	public static boolean testCommand(final Context context, final String command, final String contains) {
-		return testCommand(context, command, contains, new ArrayList<String>());
+		return testCommand(context, command, contains, Collections.<String>emptyList());
 	}
 
 	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments) {
@@ -270,8 +271,8 @@ public abstract class Utils {
 			pb.environment().put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 			logCommand(context, pb);
 			final Process compilation = pb.start();
-			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null);
-			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null);
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null, Charset.defaultCharset());
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null, Charset.defaultCharset());
 			compilation.waitFor();
 			result.join();
 			error.join();
@@ -286,6 +287,10 @@ public abstract class Utils {
 	}
 
 	public static Either<CommandResult> runCommand(final Context context, final String command, final File path, final List<String> arguments) {
+		return runCommand(context, command, path, arguments, Charset.defaultCharset());
+	}
+
+	public static Either<CommandResult> runCommand(final Context context, final String command, final File path, final List<String> arguments, final Charset charset) {
 		try {
 			final List<String> commandAndArgs = new ArrayList<String>();
 			commandAndArgs.add(command);
@@ -297,8 +302,8 @@ public abstract class Utils {
 			}
 			logCommand(context, pb);
 			final Process compilation = pb.start();
-			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context);
-			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context);
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), context, charset);
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), context, charset);
 			final int exitCode = compilation.waitFor();
 			result.join();
 			error.join();
