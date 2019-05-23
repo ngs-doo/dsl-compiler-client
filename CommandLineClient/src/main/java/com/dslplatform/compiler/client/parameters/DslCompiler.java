@@ -793,11 +793,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 
 	private static boolean testCompiler(final Context context, final File path) throws ExitException {
 		if (Utils.isWindows()) {
-			return Utils.testCommand(context, path.getAbsolutePath(), "DSL Platform", Charset.forName("UTF-8"));
+			return Utils.testCommand(context, path.getAbsolutePath(), "DSL Platform");
 		} else {
 			final Either<String> mono = Mono.findMono(context);
 			if (mono.isSuccess()) {
-				return Utils.testCommand(context, mono.get(), "DSL Platform", Collections.singletonList(path.getAbsolutePath()), Charset.forName("UTF-8"));
+				return Utils.testCommand(context, mono.get(), "DSL Platform", Collections.singletonList(path.getAbsolutePath()));
 			} else {
 				context.error("Mono is required to run DSL compiler. Mono not detected or specified.");
 				throw new ExitException();

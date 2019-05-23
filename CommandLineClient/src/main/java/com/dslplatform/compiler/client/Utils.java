@@ -262,15 +262,7 @@ public abstract class Utils {
 		return testCommand(context, command, contains, Collections.<String>emptyList());
 	}
 
-	public static boolean testCommand(final Context context, final String command, final String contains, final Charset charset) {
-		return testCommand(context, command, contains, Collections.<String>emptyList(), charset);
-	}
-
 	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments) {
-		return testCommand(context, command, contains, arguments, Charset.defaultCharset());
-	}
-
-	public static boolean testCommand(final Context context, final String command, final String contains, final List<String> arguments, final Charset charset) {
 		try {
 			final List<String> commandAndArgs = new ArrayList<String>();
 			commandAndArgs.add(command);
@@ -279,8 +271,8 @@ public abstract class Utils {
 			pb.environment().put("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 			logCommand(context, pb);
 			final Process compilation = pb.start();
-			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null, charset);
-			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null, charset);
+			final ConsumeStream result = ConsumeStream.start(compilation.getInputStream(), null, Charset.defaultCharset());
+			final ConsumeStream error = ConsumeStream.start(compilation.getErrorStream(), null, Charset.defaultCharset());
 			compilation.waitFor();
 			result.join();
 			error.join();
