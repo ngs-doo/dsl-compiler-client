@@ -197,7 +197,7 @@ object Actions {
     customSettings: Seq[String] = Nil,
     classPath: Classpath,
     latest: Boolean = true): Seq[File] = {
-    val cwd = Paths.get("").toAbsolutePath.toString
+    val cwd = new File("").getCanonicalPath
     if (cwd == output.getCanonicalPath || !output.getCanonicalPath.startsWith(cwd)) {
       logger.error("Output path must be at least one level below working directory")
       return Seq.empty
