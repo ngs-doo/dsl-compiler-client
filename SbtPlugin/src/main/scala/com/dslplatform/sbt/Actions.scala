@@ -506,8 +506,8 @@ object Actions {
     val implementations =
       ClassFinder(folders).getClasses()
         .withFilter(it => it.isConcrete && targets.exists(it.implements))
-        .map(_.name)
-        .distinct
+        .flatMap(it => targets.filter(it.implements).map(t => t-> it.name))
+        .toIndexedSeq
     logger.debug(s"""Number of matching implementations: ${implementations.size}""")
     if (manifests.exists()) {
       targets.foreach { target =>
@@ -524,7 +524,8 @@ object Actions {
         logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
       }
       val fos = new FileOutputStream(file)
-      fos.write(implementations.mkString("\n").getBytes("UTF-8"))
+      val targetImplementations = implementations.filter { case (t, _)  => t == target }
+      fos.write(targetImplementations.map(_._2).mkString("\n").getBytes("UTF-8"))
       fos.close()
       target -> file
     }.toMap
