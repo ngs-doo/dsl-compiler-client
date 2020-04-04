@@ -33,6 +33,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			final List<String> settings,
 			final String namespace,
 			final String version,
+			final DatabaseInfo dbInfo,
 			final List<File> dsls,
 			final String library,
 			final String configuration) throws ExitException {
@@ -55,6 +56,14 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 		if (configuration != null && configuration.length() > 0) {
 			arguments.add("configuration=" + configuration);
+		}
+		if (dbInfo != null) {
+			try {
+				preparePreviousDsl(context, dbInfo, arguments);
+			} catch (IOException ex) {
+				context.error("Unable to save old DSL version for comparison.");
+				throw new ExitException();
+			}
 		}
 		for (final File f : dsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
@@ -588,22 +597,11 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		if (context.contains(GrantRole.INSTANCE)) {
 			arguments.add("role=" + context.get(GrantRole.INSTANCE));
 		}
-		if (dbInfo.dsl != null && !dbInfo.dsl.isEmpty()) {
-			final StringBuilder oldDsl = new StringBuilder();
-			for (final String v : dbInfo.dsl.values()) {
-				oldDsl.append(v);
-			}
-			final File previousDsl = new File(TempPath.getTempProjectPath(context), "old.dsl");
-			try {
-				Utils.saveFile(context, previousDsl, oldDsl.toString());
-			} catch (IOException ex) {
-				context.error("Unable to save old DSL version for comparison.");
-				return Either.fail(ex);
-			}
-			arguments.add("previous-dsl=" + previousDsl.getAbsolutePath());
-			if (dbInfo.compilerVersion != null) {
-				arguments.add("previous-compiler=" + dbInfo.compilerVersion);
-			}
+		try {
+			preparePreviousDsl(context, dbInfo, arguments);
+		} catch (IOException ex) {
+			context.error("Unable to save old DSL version for comparison.");
+			return Either.fail(ex);
 		}
 		for (final File f : currentDsls) {
 			arguments.add("dsl=" + f.getAbsolutePath());
@@ -615,6 +613,21 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 		final String sql = new String(result.get(), UTF_8);
 		return Either.success(context.notify("MIGRATION", sql));
+	}
+
+	private static void preparePreviousDsl(Context context, DatabaseInfo dbInfo, List<String> arguments) throws IOException {
+		if (dbInfo.dsl != null && !dbInfo.dsl.isEmpty()) {
+			final StringBuilder oldDsl = new StringBuilder();
+			for (final String v : dbInfo.dsl.values()) {
+				oldDsl.append(v);
+			}
+			final File previousDsl = new File(TempPath.getTempProjectPath(context), "old.dsl");
+			Utils.saveFile(context, previousDsl, oldDsl.toString());
+			arguments.add("previous-dsl=" + previousDsl.getAbsolutePath());
+			if (dbInfo.compilerVersion != null) {
+				arguments.add("previous-compiler=" + dbInfo.compilerVersion);
+			}
+		}
 	}
 
 	public static Either<Boolean> parse(final Context context, final List<File> dsls) throws ExitException {

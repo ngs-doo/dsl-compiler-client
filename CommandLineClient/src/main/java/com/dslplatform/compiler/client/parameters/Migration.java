@@ -138,6 +138,16 @@ public enum Migration implements CompileParameter, ParameterParser {
 		}
 	}
 
+	public static DatabaseInfo getDatabaseInfo(Context context) throws ExitException {
+		if (context.load("previous-sql:postgres") instanceof String || context.contains(PostgresConnection.INSTANCE)) {
+			return PostgresConnection.getDatabaseDslAndVersion(context);
+		} else if (context.load("previous-sql:oracle") instanceof String || context.contains(OracleConnection.INSTANCE)) {
+			return OracleConnection.getDatabaseDslAndVersion(context);
+		} else {
+			return null;
+		}
+	}
+
 	private static void createMigration(
 			final Context context,
 			final File path,

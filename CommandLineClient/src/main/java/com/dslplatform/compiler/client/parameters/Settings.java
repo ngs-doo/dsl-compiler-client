@@ -30,6 +30,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		LAZY_LOAD_WARNING("lazy-load-warning", "Inject warning when accessing lazy load property"),
 		URI_REFERENCE("uri-reference", "Helper method for setting reference through URI value"),
 		JAXB("jaxb", "Add annotations and converters for Java Architecture for XML Binding (JAXB)"),
+		PERMISSION_ACCESS("permission-access", "Generate only code accessible through permissions"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes");
 
 		private final String value;

@@ -1,5 +1,7 @@
 package com.dslplatform.sbt
 
+import java.nio.file.Files
+
 import com.dslplatform.compiler.client.Utils
 import com.dslplatform.compiler.client.parameters.{DslCompiler, Settings, Targets}
 import sbt.Keys._
@@ -50,6 +52,12 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     inConfig(Test)(baseDslSettings(Test)) ++ Set(
       sourceGenerators in Test += (dsl in Test).taskValue
     )
+
+  private lazy val sourceTempFolder = {
+    val value = Files.createTempDirectory("sbt-dsl").toFile
+    value.deleteOnExit()
+    value
+  }
 
   private def dslTempFolder = Def.setting {
     target.value / "dsl-temp"
@@ -143,6 +151,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
               dslAnsi.value,
               targetArg,
               targetOutput,
+              sourceTempFolder,
               dslDslPath.value,
               dslPlugins.value,
               dslCompiler.value,

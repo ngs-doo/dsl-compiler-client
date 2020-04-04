@@ -3,7 +3,7 @@ package com.dslplatform.sbt
 import java.io.{File, FileOutputStream}
 import java.lang.management.ManagementFactory
 import java.net._
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.file.{Files, Path, StandardCopyOption}
 import java.util
 
 import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
@@ -160,7 +160,7 @@ object Actions {
     } else {
       val tmpFolder = Files.createTempDirectory("dsl-clc")
       try {
-        classPath foreach { it =>
+        classPath.foreach { it =>
           ctx.log(s"Copying ${it.data} to $tmpFolder")
           Files.copy(it.data.toPath, new File(tmpFolder.toFile, it.data.getName).toPath)
         }
@@ -186,6 +186,7 @@ object Actions {
     ansi: Boolean,
     target: Targets.Option,
     output: File,
+    tempFolder: File,
     dsl: Seq[File],
     plugins: Option[File] = None,
     compiler: String = "",
@@ -207,28 +208,19 @@ object Actions {
       if (!output.mkdirs()) {
         logger.warn(s"Failed creating output folder: ${output.getAbsolutePath}")
       }
-    } else {
-      output.listFiles() foreach { f =>
-        IO.delete(f)
-        if (f.exists()) {
-          logger.warn(s"Failed to delete: ${f.getAbsolutePath}")
-        }
-      }
     }
 
     val ctx = new DslContext(Some(logger), verbose, ansi)
     ctx.put(Settings.Option.SOURCE_ONLY.toString, "")
     ctx.put(target.toString, "")
 
-    val tempFolder = IO.createTemporaryDirectory
     ctx.put(s"source:$target", tempFolder.getAbsolutePath)
 
     addVersionAndSettings(ctx, target, classPath, settings, customSettings, namespace)
     executeContext(dsl, compiler, serverMode, serverURL, serverPort, plugins, latest, ctx, logger, verbose, ansi)
     val generated = new File(tempFolder, target.name)
     val files = new ArrayBuffer[File]()
-    deepCopy(generated.toPath, output.toPath, files)
-    IO.delete(tempFolder)
+    syncFiles(generated.toPath, output.toPath, files)
     logger.info(s"Source for $target created in ${output.getPath}")
     files.result()
   }
@@ -261,18 +253,34 @@ object Actions {
     }
   }
 
-  private def deepCopy(from: Path, to: Path, files: ArrayBuffer[File]): Unit = {
+  private def syncFiles(from: Path, to: Path, files: ArrayBuffer[File]): Unit = {
     if (from.toFile.isDirectory) {
       if (!to.toFile.exists()) {
         to.toFile.mkdirs()
       }
-      from.toFile.list foreach { it =>
+      from.toFile.list.foreach { it =>
         val source = new File(from.toFile, it)
         val target = new File(to.toFile, it)
-        deepCopy(source.toPath, target.toPath, files)
+        syncFiles(source.toPath, target.toPath, files)
+      }
+      to.toFile.list.foreach { it =>
+        val source = new File(from.toFile, it)
+        val target = new File(to.toFile, it)
+        if (!source.exists() && target.exists()) {
+          IO.delete(target)
+        }
       }
     } else {
-      Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+      val sameSize = Files.exists(to) && Files.size(from) == Files.size(to)
+      if (sameSize) {
+        val f1 = Files.readAllBytes(from)
+        val f2 = Files.readAllBytes(to)
+        if (!java.util.Arrays.equals(f1, f2)) {
+          Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+        }
+      } else {
+        Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING)
+      }
       files += to.toFile
     }
   }

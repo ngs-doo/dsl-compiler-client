@@ -51,51 +51,54 @@ public enum Targets implements CompileParameter, ParameterParser {
 	};
 
 	public enum Option {
-		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("revenj.java", "revenj-java", "revenj-servlet", "revenj-storage"), true),
-		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("java_server_postgres", "revenj-java", "revenj-servlet", "revenj-storage"), true),
-		REVENJ_SPRING("revenj.spring", "Revenj.Java server for Spring with Postgres", ".java", new CompileRevenjJava("revenj.spring", "revenj-spring", "revenj-spring", "revenj-storage"), true),
-		JAVA_CLIENT("java_client", "Java client", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "com/dslplatform", "dsl-client-java", "./generated-client-java.jar"), true),
-		JAVA_POJO("java_pojo", "Plain Old Java Object", ".java", new CompileJavaClient("Java POJO", "java-pojo", "java_pojo", null, null, "./generated-model-java.jar"), true),
-		JAVA_EXTERNAL_JSON("java_external_json", "Java JSON serializers for an existing POJO", ".java", new CompileJavaClient("Java JSON", "java-pojo", "java_external_json", null, null, "./generated-json-java.jar"), true),
-		ANDORID("android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "com/dslplatform", "dsl-client-java", "./generated-model-android.jar"), true),
-		ANDORID_EXTERNAL_JSON("android_external_json", "Android JSON serializers for an existing POJO", ".java", new CompileJavaClient("Android JSON", "android", "android_external_json", null, null, "./generated-json-android.jar"), true),
-		REVENJ_NET("revenj.net", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("revenj.net", null), false),
-		REVENJ_NET_POSTGRES("dotnet_server_postgres", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("dotnet_server_postgres", null), false),
-		REVENJ_NET_ORACLE_32("dotnet_server_oracle_32", "Revenj.NET server for Oracle with 32bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_32", "oracle-driver-32bit"), false),
-		REVENJ_NET_ORACLE_64("dotnet_server_oracle_64", "Revenj.NET server for Oracle with 64bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_64", "oracle-driver-64bit"), false),
-		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
-		DOTNET_CLIENT("dotnet_client", ".NET client", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false),
-		DOTNET_PORTABLE("dotnet_portable", ".NET portable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false),
-		DOTNET_WPF("wpf", ".NET WPF GUI", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false),
-		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true),
-		PHP_UI("php_ui", "PHP UI client", ".php", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true),
-		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true),
-		TYPESCRIPT("typescript", "Typescript", ".ts", new PrepareSources("typescript", "typescript", "Generated-Typescript"), false),
-		REACT("react", "React", ".ts", new PrepareSources("react", "react", "Generated-React"), false),
-		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true),
-		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true),
-		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala", "revenj-core_2.11"), true),
-		REVENJ_SCALA_POSTGRES("scala_server_postgres", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("scala_server_postgres", "revenj-scala", "revenj-core_2.11"), true),
-		SCALA_SERVER_ORACLE("scala_server_oracle", "Scala server (Oracle)", ".scala", new CompileScalaClient("Scala server (Oracle)", "scala-poso", "scala_server_oracle", null, "./generated-scala-oracle.jar"), true),
-		HTML_DOCUMENTATION("html_docs", "HTML documentation", ".html", new PrepareSources("HTML Documentation", "html_docs", "generated-html-documentation"), false);
+		REVENJ_JAVA("revenj.java", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("revenj.java", "revenj-java", "revenj-servlet", "revenj-storage"), true, false),
+		REVENJ_JAVA_POSTGRES("java_server_postgres", "Revenj.Java server for Postgres", ".java", new CompileRevenjJava("java_server_postgres", "revenj-java", "revenj-servlet", "revenj-storage"), true, false),
+		REVENJ_SPRING("revenj.spring", "Revenj.Java server for Spring with Postgres", ".java", new CompileRevenjJava("revenj.spring", "revenj-spring", "revenj-spring", "revenj-storage"), true, false),
+		JAVA_CLIENT("java_client", "Java client", ".java", new CompileJavaClient("Java client", "java-client", "java_client", "com/dslplatform", "dsl-client-java", "./generated-client-java.jar"), true, false),
+		JAVA_POJO("java_pojo", "Plain Old Java Object", ".java", new CompileJavaClient("Java POJO", "java-pojo", "java_pojo", null, null, "./generated-model-java.jar"), true, false),
+		JAVA_EXTERNAL_JSON("java_external_json", "Java JSON serializers for an existing POJO", ".java", new CompileJavaClient("Java JSON", "java-pojo", "java_external_json", null, null, "./generated-json-java.jar"), true, false),
+		ANDORID("android", "Android", ".java", new CompileJavaClient("Android", "android", "android", "com/dslplatform", "dsl-client-java", "./generated-model-android.jar"), true, false),
+		ANDORID_EXTERNAL_JSON("android_external_json", "Android JSON serializers for an existing POJO", ".java", new CompileJavaClient("Android JSON", "android", "android_external_json", null, null, "./generated-json-android.jar"), true, false),
+		REVENJ_NET("revenj.net", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("revenj.net", null), false, false),
+		REVENJ_NET_POSTGRES("dotnet_server_postgres", "Revenj.NET server for Postgres", ".cs", new CompileRevenjNet("dotnet_server_postgres", null), false, false),
+		REVENJ_NET_ORACLE_32("dotnet_server_oracle_32", "Revenj.NET server for Oracle with 32bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_32", "oracle-driver-32bit"), false, false),
+		REVENJ_NET_ORACLE_64("dotnet_server_oracle_64", "Revenj.NET server for Oracle with 64bit client driver", ".cs", new CompileRevenjNet("dotnet_server_oracle_64", "oracle-driver-64bit"), false, false),
+		DOTNET_POCO("dotnet_poco", "Plain Old C# Object", ".cs", new CompileCsClient(".NET POCO", null, "dotnet_poco", "./GeneratedModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false, false),
+		DOTNET_CLIENT("dotnet_client", ".NET client", ".cs", new CompileCsClient(".NET client", "client", "dotnet_client", "./ClientModel.dll", DOTNET_CLIENT_DEPENDENCIES, false), false, false),
+		DOTNET_PORTABLE("dotnet_portable", ".NET portable", ".cs", new CompileCsClient(".NET portable", "portable", "dotnet_portable", "./PortableModel.dll", new String[0], false), false, false),
+		DOTNET_WPF("wpf", ".NET WPF GUI", ".cs", new CompileCsClient(".NET WPF GUI", "wpf", "wpf", "./WpfModel.dll", DOTNET_WPF_DEPENDENCIES, true), false, false),
+		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true, false),
+		PHP_UI("php_ui", "PHP UI client", ".php", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true, false),
+		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true, false),
+		TYPESCRIPT("typescript", "Typescript", ".ts", new PrepareSources("typescript", "typescript", "Generated-Typescript"), false, false),
+		REACT("react", "React", ".ts", new PrepareSources("react", "react", "Generated-React"), false, false),
+		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true, false),
+		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true, false),
+		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala", "revenj-core_2.11"), true, false),
+		REVENJ_SCALA_POSTGRES("scala_server_postgres", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("scala_server_postgres", "revenj-scala", "revenj-core_2.11"), true, false),
+		SCALA_SERVER_ORACLE("scala_server_oracle", "Scala server (Oracle)", ".scala", new CompileScalaClient("Scala server (Oracle)", "scala-poso", "scala_server_oracle", null, "./generated-scala-oracle.jar"), true, false),
+		HTML_DOCUMENTATION("html_docs", "HTML documentation", ".html", new PrepareSources("HTML Documentation", "html_docs", "generated-html-documentation"), false, true);
 
 		private final String value;
 		private final String description;
 		private final String extension;
 		private final BuildAction action;
 		private final boolean convertToPath;
+		private final boolean usesPreviousDsl;
 
 		Option(
 				final String value,
 				final String description,
 				final String extension,
 				final BuildAction action,
-				final boolean convertToPath) {
+				final boolean convertToPath,
+				final boolean usesPreviousDsl) {
 			this.value = value;
 			this.description = description;
 			this.extension = extension;
 			this.action = action;
 			this.convertToPath = convertToPath;
+			this.usesPreviousDsl = usesPreviousDsl;
 		}
 
 		private static Option from(final String value) {
@@ -241,17 +244,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final String sourceOutput = context.get("source:" + target.value);
 		final String custom = sourceOutput != null ? sourceOutput : sourceOnly ? context.get(target.value) : null;
 		if (custom != null && !custom.isEmpty()) {
-			final File file = new File(custom, target.name());
-			try {
-				if (file.exists()) {
-					Utils.deletePath(file);
-				}
-				return custom;
-			} catch (IOException e) {
-				context.error("Unable to clean target source folder: " + file.getAbsolutePath());
-				context.error(e);
-				throw new ExitException();
-			}
+			return custom;
 		}
 		return TempPath.getTempProjectPath(context).getAbsolutePath();
 	}
@@ -262,6 +255,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		final boolean sourceOnly = Settings.hasSourceOnly(context);
 		for (final Option t : targets) {
 			final String temp = getTargetSourcePath(context, sourceOnly, t);
+			final DatabaseInfo dbInfo = t.usesPreviousDsl ? Migration.getDatabaseInfo(context) : null;
 			final Map<String, String> files =
 					DslCompiler.compile(
 							context,
@@ -269,6 +263,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 							settings,
 							context.get(Namespace.INSTANCE),
 							context.get(Version.INSTANCE),
+							dbInfo,
 							dsls,
 							context.get("library:" + t.value),
 							context.get("configuration:" + t.value));
@@ -280,10 +275,12 @@ public enum Targets implements CompileParameter, ParameterParser {
 						break;
 					}
 				}
+				HashSet<File> usedFiles = new HashSet<File>();
 				for (final Map.Entry<String, String> kv : files.entrySet()) {
 					final String fullName = t.name() + "/" + kv.getKey() + (hasFileWithExtension ? "" : t.extension);
-					saveFile(context, temp, t.convertToPath, fullName, kv.getValue());
+					usedFiles.add(saveFile(context, temp, t.convertToPath, fullName, kv.getValue()));
 				}
+				removeUnusedFiles(context, new File(temp, t.name()), usedFiles);
 			} catch (IOException e) {
 				context.error("Can't create temporary target file. Compilation results can't be saved locally.");
 				context.error(e);
@@ -292,6 +289,27 @@ public enum Targets implements CompileParameter, ParameterParser {
 			context.notify("TARGET", t);
 			if (!sourceOnly && t.action != null) {
 				t.action.build(new File(temp, t.name()), context);
+			}
+		}
+	}
+
+	private static void removeUnusedFiles(final Context context, File folder, HashSet<File> usedFiles) throws ExitException {
+		final File[] files = folder.listFiles();
+		if (files == null || files.length == 0) {
+			if (!folder.delete()) {
+				context.warning("Unable to remove empty folder: " + folder.getAbsolutePath());
+			}
+			return;
+		}
+		for (File f : files) {
+			if (f.isDirectory()) {
+				removeUnusedFiles(context, f, usedFiles);
+			} else if (!usedFiles.contains(f)) {
+				context.log("Removing leftover file: " + f.getAbsolutePath());
+				if (!f.delete()) {
+					context.error("Unable to delete file: " + f.getAbsolutePath());
+					throw new ExitException();
+				}
 			}
 		}
 	}
@@ -312,7 +330,7 @@ public enum Targets implements CompileParameter, ParameterParser {
 		setupFolder(context, path, retry - 1);
 	}
 
-	private static void saveFile(
+	private static File saveFile(
 			final Context context,
 			final String temp,
 			final boolean escapeName,
@@ -327,11 +345,26 @@ public enum Targets implements CompileParameter, ParameterParser {
 				: new File(temp, cleanName);
 		final File parentPath = file.getParentFile();
 		setupFolder(context, parentPath, 2);
-		if (!file.createNewFile()) {
-			context.error("Failed creating target file: " + file.getAbsolutePath());
+		if (file.exists() && file.isDirectory() && !file.delete()) {
+			context.error("Failed to remove folder: " + file.getAbsolutePath());
 			throw new ExitException();
 		}
-		Utils.saveFile(context, file, content);
+		if (file.exists()) {
+			final Either<String> existingContent = Utils.readFile(file);
+			final boolean fileChanged = !existingContent.isSuccess() || !existingContent.get().equals(content);
+			if (fileChanged) {
+				Utils.saveFile(context, file, content);
+			} else {
+				context.log("File not changed: " + file.getAbsolutePath());
+			}
+		} else {
+			if (!file.createNewFile()) {
+				context.error("Failed creating target file: " + file.getAbsolutePath());
+				throw new ExitException();
+			}
+			Utils.saveFile(context, file, content);
+		}
+		return file;
 	}
 
 	@Override
