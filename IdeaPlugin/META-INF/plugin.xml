@@ -1,21 +1,30 @@
 <idea-plugin version="2">
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.9.9</version>
+  <version>0.9.10</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
       IDEA integration with DSL Platform.<br>
+      <p>
+        Provides syntax highlighting for the dsl files.
+      </p>
       <em>dsl platform ddd</em>
     ]]></description>
 
   <change-notes><![CDATA[
-      Opening DSL files fixes.
+    <ul>
+      <li>0.9.10 Bugfix
+      <li>0.9.9 Bugfix
+      <li>0.9.8 Bugfix
+      <li>0.9.7 Bugfix
+      <li>0.9.6 Bugfix
+    </ul>
     ]]>
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="131"/>
+  <idea-version since-build="181"/>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
        on how to target different products -->
@@ -41,7 +50,13 @@
   </project-components>
 
   <actions>
-    <!-- Add your actions here -->
+    <!--action
+            id="dsl.AvailableConcepts"
+            class="com.dslplatform.ideaplugin.ListAvailableConceptsAction"
+            text="List available concepts"
+            description="List available concepts">
+      <keyboard-shortcut keymap="$default" first-keystroke="control l"/>
+    </action-->
   </actions>
 
 </idea-plugin>

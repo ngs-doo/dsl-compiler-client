@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
+import com.intellij.openapi.editor.ex.util.LexerEditorHighlighter;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -62,7 +63,11 @@ public class DslLexerParser extends Lexer {
 								public void run() {
 									forceRefresh = true;
 									if (isActive && document != null && document.isWritable()) {
-										document.setText(document.getText());
+										try {
+											String newText = document.getText();
+											document.setText(newText);
+										} catch (LexerEditorHighlighter.InvalidStateException ignore) {
+										}
 									}
 								}
 							});
@@ -117,7 +122,7 @@ public class DslLexerParser extends Lexer {
 			cur = it.offset + it.length;
 			index++;
 		}
-		if (dsl.length() > 0) {
+		if (dsl.length() > 0 && newAst.size() > 0) {
 			AST last = newAst.get(newAst.size() - 1);
 			int width = last.offset + last.length;
 			if (width < dsl.length()) {

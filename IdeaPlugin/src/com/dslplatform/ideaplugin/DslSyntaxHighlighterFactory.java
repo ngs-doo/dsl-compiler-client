@@ -11,12 +11,8 @@ import java.util.concurrent.ConcurrentMap;
 
 public class DslSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 	private static class MapKey {
-		private final Project project;
-		private final String file;
 		private final String id;
 		MapKey(Project project, String file) {
-			this.project = project;
-			this.file = file;
 			id = project == null ? file : project.getName() + "/" + file;
 		}
 
