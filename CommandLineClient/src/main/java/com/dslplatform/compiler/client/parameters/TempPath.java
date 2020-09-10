@@ -55,9 +55,7 @@ public enum TempPath implements CompileParameter {
 				context.error("Unable to remove temporary created file: " + temp.getAbsolutePath());
 				return false;
 			}
-			if (path.exists()) {
-				Utils.deletePath(path);
-			} else if (!path.mkdirs()) {
+			if (!path.exists() && !path.mkdirs()) {
 				context.error("Error creating temporary path in: " + path.getAbsolutePath());
 				return false;
 			}
