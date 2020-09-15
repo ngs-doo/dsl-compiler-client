@@ -70,14 +70,14 @@ public enum Targets implements CompileParameter, ParameterParser {
 		PHP("php_client", "PHP client", ".php", new PrepareSources("PHP", "php_client", "Generated-PHP"), true, false),
 		PHP_UI("php_ui", "PHP UI client", ".php", new PreparePhpUI("PHP UI", "php_ui", "Generated-PHP-UI"), true, false),
 		KNOCKOUT("knockout", "Knockout", ".js", new PrepareSources("knockout", "knockout", "Generated-Knockout"), true, false),
-		TYPESCRIPT("typescript", "Typescript", ".ts", new PrepareSources("typescript", "typescript", "Generated-Typescript"), false, false),
-		REACT("react", "React", ".ts", new PrepareSources("react", "react", "Generated-React"), false, false),
+		TYPESCRIPT("typescript", "Typescript", null, new PrepareSources("typescript", "typescript", "Generated-Typescript"), false, false),
+		REACT("react", "React", null, new PrepareSources("react", "react", "Generated-React"), false, false),
 		SCALA_CLIENT("scala_client", "Scala client", ".scala", new CompileScalaClient("Scala client", "scala-client", "scala_client", "dsl-client-scala_2.11", "./generated-model-scala-client.jar"), true, false),
 		SCALA_POSO("scala_poso", "Plain Old Scala Object", ".scala", new CompileScalaClient("Scala", "scala-poso", "scala_client", null, "./generated-model-scala.jar"), true, false),
 		REVENJ_SCALA("revenj.scala", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("revenj.scala", "revenj-scala", "revenj-core_2.11"), true, false),
 		REVENJ_SCALA_POSTGRES("scala_server_postgres", "Revenj.Scala server for Postgres", ".scala", new CompileRevenjScala("scala_server_postgres", "revenj-scala", "revenj-core_2.11"), true, false),
 		SCALA_SERVER_ORACLE("scala_server_oracle", "Scala server (Oracle)", ".scala", new CompileScalaClient("Scala server (Oracle)", "scala-poso", "scala_server_oracle", null, "./generated-scala-oracle.jar"), true, false),
-		HTML_DOCUMENTATION("html_docs", "HTML documentation", ".html", new PrepareSources("HTML Documentation", "html_docs", "generated-html-documentation"), false, true);
+		HTML_DOCUMENTATION("html_docs", "HTML documentation", null, new PrepareSources("HTML Documentation", "html_docs", "generated-html-documentation"), false, true);
 
 		private final String value;
 		private final String description;
@@ -268,9 +268,9 @@ public enum Targets implements CompileParameter, ParameterParser {
 							context.get("library:" + t.value),
 							context.get("configuration:" + t.value));
 			try {
-				boolean hasFileWithExtension = false;
+				boolean hasFileWithExtension = t.extension == null;
 				for (final String name : files.keySet()) {
-					if (name.endsWith(t.extension)) {
+					if (!hasFileWithExtension && name.endsWith(t.extension)) {
 						hasFileWithExtension = true;
 						break;
 					}
