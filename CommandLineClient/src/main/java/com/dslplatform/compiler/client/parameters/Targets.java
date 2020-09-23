@@ -269,10 +269,12 @@ public enum Targets implements CompileParameter, ParameterParser {
 							context.get("configuration:" + t.value));
 			try {
 				boolean hasFileWithExtension = t.extension == null;
-				for (final String name : files.keySet()) {
-					if (!hasFileWithExtension && name.endsWith(t.extension)) {
-						hasFileWithExtension = true;
-						break;
+				if (!hasFileWithExtension) {
+					for (final String name : files.keySet()) {
+						if (name.endsWith(t.extension)) {
+							hasFileWithExtension = true;
+							break;
+						}
 					}
 				}
 				HashSet<File> usedFiles = new HashSet<File>();
@@ -350,6 +352,19 @@ public enum Targets implements CompileParameter, ParameterParser {
 			throw new ExitException();
 		}
 		if (file.exists()) {
+			final File canonicalFile = file.getCanonicalFile();
+			if (!file.getName().equals(canonicalFile.getName())) {
+				if (!canonicalFile.renameTo(file)) {
+					if (!file.delete()) {
+						context.error("Failed to remove file: " + file.getAbsolutePath());
+						throw new ExitException();
+					}
+					if (!file.createNewFile()) {
+						context.error("Failed creating target file: " + file.getAbsolutePath());
+						throw new ExitException();
+					}
+				}
+			}
 			final Either<String> existingContent = Utils.readFile(file);
 			final boolean fileChanged = !existingContent.isSuccess() || !existingContent.get().equals(content);
 			if (fileChanged) {
