@@ -79,12 +79,12 @@ public enum OracleConnection implements CompileParameter {
 			context.error(e);
 			throw new ExitException();
 		}
-		final DatabaseInfo emptyResult = new DatabaseInfo("Oracle", "", oracle, new HashMap<String, String>());
+		final DatabaseInfo emptyResult = new DatabaseInfo("Oracle", "", oracle, new HashMap<String, String>(), null);
 		try {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
 							"SELECT COUNT(*) FROM sys.all_tables t\n" +
-									"WHERE (t.OWNER = '-DSL-' OR t.OWNER = '-NGS-') AND t.TABLE_NAME = 'DATABASE_MIGRATION'");
+									"WHERE t.OWNER = '-DSL-' AND t.TABLE_NAME = 'DATABASE_MIGRATION'");
 			final boolean hasTable = migrationExist.next() && migrationExist.getLong(1) > 0;
 			migrationExist.close();
 			if (!hasTable) {
@@ -123,7 +123,7 @@ public enum OracleConnection implements CompileParameter {
 			conn.close();
 			if (lastDsl != null && lastDsl.length() > 0) {
 				final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl, context);
-				final DatabaseInfo result = new DatabaseInfo("Oracle", compiler, oracle, dslMap);
+				final DatabaseInfo result = new DatabaseInfo("Oracle", compiler, oracle, dslMap, null);
 				context.cache(CACHE_NAME, result);
 				return result;
 			}
@@ -182,7 +182,7 @@ public enum OracleConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl.replace("''", "'"), context);
-		final DatabaseInfo result = new DatabaseInfo("Oracle", compiler, dbVersion, dslMap);
+		final DatabaseInfo result = new DatabaseInfo("Oracle", compiler, dbVersion, dslMap, null);
 		context.cache(CACHE_NAME, result);
 		return result;
 	}

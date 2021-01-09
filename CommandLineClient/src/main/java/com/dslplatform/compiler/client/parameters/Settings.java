@@ -31,7 +31,8 @@ public enum Settings implements CompileParameter, ParameterParser {
 		URI_REFERENCE("uri-reference", "Helper method for setting reference through URI value"),
 		JAXB("jaxb", "Add annotations and converters for Java Architecture for XML Binding (JAXB)"),
 		PERMISSION_ACCESS("permission-access", "Generate only code accessible through permissions"),
-		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes");
+		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes"),
+		DOCUMENTATION_METADATA("docs-metadata", "Create documentation metadata");
 
 		private final String value;
 		private final String description;

@@ -65,23 +65,15 @@ public enum PostgresConnection implements CompileParameter {
 			context.error(e);
 			throw new ExitException();
 		}
-		final DatabaseInfo emptyResult = new DatabaseInfo("Postgres", "", postgres, new HashMap<String, String>());
-		final boolean hasNewTable;
+		final DatabaseInfo emptyResult = new DatabaseInfo("Postgres", "", postgres, new HashMap<String, String>(), null);
+		final boolean hasTable;
 		try {
 			final ResultSet migrationExist =
 					stmt.executeQuery(
-							"SELECT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = '-DSL-' AND tablename = 'database_migration') AS new_name, " +
-								"EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = '-NGS-' AND tablename = 'database_migration') AS old_name");
-			final boolean hasOldTable;
-			if (migrationExist.next()) {
-				hasNewTable = migrationExist.getBoolean(1);
-				hasOldTable = migrationExist.getBoolean(2);
-			} else {
-				hasNewTable = false;
-				hasOldTable = false;
-			}
+							"SELECT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname = '-DSL-' AND tablename = 'database_migration') AS has_table");
+			hasTable = migrationExist.next() && migrationExist.getBoolean(1);
 			migrationExist.close();
-			if (!hasNewTable && !hasOldTable) {
+			if (!hasTable) {
 				stmt.close();
 				conn.close();
 				context.cache(CACHE_NAME, emptyResult);
@@ -94,23 +86,29 @@ public enum PostgresConnection implements CompileParameter {
 			throw new ExitException();
 		}
 		try {
-			final ResultSet lastMigration = hasNewTable
-					?  stmt.executeQuery("SELECT dsls, version FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1")
-					: stmt.executeQuery("SELECT dsls, version FROM \"-NGS-\".database_migration ORDER BY ordinal DESC LIMIT 1");
+			final ResultSet lastMigration = stmt.executeQuery("SELECT * FROM \"-DSL-\".database_migration ORDER BY ordinal DESC LIMIT 1");
 			final String lastDsl;
 			final String compiler;
+			final String previousHash;
 			if (lastMigration.next()) {
-				lastDsl = lastMigration.getString(1);
-				compiler = lastMigration.getString(2);
+				lastDsl = lastMigration.getString("dsls");
+				compiler = lastMigration.getString("version");
+				boolean hasHash = false;
+				final ResultSetMetaData md = lastMigration.getMetaData();
+				for (int i = md.getColumnCount(); !hasHash && i > 0; i--) {
+					hasHash = "previous_hash".equals(md.getColumnLabel(i));
+				}
+				previousHash = hasHash ? lastMigration.getString("previous_hash") : null;
 			} else {
 				lastDsl = compiler = "";
+				previousHash = null;
 			}
 			lastMigration.close();
 			stmt.close();
 			conn.close();
 			if (lastDsl != null && lastDsl.length() > 0) {
 				final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl, context);
-				final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, postgres, dslMap);
+				final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, postgres, dslMap, previousHash);
 				context.cache(CACHE_NAME, result);
 				return result;
 			}
@@ -124,7 +122,7 @@ public enum PostgresConnection implements CompileParameter {
 		return emptyResult;
 	}
 
-	static DatabaseInfo extractDatabaseInfoFromMigration(final Context context, final String previous) throws ExitException {
+	public static DatabaseInfo extractDatabaseInfoFromMigration(final Context context, final String previous) throws ExitException {
 		final String dbVersion = context.load("db-version:postgres");
 		final int persistInd = previous.lastIndexOf("SELECT \"-DSL-\".Persist_Concepts('");
 		final int notifyInd = previous.indexOf("SELECT pg_notify", persistInd + 1);
@@ -132,17 +130,20 @@ public enum PostgresConnection implements CompileParameter {
 			context.error("Unable to find 'Persist_Concepts' or SELECT pg_notify in previous sql migration. Wrong file provided");
 			throw new ExitException();
 		}
-		final String subset = previous.substring(persistInd + "SELECT \"-DSL-\".Persist_Concepts(".length() + 1, notifyInd - 2);
+		final String subset = previous.substring(persistInd + "SELECT \"-DSL-\".Persist_Concepts(".length() + 1, notifyInd - 1);
 		final String pattern = "\"', '\\x','";
 		final int lastNL = subset.lastIndexOf(pattern);
 		if (lastNL == -1) {
 			context.error("Invalid content detected in previous sql migration. Unable to find magic pattern: " + pattern);
 			throw new ExitException();
 		}
-		final String compiler = subset.substring(lastNL + pattern.length(), subset.lastIndexOf('\''));
+		final String compiler = subset.substring(lastNL + pattern.length(), subset.indexOf('\'', lastNL + pattern.length() + 1));
 		final String lastDsl = subset.substring(0, lastNL + 1).replace("''", "'");
+		final int hashPos = lastNL + pattern.length() + compiler.length() + 1;
+		final int endIndex = subset.indexOf("');", hashPos);
+		final String previousHash =  endIndex > hashPos + 4 ? subset.substring(hashPos + 2, endIndex) : null;
 		final Map<String, String> dslMap = DatabaseInfo.convertToMap(lastDsl, context);
-		final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, dbVersion, dslMap);
+		final DatabaseInfo result = new DatabaseInfo("Postgres", compiler, dbVersion, dslMap, previousHash);
 		context.cache(CACHE_NAME, result);
 		return result;
 	}

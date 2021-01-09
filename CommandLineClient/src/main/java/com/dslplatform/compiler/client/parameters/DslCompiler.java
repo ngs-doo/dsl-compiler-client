@@ -739,7 +739,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					final String answer =
 							context.ask("Compiler found in default location: "
 									+ compiler.getAbsolutePath() + ". Do you wish to use it? (y/N)");
-					if (answer.toLowerCase().equals("y")) {
+					if ("y".equalsIgnoreCase(answer)) {
 						context.put(INSTANCE, compiler.getAbsolutePath());
 						return true;
 					}
@@ -748,7 +748,7 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 			if (!context.contains(Download.INSTANCE)) {
 				if (context.canInteract()) {
 					final String answer = context.ask("Do you wish to download compiler from the Internet? (y/N)");
-					if (!answer.toLowerCase().equals("y")) throw new ExitException();
+					if (!"y".equalsIgnoreCase(answer)) throw new ExitException();
 				} else throw new ExitException();
 			}
 			context.show("Downloading DSL Platform compiler since it's not found in: " + compiler.getAbsolutePath());

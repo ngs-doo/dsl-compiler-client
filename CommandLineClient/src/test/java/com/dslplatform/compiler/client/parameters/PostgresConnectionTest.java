@@ -19,13 +19,14 @@ public class PostgresConnectionTest {
 	}
 
 	@Test
-	public void testMigrationFile() throws ExitException {
+	public void testMigrationFileWithoutHash() throws ExitException {
 		Context ctx = new Context();
 		ctx.cache("db-version:postgres", "9.5");
 		String content = TestUtils.fileContent("/postgres-migration-example1.sql");
 		DatabaseInfo dbInfo = PostgresConnection.extractDatabaseInfoFromMigration(ctx, content);
 		Assert.assertEquals("9.5", dbInfo.dbVersion);
 		Assert.assertEquals("2.1.0.14620", dbInfo.compilerVersion);
+		Assert.assertNull(dbInfo.previousHash);
 		Assert.assertEquals(3, dbInfo.dsl.size());
 		Assert.assertEquals("module spec\r\n" +
 				"{\r\n" +
@@ -46,5 +47,17 @@ public class PostgresConnectionTest {
 				"    Bool    cancelled; // Only an \"Test me\" can be used\r\n" +
 				"  }\r\n" +
 				"}\r\n", dbInfo.dsl.get("test/escapes.dsl"));
+	}
+
+	@Test
+	public void testMigrationFileWithHash() throws ExitException {
+		Context ctx = new Context();
+		ctx.cache("db-version:postgres", "9.5");
+		String content = TestUtils.fileContent("/postgres-migration-example2.sql");
+		DatabaseInfo dbInfo = PostgresConnection.extractDatabaseInfoFromMigration(ctx, content);
+		Assert.assertEquals("9.5", dbInfo.dbVersion);
+		Assert.assertEquals("2.1.0.14620", dbInfo.compilerVersion);
+		Assert.assertEquals("ABCD", dbInfo.previousHash);
+		Assert.assertEquals(3, dbInfo.dsl.size());
 	}
 }

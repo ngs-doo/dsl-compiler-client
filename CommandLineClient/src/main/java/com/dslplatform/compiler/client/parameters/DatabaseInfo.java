@@ -2,21 +2,43 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
+import org.postgresql.util.Base64;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class DatabaseInfo {
-	final String database;
-	final String compilerVersion;
-	final String dbVersion;
-	final Map<String, String> dsl;
+public class DatabaseInfo {
+	public final String database;
+	public final String compilerVersion;
+	public final String dbVersion;
+	public final Map<String, String> dsl;
+	public final String previousHash;
 
-	DatabaseInfo(final String database, final String compilerVersion, final String dbVersion, final Map<String, String> dsl) {
+	private static final Charset UTF8 = Charset.forName("UTF-8");
+
+	DatabaseInfo(final String database, final String compilerVersion, final String dbVersion, final Map<String, String> dsl, final String previousHash) {
 		this.database = database;
 		this.compilerVersion = compilerVersion;
 		this.dbVersion = dbVersion;
 		this.dsl = dsl;
+		this.previousHash = previousHash;
+	}
+
+	public String currentHash() {
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			for (final String v : dsl.values()) {
+				stream.write(v.getBytes(UTF8));
+			}
+			MessageDigest md5 = MessageDigest.getInstance("MD5");
+			byte[] hash = md5.digest(stream.toByteArray());
+			return Base64.encodeBytes(hash);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
 	private static String unescape(final String element) {
