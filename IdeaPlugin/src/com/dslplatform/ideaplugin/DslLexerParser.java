@@ -5,6 +5,7 @@ import com.intellij.lexer.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
 import com.intellij.openapi.editor.ex.util.LexerEditorHighlighter;
@@ -37,6 +38,7 @@ public class DslLexerParser extends Lexer {
 	private final List<AST> ast = new ArrayList<AST>();
 	private int position = 0;
 	private boolean isActive = true;
+	private final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
@@ -63,10 +65,14 @@ public class DslLexerParser extends Lexer {
 								public void run() {
 									forceRefresh = true;
 									if (isActive && document != null && document.isWritable()) {
+										String newText = document.getText();
+										if (newText.isEmpty()) {
+											position = 0;
+										}
 										try {
-											String newText = document.getText();
 											document.setText(newText);
-										} catch (LexerEditorHighlighter.InvalidStateException ignore) {
+										} catch (Exception ex) {
+											logger.warn(ex.getMessage());
 										}
 									}
 								}
@@ -122,9 +128,12 @@ public class DslLexerParser extends Lexer {
 			cur = it.offset + it.length;
 			index++;
 		}
-		if (dsl.length() > 0 && newAst.size() > 0) {
-			AST last = newAst.get(newAst.size() - 1);
-			int width = last.offset + last.length;
+		if (dsl.length() > 0) {
+			int width = 0;
+			if (newAst.size() > 0) {
+				AST last = newAst.get(newAst.size() - 1);
+				width = last.offset + last.length;
+			}
 			if (width < dsl.length()) {
 				newAst.add(new AST(null, width, dsl.length() - width, null));
 			}
@@ -179,6 +188,7 @@ public class DslLexerParser extends Lexer {
 				Either<List<AST>> tryNewAst = dslService.analyze(dsl);
 				if (tryNewAst.isSuccess()) {
 					List<AST> newAst = tryNewAst.get();
+					logger.debug("analyzed successfuly = " + newAst.size());
 					if (newAst.size() == 0) {
 						newAst.add(new AST(null, 0, dsl.length(), null));
 					}
@@ -187,12 +197,14 @@ public class DslLexerParser extends Lexer {
 					lastParsedAnalysis = newAst;
 					lastParsedDsl = dsl;
 				} else {
+					logger.debug("analyzed and failed");
 					List<AST> newAst = new ArrayList<AST>(1);
 					newAst.add(new AST(null, 0, dsl.length(), null));
 					fixupAndReposition(dsl, newAst, start);
 				}
 			}
 		} else if (!dsl.equals(lastDsl)) {
+			logger.debug("changed dsl");
 			final String actualDsl;
 			if (start == end && dsl.length() == 0) {
 				if (psiFile.getLanguage() == DomainSpecificationLanguage.INSTANCE) {
@@ -282,10 +294,7 @@ public class DslLexerParser extends Lexer {
 	@Override
 	public int getTokenStart() {
 		AST current = getCurrent();
-		if (current == null) {
-			return lastDsl.length();
-		}
-		return current.offset;
+		return current == null ? lastDsl.length() : current.offset;
 	}
 
 	@Override

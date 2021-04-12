@@ -3,6 +3,7 @@ package com.dslplatform.ideaplugin;
 import com.dslplatform.compiler.client.parameters.DslCompiler;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 class AST {
@@ -22,5 +23,17 @@ class AST {
 		if (parent != null) {
 			parent.children.add(this);
 		}
+	}
+
+	public static Comparator<AST> SORT = new Comparator<AST>() {
+		@Override
+		public int compare(AST left, AST right) {
+			return left.offset - right.offset;
+		}
+	};
+
+	@Override
+	public String toString() {
+		return "AST(" + (concept != null ? concept.type.name() : "empty") + ", " + offset + " - " + length + ")";
 	}
 }

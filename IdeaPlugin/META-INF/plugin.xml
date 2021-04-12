@@ -14,7 +14,7 @@
 
   <change-notes><![CDATA[
     <ul>
-      <li>0.9.10 Bugfix
+      <li>0.9.10 Highligting fix for IDEA 2020+
       <li>0.9.9 Bugfix
       <li>0.9.8 Bugfix
       <li>0.9.7 Bugfix
@@ -24,13 +24,11 @@
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="181"/>
+  <idea-version since-build="162"/>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
        on how to target different products -->
-  <!-- uncomment to enable plugin in all products
   <depends>com.intellij.modules.lang</depends>
-  -->
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->

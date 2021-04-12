@@ -118,6 +118,7 @@ public class DslCompilerService {
 					break;
 			}
 		}
+		newAst.sort(AST.SORT);
 		return Either.success(newAst);
 	}
 
