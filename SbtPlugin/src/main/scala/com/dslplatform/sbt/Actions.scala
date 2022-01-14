@@ -1,17 +1,17 @@
 package com.dslplatform.sbt
 
-import java.io.{File, FileOutputStream}
-import java.lang.management.ManagementFactory
-import java.net._
-import java.nio.file.{Files, Path, StandardCopyOption}
-import java.util
-
+import com.dslplatform.compiler.client.parameters._
 import com.dslplatform.compiler.client.{CompileParameter, Main, Utils}
-import com.dslplatform.compiler.client.parameters.{Settings, _}
 import org.clapper.classutil.ClassFinder
 import sbt.Def.Classpath
-import sbt.{File, IO, Logger}
+import sbt.{IO, Logger}
 
+import java.io.File
+import java.lang.management.ManagementFactory
+import java.net._
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, StandardCopyOption}
+import java.util
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
@@ -500,9 +500,7 @@ object Actions {
           if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
             logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
           }
-          val fos = new FileOutputStream(file)
-          fos.write(vals.sorted.mkString("\n").getBytes("UTF-8"))
-          fos.close()
+          IO.write(file, vals.sorted.mkString("\n"), StandardCharsets.UTF_8)
         }
       }
     }
@@ -531,10 +529,8 @@ object Actions {
       if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
         logger.error(s"Error creating folder: ${file.getParentFile.getAbsolutePath}")
       }
-      val fos = new FileOutputStream(file)
       val targetImplementations = implementations.filter { case (t, _)  => t == target }
-      fos.write(targetImplementations.map(_._2).mkString("\n").getBytes("UTF-8"))
-      fos.close()
+      IO.write(file, targetImplementations.map(_._2).mkString("\n"), StandardCharsets.UTF_8)
       target -> file
     }.toMap
   }
