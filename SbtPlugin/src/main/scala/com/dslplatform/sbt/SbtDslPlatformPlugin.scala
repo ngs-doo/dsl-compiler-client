@@ -1,13 +1,12 @@
 package com.dslplatform.sbt
 
-import java.nio.file.Files
-
 import com.dslplatform.compiler.client.Utils
 import com.dslplatform.compiler.client.parameters.{DslCompiler, Settings, Targets}
-import sbt.Keys._
 import sbt._
+import sbt.Keys._
 import sbt.complete.Parsers
 
+import java.nio.file.Files
 import scala.util.Try
 
 object SbtDslPlatformPlugin extends AutoPlugin {
@@ -47,10 +46,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
   override lazy val projectSettings =
     inConfig(Compile)(baseDslSettings(Compile)) ++ Set(
-      sourceGenerators in Compile += (dsl in Compile).taskValue
+      Compile / sourceGenerators += (Compile / dsl).taskValue
     ) ++
     inConfig(Test)(baseDslSettings(Test)) ++ Set(
-      sourceGenerators in Test += (dsl in Test).taskValue
+      Test / sourceGenerators += (Test / dsl).taskValue
     )
 
   private lazy val sourceTempFolder = {
@@ -70,7 +69,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslDownload: Option[String],
     dslTempFolder: File,
     dslSettings: Seq[Settings.Option],
-    dslCustomSettings: Seq[String]
+    dslCustomSettings: Seq[String],
   ): File = {
     def parsePort(in: String): Boolean = Try(Integer.parseInt(in)).filter(_ > 0).isSuccess
 
@@ -80,10 +79,10 @@ object SbtDslPlatformPlugin extends AutoPlugin {
       if (parsePort(dslCompiler) || dslCompiler.isEmpty) fallBackCompiler
       else {
         val customCompilerPath = new File(dslCompiler)
-        if (!customCompilerPath.exists())
+        if (!customCompilerPath.exists()) {
           logger.error(
             s"Unable to find the specified dslCompiler path: ${customCompilerPath.getAbsolutePath}")
-
+        }
         customCompilerPath
       }
 
@@ -104,28 +103,28 @@ object SbtDslPlatformPlugin extends AutoPlugin {
   }
 
   def baseDslSettings(scope: Configuration) = Seq(
-    dsl := (dslGenerate in dsl).value,
-    dslLibraries in dsl := Map.empty,
-    dslSources in dsl := Map.empty,
-    dslCompiler in dsl := "",
-    dslServerMode in dsl := false,
-    dslServerPort in dsl := Some(55662),
-    dslPostgres in dsl := "",
-    dslOracle in dsl := "",
-    dslApplyMigration in dsl := false,
-    dslNamespace in dsl := "",
-    dslSettings in dsl := Nil,
-    dslCustomSettings in dsl := Nil,
-    dslDslPath in dsl := Seq(baseDirectory.value / "dsl"),
-    dslDependencies in dsl := Map.empty,
-    dslResourcePath in dsl := None,
-    dslSqlPath in dsl := baseDirectory.value / "sql",
-    dslLatest in dsl := true,
-    dslForce in dsl := false,
-    dslVerbose in dsl := false,
-    dslAnsi in dsl := true,
-    dslPlugins in dsl := Some(baseDirectory.value),
-    dslDownload in dsl := None
+    dsl := (dsl / dslGenerate).value,
+    dsl / dslLibraries := Map.empty,
+    dsl / dslSources := Map.empty,
+    dsl / dslCompiler := "",
+    dsl / dslServerMode := false,
+    dsl / dslServerPort := Some(55662),
+    dsl / dslPostgres := "",
+    dsl / dslOracle := "",
+    dsl / dslApplyMigration := false,
+    dsl / dslNamespace := "",
+    dsl / dslSettings := Nil,
+    dsl / dslCustomSettings := Nil,
+    dsl / dslDslPath := Seq(baseDirectory.value / "dsl"),
+    dsl / dslDependencies := Map.empty,
+    dsl / dslResourcePath := None,
+    dsl / dslSqlPath := baseDirectory.value / "sql",
+    dsl / dslLatest := true,
+    dsl / dslForce := false,
+    dsl / dslVerbose := false,
+    dsl / dslAnsi := true,
+    dsl / dslPlugins := Some(baseDirectory.value),
+    dsl / dslDownload := None,
   ) ++ inTask(dsl)(Seq(
     dslGenerate := {
       val logger = streams.value.log
@@ -140,29 +139,29 @@ object SbtDslPlatformPlugin extends AutoPlugin {
         val cached = FileFunction.cached(
           cacheDirectory / "dsl-generate",
           inStyle = FilesInfo.hash,
-          outStyle = FilesInfo.hash
+          outStyle = FilesInfo.hash,
         ) { changes: Set[File] =>
           if (changes.nonEmpty) logger.info("Re-compiling DSL files...")
 
           dslSources.value.toList.flatMap { case (targetArg, targetOutput) =>
             Actions.generateSource(
-              logger,
-              dslVerbose.value,
-              dslAnsi.value,
-              targetArg,
-              targetOutput,
-              sourceTempFolder,
-              dslDslPath.value,
-              dslPlugins.value,
-              dslCompiler.value,
-              dslServerMode.value,
-              dslDownload.value,
-              dslServerPort.value,
-              dslNamespace.value,
-              dslSettings.value,
-              dslCustomSettings.value,
-              depClassPath,
-              dslLatest.value
+              logger = logger,
+              verbose = dslVerbose.value,
+              ansi = dslAnsi.value,
+              target = targetArg,
+              output = targetOutput,
+              tempFolder = sourceTempFolder,
+              dsl = dslDslPath.value,
+              plugins = dslPlugins.value,
+              compiler = dslCompiler.value,
+              serverMode = dslServerMode.value,
+              serverURL = dslDownload.value,
+              serverPort = dslServerPort.value,
+              namespace = dslNamespace.value,
+              settings = dslSettings.value,
+              customSettings = dslCustomSettings.value,
+              classPath = depClassPath,
+              latest = dslLatest.value,
             ).map(_.getAbsoluteFile)
           }.toIndexedSeq.sortBy(_.getAbsolutePath).toSet
         }
@@ -172,7 +171,6 @@ object SbtDslPlatformPlugin extends AutoPlugin {
           .value
           .flatMap(path => (path ** ("*.dsl" || "*.ddd")).get)
           .toIndexedSeq.sortBy(_.getAbsolutePath).toSet
-
 
         logger.info(s"Found ${dslPathFiles.size} DSL files")
         val settingsFile = createCompilerSettingsFingerprint(
@@ -184,7 +182,7 @@ object SbtDslPlatformPlugin extends AutoPlugin {
     dslResource := {
       if (dslResourcePath.value.isEmpty) {
         streams.value.log.error(s"$scope: dslResourcePath must be set")
-        Seq()
+        Nil
       } else {
         val targets = {
           val defined = (dslSources.value.keys ++ dslLibraries.value.keys).toSet
@@ -196,56 +194,59 @@ object SbtDslPlatformPlugin extends AutoPlugin {
 
         targets.flatMap { tgt =>
           Actions.generateResources(
-            streams.value.log,
-            tgt,
-            dslResourcePath.value.get,
-            Seq((target in scope).value),
-            (fullClasspath in scope).value)
+            logger = streams.value.log,
+            target = tgt,
+            manifests = dslResourcePath.value.get,
+            folders = Seq((scope / target).value),
+            dependencies = (scope / fullClasspath).value,
+          )
         }.toSeq
       }
     },
 
     dslMigrate := {
-      if (dslPostgres.value.isEmpty && dslOracle.value.isEmpty)
+      if (dslPostgres.value.isEmpty && dslOracle.value.isEmpty) {
         streams.value.log.error(s"$scope: JDBC connection string not defined for PostgreSQL or Oracle")
-      else {
+      } else {
         val jdbcs =
-          (if (dslPostgres.value.nonEmpty) List(dslPostgres.value) else List()) ++
-          (if (dslOracle.value.nonEmpty) List(dslOracle.value) else List())
+          (if (dslPostgres.value.nonEmpty) Seq(dslPostgres.value) else Nil) ++
+          (if (dslOracle.value.nonEmpty) Seq(dslOracle.value) else Nil)
 
         jdbcs.foreach { jdbc =>
           Actions.dbMigration(
-            streams.value.log,
-            dslVerbose.value,
-            dslAnsi.value,
-            jdbc,
-            dslPostgres.value.nonEmpty,
-            dslSqlPath.value,
-            dslDslPath.value,
-            dslPlugins.value,
-            dslCompiler.value,
-            dslServerMode.value,
-            dslDownload.value,
-            dslServerPort.value,
-            dslApplyMigration.value,
-            dslForce.value,
-            dslLatest.value)
+            logger = streams.value.log,
+            verbose = dslVerbose.value,
+            ansi = dslAnsi.value,
+            jdbcUrl = jdbc,
+            postgres = dslPostgres.value.nonEmpty,
+            output = dslSqlPath.value,
+            dsl = dslDslPath.value,
+            plugins = dslPlugins.value,
+            compiler = dslCompiler.value,
+            serverMode = dslServerMode.value,
+            serverURL = dslDownload.value,
+            serverPort = dslServerPort.value,
+            apply = dslApplyMigration.value,
+            force = dslForce.value,
+            latest = dslLatest.value,
+          )
         }
       }
     },
 
     dslExecute := Def.inputTask {
       Actions.execute(
-        streams.value.log,
-        dslVerbose.value,
-        dslAnsi.value,
-        dslDslPath.value,
-        dslPlugins.value,
-        dslCompiler.value,
-        dslServerMode.value,
-        dslDownload.value,
-        dslServerPort.value,
-        Parsers.spaceDelimited("<arg>").parsed)
-    }
+        logger = streams.value.log,
+        verbose = dslVerbose.value,
+        ansi = dslAnsi.value,
+        dsl = dslDslPath.value,
+        plugins = dslPlugins.value,
+        compiler = dslCompiler.value,
+        serverMode = dslServerMode.value,
+        serverURL = dslDownload.value,
+        serverPort = dslServerPort.value,
+        arguments = Parsers.spaceDelimited("<arg>").parsed,
+      )
+    },
   ))
 }

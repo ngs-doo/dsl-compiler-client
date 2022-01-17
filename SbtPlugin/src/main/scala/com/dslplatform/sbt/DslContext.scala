@@ -1,16 +1,18 @@
 package com.dslplatform.sbt
 
-import java.io.{PrintWriter, StringWriter}
-
 import com.dslplatform.compiler.client.Context
 import com.dslplatform.compiler.client.parameters.{DisableColors, DisablePrompt, LogOutput}
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.Color
 import sbt.Logger
 
-private[sbt] class DslContext(logger : Option[Logger],
-                              verbose: Boolean,
-                              ansi   : Boolean) extends Context {
+import java.io.{PrintWriter, StringWriter}
+
+private[sbt] class DslContext(
+  logger: Option[Logger],
+  verbose: Boolean,
+  ansi: Boolean) extends Context {
+
   if (logger.isEmpty) put(DisablePrompt.INSTANCE, "")
   else {
     put(LogOutput.INSTANCE,"")
