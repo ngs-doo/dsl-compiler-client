@@ -60,7 +60,7 @@ namespace DSLPlatform
 					CurrentPosition += (int)offset;
 					break;
 				default:
-					CurrentPosition = TotalSize - (int)offset;
+					CurrentPosition = TotalSize + (int)offset;
 					break;
 			}
 			return CurrentPosition;

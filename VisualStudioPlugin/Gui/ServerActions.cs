@@ -9,8 +9,8 @@ using System.Text;
 using System.Xml.Linq;
 using EnvDTE;
 using Ionic.Zip;
-using Npgsql;
 using Oracle.ManagedDataAccess.Client;
+using Revenj.DatabasePersistence.Postgres.Npgsql;
 
 namespace DSLPlatform
 {
@@ -165,6 +165,9 @@ namespace DSLPlatform
 							foreach (var ze in zf.Entries)
 							{
 								zipFiles.Add(ze.FileName);
+								var filename = Path.Combine(path, ze.FileName);
+								TryDelete(filename + ".tmp");
+								TryDelete(filename + ".PendingOverwrite");
 								ze.Extract(path, ExtractExistingFileAction.OverwriteSilently);
 							}
 						}
@@ -172,6 +175,17 @@ namespace DSLPlatform
 						var diskFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
 						return diskFiles.Length == zipFiles.Count;
 					});
+		}
+
+		private static void TryDelete(string file)
+		{
+			var fi = new FileInfo(file);
+			if (!fi.Exists) return;
+			try
+			{
+				fi.Delete();
+			}
+			catch { }
 		}
 
 		private static Dictionary<string, string> GatherCurrentDsl(DTE dte)
@@ -554,7 +568,7 @@ Error: " + ex.Message, ex);
 
 		private static DbInfo ReadInfoFromPostgres(DatabaseInfo dbInfo)
 		{
-			var postgresVersion = new Version(9, 3);
+			var postgresVersion = new Version(11, 0);
 			try
 			{
 				using (var conn = new NpgsqlConnection(dbInfo.ConnectionString))
@@ -562,7 +576,7 @@ Error: " + ex.Message, ex);
 					var com = conn.CreateCommand();
 					conn.Open();
 					if (!Version.TryParse(conn.ServerVersion, out postgresVersion))
-						postgresVersion = new Version(9, 3);
+						postgresVersion = new Version(11, 0);
 					IDataReader dr;
 					try
 					{
@@ -607,10 +621,10 @@ Modifications:
 		{
 			if (!force)
 				CheckForce(stream);
-			using (var conn = new Npgsql.NpgsqlConnection(dbInfo.ConnectionString))
+			using (var conn = new NpgsqlConnection(dbInfo.ConnectionString))
 			{
 				conn.Open();
-				var com = new Npgsql.NpgsqlCommand(stream);
+				var com = new NpgsqlCommand(stream);
 				com.Connection = conn;
 				com.ExecuteNonQuery();
 				conn.Close();

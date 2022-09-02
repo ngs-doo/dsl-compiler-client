@@ -33,7 +33,7 @@ Build C# classes based on DSL definition
                     ToolTip="Target folder is used to place compiled library." 
                     Foreground="{Binding Path=PocoLibrary.TargetColor}"/>
             </DockPanel>
-            <DockPanel Margin="5" Visibility="{Binding Path=PocoLibrary.LegacyVisibility}">
+            <DockPanel Margin="5">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Poco" />
                 <TextBox Text="{Binding Path=PocoLibrary.Dependencies}" 

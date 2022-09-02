@@ -40,13 +40,21 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                     ToolTip="Target folder is used to place compiled library." 
                     Foreground="{Binding Path=ClientLibrary.TargetColor}"/>
             </DockPanel>
-            <DockPanel Margin="5" Visibility="{Binding Path=ClientLibrary.LegacyVisibility}">
+            <DockPanel Margin="5">
                 <Button Content="Dependency path" Width="120"
                 Command="{Binding ChangeDependencies}" CommandParameter="Client" />
                 <TextBox Text="{Binding Path=ClientLibrary.Dependencies}" 
                     ToolTip="Dependencies for specialized library are used during compilation process."
                     Foreground="{Binding Path=ClientLibrary.DependenciesColor}" />
             </DockPanel>
+            <DataGrid Visibility="{Binding Path=ClientLibrary.NetStandardVisibility}"
+                      ItemsSource="{Binding Path=ClientLibrary.Nugets}" 
+                      AutoGenerateColumns="False" CanUserAddRows="True" CanUserResizeColumns="True" CanUserDeleteRows="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Nuget package" Binding="{Binding Project}" Width="*"/>
+                    <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
             <CheckBox IsChecked="{Binding Path=ClientLibrary.WithActiveRecord}" 
                 Content="Active record"
                 Margin="5"

@@ -16,7 +16,11 @@ namespace DSLPlatform
 		}
 		private static List<LibraryInfo.Nuget> RevenjStandard()
 		{
-			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.5.1" } });
+			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.6.1" } });
+		}
+		private static List<LibraryInfo.Nuget> RevenjClient()
+		{
+			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj.client", Version = "0.9.0" } });
 		}
 
 		private static readonly string[] PocoDependencies = new[] {
@@ -100,7 +104,7 @@ namespace DSLPlatform
 				false,
 				PocoDependencies,
 				NoDependencies(),
-				BuildTypes.LegacyDotNet,
+				BuildTypes.DotNetStandard,
 				".cs",
 				BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
 		public readonly LibraryInfo PocoLibrary = PocoLibraryDefault.Clone();
@@ -112,9 +116,10 @@ namespace DSLPlatform
 				NoVersion,
 				true,
 				PocoDependencies,
-				NoDependencies(),
-				BuildTypes.LegacyDotNet,
-				".cs");
+				RevenjClient(),
+				BuildTypes.DotNetStandard,
+				".cs",
+				BuildTypes.LegacyDotNet, BuildTypes.DotNetStandard);
 		public readonly LibraryInfo ClientLibrary = ClientLibraryDefault.Clone();
 		private LibraryInfo oldPortableLibrary;
 		public static readonly LibraryInfo PortableLibraryDefault =
@@ -282,7 +287,7 @@ namespace DSLPlatform
 				{
 					if (!t.TargetExists)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " target folder: " + t.Target);
-					if (t.RequireDependenciesLegacy && !t.DependenciesExists)
+					if (t.RequireDependenciesLegacy && !t.DependenciesExists && t.BuildType == BuildTypes.LegacyDotNet)
 						return Either<List<string>>.Fail("Could not find " + t.Type + " dependencies folder: " + t.Dependencies);
 					var result = RunCompiler(CompilerPath, t, dsls);
 					if (!result.Success)
