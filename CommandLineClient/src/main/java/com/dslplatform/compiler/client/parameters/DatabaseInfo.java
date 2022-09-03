@@ -2,11 +2,12 @@ package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
-import org.postgresql.util.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -35,7 +36,8 @@ public class DatabaseInfo {
 			}
 			MessageDigest md5 = MessageDigest.getInstance("MD5");
 			byte[] hash = md5.digest(stream.toByteArray());
-			return Base64.encodeBytes(hash);
+			byte[] encoded = Base64.getEncoder().encode(hash);
+			return new String(encoded, 0, encoded.length, StandardCharsets.UTF_8);
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
