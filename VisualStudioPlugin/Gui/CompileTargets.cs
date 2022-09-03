@@ -273,7 +273,10 @@ namespace DSLPlatform
 					 .ToDictionary(it => it.key, it => it.value);
 				return Either.Success(dict);
 			}
-			else return Either<Dictionary<string, string>>.Fail(result.Error);
+			var error = string.IsNullOrEmpty(result.Error)
+				? "Unknown error"
+				: result.Error;
+			return Either<Dictionary<string, string>>.Fail(error);
 		}
 
 		public Either<List<string>> Compile(List<string> dsls)
