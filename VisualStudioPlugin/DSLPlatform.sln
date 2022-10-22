@@ -1,13 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.438
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32929.386
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "DSLPlatform.csproj", "{95139D00-CBBC-46B4-94D4-7DA098B161A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualStudioItemTemplate", "VisualStudioItemTemplate\VisualStudioItemTemplate.csproj", "{32628025-999C-4BC9-9496-DB92DB0A1B7F}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DSLPlatform.Shared", "Shared\DSLPlatform.Shared.shproj", "{865B46C3-EE49-4200-8AFB-560BD17E4FFE}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\DSLPlatform.Shared.projitems*{865b46c3-ee49-4200-8afb-560bd17e4ffe}*SharedItemsImports = 13
+		Shared\DSLPlatform.Shared.projitems*{95139d00-cbbc-46b4-94d4-7da098b161a6}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
