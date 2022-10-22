@@ -12,7 +12,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Shared\Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -54,113 +54,37 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ChunkedMemoryStream.cs" />
-    <Compile Include="Classification\ClassificationFormat.cs" />
-    <Compile Include="Classification\ClassificationType.cs" />
-    <Compile Include="Classification\DddClassifier.cs" />
-    <Compile Include="Classification\DddClassifierProvider.cs" />
-    <Compile Include="Classification\DslClassifierProvider.cs" />
-    <Compile Include="Classification\FileAndContentTypeDefinition.cs" />
-    <Compile Include="Compiler.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Either.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Gui\BuildTypes.cs" />
-    <Compile Include="Gui\CompileTargets.cs" />
-    <Compile Include="Gui\DatabaseInfo.cs" />
-    <Compile Include="Gui\DiffPlex\DiffModel.cs" />
-    <Compile Include="Gui\DiffPlex\DiffPlexControl.xaml.cs">
-      <DependentUpon>DiffPlexControl.xaml</DependentUpon>
+    <Compile Include="..\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Gui\DiffPlex\FontInfo.cs" />
-    <Compile Include="Gui\DiffPlex\ScrollViewerSynchronizer.cs" />
-    <Compile Include="Gui\DiffPlex\TextBoxDiffRenderer.cs" />
-    <Compile Include="Gui\DiffPlex\WindowWidthConverter.cs" />
-    <Compile Include="Gui\LibraryInfo.cs" />
-    <Compile Include="Gui\RelayCommand.cs" />
-    <Compile Include="Gui\SchemaChange.cs" />
-    <Compile Include="Gui\ServerActions.cs" />
-    <Compile Include="Gui\ToolPresenter.cs" />
-    <Compile Include="Gui\ToolWindow.cs" />
-    <Compile Include="Gui\View\AboutControl.xaml.cs">
-      <DependentUpon>AboutControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationClientControl.xaml.cs">
-      <DependentUpon>ConfigurationClientControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationOracleControl.xaml.cs">
-      <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationPhpControl.xaml.cs">
-      <DependentUpon>ConfigurationPhpControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationPocoControl.xaml.cs">
-      <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationPortableControl.xaml.cs">
-      <DependentUpon>ConfigurationPortableControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationPostgresControl.xaml.cs">
-      <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationTypescriptControl.xaml.cs">
-      <DependentUpon>ConfigurationTypescriptControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ConfigurationWpfControl.xaml.cs">
-      <DependentUpon>ConfigurationWpfControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\DiffControl.xaml.cs">
-      <DependentUpon>DiffControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\StatusControl.xaml.cs">
-      <DependentUpon>StatusControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gui\View\ToolContent.xaml.cs">
-      <DependentUpon>ToolContent.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Intellisense\DddCompletitionController.cs" />
-    <Compile Include="Intellisense\DddCompletitionSource.cs" />
-    <Compile Include="Intellisense\DddQuickInfo.cs" />
-    <Compile Include="Outlining\DddOutliningTagger.cs" />
-    <Compile Include="Outlining\Region.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DSLPlatformPackage.cs" />
-    <Compile Include="ProvideSolutionProps.cs" />
-    <Compile Include="SyntaxConcept.cs" />
-    <Compile Include="SyntaxParser.cs" />
-    <Compile Include="SyntaxType.cs" />
-    <Compile Include="Token\DddOutlineTag.cs" />
-    <Compile Include="Token\DddTokenTag.cs" />
-    <Compile Include="Token\DddTokenTagger.cs" />
-    <Compile Include="Token\DddTokenTypes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Key.snk" />
     <None Include="packages.config" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="DSLPlatformPackage.vsct">
+    <VSCTCompile Include="..\Shared\DSLPlatformPackage.vsct">
+      <Link>DSLPlatformPackage.vsct</Link>
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <Content Include="dsl.png">
+    <Content Include="..\dsl.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <Link>dsl.png</Link>
     </Content>
-    <Content Include="file.png">
+    <Content Include="..\file.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <Link>file.png</Link>
     </Content>
-    <Content Include="License.txt">
+    <Content Include="..\License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <Link>License.txt</Link>
     </Content>
-    <Content Include="Resources\Images_24bit.bmp" />
-    <Content Include="Resources\Images_32bit.bmp" />
-    <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="packages\Microsoft.VisualStudio.SDK.Analyzers.15.8.36\analyzers\cs\Microsoft.VisualStudio.SDK.Analyzers.dll" />
@@ -168,7 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DiffPlex">
-      <HintPath>Dependencies\DiffPlex.dll</HintPath>
+      <HintPath>..\Shared\Dependencies\DiffPlex.dll</HintPath>
     </Reference>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -183,7 +107,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Ionic.Zip.Reduced">
-      <HintPath>Dependencies\Ionic.Zip.Reduced.dll</HintPath>
+      <HintPath>..\Shared\Dependencies\Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -267,15 +191,15 @@
       <HintPath>packages\Microsoft.VisualStudio.Validation.15.0.82\lib\net45\Microsoft.VisualStudio.Validation.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.ManagedDataAccess">
-      <HintPath>Dependencies\Oracle.ManagedDataAccess.dll</HintPath>
+      <HintPath>..\Shared\Dependencies\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Revenj.Core">
-      <HintPath>Dependencies\Revenj.Core.dll</HintPath>
+      <HintPath>..\Shared\Dependencies\Revenj.Core.dll</HintPath>
     </Reference>
     <Reference Include="Revenj.Core.Interface">
-      <HintPath>Dependencies\Revenj.Core.Interface.dll</HintPath>
+      <HintPath>..\Shared\Dependencies\Revenj.Core.Interface.dll</HintPath>
     </Reference>
     <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -295,68 +219,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="VSPackage.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="Gui\DiffPlex\DiffPlexControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\AboutControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationClientControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationOracleControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationPhpControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationPocoControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationPortableControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationPostgresControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationTypescriptControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ConfigurationWpfControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\DiffControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\StatusControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Gui\View\ToolContent.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="VisualStudioItemTemplate\VisualStudioItemTemplate.csproj">
+    <ProjectReference Include="..\VisualStudioItemTemplate\VisualStudioItemTemplate.csproj">
       <Project>{32628025-999c-4bc9-9496-db92db0a1b7f}</Project>
       <Name>VisualStudioItemTemplate</Name>
       <VSIXSubPath>ItemTemplates</VSIXSubPath>
@@ -364,7 +227,7 @@
       <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="Shared\DSLPlatform.Shared.projitems" Label="Shared" />
+  <Import Project="..\Shared\DSLPlatform.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.168\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />

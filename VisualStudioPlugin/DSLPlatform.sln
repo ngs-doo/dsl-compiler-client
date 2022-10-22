@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32929.386
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "DSLPlatform.csproj", "{95139D00-CBBC-46B4-94D4-7DA098B161A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform.2019", "2019\DSLPlatform.2019.csproj", "{95139D00-CBBC-46B4-94D4-7DA098B161A6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualStudioItemTemplate", "VisualStudioItemTemplate\VisualStudioItemTemplate.csproj", "{32628025-999C-4BC9-9496-DB92DB0A1B7F}"
 EndProject
