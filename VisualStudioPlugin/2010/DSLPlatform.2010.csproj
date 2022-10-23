@@ -11,7 +11,7 @@
     <RootNamespace>DSLPlatform</RootNamespace>
     <AssemblyName>DSLPlatform</AssemblyName>
     <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\Key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Shared\Key.snk</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -114,152 +114,152 @@
     <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Classification\ClassificationFormat.cs">
+    <Compile Include="..\Shared\Classification\ClassificationFormat.cs">
       <Link>Classification\ClassificationFormat.cs</Link>
     </Compile>
-    <Compile Include="..\Classification\ClassificationType.cs">
+    <Compile Include="..\Shared\Classification\ClassificationType.cs">
       <Link>Classification\ClassificationType.cs</Link>
     </Compile>
-    <Compile Include="..\Classification\DddClassifier.cs">
+    <Compile Include="..\Shared\Classification\DddClassifier.cs">
       <Link>Classification\DddClassifier.cs</Link>
     </Compile>
-    <Compile Include="..\Classification\DddClassifierProvider.cs">
+    <Compile Include="..\Shared\Classification\DddClassifierProvider.cs">
       <Link>Classification\DddClassifierProvider.cs</Link>
     </Compile>
-    <Compile Include="..\Classification\DslClassifierProvider.cs">
+    <Compile Include="..\Shared\Classification\DslClassifierProvider.cs">
       <Link>Classification\DslClassifierProvider.cs</Link>
     </Compile>
-    <Compile Include="..\ChunkedMemoryStream.cs" />
-    <Compile Include="..\Constants.cs">
+    <Compile Include="..\Shared\ChunkedMemoryStream.cs" />
+    <Compile Include="..\Shared\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\BuildTypes.cs">
+    <Compile Include="..\Shared\Gui\BuildTypes.cs">
       <Link>Gui\BuildTypes.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\CompileTargets.cs">
+    <Compile Include="..\Shared\Gui\CompileTargets.cs">
       <Link>Gui\CompileTargets.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DatabaseInfo.cs">
+    <Compile Include="..\Shared\Gui\DatabaseInfo.cs">
       <Link>Gui\DatabaseInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationOracleControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationOracleControl.xaml.cs">
       <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationOracleControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Compiler.cs" />
-    <Compile Include="..\Gui\View\ConfigurationPocoControl.xaml.cs">
+    <Compile Include="..\Shared\Compiler.cs" />
+    <Compile Include="..\Shared\Gui\View\ConfigurationPocoControl.xaml.cs">
       <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationPocoControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationClientControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationClientControl.xaml.cs">
       <DependentUpon>ConfigurationClientControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationClientControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationPortableControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationPortableControl.xaml.cs">
       <DependentUpon>ConfigurationPortableControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationPortableControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationPhpControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationPhpControl.xaml.cs">
       <DependentUpon>ConfigurationPhpControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationPhpControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationWpfControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationWpfControl.xaml.cs">
       <DependentUpon>ConfigurationWpfControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationWpfControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationPostgresControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationPostgresControl.xaml.cs">
       <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationPostgresControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ConfigurationTypescriptControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ConfigurationTypescriptControl.xaml.cs">
       <DependentUpon>ConfigurationTypescriptControl.xaml</DependentUpon>
       <Link>Gui\View\ConfigurationTypescriptControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\DiffControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\DiffControl.xaml.cs">
       <DependentUpon>DiffControl.xaml</DependentUpon>
       <Link>Gui\View\DiffControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\DiffModel.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\DiffModel.cs">
       <Link>Gui\DiffPlex\DiffModel.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\DiffPlexControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\DiffPlexControl.xaml.cs">
       <DependentUpon>DiffPlexControl.xaml</DependentUpon>
       <Link>Gui\DiffPlex\DiffPlexControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\FontInfo.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\FontInfo.cs">
       <Link>Gui\DiffPlex\FontInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\ScrollViewerSynchronizer.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\ScrollViewerSynchronizer.cs">
       <Link>Gui\DiffPlex\ScrollViewerSynchronizer.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\TextBoxDiffRenderer.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\TextBoxDiffRenderer.cs">
       <Link>Gui\DiffPlex\TextBoxDiffRenderer.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\DiffPlex\WindowWidthConverter.cs">
+    <Compile Include="..\Shared\Gui\DiffPlex\WindowWidthConverter.cs">
       <Link>Gui\DiffPlex\WindowWidthConverter.cs</Link>
     </Compile>
-    <Compile Include="..\Either.cs" />
-    <Compile Include="..\Gui\LibraryInfo.cs">
+    <Compile Include="..\Shared\Either.cs" />
+    <Compile Include="..\Shared\Gui\LibraryInfo.cs">
       <Link>Gui\LibraryInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\SchemaChange.cs">
+    <Compile Include="..\Shared\Gui\SchemaChange.cs">
       <Link>Gui\SchemaChange.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\ServerActions.cs">
+    <Compile Include="..\Shared\Gui\ServerActions.cs">
       <Link>Gui\ServerActions.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\AboutControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\AboutControl.xaml.cs">
       <DependentUpon>AboutControl.xaml</DependentUpon>
       <Link>Gui\View\AboutControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\RelayCommand.cs">
+    <Compile Include="..\Shared\Gui\RelayCommand.cs">
       <Link>Gui\RelayCommand.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\ToolWindow.cs">
+    <Compile Include="..\Shared\Gui\ToolWindow.cs">
       <Link>Gui\ToolWindow.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\ToolPresenter.cs">
+    <Compile Include="..\Shared\Gui\ToolPresenter.cs">
       <Link>Gui\ToolPresenter.cs</Link>
     </Compile>
-    <Compile Include="..\Intellisense\DddCompletitionController.cs">
+    <Compile Include="..\Shared\Intellisense\DddCompletitionController.cs">
       <Link>Intellisense\DddCompletitionController.cs</Link>
     </Compile>
-    <Compile Include="..\Intellisense\DddCompletitionSource.cs">
+    <Compile Include="..\Shared\Intellisense\DddCompletitionSource.cs">
       <Link>Intellisense\DddCompletitionSource.cs</Link>
     </Compile>
-    <Compile Include="..\Intellisense\DddQuickInfo.cs">
+    <Compile Include="..\Shared\Intellisense\DddQuickInfo.cs">
       <Link>Intellisense\DddQuickInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Outlining\DddOutliningTagger.cs">
+    <Compile Include="..\Shared\Outlining\DddOutliningTagger.cs">
       <Link>Outlining\DddOutliningTagger.cs</Link>
     </Compile>
-    <Compile Include="..\Outlining\Region.cs">
+    <Compile Include="..\Shared\Outlining\Region.cs">
       <Link>Outlining\Region.cs</Link>
     </Compile>
-    <Compile Include="..\SyntaxConcept.cs" />
-    <Compile Include="..\SyntaxParser.cs" />
-    <Compile Include="..\ProvideSolutionProps.cs" />
-    <Compile Include="..\GlobalSuppressions.cs" />
-    <Compile Include="..\DSLPlatformPackage.cs" />
+    <Compile Include="..\Shared\SyntaxConcept.cs" />
+    <Compile Include="..\Shared\SyntaxParser.cs" />
+    <Compile Include="..\Shared\ProvideSolutionProps.cs" />
+    <Compile Include="..\Shared\GlobalSuppressions.cs" />
+    <Compile Include="..\Shared\DSLPlatformPackage.cs" />
     <Compile Include="..\Properties\AssemblyInfo.cs" />
-    <Compile Include="..\Gui\View\StatusControl.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\StatusControl.xaml.cs">
       <DependentUpon>StatusControl.xaml</DependentUpon>
       <Link>Gui\View\StatusControl.xaml.cs</Link>
     </Compile>
-    <Compile Include="..\SyntaxType.cs" />
-    <Compile Include="..\Token\DddOutlineTag.cs">
+    <Compile Include="..\Shared\SyntaxType.cs" />
+    <Compile Include="..\Shared\Token\DddOutlineTag.cs">
       <Link>Token\DddOutlineTag.cs</Link>
     </Compile>
-    <Compile Include="..\Token\DddTokenTag.cs">
+    <Compile Include="..\Shared\Token\DddTokenTag.cs">
       <Link>Token\DddTokenTag.cs</Link>
     </Compile>
-    <Compile Include="..\Token\DddTokenTagger.cs">
+    <Compile Include="..\Shared\Token\DddTokenTagger.cs">
       <Link>Token\DddTokenTagger.cs</Link>
     </Compile>
-    <Compile Include="..\Token\DddTokenTypes.cs">
+    <Compile Include="..\Shared\Token\DddTokenTypes.cs">
       <Link>Token\DddTokenTypes.cs</Link>
     </Compile>
-    <Compile Include="..\Gui\View\ToolContent.xaml.cs">
+    <Compile Include="..\Shared\Gui\View\ToolContent.xaml.cs">
       <DependentUpon>ToolContent.xaml</DependentUpon>
       <Link>Gui\View\ToolContent.xaml.cs</Link>
     </Compile>
@@ -272,7 +272,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Key.snk">
+    <None Include="..\Shared\Key.snk">
       <Link>Key.snk</Link>
     </None>
     <None Include="source.extension.vsixmanifest">
@@ -308,67 +308,67 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="..\Gui\View\ConfigurationOracleControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationOracleControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Link>Gui\View\ConfigurationOracleControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationPocoControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationPocoControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationPocoControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationClientControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationClientControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationClientControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationPortableControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationPortableControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationPortableControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationPhpControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationPhpControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationPhpControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationWpfControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationWpfControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationWpfControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationPostgresControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationPostgresControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationPostgresControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ConfigurationTypescriptControl.xaml">
+    <Page Include="..\Shared\Gui\View\ConfigurationTypescriptControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\View\ConfigurationTypescriptControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\DiffControl.xaml">
+    <Page Include="..\Shared\Gui\View\DiffControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Link>Gui\View\DiffControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\DiffPlex\DiffPlexControl.xaml">
+    <Page Include="..\Shared\Gui\DiffPlex\DiffPlexControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
       <Link>Gui\DiffPlex\DiffPlexControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\AboutControl.xaml">
+    <Page Include="..\Shared\Gui\View\AboutControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Link>Gui\View\AboutControl.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\ToolContent.xaml">
+    <Page Include="..\Shared\Gui\View\ToolContent.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Link>Gui\View\ToolContent.xaml</Link>
     </Page>
-    <Page Include="..\Gui\View\StatusControl.xaml">
+    <Page Include="..\Shared\Gui\View\StatusControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Link>Gui\View\StatusControl.xaml</Link>

@@ -51,22 +51,22 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DiffPlex">
-      <HintPath>Shared\Dependencies\DiffPlex.dll</HintPath>
+      <HintPath>Dependencies\DiffPlex.dll</HintPath>
     </Reference>
     <Reference Include="Ionic.Zip.Reduced">
-      <HintPath>Shared\Dependencies\Ionic.Zip.Reduced.dll</HintPath>
+      <HintPath>Dependencies\Ionic.Zip.Reduced.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Oracle.ManagedDataAccess">
-      <HintPath>Shared\Dependencies\Oracle.ManagedDataAccess.dll</HintPath>
+      <HintPath>Dependencies\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Revenj.Core">
-      <HintPath>Shared\Dependencies\Revenj.Core.dll</HintPath>
+      <HintPath>Dependencies\Revenj.Core.dll</HintPath>
     </Reference>
     <Reference Include="Revenj.Core.Interface">
-      <HintPath>Shared\Dependencies\Revenj.Core.Interface.dll</HintPath>
+      <HintPath>Dependencies\Revenj.Core.Interface.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
