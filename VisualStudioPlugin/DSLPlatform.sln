@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.438
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "DSLPlatform.csproj", "{95139D00-CBBC-46B4-94D4-7DA098B161A6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualStudioItemTemplate", "VisualStudioItemTemplate\VisualStudioItemTemplate.csproj", "{32628025-999C-4BC9-9496-DB92DB0A1B7F}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DSLPlatform.Shared", "Shared\DSLPlatform.Shared.shproj", "{865B46C3-EE49-4200-8AFB-560BD17E4FFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSLPlatform", "DSLPlatform.csproj", "{9254F04E-98B4-4C42-A4A7-49C9D7128E0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,19 +15,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{95139D00-CBBC-46B4-94D4-7DA098B161A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{95139D00-CBBC-46B4-94D4-7DA098B161A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{95139D00-CBBC-46B4-94D4-7DA098B161A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{95139D00-CBBC-46B4-94D4-7DA098B161A6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{32628025-999C-4BC9-9496-DB92DB0A1B7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{32628025-999C-4BC9-9496-DB92DB0A1B7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32628025-999C-4BC9-9496-DB92DB0A1B7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32628025-999C-4BC9-9496-DB92DB0A1B7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9254F04E-98B4-4C42-A4A7-49C9D7128E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9254F04E-98B4-4C42-A4A7-49C9D7128E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9254F04E-98B4-4C42-A4A7-49C9D7128E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9254F04E-98B4-4C42-A4A7-49C9D7128E0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63AC6BF4-8961-4E08-9D10-3AA7D9324A20}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\DSLPlatform.Shared.projitems*{865b46c3-ee49-4200-8afb-560bd17e4ffe}*SharedItemsImports = 13
+		Shared\DSLPlatform.Shared.projitems*{9254f04e-98b4-4c42-a4a7-49c9d7128e0a}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

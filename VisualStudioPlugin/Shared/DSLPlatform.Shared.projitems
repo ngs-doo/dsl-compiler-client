@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>865b46c3-ee49-4200-8afb-560bd17e4ffe</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>DSLPlatform.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ChunkedMemoryStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\ClassificationFormat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\ClassificationType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\DddClassifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\DddClassifierProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\DslClassifierProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Classification\FileAndContentTypeDefinition.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Compiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DSLPlatformPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Either.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GlobalSuppressions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\BuildTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\CompileTargets.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DatabaseInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\DiffModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\DiffPlexControl.xaml.cs">
+      <DependentUpon>DiffPlexControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\FontInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\ScrollViewerSynchronizer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\TextBoxDiffRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\WindowWidthConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\LibraryInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\RelayCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\SchemaChange.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\ServerActions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\ToolPresenter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\ToolWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\AboutControl.xaml.cs">
+      <DependentUpon>AboutControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationClientControl.xaml.cs">
+      <DependentUpon>ConfigurationClientControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationOracleControl.xaml.cs">
+      <DependentUpon>ConfigurationOracleControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPhpControl.xaml.cs">
+      <DependentUpon>ConfigurationPhpControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPocoControl.xaml.cs">
+      <DependentUpon>ConfigurationPocoControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPortableControl.xaml.cs">
+      <DependentUpon>ConfigurationPortableControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPostgresControl.xaml.cs">
+      <DependentUpon>ConfigurationPostgresControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationTypescriptControl.xaml.cs">
+      <DependentUpon>ConfigurationTypescriptControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationWpfControl.xaml.cs">
+      <DependentUpon>ConfigurationWpfControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\DiffControl.xaml.cs">
+      <DependentUpon>DiffControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\StatusControl.xaml.cs">
+      <DependentUpon>StatusControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui\View\ToolContent.xaml.cs">
+      <DependentUpon>ToolContent.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Intellisense\DddCompletitionController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intellisense\DddCompletitionSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Intellisense\DddQuickInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Outlining\DddOutliningTagger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Outlining\Region.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProvideSolutionProps.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyntaxConcept.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyntaxParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyntaxType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Token\DddOutlineTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Token\DddTokenTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Token\DddTokenTagger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Token\DddTokenTypes.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)DSLPlatformPackage.vsct" />
+    <None Include="$(MSBuildThisFileDirectory)Key.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)VSPackage.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\DiffPlex\DiffPlexControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\AboutControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationClientControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationOracleControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPhpControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPocoControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPortableControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationPostgresControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationTypescriptControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ConfigurationWpfControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\DiffControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\StatusControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Gui\View\ToolContent.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Resources\Images_24bit.bmp" />
+    <Content Include="$(MSBuildThisFileDirectory)Resources\Images_32bit.bmp" />
+    <Content Include="$(MSBuildThisFileDirectory)Resources\Package.ico" />
+  </ItemGroup>
+</Project>
