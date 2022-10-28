@@ -13,7 +13,7 @@ using System.Windows;
 namespace DSLPlatform
 {
 	[PackageRegistration(		UseManagedResourcesOnly = true
-#if !VS2010       , AllowsBackgroundLoading = true
+#if !VS2010	   , AllowsBackgroundLoading = true
 #endif	)]	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideSolutionProps(SolutionPersistanceKey)]
@@ -207,6 +207,7 @@ namespace DSLPlatform
 			info.Legacy = TryReadBool(info.Type + ".Legacy", pBag, info.Legacy);
 			info.MinimalSerialization = TryReadBool(info.Type + ".MinimalSerialization", pBag, info.MinimalSerialization);
 			info.NoPrepareExecute = TryReadBool(info.Type + ".NoPrepareExecute", pBag, info.NoPrepareExecute);
+			info.MutableSnowflake = TryReadBool(info.Type + ".MutableSnowflake", pBag, info.MutableSnowflake);
 		}
 		
 		public int ReadSolutionProps(IVsHierarchy pHierarchy, string pszProjectName, string pszProjectMk, string pszKey, int fPreLoad, IPropertyBag pPropBag)
