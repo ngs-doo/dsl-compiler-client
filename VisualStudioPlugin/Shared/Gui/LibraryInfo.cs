@@ -209,7 +209,8 @@ Please download dependencies before running compilation" : string.Empty);
 				NoPrepareExecute = NoPrepareExecute,
 				MutableSnowflake = MutableSnowflake,
 				Legacy = Legacy,
-				Namespace = Namespace
+				Namespace = Namespace,
+				BuildType = BuildType,
 			};
 		}
 		object ICloneable.Clone() { return Clone(); }
@@ -227,6 +228,7 @@ Please download dependencies before running compilation" : string.Empty);
 				&& other.UseUtc == this.UseUtc
 				&& other.MinimalSerialization == this.MinimalSerialization
 				&& other.NoPrepareExecute == this.NoPrepareExecute
+				&& other.MutableSnowflake == this.MutableSnowflake
 				&& other.Legacy == this.Legacy
 				&& other.Namespace == this.Namespace
 				&& other.BuildType == this.BuildType
