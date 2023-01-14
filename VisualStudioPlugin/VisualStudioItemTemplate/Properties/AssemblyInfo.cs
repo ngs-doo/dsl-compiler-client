@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DSL Platform Item Template")]
 [assembly: AssemblyDescription("Visual Studio Item Template for DSL Platform")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("N.G.S.")]
+[assembly: AssemblyCompany("New Generation Software Ltd.")]
 [assembly: AssemblyProduct("DDD for DSL Platform")]
 [assembly: AssemblyCopyright("Copyright © N.G.S. 2016")]
 [assembly: AssemblyTrademark("")]
