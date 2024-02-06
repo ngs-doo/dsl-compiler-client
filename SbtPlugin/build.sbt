@@ -2,9 +2,9 @@ sbtPlugin := true
 
 organization := "com.dslplatform"
 name := "sbt-dsl-platform"
-version := "0.8.1"
+version := "0.9.0"
 
-scalaVersion := "2.12.15"
+scalaVersion := "2.12.18"
 scalacOptions ++= Seq(
   "-deprecation",
   "-encoding", "UTF-8",
@@ -15,8 +15,8 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.dslplatform" % "dsl-clc" % "1.9.10",
-  "org.clapper" %% "classutil" % "1.1.2",
+  "com.dslplatform" % "dsl-clc" % "2.1.0",
+  "org.clapper" %% "classutil" % "1.5.1",
 )
 
 publishMavenStyle := false

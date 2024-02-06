@@ -32,6 +32,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		JAXB("jaxb", "Add annotations and converters for Java Architecture for XML Binding (JAXB)"),
 		PERMISSION_ACCESS("permission-access", "Generate only code accessible through permissions"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes"),
+		BUILDER("builder", "Create builder object when appropriate"),
 		DOCUMENTATION_METADATA("docs-metadata", "Create documentation metadata");
 
 		private final String value;
