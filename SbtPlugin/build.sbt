@@ -2,7 +2,7 @@ sbtPlugin := true
 
 organization := "com.dslplatform"
 name := "sbt-dsl-platform"
-version := "0.9.0"
+version := "0.9.1"
 
 scalaVersion := "2.12.18"
 scalacOptions ++= Seq(
@@ -19,11 +19,17 @@ libraryDependencies ++= Seq(
   "org.clapper" %% "classutil" % "1.5.1",
 )
 
-publishMavenStyle := false
+publishMavenStyle := true
 licenses += (("BSD-style", url("http://opensource.org/licenses/BSD-3-Clause")))
 startYear := Some(2016)
 pomIncludeRepository := { _ => false }
 homepage := Some(url("https://dsl-platform.com/"))
+developers += Developer(
+  id = "zapov",
+  name = "Rikard Pavelić",
+  email = "rikard@ngs.hr",
+  url = new java.net.URL("https://github.com/zapov")
+)
 Test / publishArtifact := false
 ThisBuild / versionScheme := Some("early-semver")
 
