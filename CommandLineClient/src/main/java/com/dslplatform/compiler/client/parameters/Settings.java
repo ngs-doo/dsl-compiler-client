@@ -33,6 +33,7 @@ public enum Settings implements CompileParameter, ParameterParser {
 		PERMISSION_ACCESS("permission-access", "Generate only code accessible through permissions"),
 		DISABLE_COMPANION("disable-companion", "Don't use companion object for scala classes"),
 		BUILDER("builder", "Create builder object when appropriate"),
+		NULLABLE_REFERENCES("nullable-references", "Enable Nullable Reference Types"),
 		DOCUMENTATION_METADATA("docs-metadata", "Create documentation metadata");
 
 		private final String value;
