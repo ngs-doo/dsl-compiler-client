@@ -56,6 +56,10 @@ Build C# classes based on DSL definition
                 Content="Mutable snowflake"
                 Margin="5"
                 ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
+            <CheckBox IsChecked="{Binding Path=PocoLibrary.NullableReferences}" 
+                Content="Nullable references"
+                Margin="5"
+                ToolTip="Modern C# versions allow nullable signatures not only on value types, but also on references"/>
             <Separator />
             <Button Content="Back" Command="{Binding BackToStatus}" Width="80" HorizontalAlignment="Right" />
             <TextBox IsReadOnly="True" Text="{Binding Message, Mode=OneWay}"

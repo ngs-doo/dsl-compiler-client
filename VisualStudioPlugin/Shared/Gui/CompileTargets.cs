@@ -16,7 +16,7 @@ namespace DSLPlatform
 		}
 		private static List<LibraryInfo.Nuget> RevenjStandard()
 		{
-			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.6.1" } });
+			return new List<LibraryInfo.Nuget>(new[] { new LibraryInfo.Nuget { Project = "revenj", Version = "1.6.5" } });
 		}
 		private static List<LibraryInfo.Nuget> RevenjClient()
 		{
@@ -255,6 +255,8 @@ namespace DSLPlatform
 				sb.Append(" settings=legacy");
 			if (target.MutableSnowflake)
 				sb.Append(" settings=mutable-snowflake");
+			if (target.NullableReferences)
+				sb.Append(" settings=nullable-references");
 			if (!string.IsNullOrWhiteSpace(target.Namespace))
 				sb.Append(" namespace=").Append(target.Namespace);
 			if (string.IsNullOrEmpty(target.Extension))

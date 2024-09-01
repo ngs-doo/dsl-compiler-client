@@ -71,6 +71,10 @@ DSL Platform libraries are BSD licensed and source is available on GitHub.
                 Content="Mutable snowflake"
                 Margin="5"
                 ToolTip="Snowflakes are read-only data structures. But for easier exchange of complex data it's often convenient to mutate it and send it back"/>
+            <CheckBox IsChecked="{Binding Path=ClientLibrary.NullableReferences}" 
+                Content="Nullable references"
+                Margin="5"
+                ToolTip="Modern C# versions allow nullable signatures not only on value types, but also on references"/>
             <Button Margin="2" Visibility="{Binding Path=ClientLibrary.LegacyVisibility}"
                     Content="Download Revenj.NET client library" 
                     Command="{Binding DownloadLibrary}" CommandParameter="Client:dotnet_client.zip" />

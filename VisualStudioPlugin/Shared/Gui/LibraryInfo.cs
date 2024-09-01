@@ -124,6 +124,7 @@ namespace DSLPlatform
 		public bool MinimalSerialization { get; set; }
 		public bool NoPrepareExecute { get; set; }
 		public bool MutableSnowflake { get; set; }
+		public bool NullableReferences { get; set; }
 		public bool Legacy { get; set; }
 		public string Namespace { get; set; }
 
@@ -208,6 +209,7 @@ Please download dependencies before running compilation" : string.Empty);
 				MinimalSerialization = MinimalSerialization,
 				NoPrepareExecute = NoPrepareExecute,
 				MutableSnowflake = MutableSnowflake,
+				NullableReferences = NullableReferences,
 				Legacy = Legacy,
 				Namespace = Namespace,
 				BuildType = BuildType,
@@ -229,6 +231,7 @@ Please download dependencies before running compilation" : string.Empty);
 				&& other.MinimalSerialization == this.MinimalSerialization
 				&& other.NoPrepareExecute == this.NoPrepareExecute
 				&& other.MutableSnowflake == this.MutableSnowflake
+				&& other.NullableReferences == this.NullableReferences
 				&& other.Legacy == this.Legacy
 				&& other.Namespace == this.Namespace
 				&& other.BuildType == this.BuildType

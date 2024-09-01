@@ -208,8 +208,9 @@ namespace DSLPlatform
 			info.MinimalSerialization = TryReadBool(info.Type + ".MinimalSerialization", pBag, info.MinimalSerialization);
 			info.NoPrepareExecute = TryReadBool(info.Type + ".NoPrepareExecute", pBag, info.NoPrepareExecute);
 			info.MutableSnowflake = TryReadBool(info.Type + ".MutableSnowflake", pBag, info.MutableSnowflake);
+			info.NullableReferences = TryReadBool(info.Type + ".NullableReferences", pBag, info.NullableReferences);
 		}
-		
+
 		public int ReadSolutionProps(IVsHierarchy pHierarchy, string pszProjectName, string pszProjectMk, string pszKey, int fPreLoad, IPropertyBag pPropBag)
 		{
 			try
@@ -383,8 +384,13 @@ namespace DSLPlatform
 				val = info.MutableSnowflake.ToString();
 				pBag.Write(info.Type + ".MutableSnowflake", ref val);
 			}
+			if (reference.NullableReferences != info.NullableReferences)
+			{
+				val = info.NullableReferences.ToString();
+				pBag.Write(info.Type + ".NullableReferences", ref val);
+			}
 		}
-		
+
 		public int WriteSolutionProps(IVsHierarchy pHierarchy, string pszKey, IPropertyBag pPropBag)
 		{
 			if (pHierarchy != null)
