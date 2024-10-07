@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="DDDLanguage..5db84b4d-137c-43af-9d26-9df8ab3076a6" Version="1.9.4" Language="en-US" Publisher="New Generation Software Ltd." />
+        <Identity Id="DDDLanguage..5db84b4d-137c-43af-9d26-9df8ab3076a6" Version="1.9.7" Language="en-US" Publisher="New Generation Software Ltd." />
         <DisplayName>DSL Platform</DisplayName>
         <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
         <MoreInfo>https://dsl-platform.com</MoreInfo>
