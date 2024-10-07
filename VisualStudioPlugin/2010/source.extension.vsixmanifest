@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="DDDLanguage..0c2dba72-d915-4d37-9379-2100b92042de">
+  <Identifier Id="DSLPlatform.2010">
     <Name>DSL Platform</Name>
-    <Author>N.G.S.</Author>
-    <Version>1.9.1</Version>
+    <Author>New Generation Software Ltd.</Author>
+    <Version>2.0.4</Version>
     <Description xml:space="preserve">Domain Specification Language by DSL Platform. Based on Domain-Driven Design</Description>
     <Locale>1033</Locale>
     <MoreInfoUrl>https://dsl-platform.com</MoreInfoUrl>
@@ -30,21 +30,6 @@
         <Edition>Community</Edition>
         <Edition>VST_All</Edition>
       </VisualStudio>
-      <VisualStudio Version="14.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <!--VisualStudio Version="15.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio>
-      <VisualStudio Version="16.0">
-        <Edition>Pro</Edition>
-        <Edition>Community</Edition>
-        <Edition>VST_All</Edition>
-      </VisualStudio-->
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>

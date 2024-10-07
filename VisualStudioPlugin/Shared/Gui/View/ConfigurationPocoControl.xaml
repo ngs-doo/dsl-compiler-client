@@ -40,8 +40,8 @@ Build C# classes based on DSL definition
                     ToolTip="Dependencies for specialized library are used during compilation process."
                     Foreground="{Binding Path=PocoLibrary.DependenciesColor}" />
             </DockPanel>
-            <DataGrid Visibility="{Binding Path=PostgresLibrary.NetStandardVisibility}"
-                      ItemsSource="{Binding Path=PostgresLibrary.Nugets}" 
+            <DataGrid Visibility="{Binding Path=PocoLibrary.NetStandardVisibility}"
+                      ItemsSource="{Binding Path=PocoLibrary.Nugets}" 
                       AutoGenerateColumns="False" CanUserAddRows="True" CanUserResizeColumns="True" CanUserDeleteRows="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Nuget package" Binding="{Binding Project}" Width="*"/>

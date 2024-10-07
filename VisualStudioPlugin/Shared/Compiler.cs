@@ -130,10 +130,15 @@ namespace DSLPlatform
 			var csproj = new StringBuilder(@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
 	<TargetFramework>netstandard2.0</TargetFramework>
-	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<AssemblyName>");
-			csproj.Append(outputName);
-			csproj.Append(@"</AssemblyName>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>");
+			if (library.NullableReferences)
+			{
+				csproj.Append(@"
+	<LangVersion>8</LangVersion>
+	<Nullable>enable</Nullable>");
+			}
+			csproj.Append(@"
+	<AssemblyName>").Append(outputName).Append(@"</AssemblyName>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>");
 			if (library.Nugets.Count != 0 || customDlls.Length != 0)
