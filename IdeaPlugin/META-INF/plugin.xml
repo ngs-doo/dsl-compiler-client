@@ -1,7 +1,7 @@
-<idea-plugin version="2">
+<idea-plugin>
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.9.10</version>
+  <version>0.10.1</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -14,17 +14,15 @@
 
   <change-notes><![CDATA[
     <ul>
+      <li>0.10.1 IDEA 2024 compatibility fix
       <li>0.9.10 Highligting fix for IDEA 2020+
       <li>0.9.9 Bugfix
-      <li>0.9.8 Bugfix
-      <li>0.9.7 Bugfix
-      <li>0.9.6 Bugfix
     </ul>
     ]]>
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="162"/>
+  <idea-version since-build="203.5981.155"/>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
        on how to target different products -->
@@ -32,20 +30,11 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <applicationService serviceInterface="com.dslplatform.ideaplugin.DslCompilerService" serviceImplementation="com.dslplatform.ideaplugin.DslCompilerService" />
-    <fileTypeFactory implementation="com.dslplatform.ideaplugin.DslFileTypeFactory"/>
-    <lang.syntaxHighlighterFactory key="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
+    <fileType name="DSL file" implementationClass="com.dslplatform.ideaplugin.DslFileType" fieldName="INSTANCE" language="DomainSpecificationLanguage" extensions="dsl" />
+    <lang.syntaxHighlighterFactory language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
     <colorSettingsPage implementation="com.dslplatform.ideaplugin.DslColorSettingsPage"/>
     <lang.commenter language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCommenter"/>
   </extensions>
-
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
-
-  <project-components>
-    <!-- Add your project components here -->
-  </project-components>
 
   <actions>
     <!--action

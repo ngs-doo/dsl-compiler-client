@@ -5,6 +5,7 @@ import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.Main;
 import com.dslplatform.compiler.client.parameters.Download;
 import com.dslplatform.compiler.client.parameters.DslCompiler;
+import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 
 import java.io.File;
@@ -13,10 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
-public class DslCompilerService {
+@Service(Service.Level.APP)
+public final class DslCompilerService {
 
 	private DslCompiler.TokenParser tokenParser;
-	private final List<Runnable> notifications = new ArrayList<Runnable>();
+	private final List<Runnable> notifications = new ArrayList<>();
 
 	public DslCompilerService() {
 		final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
@@ -80,7 +82,7 @@ public class DslCompilerService {
 
 	Either<List<AST>> analyze(String dsl) {
 		if (dsl.trim().isEmpty()) {
-			List<AST> empty = new ArrayList<AST>(0);
+			List<AST> empty = new ArrayList<>(0);
 			return Either.success(empty);
 		}
 		if (tokenParser == null) return Either.fail("Token parser not ready");

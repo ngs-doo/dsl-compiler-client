@@ -2,11 +2,10 @@ package com.dslplatform.ideaplugin;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-public class DslFileType extends LanguageFileType {
+public final class DslFileType extends LanguageFileType {
 	public static final DslFileType INSTANCE = new DslFileType();
 
 	private DslFileType() {
@@ -31,9 +30,8 @@ public class DslFileType extends LanguageFileType {
 		return "dsl";
 	}
 
-	@Nullable
 	@Override
 	public Icon getIcon() {
-		return Icons.FILE;
+		return DslIcons.FILE;
 	}
 }

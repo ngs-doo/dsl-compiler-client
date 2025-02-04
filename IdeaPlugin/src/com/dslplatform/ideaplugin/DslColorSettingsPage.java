@@ -21,7 +21,7 @@ public class DslColorSettingsPage implements ColorSettingsPage {
 	@Nullable
 	@Override
 	public Icon getIcon() {
-		return Icons.FILE;
+		return DslIcons.FILE;
 	}
 
 	@NotNull
