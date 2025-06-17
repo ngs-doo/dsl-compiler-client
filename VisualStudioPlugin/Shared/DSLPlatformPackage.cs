@@ -3,6 +3,8 @@ using System.Linq;
 using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -12,9 +14,13 @@ using System.Windows;
 
 namespace DSLPlatform
 {
-	[PackageRegistration(		UseManagedResourcesOnly = true
-#if !VS2010	   , AllowsBackgroundLoading = true
-#endif	)]	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
+	[PackageRegistration(
+		UseManagedResourcesOnly = true
+#if !VS2010
+	   , AllowsBackgroundLoading = true
+#endif
+	)]
+	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideSolutionProps(SolutionPersistanceKey)]
 	[ProvideToolWindow(typeof(ToolWindow))]
@@ -32,43 +38,100 @@ namespace DSLPlatform
 		public const string SolutionPersistanceKey = "DslPlatformSolutionProperties";
 		private SolutionEvents DteSolutionEvents;
 		private OleMenuCommand MenuItemCompile;
+		private ToolWindowPane window;
+		private DTE dte;
 
 #if VS2010
 		protected override void Initialize()
 		{
 			base.Initialize();
 
-			// Add our command handlers for menu (commands must exist in the .vsct file)
 			var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 			ConfigureCommands(mcs);
-			var window = this.FindToolWindow(typeof(ToolWindow), 0, true);
-			var dte = GetService(typeof(DTE)) as DTE;
-			ConfigureDTE(window, dte);
+			dte = GetService(typeof(DTE)) as DTE;
+			if (dte != null)
+			{
+				ConfigureDteSolutionEvents();
+			}
+		}
+
+		private void EnsureToolWindow()
+		{
+			if (window != null) return;
+
+			if (dte != null)
+			{
+				window = FindToolWindow(typeof(ToolWindow), 0, true);
+				if (window?.Content is ToolContent content)
+				{
+					Presenter.Initialize(content, dte);
+				}
+				else if (window == null || window.Frame == null)
+				{
+					throw new NotSupportedException("Cannot create ToolWindow");
+				}
+			}
 		}
 #else
-		protected override async System.Threading.Tasks.Task InitializeAsync(System.Threading.CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
 			await base.InitializeAsync(cancellationToken, progress);
 
-			await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 			var mcs = await GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
 			ConfigureCommands(mcs);
-			var dte = await GetServiceAsync(typeof(DTE)) as DTE;
-			var window = this.FindToolWindow(typeof(ToolWindow), 0, true);
-			ConfigureDTE(window, dte);
+			dte = await GetServiceAsync(typeof(DTE)) as DTE;
+			if (dte != null)
+			{
+				await ConfigureDteSolutionEventsAsync();
+			}
+		}
+
+		private async Task EnsureToolWindowAsync(CancellationToken cancellationToken = default)
+		{
+			if (window != null) return;
+
+			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+			if (dte != null)
+			{
+				window = await FindToolWindowAsync(typeof(ToolWindow), 0, true, cancellationToken);
+				if (window?.Content is ToolContent content)
+				{
+					Presenter.Initialize(content, dte);
+					Presenter.PrepareWindow();
+				}
+				else if (window == null || window.Frame == null)
+				{
+					throw new NotSupportedException("Cannot create ToolWindow");
+				}
+			}
 		}
 #endif
-		private void ConfigureDTE(ToolWindowPane window, DTE dte)
+
+		private async Task ConfigureDteSolutionEventsAsync()
 		{
-			if (window == null || window.Frame == null || dte == null) return;
 #if !VS2010
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
 #endif
-			Presenter.Initialize(window.Content as ToolContent, dte);
 			DteSolutionEvents = dte.Events.SolutionEvents;
-			DteSolutionEvents.Opened += () => Presenter.PrepareWindow();
+			DteSolutionEvents.Opened += OnSolutionOpened;
 			DteSolutionEvents.AfterClosing += () => Presenter.SolutionClosed();
 		}
+
+#if !VS2010
+		private async void OnSolutionOpened()
+		{
+			await EnsureToolWindowAsync();
+			Presenter.PrepareWindow();
+		}
+#else
+		private void OnSolutionOpened()
+		{
+			EnsureToolWindow();
+			Presenter.PrepareWindow();
+		}
+#endif
 
 		private void ConfigureCommands(OleMenuCommandService mcs)
 		{
@@ -101,8 +164,18 @@ namespace DSLPlatform
 					|| dte.ActiveWindow.Caption.EndsWith(".ddd", StringComparison.InvariantCultureIgnoreCase));
 		}
 
+#if VS2010
 		private void CreateDslPlatformWindow(object sender, EventArgs e)
+#else
+		private async void CreateDslPlatformWindow(object sender, EventArgs e)
+#endif
 		{
+#if !VS2010
+				await EnsureToolWindowAsync();
+#else
+				EnsureToolWindow();
+#endif
+
 			if (string.IsNullOrEmpty(Presenter.DslCompiler))
 			{
 				var result =
@@ -117,31 +190,54 @@ namespace DSLPlatform
 			}
 			else
 			{
+#if VS2010
 				DslPlatformWindow();
+#else
+				await DslPlatformWindowAsync();
+#endif
 			}
 		}
 
+#if VS2010
 		private void ShowDslPlatformWindow(object sender, EventArgs e)
 		{
+			EnsureToolWindow();
 			DslPlatformWindow();
 		}
+#else
+		private async void ShowDslPlatformWindow(object sender, EventArgs e)
+		{
+			await EnsureToolWindowAsync(CancellationToken.None);
+			await DslPlatformWindowAsync();
+		}
+#endif
 
 		private void CompileDsl(object sender, EventArgs e)
 		{
 			if (Presenter.CanCompile()) Presenter.Compile.Execute(null);
 		}
 
+#if VS2010
 		private void DslPlatformWindow()
 		{
-#if !VS2010
-			ThreadHelper.ThrowIfNotOnUIThread();
-#endif
-			var window = this.FindToolWindow(typeof(ToolWindow), 0, true);
 			if (window == null || window.Frame == null)
 				throw new NotSupportedException("Can not create tool window.");
+
 			var windowFrame = (IVsWindowFrame)window.Frame;
 			Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
 		}
+#else
+		private async Task DslPlatformWindowAsync()
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			if (window == null || window.Frame == null)
+				throw new NotSupportedException("Can not create tool window.");
+
+			var windowFrame = (IVsWindowFrame)window.Frame;
+			ErrorHandler.ThrowOnFailure(windowFrame.Show());
+		}
+#endif
 
 		private bool TryReadBool(string property, IPropertyBag pBag, bool defaultValue = false)
 		{
@@ -215,7 +311,7 @@ namespace DSLPlatform
 		{
 			try
 			{
-				Presenter.SetupBasePath();
+				Presenter.SetupBasePath(dte);
 				ReadInfo(Presenter.PostgresDb, pPropBag);
 				ReadInfo(Presenter.OracleDb, pPropBag);
 				ReadInfo(Presenter.PocoLibrary, pPropBag);

@@ -450,16 +450,17 @@ namespace DSLPlatform
 			LastTool.Content = new AboutControl { DataContext = this };
 		}
 
-		public void SetupBasePath()
+		public void SetupBasePath(EnvDTE.DTE dte)
 		{
-			LibraryInfo.BasePath = DTE.Solution != null ? Path.GetDirectoryName(DTE.Solution.FullName) + Path.DirectorySeparatorChar : null;
+			Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
+			LibraryInfo.BasePath = dte?.Solution != null ? Path.GetDirectoryName(dte.Solution.FullName) + Path.DirectorySeparatorChar : null;
 		}
 
 		public void PrepareWindow()
 		{
 			Message = null;
 			ChangeMessage();
-			SetupBasePath();
+			SetupBasePath(DTE);
 
 			ResetConfiguration();
 			Message = null;
