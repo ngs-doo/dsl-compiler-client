@@ -18,6 +18,7 @@ import java.util.Stack;
 public final class DslCompilerService {
 
 	private DslCompiler.TokenParser tokenParser;
+	private final Object readyLock = new Object();
 	private final List<Runnable> notifications = new ArrayList<>();
 
 	public DslCompilerService() {
@@ -38,15 +39,17 @@ public final class DslCompilerService {
 	}
 
 	boolean callWhenReady(Runnable callback) {
-		if (tokenParser == null) {
-			notifications.add(callback);
-			if (tokenParser != null) {
-				callback.run();
-				return false;
+		synchronized (readyLock) {
+			if (tokenParser == null) {
+				notifications.add(callback);
+				return true;
 			}
-			return true;
 		}
 		return false;
+	}
+
+	boolean isReady() {
+		return tokenParser != null;
 	}
 
 	private void setupCompiler(Logger logger, DslContext context) throws InterruptedException {
@@ -73,7 +76,12 @@ public final class DslCompilerService {
 					}
 				}));
 				Thread.sleep(2000);
-				for (Runnable r : notifications) {
+				List<Runnable> toRun;
+				synchronized (readyLock) {
+					toRun = new ArrayList<>(notifications);
+					notifications.clear();
+				}
+				for (Runnable r : toRun) {
 					r.run();
 				}
 			}

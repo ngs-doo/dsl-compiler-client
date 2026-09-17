@@ -4,6 +4,7 @@ import com.dslplatform.compiler.client.Either;
 import com.intellij.lexer.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
@@ -32,6 +33,7 @@ public class DslLexerParser extends Lexer {
 	private boolean forceRefresh;
 	private boolean waitingForSync;
 	private long delayUntil;
+	private boolean waitingForCompiler;
 	private String lastDsl = "";
 	private final List<AST> ast = new ArrayList<>();
 	private int position = 0;
@@ -49,7 +51,7 @@ public class DslLexerParser extends Lexer {
 				@Override
 				public void run() {
 					if (application != null && isActive) {
-						application.invokeLater(scheduleRefresh);
+						application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
 					}
 				}
 			});
@@ -151,10 +153,24 @@ public class DslLexerParser extends Lexer {
 			try {
 				do {
 					Thread.sleep(100);
-				} while (System.currentTimeMillis() < delayUntil);
+				} while (System.currentTimeMillis() < delayUntil && isActive);
 				waitingForSync = false;
 				if (isActive) {
-					application.invokeLater(scheduleRefresh);
+					application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
+				}
+			} catch (Exception ignore) {
+			}
+		}
+	};
+
+	private final Runnable waitForCompiler = new DumbAwareRunnable() {
+		@Override
+		public void run() {
+			try {
+				Thread.sleep(3000);
+				waitingForCompiler = false;
+				if (isActive) {
+					application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
 				}
 			} catch (Exception ignore) {
 			}
@@ -191,6 +207,12 @@ public class DslLexerParser extends Lexer {
 					List<AST> newAst = new ArrayList<AST>(1);
 					newAst.add(new AST(null, 0, dsl.length(), null));
 					fixupAndReposition(dsl, newAst, start);
+					if (!dslService.isReady() && project != null && project.isOpen()) {
+						if (!waitingForCompiler) {
+							waitingForCompiler = true;
+							application.executeOnPooledThread(waitForCompiler);
+						}
+					}
 				}
 			}
 		} else if (!dsl.equals(lastDsl)) {

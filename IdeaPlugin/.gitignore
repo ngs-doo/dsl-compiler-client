@@ -8,4 +8,6 @@ target
 out/
 *.orig
 *~
-.idea/workspace.xml
+.idea
+.gradle/
+build/

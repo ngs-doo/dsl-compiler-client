@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.17.4'
+}
+
+group = 'com.dslplatform'
+version = '0.11.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// Legacy project layout: sources live in src/, resources (incl. META-INF/plugin.xml) in resources/
+sourceSets {
+    main {
+        java.srcDirs = ['src']
+        resources.srcDirs = ['resources']
+    }
+}
+
+dependencies {
+    implementation files('lib/dsl-clc-2.1.1.jar')
+}
+
+processResources {
+    // Legacy layout: plugin.xml lives in the top-level META-INF/ dir - package it at the standard jar path
+    from('META-INF/plugin.xml') { into 'META-INF' }
+}
+
+intellij {
+    // Development/test SDK: use a recent IDE (JBR 17+, works on Apple Silicon + JDK 17).
+    // The minimum supported version is still controlled by since-build in plugin.xml.
+    version = '2024.1'
+    type = 'IC'
+    // Keep the explicit since-build from plugin.xml and don't stamp an until-build,
+    // otherwise the packaged plugin would only install on 2020.x IDEs.
+    updateSinceUntilBuild = false
+}
