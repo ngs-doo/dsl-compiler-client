@@ -23,8 +23,9 @@ import java.util.*;
 public class DslLexerParser extends Lexer {
 
 	private final Project project;
-	private final PsiFile psiFile;
-	private final Document document;
+	private final VirtualFile file;
+	private PsiFile psiFile;
+	private Document document;
 	private final Application application;
 	private final Runnable refreshAll;
 	private final Runnable scheduleRefresh;
@@ -34,6 +35,7 @@ public class DslLexerParser extends Lexer {
 	private boolean waitingForSync;
 	private long delayUntil;
 	private boolean waitingForCompiler;
+	private boolean failedNotReady = false;
 	private String lastDsl = "";
 	private final List<AST> ast = new ArrayList<>();
 	private int position = 0;
@@ -42,19 +44,11 @@ public class DslLexerParser extends Lexer {
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
+		this.file = file;
 		this.application = ApplicationManager.getApplication();
 		this.dslService = application.getService(DslCompilerService.class);
 		if (project != null && file != null) {
-			psiFile = PsiManager.getInstance(project).findFile(file);
-			document = psiFile != null ? PsiDocumentManager.getInstance(project).getDocument(psiFile) : null;
-			dslService.callWhenReady(new Runnable() {
-				@Override
-				public void run() {
-					if (application != null && isActive) {
-						application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
-					}
-				}
-			});
+			resolvePsi();
 			refreshAll = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
@@ -64,6 +58,7 @@ public class DslLexerParser extends Lexer {
 								@Override
 								public void run() {
 									forceRefresh = true;
+									resolvePsi();
 									if (isActive && document != null && document.isWritable()) {
 										String newText = document.getText();
 										if (newText.isEmpty() || position >= ast.size()) {
@@ -87,11 +82,32 @@ public class DslLexerParser extends Lexer {
 					}
 				}
 			};
+			dslService.callWhenReady(new Runnable() {
+				@Override
+				public void run() {
+					if (isActive) {
+						application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
+					}
+				}
+			});
 		} else {
 			psiFile = null;
 			document = null;
 			refreshAll = () -> {};
 			scheduleRefresh = () -> {};
+		}
+	}
+
+	private void resolvePsi() {
+		if (psiFile != null || project == null || file == null || project.isDisposed()) return;
+		try {
+			PsiFile f = PsiManager.getInstance(project).findFile(file);
+			if (f != null) {
+				psiFile = f;
+				document = PsiDocumentManager.getInstance(project).getDocument(f);
+			}
+		} catch (Exception ex) {
+			logger.debug("Failed to resolve PSI for " + file.getPath() + ": " + ex.getMessage());
 		}
 	}
 
@@ -167,7 +183,7 @@ public class DslLexerParser extends Lexer {
 		@Override
 		public void run() {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(5000);
 				waitingForCompiler = false;
 				if (isActive) {
 					application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
@@ -183,9 +199,10 @@ public class DslLexerParser extends Lexer {
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
 		if (project != null && project.isDisposed() || !isActive) return;
-		final boolean nonEditorPage = project == null || psiFile == null || !document.isWritable();
+		resolvePsi();
+		final boolean nonEditorPage = project == null || psiFile == null || document == null || !document.isWritable();
 		final String dsl = charSequence.toString();
-		if (forceRefresh || nonEditorPage || ast.isEmpty()) {
+		if (forceRefresh || nonEditorPage || ast.isEmpty() || (failedNotReady && dslService.isReady())) {
 			if (lastParsedAnalysis != null && dsl.equals(lastParsedDsl)) {
 				changeAst(start, lastParsedAnalysis);
 				lastDsl = lastParsedDsl;
@@ -200,6 +217,7 @@ public class DslLexerParser extends Lexer {
 					}
 					fixupAndReposition(dsl, newAst, start);
 					forceRefresh = false;
+					failedNotReady = false;
 					lastParsedAnalysis = newAst;
 					lastParsedDsl = dsl;
 				} else {
@@ -208,6 +226,7 @@ public class DslLexerParser extends Lexer {
 					newAst.add(new AST(null, 0, dsl.length(), null));
 					fixupAndReposition(dsl, newAst, start);
 					if (!dslService.isReady() && project != null && project.isOpen()) {
+						failedNotReady = true;
 						if (!waitingForCompiler) {
 							waitingForCompiler = true;
 							application.executeOnPooledThread(waitForCompiler);
@@ -220,7 +239,7 @@ public class DslLexerParser extends Lexer {
 			final String actualDsl;
 			if (start == end && dsl.isEmpty()) {
 				if (psiFile.getLanguage() == DomainSpecificationLanguage.INSTANCE) {
-					actualDsl = psiFile.getText();
+					actualDsl = document != null ? document.getText() : psiFile.getText();
 					if (actualDsl.equals(lastDsl)) {
 						position = 0;
 						return;

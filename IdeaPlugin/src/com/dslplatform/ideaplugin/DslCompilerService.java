@@ -38,14 +38,12 @@ public final class DslCompilerService {
 		setup.start();
 	}
 
-	boolean callWhenReady(Runnable callback) {
+	void callWhenReady(Runnable callback) {
 		synchronized (readyLock) {
 			if (tokenParser == null) {
 				notifications.add(callback);
-				return true;
 			}
 		}
-		return false;
 	}
 
 	boolean isReady() {
