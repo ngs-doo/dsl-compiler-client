@@ -32,9 +32,14 @@
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
     <fileType name="DSL file" implementationClass="com.dslplatform.ideaplugin.DslFileType" fieldName="INSTANCE" language="DomainSpecificationLanguage" extensions="dsl" />
+    <lang.parserDefinition language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslParserDefinition"/>
     <lang.syntaxHighlighterFactory language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
     <colorSettingsPage implementation="com.dslplatform.ideaplugin.DslColorSettingsPage"/>
     <lang.commenter language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCommenter"/>
+    <editorFactoryListener implementation="com.dslplatform.ideaplugin.DslHoverListener"/>
+    <applicationService serviceImplementation="com.dslplatform.ideaplugin.DslSettings"/>
+    <applicationConfigurable parentId="tools" id="com.dslplatform.ideaplugin.settings"
+                             instance="com.dslplatform.ideaplugin.DslSettingsPage" displayName="DSL Platform"/>
   </extensions>
 
   <actions>

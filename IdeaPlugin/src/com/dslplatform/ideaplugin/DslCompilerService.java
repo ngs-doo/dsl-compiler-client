@@ -52,6 +52,16 @@ public final class DslCompilerService {
 		return tokenParser != null;
 	}
 
+	Either<DslCompiler.RuleInfo> findRule(String name) {
+		final DslCompiler.TokenParser parser = tokenParser;
+		if (parser == null) return Either.fail("Token parser not ready");
+		try {
+			return parser.findRule(name);
+		} catch (Exception e) {
+			return Either.fail(e.getMessage());
+		}
+	}
+
 	private void setupCompiler(Logger logger, DslContext context) throws InterruptedException {
 		if (!Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE))) {
 			logger.warn("Unable to setup DSL Platform client");
