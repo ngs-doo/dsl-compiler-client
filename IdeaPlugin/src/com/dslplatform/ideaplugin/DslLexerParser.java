@@ -1,10 +1,12 @@
 package com.dslplatform.ideaplugin;
 
 import com.dslplatform.compiler.client.Either;
+import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.lexer.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.DocumentRunnable;
@@ -35,12 +37,16 @@ public class DslLexerParser extends Lexer {
 	private boolean waitingForSync;
 	private long delayUntil;
 	private boolean waitingForCompiler;
+	private String analyzingText = null;
 	private boolean failedNotReady = false;
 	private String lastDsl = "";
+	private String startedText = null;
 	private final List<AST> ast = new ArrayList<>();
 	private int position = 0;
 	private boolean isActive = true;
-	private final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
+	private final Logger logger = Logger.getInstance("DSL Platform");
+
+	private static final int RETRY_DELAY_MS = 500;
 
 	public DslLexerParser(Project project, VirtualFile file) {
 		this.project = project;
@@ -53,7 +59,11 @@ public class DslLexerParser extends Lexer {
 				@Override
 				public void run() {
 					if (!isActive) return;
-					com.intellij.openapi.command.CommandProcessor.getInstance().runUndoTransparentAction(
+					if (hasActiveLookup()) {
+						scheduleRefreshWhileLookupOpen();
+						return;
+					}
+					CommandProcessor.getInstance().runUndoTransparentAction(
 							new Runnable() {
 								@Override
 								public void run() {
@@ -98,6 +108,90 @@ public class DslLexerParser extends Lexer {
 		application.invokeLater(scheduleRefresh, ModalityState.NON_MODAL);
 	}
 
+	private boolean hasActiveLookup() {
+		if (project == null || project.isDisposed()) return false;
+		try {
+			return LookupManager.getInstance(project).getActiveLookup() != null;
+		} catch (Exception ex) {
+			return false;
+		}
+	}
+
+	private void scheduleRefreshWhileLookupOpen() {
+		if (!isActive || waitingForSync) return;
+		waitingForSync = true;
+		application.executeOnPooledThread(new DumbAwareRunnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(RETRY_DELAY_MS);
+				} catch (InterruptedException ignore) {
+				}
+				waitingForSync = false;
+				if (isActive) {
+					scheduleRefreshLater();
+				}
+			}
+		});
+	}
+
+	private void analyzeInBackground(final String text) {
+		if (!isActive || project == null || project.isDisposed() || text == null || dslService == null) return;
+		if (!dslService.isReady()) {
+			failedNotReady = true;
+			if (!waitingForCompiler && project.isOpen()) {
+				waitingForCompiler = true;
+				application.executeOnPooledThread(waitForCompiler);
+			}
+			return;
+		}
+		synchronized (this) {
+			if (text.equals(analyzingText)) return;
+			analyzingText = text;
+		}
+		application.executeOnPooledThread(new DumbAwareRunnable() {
+			@Override
+			public void run() {
+				final Either<List<AST>> tryNewAst = dslService.analyze(text);
+				synchronized (DslLexerParser.this) {
+					if (!text.equals(analyzingText)) return;   // superseded by a newer analyze
+					analyzingText = null;
+				}
+				if (!tryNewAst.isSuccess()) {
+					logger.debug("background analyze failed: " + tryNewAst.explainError());
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException ignore) {
+					}
+					String current = document != null ? document.getText() : lastDsl;
+					if (isActive && text.equals(current)) {
+						analyzeInBackground(text);
+					}
+					return;
+				}
+				final List<AST> newAst = tryNewAst.get();
+				logger.debug("analyzed successfully = " + newAst.size());
+				application.invokeLater(new DumbAwareRunnable() {
+					@Override
+					public void run() {
+						if (!isActive) return;
+						String current = document != null ? document.getText() : text;
+						if (current == null || !current.equals(text)) return;
+						List<AST> asts = new ArrayList<AST>(newAst);
+						if (asts.isEmpty()) {
+							asts.add(new AST(null, 0, text.length(), null));
+						}
+						lastParsedAnalysis = padToFullCoverage(text, asts);
+						lastParsedDsl = text;
+						failedNotReady = false;
+						fixupAndReposition(text, lastParsedAnalysis, 0);
+						scheduleRefreshLater();
+					}
+				}, ModalityState.NON_MODAL);
+			}
+		});
+	}
+
 	private void resolvePsi() {
 		if (psiFile != null || project == null || file == null || project.isDisposed()) return;
 		try {
@@ -125,28 +219,65 @@ public class DslLexerParser extends Lexer {
 
 	private void fixupAndReposition(String dsl, List<AST> newAst, int start) {
 		lastDsl = dsl;
+		changeAst(start, padToFullCoverage(dsl, newAst));
+	}
+
+	private static List<AST> padToFullCoverage(String dsl, List<AST> in) {
+		final int len = dsl.length();
+		List<AST> clean = new ArrayList<>(in.size());
+		int prevEnd = 0;
+		for (AST a : in) {
+			if (a == null || a.length <= 0 || a.offset < prevEnd || a.offset >= len || a.offset + a.length > len) continue;
+			clean.add(a);
+			prevEnd = a.offset + a.length;
+		}
 		int cur = 0;
 		int index = 0;
-		while (index < newAst.size()) {
-			AST it = newAst.get(index);
+		while (index < clean.size()) {
+			AST it = clean.get(index);
 			if (it.offset > cur) {
-				newAst.add(index, new AST(null, cur, it.offset - cur, null));
+				clean.add(index, new AST(null, cur, it.offset - cur, null));
 				index++;
 			}
 			cur = it.offset + it.length;
 			index++;
 		}
-		if (dsl.length() > 0) {
-			int width = 0;
-			if (newAst.size() > 0) {
-				AST last = newAst.get(newAst.size() - 1);
-				width = last.offset + last.length;
-			}
-			if (width < dsl.length()) {
-				newAst.add(new AST(null, width, dsl.length() - width, null));
+		if (len > 0 && cur < len) {
+			clean.add(new AST(null, cur, len - cur, null));
+		}
+		return clean;
+	}
+
+	private void rebaseToNewText(String dsl, int start) {
+		final String old = lastDsl;
+		int pos = 0;
+		while (pos < dsl.length() && pos < old.length() && dsl.charAt(pos) == old.charAt(pos)) {
+			pos++;
+		}
+		List<AST> newAst = new ArrayList<>(ast.size() + 1);
+		synchronized (ast) {
+			for (AST a : ast) {
+				if (a.offset >= 0 && a.offset + a.length > 0 && a.offset + a.length <= pos) {
+					newAst.add(a);
+				} else break;
 			}
 		}
-		changeAst(start, newAst);
+		if (pos < dsl.length()) {
+			newAst.add(new AST(null, pos, dsl.length() - pos, null));
+		}
+		fixupAndReposition(dsl, newAst, start);
+	}
+
+	private void setupFullCoverage(String dsl) {
+		if (lastDsl.equals(dsl)) {
+			position = 0;
+			return;
+		}
+		List<AST> newAst = new ArrayList<AST>(dsl.length() > 0 ? 1 : 0);
+		if (dsl.length() > 0) {
+			newAst.add(new AST(null, 0, dsl.length(), null));
+		}
+		fixupAndReposition(dsl, newAst, 0);
 	}
 
 	private void changeAst(int start, List<AST> newAst) {
@@ -163,6 +294,26 @@ public class DslLexerParser extends Lexer {
 		}
 	}
 
+	private void ensureCoverage(int start) {
+		synchronized (ast) {
+			if (ast.isEmpty()) return;
+			AST last = ast.get(ast.size() - 1);
+			if (last.offset + last.length == lastDsl.length()) return;
+			logger.warn("lexer coverage out of sync (tokens end at " + (last.offset + last.length)
+					+ ", buffer is " + lastDsl.length() + " chars); rebuilding");
+			List<AST> rebuilt = new ArrayList<AST>(ast.size() + 1);
+			int keepEnd = 0;
+			for (AST a : ast) {
+				if (a.offset >= keepEnd && a.offset + a.length > keepEnd && a.offset + a.length <= lastDsl.length()) {
+					rebuilt.add(a);
+					keepEnd = a.offset + a.length;
+				} else break;
+			}
+			fixupAndReposition(lastDsl, rebuilt, start);
+		}
+		analyzeInBackground(lastDsl);
+	}
+
 	private final Runnable waitForDslSync = new DumbAwareRunnable() {
 		@Override
 		public void run() {
@@ -170,11 +321,13 @@ public class DslLexerParser extends Lexer {
 				do {
 					Thread.sleep(100);
 				} while (System.currentTimeMillis() < delayUntil && isActive);
-				waitingForSync = false;
-				if (isActive) {
-					scheduleRefreshLater();
-				}
 			} catch (Exception ignore) {
+			}
+			waitingForSync = false;
+			if (!isActive) return;
+			String text = document != null ? document.getText() : lastDsl;
+			if (text != null && !text.equals(lastParsedDsl)) {
+				analyzeInBackground(text);
 			}
 		}
 	};
@@ -184,11 +337,13 @@ public class DslLexerParser extends Lexer {
 		public void run() {
 			try {
 				Thread.sleep(5000);
-				waitingForCompiler = false;
-				if (isActive) {
-					scheduleRefreshLater();
-				}
 			} catch (Exception ignore) {
+			}
+			waitingForCompiler = false;
+			if (!isActive) return;
+			String text = document != null ? document.getText() : lastDsl;
+			if (text != null && !text.equals(lastParsedDsl)) {
+				analyzeInBackground(text);
 			}
 		}
 	};
@@ -198,41 +353,39 @@ public class DslLexerParser extends Lexer {
 
 	@Override
 	public void start(@NotNull CharSequence charSequence, int start, int end, int state) {
-		if (project != null && project.isDisposed() || !isActive) return;
+		final String dsl = charSequence.toString();
+		startedText = dsl;
+		if (project != null && project.isDisposed() || !isActive) {
+			setupFullCoverage(dsl);
+			return;
+		}
 		resolvePsi();
 		final boolean nonEditorPage = project == null || psiFile == null || document == null || !document.isWritable();
-		final String dsl = charSequence.toString();
 		if (forceRefresh || nonEditorPage || ast.isEmpty() || (failedNotReady && dslService.isReady())) {
 			if (lastParsedAnalysis != null && dsl.equals(lastParsedDsl)) {
 				changeAst(start, lastParsedAnalysis);
 				lastDsl = lastParsedDsl;
 				forceRefresh = false;
 			} else {
-				Either<List<AST>> tryNewAst = dslService.analyze(dsl);
-				if (tryNewAst.isSuccess()) {
-					List<AST> newAst = tryNewAst.get();
-					logger.debug("analyzed successfuly = " + newAst.size());
-					if (newAst.isEmpty()) {
-						newAst.add(new AST(null, 0, dsl.length(), null));
-					}
-					fixupAndReposition(dsl, newAst, start);
-					forceRefresh = false;
-					failedNotReady = false;
-					lastParsedAnalysis = newAst;
-					lastParsedDsl = dsl;
-				} else {
-					logger.debug("analyzed and failed");
+				if (ast.isEmpty()) {
 					List<AST> newAst = new ArrayList<AST>(1);
 					newAst.add(new AST(null, 0, dsl.length(), null));
 					fixupAndReposition(dsl, newAst, start);
-					if (!dslService.isReady() && project != null && project.isOpen()) {
-						failedNotReady = true;
-						if (!waitingForCompiler) {
-							waitingForCompiler = true;
-							application.executeOnPooledThread(waitForCompiler);
+				} else if (!dsl.equals(lastDsl)) {
+					rebaseToNewText(dsl, start);
+				} else {
+					synchronized (ast) {
+						position = 0;
+						for (int i = 0; i < ast.size(); i++) {
+							if (ast.get(i).offset > start) {
+								position = i - 1;
+								break;
+							}
 						}
 					}
 				}
+				forceRefresh = false;
+				analyzeInBackground(dsl);
 			}
 		} else if (!dsl.equals(lastDsl)) {
 			logger.debug("changed dsl");
@@ -250,25 +403,8 @@ public class DslLexerParser extends Lexer {
 					return;
 				}
 			} else actualDsl = dsl;
-			List<AST> newAst = new ArrayList<>(ast.size());
-			int cur = 0;
-			int pos = start;
-			while(pos < dsl.length() && pos < lastDsl.length() && dsl.charAt(pos) == lastDsl.charAt(pos)) {
-				pos++;
-			}
-			while (cur < ast.size()) {
-				AST a = ast.get(cur);
-				if (a.offset + a.length < pos) {
-					newAst.add(a);
-				}
-				else break;
-				cur++;
-			}
-			if (pos < actualDsl.length()) {
-				newAst.add(new AST(null, pos, actualDsl.length() - pos, null));
-			}
-			fixupAndReposition(actualDsl, newAst, start);
-			delayUntil = System.currentTimeMillis() + 500;
+			rebaseToNewText(actualDsl, start);
+			delayUntil = System.currentTimeMillis() + RETRY_DELAY_MS;
 			if (!waitingForSync && project.isOpen()) {
 				waitingForSync = true;
 				application.executeOnPooledThread(waitForDslSync);
@@ -276,6 +412,7 @@ public class DslLexerParser extends Lexer {
 		} else if (start == 0 && end == dsl.length()) {
 			position = 0;
 		}
+		ensureCoverage(start);
 	}
 
 	static class OffsetPosition implements LexerPosition {
@@ -325,13 +462,13 @@ public class DslLexerParser extends Lexer {
 	@Override
 	public int getTokenStart() {
 		AST current = getCurrent();
-		return current == null ? lastDsl.length() : current.offset;
+		return current == null ? getBufferEnd() : current.offset;
 	}
 
 	@Override
 	public int getTokenEnd() {
 		AST current = getCurrent();
-		return current != null ? current.offset + current.length : lastDsl.length();
+		return current != null ? current.offset + current.length : getBufferEnd();
 	}
 
 	@Override
@@ -342,11 +479,11 @@ public class DslLexerParser extends Lexer {
 	@NotNull
 	@Override
 	public CharSequence getBufferSequence() {
-		return lastDsl;
+		return startedText != null ? startedText : lastDsl;
 	}
 
 	@Override
 	public int getBufferEnd() {
-		return lastDsl.length();
+		return getBufferSequence().length();
 	}
 }

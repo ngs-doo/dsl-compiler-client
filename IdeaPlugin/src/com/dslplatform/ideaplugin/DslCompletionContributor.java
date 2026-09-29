@@ -14,6 +14,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.psi.PsiFile;
@@ -59,6 +60,10 @@ public class DslCompletionContributor extends CompletionContributor implements D
 			}
 
 			final DslCompilerService service = ApplicationManager.getApplication().getService(DslCompilerService.class);
+			if (!service.areRulesReady()) {
+				LOG.debug("completion skipped: DSL rules still loading");
+				return;
+			}
 			if (!dslFile.hasFreshRegions(text) && dslFile.requestRefresh(text)) {
 				ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 					@Override
@@ -85,17 +90,33 @@ public class DslCompletionContributor extends CompletionContributor implements D
 			for (String childName : parent.children) {
 				DslCompiler.RuleInfo child = findRule(service, childName);
 				if (child == null) continue;
-				if (!matches(child, prefix)) continue;
 				final String grammar = child.grammar == null ? "" : child.grammar;
 				final String name = prettyRuleName(child.rule);
-				final String insert = prepareStaticGrammar(grammar);
-				LookupElementBuilder element = LookupElementBuilder.create(insert.isEmpty() ? name : insert)
-						.withPresentableText(name)
+				final List<String> keywords = conceptKeywords(grammar);
+
+				String insert = null;
+				if (!keywords.isEmpty()) {
+					for (String keyword : keywords) {
+						if (prefix.isEmpty() || keyword.toLowerCase().startsWith(prefix.toLowerCase())) {
+							insert = keyword;
+							break;
+						}
+					}
+					if (insert == null) continue;
+				} else if (!prefix.isEmpty() && !name.toLowerCase().contains(prefix.toLowerCase())) {
+					continue;
+				}
+				LookupElementBuilder element;
+				if (insert != null) {
+					element = LookupElementBuilder.create(insert);
+				} else if (!prefix.isEmpty()) {
+					element = LookupElementBuilder.create(prefix);
+				} else {
+					element = LookupElementBuilder.create(name).withInsertHandler(new InsertNothing());
+				}
+				element = element.withPresentableText(name)
 						.withIcon(DslIcons.FILE)
 						.withTailText(grammar.isEmpty() ? null : " " + grammar, true);
-				if (insert.isEmpty()) {
-					element = element.withInsertHandler(new InsertNothing(prefix));
-				}
 				result.addElement(element);
 				added++;
 			}
@@ -109,43 +130,17 @@ public class DslCompletionContributor extends CompletionContributor implements D
 			return tryRule.isSuccess() ? tryRule.get() : null;
 		}
 
-		private static boolean matches(DslCompiler.RuleInfo child, String prefix) {
-			if (prefix.isEmpty()) return true;
-			final String grammar = child.grammar == null ? "" : child.grammar;
-			final String insert = prepareStaticGrammar(grammar);
-			if (!insert.isEmpty() && insert.startsWith(prefix)) return true;
-			for (String keyword : conceptKeywords(grammar)) {
-				if (keyword.startsWith(prefix)) return true;
-			}
-			return prettyRuleName(child.rule).toLowerCase().contains(prefix.toLowerCase());
-		}
 	}
 
 	private static class InsertNothing implements InsertHandler<LookupElement> {
-		private final String prefix;
-
-		InsertNothing(String prefix) {
-			this.prefix = prefix;
-		}
-
 		@Override
 		public void handleInsert(InsertionContext context, LookupElement item) {
-			final Document document = context.getEditor().getDocument();
+			final Editor editor = context.getEditor();
+			final Document document = editor.getDocument();
 			final int start = context.getStartOffset();
-			final int end = Math.max(start, context.getEditor().getCaretModel().getOffset());
-			document.replaceString(start, end, prefix);
+			final int end = Math.max(start, editor.getCaretModel().getOffset());
+			document.replaceString(start, end, "");
 		}
-	}
-
-	static String prepareStaticGrammar(String grammar) {
-		if (grammar == null || grammar.isEmpty()) return "";
-		if (!Character.isLetter(grammar.charAt(0))) return "";
-		int i = 0;
-		while (i < grammar.length()
-				&& (Character.isWhitespace(grammar.charAt(i)) || Character.isLetterOrDigit(grammar.charAt(i)))) {
-			i++;
-		}
-		return (i == grammar.length() ? grammar : grammar.substring(0, i)).trim();
 	}
 
 	static List<String> conceptKeywords(String grammar) {

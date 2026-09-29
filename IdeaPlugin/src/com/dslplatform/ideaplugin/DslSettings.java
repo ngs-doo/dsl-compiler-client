@@ -24,6 +24,7 @@ public final class DslSettings implements PersistentStateComponent<DslSettings> 
 	private String autocompleteShortcut = SystemInfo.isMac ? "alt_space" : "ctrl_space";
 
 	public static final String ACTION_ID = "dsl.ListAvailableConcepts";
+	private static final String QUICK_IMPLEMENTATIONS_ACTION_ID = "QuickImplementations";
 	public static final String[] SHORTCUT_OPTION_IDS = {"alt_space", "ctrl_space", "ctrl_shift_space", "alt_shift_space", "custom"};
 	public static final String[] SHORTCUT_OPTION_LABELS = {"Option / Alt + Space", "Ctrl + Space", "Ctrl + Shift + Space", "Alt / Option + Shift + Space", "Custom (set in Keymap settings)"};
 
@@ -64,6 +65,12 @@ public final class DslSettings implements PersistentStateComponent<DslSettings> 
 		}
 		try {
 			keymap.addShortcut(ACTION_ID, new KeyboardShortcut(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, modifiers), null));
+			final KeyboardShortcut altSpace = new KeyboardShortcut(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.ALT_DOWN_MASK), null);
+			if (modifiers == InputEvent.ALT_DOWN_MASK) {
+				keymap.removeShortcut(QUICK_IMPLEMENTATIONS_ACTION_ID, altSpace);
+			} else {
+				keymap.addShortcut(QUICK_IMPLEMENTATIONS_ACTION_ID, altSpace);
+			}
 		} catch (Exception e) {
 			Logger.getInstance("DSL Platform").warn("Unable to assign DSL completion shortcut: " + e.getMessage());
 		}

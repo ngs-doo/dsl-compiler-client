@@ -50,8 +50,6 @@
             class="com.dslplatform.ideaplugin.ListAvailableConceptsAction"
             text="List available concepts (DSL)"
             description="Show the rules available at the caret in a DSL file">
-      <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt SPACE"/>
-      <keyboard-shortcut keymap="$default" first-keystroke="control SPACE"/>
     </action>
 
     <group id="dsl.DslConceptsMenu"

@@ -20,11 +20,12 @@ import java.util.Stack;
 public final class DslCompilerService {
 
 	private DslCompiler.TokenParser tokenParser;
-	private volatile boolean parserVerified = false;
-	private final Logger logger = Logger.getInstance("DSL Platform");
+	private boolean parserVerified = false;
+	private boolean rulesReady = false;
+	private final Logger logger;
 
 	public DslCompilerService() {
-		final Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("DSL Platform");
+		logger = Logger.getInstance("DSL Platform");
 		final DslContext context = new DslContext(logger);
 		context.put(Download.INSTANCE, null);
 		Thread setup = new Thread(new Runnable() {
@@ -46,12 +47,18 @@ public final class DslCompilerService {
 
 	Either<DslCompiler.RuleInfo> findRule(String name) {
 		final DslCompiler.TokenParser parser = tokenParser;
-		if (parser == null) return Either.fail("Token parser not ready");
+		if (parser == null || !rulesReady) return Either.fail("DSL rules not loaded yet");
 		try {
-			return parser.findRule(name);
+			synchronized (this) {
+				return parser.findRule(name);
+			}
 		} catch (Exception e) {
 			return Either.fail(e.getMessage());
 		}
+	}
+
+	boolean areRulesReady() {
+		return rulesReady;
 	}
 
 	private void setupCompiler(Logger logger, DslContext context) throws InterruptedException {
@@ -63,15 +70,20 @@ public final class DslCompilerService {
 			logger.error("Unable to setup dsl-compiler.exe. Please check if Mono/.NET is installed and available on path.");
 		} else {
 			final File compiler = new File(path);
-			logger.info("DSL Platform compiler found at: " + compiler.getAbsolutePath());
+			logger.debug("DSL Platform compiler found at: " + compiler.getAbsolutePath());
 			Either<DslCompiler.TokenParser> trySetup = DslCompiler.setupServer(context, compiler);
 			if (trySetup.isSuccess()) {
 				tokenParser = trySetup.get();
-				tokenParser.findRule("");
 				ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 					@Override
 					public void run() {
 						warmUpParser();
+					}
+				});
+				ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
+					@Override
+					public void run() {
+						loadRulesInBackground();
 					}
 				});
 				Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -216,9 +228,43 @@ public final class DslCompilerService {
 		}
 	}
 
+	private void loadRulesInBackground() {
+		final long start = System.currentTimeMillis();
+		int attempt = 0;
+		while (!rulesReady && attempt < 1000) {
+			final DslCompiler.TokenParser parser = tokenParser;
+			if (parser == null) return;
+			Either<DslCompiler.RuleInfo> tryRule;
+			synchronized (this) {   // same monitor as parseTokens: no concurrent socket use
+				try {
+					tryRule = parser.findRule("");
+				} catch (Exception e) {
+					tryRule = Either.fail(e.getMessage());
+				}
+			}
+			if (tryRule.isSuccess() || isRulesTableLoaded(tryRule)) {
+				rulesReady = true;
+				logger.warn("DSL Platform rules loaded in " + (System.currentTimeMillis() - start) + " ms (attempt " + attempt + ")");
+				return;
+			}
+			attempt++;
+			logger.debug("DSL Platform rules not loaded yet (attempt " + attempt + "): " + tryRule.explainError());
+			try {
+				Thread.sleep(Math.min(1000L * attempt, 10000L));
+			} catch (InterruptedException e) {
+				return;
+			}
+		}
+	}
+
+	private static boolean isRulesTableLoaded(Either<DslCompiler.RuleInfo> tryRule) {
+		final String error = tryRule.explainError();
+		return error != null && error.startsWith("Unknown rule");
+	}
+
 	void warmUpParser() {
 		long start = System.currentTimeMillis();
-		logger.info("DSL Platform parser warming up - the first parse makes the server build its rule set, this can take a while");
+		logger.debug("DSL Platform parser warming up - the first parse makes the server build its rule set, this can take a while");
 		for (int attempt = 1; ; attempt++) {
 			if (tokenParser == null) return;
 			Either<List<DslCompiler.SyntaxConcept>> result = null;
@@ -229,7 +275,7 @@ public final class DslCompilerService {
 				error = e.getMessage();
 			}
 			if (result != null && result.isSuccess()) {
-				logger.info("DSL Platform parser warmed up in " + (System.currentTimeMillis() - start) + " ms (attempt " + attempt + ")");
+				logger.debug("DSL Platform parser warmed up in " + (System.currentTimeMillis() - start) + " ms (attempt " + attempt + ")");
 				parserVerified = true;
 				return;
 			}
@@ -247,7 +293,6 @@ public final class DslCompilerService {
 			}
 		}
 	}
-
 
 	private synchronized Either<List<DslCompiler.SyntaxConcept>> parseTokens(String dsl) {
 		Either<DslCompiler.ParseResult> result = tokenParser.parse(dsl);

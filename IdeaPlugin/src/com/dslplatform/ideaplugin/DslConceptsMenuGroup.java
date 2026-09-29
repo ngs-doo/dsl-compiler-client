@@ -71,7 +71,8 @@ public class DslConceptsMenuGroup extends ActionGroup implements DynamicActionGr
 			parent = findRule(service, "");
 		}
 		if (parent == null) {
-			return new AnAction[]{new AnAction("DSL Platform compiler not ready") {
+			final String message = service.areRulesReady() ? "DSL Platform compiler not ready" : "DSL Platform rules are still loading...";
+			return new AnAction[]{new AnAction(message) {
 				@Override
 				public void actionPerformed(@NotNull AnActionEvent event) {
 				}
