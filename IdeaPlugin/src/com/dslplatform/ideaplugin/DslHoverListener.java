@@ -3,6 +3,8 @@ package com.dslplatform.ideaplugin;
 import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.parameters.DslCompiler;
 import com.intellij.codeInsight.hint.HintManager;
+import com.intellij.codeInsight.lookup.LookupManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
@@ -19,8 +21,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
+import javax.swing.Timer;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
@@ -28,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 
 public class DslHoverListener implements EditorFactoryListener {
+	private static final Logger LOG = Logger.getInstance("DSL Platform");
 	private static final int THROTTLE_MS = 250;
+	private static final int REGION_REFRESH_DELAY_MS = 400;
 	private static final int MAX_HINT_WIDTH = 480;
 
 	private final Map<Editor, HoverHandler> handlers = new HashMap<Editor, HoverHandler>();
@@ -45,6 +52,7 @@ public class DslHoverListener implements EditorFactoryListener {
 		handlers.put(editor, handler);
 		editor.getContentComponent().addMouseMotionListener(handler);
 		editor.getDocument().addDocumentListener(handler);
+		handler.refreshRegions();
 	}
 
 	@Override
@@ -63,11 +71,19 @@ public class DslHoverListener implements EditorFactoryListener {
 		private int shownLength = -1;
 		private volatile int generation;
 		private boolean showing;
-		private volatile long analyzedStamp = -1;
-		private volatile List<AST> analyzedAst;
+		private volatile String analyzedText = null;
+		private volatile DslCompilerService.Analysis cachedAnalysis;
+		private final Timer regionRefreshTimer;
 
 		HoverHandler(Editor editor) {
 			this.editor = editor;
+			this.regionRefreshTimer = new Timer(REGION_REFRESH_DELAY_MS, new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					refreshRegions();
+				}
+			});
+			regionRefreshTimer.setRepeats(false);
 		}
 
 		@Override
@@ -77,18 +93,23 @@ public class DslHoverListener implements EditorFactoryListener {
 
 		@Override
 		public void mouseExited(MouseEvent e) {
+			hide();
 			invalidate();
 		}
 
 		@Override
 		public void documentChanged(DocumentEvent e) {
+			hide();
 			invalidate();
-			analyzedStamp = -1;
-			analyzedAst = null;
+			analyzedText = null;
+			cachedAnalysis = null;
+			regionRefreshTimer.restart();
 		}
 
 		void dispose() {
+			hide();
 			invalidate();
+			regionRefreshTimer.stop();
 			editor.getContentComponent().removeMouseMotionListener(this);
 			editor.getDocument().removeDocumentListener(this);
 		}
@@ -99,6 +120,20 @@ public class DslHoverListener implements EditorFactoryListener {
 			shownRule = null;
 			shownOffset = -1;
 			shownLength = -1;
+		}
+
+		void refreshRegions() {
+			final String text = editor.getDocument().getText();
+			final PsiFile psi = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
+			if (!(psi instanceof DslFile)) return;
+			final DslFile dslFile = (DslFile) psi;
+			if (!dslFile.requestRefresh(text)) return;
+			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
+				@Override
+				public void run() {
+					dslService.refreshRegions(dslFile, text);
+				}
+			});
 		}
 
 		private void check(MouseEvent e) {
@@ -112,24 +147,32 @@ public class DslHoverListener implements EditorFactoryListener {
 			final Point point = e.getPoint();
 			final int offset = editor.logicalPositionToOffset(editor.xyToLogicalPosition(point));
 			final String text = editor.getDocument().getText();
-			final long stamp = editor.getDocument().getModificationStamp();
+			final PsiFile psi = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
 			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 				@Override
 				public void run() {
-					List<AST> asts = stamp == analyzedStamp ? analyzedAst : null;
-					if (asts == null) {
-						Either<List<AST>> tryAst = dslService.analyze(text);
-						if (!tryAst.isSuccess()) return;
-						asts = tryAst.get();
-						analyzedAst = asts;
-						analyzedStamp = stamp;
+					DslCompilerService.Analysis analysis = text.equals(analyzedText) ? cachedAnalysis : null;
+					if (analysis == null) {
+						Either<DslCompilerService.Analysis> tryAnalysis = dslService.analyzeFull(text);
+						if (!tryAnalysis.isSuccess()) {
+							LOG.debug("hover: analysis failed for " + text.length() + "-char text: " + tryAnalysis.explainError());
+							return;
+						}
+						analysis = tryAnalysis.get();
+						cachedAnalysis = analysis;
+						analyzedText = text;
+						// Warm up the completion region cache while we are at it.
+						if (psi instanceof DslFile) {
+							((DslFile) psi).storeRegions(text, analysis.regions);
+						}
 					}
+					List<AST> asts = analysis.ast;
 					String rule = null;
 					int tokenOffset = -1;
 					int tokenLength = -1;
 					for (AST a : asts) {
 						if (offset >= a.offset && offset < a.offset + a.length) {
-							if (a.parent != null && a.parent.concept != null) {
+							if (a.type == TokenType.KEYWORD && a.parent != null && a.parent.concept != null) {
 								rule = a.parent.concept.value;
 								tokenOffset = a.parent.offset;
 								tokenLength = a.parent.length;
@@ -151,18 +194,20 @@ public class DslHoverListener implements EditorFactoryListener {
 						@Override
 						public void run() {
 							if (gen != generation) return;
+							if (LookupManager.getActiveLookup(editor) != null) return;
 							if (finalInfo == null) {
 								hide();
 							} else {
 								show(point, finalRule, finalInfo, finalTokenOffset, finalTokenLength);
 							}
 						}
-					}, ModalityState.defaultModalityState());
+					}, ModalityState.NON_MODAL);
 				}
 			});
 		}
 
 		private void show(Point point, String rule, DslCompiler.RuleInfo info, int tokenOffset, int tokenLength) {
+			if (LookupManager.getActiveLookup(editor) != null) return;
 			if (rule.equals(shownRule) && tokenOffset == shownOffset && tokenLength == shownLength) return;
 			if (showing) {
 				HintManager.getInstance().hideAllHints();
@@ -195,11 +240,11 @@ public class DslHoverListener implements EditorFactoryListener {
 		}
 
 		private void hide() {
-			if (showing) {
-				showing = false;
-				shownRule = null;
-				HintManager.getInstance().hideAllHints();
-			}
+			if (!showing) return;
+			showing = false;
+			shownRule = null;
+			if (LookupManager.getActiveLookup(editor) != null) return;
+			HintManager.getInstance().hideAllHints();
 		}
 	}
 	private static String escape(String s) {

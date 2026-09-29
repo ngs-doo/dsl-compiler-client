@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.11.0</version>
+  <version>0.20.0</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -14,6 +14,7 @@
 
   <change-notes><![CDATA[
     <ul>
+      <li>0.20.0 Concept listing, autocomplete, settings page
       <li>0.11.0 IDEA 2026 compatibility fix
       <li>0.10.1 IDEA 2024 compatibility fix
       <li>0.9.10 Highligting fix for IDEA 2020+
@@ -36,20 +37,30 @@
     <lang.syntaxHighlighterFactory language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
     <colorSettingsPage implementation="com.dslplatform.ideaplugin.DslColorSettingsPage"/>
     <lang.commenter language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCommenter"/>
+    <completion.contributor language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCompletionContributor"/>
     <editorFactoryListener implementation="com.dslplatform.ideaplugin.DslHoverListener"/>
     <applicationService serviceImplementation="com.dslplatform.ideaplugin.DslSettings"/>
     <applicationConfigurable parentId="tools" id="com.dslplatform.ideaplugin.settings"
                              instance="com.dslplatform.ideaplugin.DslSettingsPage" displayName="DSL Platform"/>
+    <postStartupActivity implementation="com.dslplatform.ideaplugin.DslShortcutInitializer"/>
   </extensions>
 
   <actions>
-    <!--action
-            id="dsl.AvailableConcepts"
+    <action id="dsl.ListAvailableConcepts"
             class="com.dslplatform.ideaplugin.ListAvailableConceptsAction"
-            text="List available concepts"
-            description="List available concepts">
-      <keyboard-shortcut keymap="$default" first-keystroke="control l"/>
-    </action-->
+            text="List available concepts (DSL)"
+            description="Show the rules available at the caret in a DSL file">
+      <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt SPACE"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="control SPACE"/>
+    </action>
+
+    <group id="dsl.DslConceptsMenu"
+           class="com.dslplatform.ideaplugin.DslConceptsMenuGroup"
+           text="DSL"
+           description="Rules available at the caret (DSL)"
+           popup="true">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </group>
   </actions>
 
 </idea-plugin>

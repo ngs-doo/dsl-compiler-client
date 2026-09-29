@@ -77,25 +77,25 @@ public class DslLexerParser extends Lexer {
 			scheduleRefresh = new DocumentRunnable(document, project) {
 				@Override
 				public void run() {
-					if (isActive) {
+					if (!isActive) return;
+					if (ModalityState.current() != ModalityState.NON_MODAL) {
+						scheduleRefreshLater();
+					} else {
 						application.runWriteAction(refreshAll);
 					}
 				}
 			};
-			dslService.callWhenReady(new Runnable() {
-				@Override
-				public void run() {
-					if (isActive) {
-						application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
-					}
-				}
-			});
 		} else {
 			psiFile = null;
 			document = null;
 			refreshAll = () -> {};
 			scheduleRefresh = () -> {};
 		}
+	}
+
+	private void scheduleRefreshLater() {
+		if (!isActive) return;
+		application.invokeLater(scheduleRefresh, ModalityState.NON_MODAL);
 	}
 
 	private void resolvePsi() {
@@ -172,7 +172,7 @@ public class DslLexerParser extends Lexer {
 				} while (System.currentTimeMillis() < delayUntil && isActive);
 				waitingForSync = false;
 				if (isActive) {
-					application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
+					scheduleRefreshLater();
 				}
 			} catch (Exception ignore) {
 			}
@@ -186,7 +186,7 @@ public class DslLexerParser extends Lexer {
 				Thread.sleep(5000);
 				waitingForCompiler = false;
 				if (isActive) {
-					application.invokeLater(scheduleRefresh, ModalityState.defaultModalityState());
+					scheduleRefreshLater();
 				}
 			} catch (Exception ignore) {
 			}
