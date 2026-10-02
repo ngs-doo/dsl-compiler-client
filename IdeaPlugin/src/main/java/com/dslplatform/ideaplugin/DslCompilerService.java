@@ -114,11 +114,35 @@ public final class DslCompilerService {
 		public final int start;
 		public final int end;
 		public final String name;
+		public final boolean nested;
 
 		RuleRegion(int start, int end, String name) {
+			this(start, end, name, false);
+		}
+
+		RuleRegion(int start, int end, String name, boolean nested) {
 			this.start = start;
 			this.end = end;
 			this.name = name;
+			this.nested = nested;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof RuleRegion)) return false;
+			RuleRegion that = (RuleRegion) o;
+			return start == that.start && end == that.end && nested == that.nested
+					&& (name == null ? that.name == null : name.equals(that.name));
+		}
+
+		@Override
+		public int hashCode() {
+			int result = start;
+			result = 31 * result + end;
+			result = 31 * result + (nested ? 1 : 0);
+			result = 31 * result + (name != null ? name.hashCode() : 0);
+			return result;
 		}
 	}
 
@@ -132,13 +156,7 @@ public final class DslCompilerService {
 			return Either.fail(tryParsed.explainError());
 		}
 		List<DslCompiler.SyntaxConcept> parsed = tryParsed.get();
-		String[] lines = dsl.split("\\n");
-		int[] linesTotal = new int[lines.length];
-		int runningTotal = 0;
-		for (int i = 0; i < lines.length; i++) {
-			linesTotal[i] = runningTotal;
-			runningTotal += lines[i].length() + 1;
-		}
+		int[] linesTotal = lineOffsets(dsl);
 
 		List<AST> newAst = new ArrayList<AST>(parsed.size() * 2);
 		Stack<AST> stack = new Stack<AST>();
@@ -173,37 +191,21 @@ public final class DslCompilerService {
 		return Either.success(full.get().ast);
 	}
 
+	static int[] lineOffsets(String dsl) {
+		String[] lines = dsl.split("\\n");
+		int[] linesTotal = new int[lines.length];
+		int runningTotal = 0;
+		for (int i = 0; i < lines.length; i++) {
+			linesTotal[i] = runningTotal;
+			runningTotal += lines[i].length() + 1;
+		}
+		return linesTotal;
+	}
+
 	private static List<RuleRegion> extractRegions(List<DslCompiler.SyntaxConcept> tokens, int[] linesTotal, int textLength) {
 		List<RuleRegion> regions = new ArrayList<RuleRegion>();
-		ArrayList<String> names = new ArrayList<String>();
-		ArrayList<Integer> starts = new ArrayList<Integer>();
-		ArrayList<Integer> levels = new ArrayList<Integer>();
-		for (DslCompiler.SyntaxConcept t : tokens) {
-			int off = linesTotal[t.line - 1] + t.column;
-			if (t.type == DslCompiler.SyntaxType.RuleExtension) {
-				names.add(t.value);
-				starts.add(off);
-				levels.add(0);
-			} else if (t.type == DslCompiler.SyntaxType.RuleEnd && !levels.isEmpty()) {
-				int idx = levels.size() - 1;
-				int level = levels.get(idx) - 1;
-				levels.set(idx, level);
-				if (level >= 0) continue;
-				regions.add(new RuleRegion(starts.get(idx), off, t.value));
-				names.remove(idx);
-				starts.remove(idx);
-				levels.remove(idx);
-				if (!levels.isEmpty()) {
-					int parentIdx = levels.size() - 1;
-					levels.set(parentIdx, levels.get(parentIdx) - 1);
-				}
-			} else if (t.type == DslCompiler.SyntaxType.RuleStart && !levels.isEmpty()) {
-				int idx = levels.size() - 1;
-				levels.set(idx, levels.get(idx) + 1);
-			}
-		}
-		for (int i = names.size() - 1; i >= 0; i--) {
-			regions.add(new RuleRegion(starts.get(i), textLength, names.get(i)));
+		for (DslRuleRegions.Region r : DslRuleRegions.extract(tokens, linesTotal, textLength)) {
+			regions.add(new RuleRegion(r.start, r.end, r.name, r.nested));
 		}
 		return regions;
 	}

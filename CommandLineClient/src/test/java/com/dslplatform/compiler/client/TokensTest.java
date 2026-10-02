@@ -66,4 +66,34 @@ public class TokensTest {
 		assertEquals(505, i);
 		trySetup.get().close();
 	}
+
+	@Test
+	public void unknownRule() throws IOException, InterruptedException {
+		ContextMock context = new ContextMock();
+		context.put(Download.INSTANCE, "");
+		context.put(DslCompiler.INSTANCE, "");
+		assertTrue(Main.processContext(context, Arrays.<CompileParameter>asList(Download.INSTANCE, DslCompiler.INSTANCE)));
+		String path = context.get(DslCompiler.INSTANCE);
+		assertNotNull(path);
+		File compiler = new File(path);
+		assertTrue(compiler.exists());
+		Either<DslCompiler.TokenParser> trySetup = DslCompiler.setupServer(context, compiler);
+		assertTrue(trySetup.isSuccess());
+		int i = 0;
+		for(;i < 500; i++) {
+			Either<DslCompiler.RuleInfo> rule = trySetup.get().findRule("module_rule");
+			if (!rule.isSuccess()) {
+				Thread.sleep(100);
+				continue;
+			}
+			assertEquals("module_rule", rule.get().rule);
+			i = 505;
+			break;
+		}
+		assertEquals(505, i);
+		Either<DslCompiler.RuleInfo> error = trySetup.get().findRule("bad_name_rule");
+		assertFalse(error.isSuccess());
+		assertEquals("Unknown rule: bad_name_rule", error.whyNot().getMessage());
+		trySetup.get().close();
+	}
 }

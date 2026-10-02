@@ -1,7 +1,16 @@
 package com.dslplatform.ideaplugin;
 
+import com.intellij.codeInsight.folding.CodeFoldingManager;
 import com.intellij.extapi.psi.PsiFileBase;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.TextEditor;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.FileViewProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,14 +39,40 @@ public class DslFile extends PsiFileBase {
     }
 
     void storeRegions(@NotNull String text, @NotNull List<DslCompilerService.RuleRegion> newRegions) {
+        boolean changed;
         synchronized (this) {
             if (refreshingText != null && !text.equals(refreshingText)) {
                 return;
             }
+            changed = !newRegions.equals(regions);
             regions = newRegions;
             regionsText = text;
             if (text.equals(refreshingText)) refreshingText = null;
         }
+        if (changed) scheduleFoldingRefresh();
+    }
+
+    private void scheduleFoldingRefresh() {
+        final Project project = getProject();
+        if (project == null || project.isDisposed()) return;
+        final VirtualFile virtualFile = getViewProvider().getVirtualFile();
+        final Document document = getViewProvider().getDocument();
+        if (virtualFile == null || document == null) return;
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (project.isDisposed()) return;
+                CodeFoldingManager foldingManager = CodeFoldingManager.getInstance(project);
+                for (FileEditor fileEditor : FileEditorManager.getInstance(project).getAllEditors(virtualFile)) {
+                    if (fileEditor instanceof TextEditor) {
+                        Editor editor = ((TextEditor) fileEditor).getEditor();
+                        if (!editor.isDisposed() && editor.getDocument() == document) {
+                            foldingManager.scheduleAsyncFoldingUpdate(editor);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     void refreshSkipped(@NotNull String text) {
@@ -54,6 +89,10 @@ public class DslFile extends PsiFileBase {
 
     boolean hasFreshRegions(@NotNull String text) {
         return text.equals(regionsText);
+    }
+
+    List<DslCompilerService.RuleRegion> getRegions() {
+        return regions;
     }
 
     String findEnclosingRule(@NotNull String text, int offset) {

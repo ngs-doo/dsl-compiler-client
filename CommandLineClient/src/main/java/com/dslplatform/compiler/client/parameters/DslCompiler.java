@@ -234,29 +234,27 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 		}
 
 		public Either<RuleInfo> findRule(String name) {
-			if (name != null) {
-				if (rules.isEmpty()) {
-					try {
-						Socket sck = setupSocket();
-						if (sck == null) {
-							return Either.fail("Unable to setup socket.");
-						}
-						Either<List<RuleInfo>> newRules = loadRules(sck);
-						if (!newRules.isSuccess()) {
-							return Either.fail(newRules.whyNot());
-						}
-						for (RuleInfo ri : newRules.get()) {
-							rules.put(ri.rule, ri);
-						}
-					} catch (Exception ex) {
-						return Either.fail("Unable to load rules: " + ex.getMessage());
+			if (name == null) return Either.fail("Rule name can't be null");
+			if (rules.isEmpty()) {
+				try {
+					Socket sck = setupSocket();
+					if (sck == null) {
+						return Either.fail("Unable to setup socket.");
 					}
+					Either<List<RuleInfo>> newRules = loadRules(sck);
+					if (!newRules.isSuccess()) {
+						return Either.fail(newRules.whyNot());
+					}
+					for (RuleInfo ri : newRules.get()) {
+						rules.put(ri.rule, ri);
+					}
+				} catch (Exception ex) {
+					return Either.fail("Unable to load rules: " + ex.getMessage());
 				}
-				RuleInfo rule = rules.get(name);
-				if (rule != null) return Either.success(rule);
-				else Either.fail("Unknown rule: " + name);
 			}
-			return Either.fail("Rule name can't be null");
+			RuleInfo rule = rules.get(name);
+			if (rule != null) return Either.success(rule);
+			return Either.fail("Unknown rule: " + name);
 		}
 
 		private void setupMonitor(final int port, final Process process, final TokenParser parser) {

@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.20.0</version>
+  <version>0.50.0</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -9,12 +9,18 @@
       <p>
         Provides syntax highlighting for the dsl files.
       </p>
+      <p>
+        Context-sensitive autocomplete is avilable via ctr + space or right click -> DSL.
+      </p>
+      <p>
+        Region collapse available between extension points: { and }.
+      </p>
       <em>dsl platform ddd</em>
     ]]></description>
 
   <change-notes><![CDATA[
     <ul>
-      <li>0.20.0 Concept listing, autocomplete, settings page
+      <li>0.50.0 Concept listing, autocomplete, folding, settings page
       <li>0.11.0 IDEA 2026 compatibility fix
       <li>0.10.1 IDEA 2024 compatibility fix
       <li>0.9.10 Highligting fix for IDEA 2020+
@@ -24,7 +30,7 @@
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="203.5981.155"/>
+  <idea-version since-build="223.0"/>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
        on how to target different products -->
@@ -35,6 +41,7 @@
     <fileType name="DSL file" implementationClass="com.dslplatform.ideaplugin.DslFileType" fieldName="INSTANCE" language="DomainSpecificationLanguage" extensions="dsl" />
     <lang.parserDefinition language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslParserDefinition"/>
     <lang.syntaxHighlighterFactory language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslSyntaxHighlighterFactory"/>
+    <lang.foldingBuilder language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslFoldingBuilder"/>
     <colorSettingsPage implementation="com.dslplatform.ideaplugin.DslColorSettingsPage"/>
     <lang.commenter language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCommenter"/>
     <completion.contributor language="DomainSpecificationLanguage" implementationClass="com.dslplatform.ideaplugin.DslCompletionContributor"/>
