@@ -7,6 +7,7 @@ import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
@@ -45,7 +46,8 @@ public class DslHoverListener implements EditorFactoryListener {
 	public void editorCreated(@NotNull EditorFactoryEvent event) {
 		final Editor editor = event.getEditor();
 		if (editor.getProject() == null) return;
-		PsiFile file = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
+		final PsiFile file = ReadAction.compute(
+				() -> PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()));
 		if (!(file instanceof DslFile)) return;
 
 		final HoverHandler handler = new HoverHandler(editor);
@@ -124,9 +126,11 @@ public class DslHoverListener implements EditorFactoryListener {
 
 		void refreshRegions() {
 			final String text = editor.getDocument().getText();
-			final PsiFile psi = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
-			if (!(psi instanceof DslFile)) return;
-			final DslFile dslFile = (DslFile) psi;
+			final DslFile dslFile = ReadAction.compute(() -> {
+				PsiFile psi = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
+				return psi instanceof DslFile ? (DslFile) psi : null;
+			});
+			if (dslFile == null) return;
 			if (!dslFile.requestRefresh(text)) return;
 			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 				@Override
@@ -147,7 +151,8 @@ public class DslHoverListener implements EditorFactoryListener {
 			final Point point = e.getPoint();
 			final int offset = editor.logicalPositionToOffset(editor.xyToLogicalPosition(point));
 			final String text = editor.getDocument().getText();
-			final PsiFile psi = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument());
+			final PsiFile psi = ReadAction.compute(
+					() -> PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()));
 			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 				@Override
 				public void run() {

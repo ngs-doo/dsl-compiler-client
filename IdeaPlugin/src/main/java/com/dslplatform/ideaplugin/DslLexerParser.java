@@ -6,6 +6,7 @@ import com.intellij.lexer.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -195,11 +196,14 @@ public class DslLexerParser extends Lexer {
 	private void resolvePsi() {
 		if (psiFile != null || project == null || file == null || project.isDisposed()) return;
 		try {
-			PsiFile f = PsiManager.getInstance(project).findFile(file);
-			if (f != null) {
-				psiFile = f;
-				document = PsiDocumentManager.getInstance(project).getDocument(f);
-			}
+			ReadAction.compute(() -> {
+				PsiFile f = PsiManager.getInstance(project).findFile(file);
+				if (f != null) {
+					psiFile = f;
+					document = PsiDocumentManager.getInstance(project).getDocument(f);
+				}
+				return null;
+			});
 		} catch (Exception ex) {
 			logger.debug("Failed to resolve PSI for " + file.getPath() + ": " + ex.getMessage());
 		}

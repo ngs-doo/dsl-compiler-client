@@ -3,6 +3,7 @@ package com.dslplatform.ideaplugin;
 import com.intellij.codeInsight.folding.CodeFoldingManager;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
@@ -53,24 +54,26 @@ public class DslFile extends PsiFileBase {
     }
 
     private void scheduleFoldingRefresh() {
-        final Project project = getProject();
-        if (project == null || project.isDisposed()) return;
-        final VirtualFile virtualFile = getViewProvider().getVirtualFile();
-        final Document document = getViewProvider().getDocument();
-        if (virtualFile == null || document == null) return;
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (project.isDisposed()) return;
-                CodeFoldingManager foldingManager = CodeFoldingManager.getInstance(project);
-                for (FileEditor fileEditor : FileEditorManager.getInstance(project).getAllEditors(virtualFile)) {
-                    if (fileEditor instanceof TextEditor) {
-                        Editor editor = ((TextEditor) fileEditor).getEditor();
-                        if (!editor.isDisposed() && editor.getDocument() == document) {
-                            foldingManager.scheduleAsyncFoldingUpdate(editor);
+                ReadAction.compute(() -> {
+                    final Project project = getProject();
+                    if (project == null || project.isDisposed()) return null;
+                    final VirtualFile virtualFile = getViewProvider().getVirtualFile();
+                    final Document document = getViewProvider().getDocument();
+                    if (virtualFile == null || document == null) return null;
+                    CodeFoldingManager foldingManager = CodeFoldingManager.getInstance(project);
+                    for (FileEditor fileEditor : FileEditorManager.getInstance(project).getAllEditors(virtualFile)) {
+                        if (fileEditor instanceof TextEditor) {
+                            Editor editor = ((TextEditor) fileEditor).getEditor();
+                            if (!editor.isDisposed() && editor.getDocument() == document) {
+                                foldingManager.scheduleAsyncFoldingUpdate(editor);
+                            }
                         }
                     }
-                }
+                    return null;
+                });
             }
         });
     }

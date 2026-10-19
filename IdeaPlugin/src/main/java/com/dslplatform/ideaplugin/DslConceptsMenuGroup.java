@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareRunnable;
@@ -48,10 +49,17 @@ public class DslConceptsMenuGroup extends ActionGroup {
 		}
 
 		final DslFile dslFile = (DslFile) psi;
-		final int offset = editor.getCaretModel().getOffset();
-		final String text = editor.getDocument().getText();
+		final int offset = ReadAction.compute(() -> editor.getCaretModel().getOffset());
+		final String text = ReadAction.compute(() -> editor.getDocument().getText());
 
 		final DslCompilerService service = ApplicationManager.getApplication().getService(DslCompilerService.class);
+		if (!service.areRulesReady()) {
+			return new AnAction[]{new AnAction("DSL Platform rules are still loading...") {
+				@Override
+				public void actionPerformed(@NotNull AnActionEvent event) {
+				}
+			}};
+		}
 		if (!dslFile.hasFreshRegions(text) && dslFile.requestRefresh(text)) {
 			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
 				@Override

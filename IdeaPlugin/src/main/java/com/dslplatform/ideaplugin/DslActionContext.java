@@ -2,6 +2,8 @@ package com.dslplatform.ideaplugin;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
@@ -16,15 +18,12 @@ final class DslActionContext {
 	@Nullable
 	static PsiFile resolve(@Nullable AnActionEvent e) {
 		if (e == null) return null;
-		PsiFile file = e.getData(CommonDataKeys.PSI_FILE);
-		if (file == null) {
-			Project project = e.getProject();
-			Editor editor = e.getData(CommonDataKeys.EDITOR);
-			if (project != null && editor != null) {
-				file = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
-			}
-		}
-		return file;
+		final Project project = e.getProject();
+		final Editor editor = e.getData(CommonDataKeys.EDITOR);
+		if (project == null || editor == null) return null;
+		final Document document = editor.getDocument();
+		if (document == null) return null;
+		return ReadAction.compute(() -> PsiDocumentManager.getInstance(project).getPsiFile(document));
 	}
 
 	static boolean isDsl(@Nullable AnActionEvent e) {
