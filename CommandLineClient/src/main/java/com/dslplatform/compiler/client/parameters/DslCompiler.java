@@ -346,6 +346,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					os.write(buf, 0, read);
 				}
 				os.flush();
+				if (length > 0) {
+					return Either.fail("Connection closed while reading response from server. Missing " + length + " bytes.");
+				}
 				final List<Object> result = JSON.readList(os.getBuffer(), os.size());
 				final List<RuleInfo> rules = new ArrayList<RuleInfo>(result.size());
 				for (Object it : result) {
@@ -383,6 +386,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 					os.write(buf, 0, read);
 				}
 				os.flush();
+				if (length > 0) {
+					return Either.fail("Connection closed while reading response from server. Missing " + length + " bytes.");
+				}
 				return Either.success(new ParseResult(JSON.readMap(os.getBuffer(), os.size())));
 			} catch (IOException e) {
 				return Either.fail(e.getMessage());
@@ -528,6 +534,9 @@ public enum DslCompiler implements CompileParameter, ParameterParser {
 				os.write(buf, 0, read);
 			}
 			os.flush();
+			if (length > 0) {
+				return Either.fail("Connection closed while reading response from server. Missing " + length + " bytes.");
+			}
 			if (!success) {
 				return Either.fail(os.toString("UTF-8"));
 			}

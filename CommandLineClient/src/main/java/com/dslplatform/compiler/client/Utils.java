@@ -97,10 +97,28 @@ public abstract class Utils {
 			final ZipInputStream zip = new ZipInputStream(new BufferedInputStream(response));
 			ZipEntry entry;
 			final byte[] buffer = new byte[8192];
+			final String canonicalPath = path.getCanonicalPath();
 			while ((entry = zip.getNextEntry()) != null) {
-				long size = 0;
 				final File file = new File(path, entry.getName());
+				// prevent zip-slip: entries must stay inside the target directory
+				final String canonicalFile = file.getCanonicalPath();
+				if (!canonicalFile.equals(canonicalPath) && !canonicalFile.startsWith(canonicalPath + File.separator)) {
+					throw new IOException("Zip entry is outside of the target directory: " + entry.getName());
+				}
 				unpackedFiles.add(file);
+				if (entry.isDirectory()) {
+					if (!file.exists() && !file.mkdirs()) {
+						throw new IOException("Unable to create directory: " + file.getAbsolutePath());
+					}
+					context.log("Unpacked directory: " + entry.getName());
+					zip.closeEntry();
+					continue;
+				}
+				long size = 0;
+				final File parent = file.getParentFile();
+				if (parent != null && !parent.exists() && !parent.mkdirs()) {
+					throw new IOException("Unable to create directory: " + parent.getAbsolutePath());
+				}
 				final FileOutputStream fos = new FileOutputStream(file);
 				int len;
 				while ((len = zip.read(buffer)) != -1) {
@@ -115,7 +133,8 @@ public abstract class Utils {
 			return lastModified;
 		} catch (IOException io) {
 			context.error(io);
-			for (final File f : unpackedFiles) {
+			for (int i = unpackedFiles.size() - 1; i >= 0; i--) {
+				final File f = unpackedFiles.get(i);
 				if (f.delete()) {
 					context.log("Cleaned up: " + f);
 				} else {
@@ -159,6 +178,10 @@ public abstract class Utils {
 	public static synchronized Either<Document> readXml(final InputStream stream) {
 		try {
 			final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			// harden against XXE: inputs (compiler responses, maven metadata) never contain DOCTYPE declarations
+			dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+			dbFactory.setXIncludeAware(false);
+			dbFactory.setExpandEntityReferences(false);
 			final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			return Either.success(dBuilder.parse(stream));
 		} catch (Exception ex) {

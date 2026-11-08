@@ -82,10 +82,48 @@ abstract class NumberConverter {
 		return value;
 	}
 
+	private static void validateNumber(final char[] buf, final int len, final int position) throws IOException {
+		int i = 0;
+		if (buf[0] == '-') {
+			i = 1;
+		}
+		if (i >= len || !(buf[i] >= '0' && buf[i] <= '9')) {
+			throw new IOException("Error parsing number at position: " + (position - len) + ". Found invalid number");
+		}
+		i++;
+		while (i < len && buf[i] >= '0' && buf[i] <= '9') {
+			i++;
+		}
+		if (i < len && buf[i] == '.') {
+			i++;
+			if (i >= len || !(buf[i] >= '0' && buf[i] <= '9')) {
+				throw new IOException("Error parsing number at position: " + (position - len) + ". Found invalid number");
+			}
+			while (i < len && buf[i] >= '0' && buf[i] <= '9') {
+				i++;
+			}
+		}
+		if (i < len && (buf[i] == 'e' || buf[i] == 'E')) {
+			i++;
+			if (i < len && (buf[i] == '+' || buf[i] == '-')) {
+				i++;
+			}
+			if (i >= len || !(buf[i] >= '0' && buf[i] <= '9')) {
+				throw new IOException("Error parsing number at position: " + (position - len) + ". Found invalid number");
+			}
+			while (i < len && buf[i] >= '0' && buf[i] <= '9') {
+				i++;
+			}
+		}
+		if (i != len) {
+			throw new IOException("Error parsing number at position: " + (position - len) + ". Found invalid number");
+		}
+	}
+
 	public static Number deserializeNumber(final JsonReader reader) throws IOException {
 		final char[] buf = reader.readNumber();
 		final int position = reader.getCurrentIndex();
-		final int len = position - reader.getTokenStart();
+		int len = position - reader.getTokenStart();
 		if (len > 18) {
 			if (len == buf.length) {
 				final NumberInfo tmp = readLongNumber(reader, buf);
@@ -94,6 +132,13 @@ abstract class NumberConverter {
 				return parseNumberGeneric(buf, len, position);
 			}
 		}
+		while (len > 0 && Character.isWhitespace(buf[len - 1])) {
+			len--;
+		}
+		if (len == 0) {
+			throw new IOException("Error parsing number at position: " + position + ". Found empty token");
+		}
+		validateNumber(buf, len, position);
 		final char ch = buf[0];
 		if (ch == '-') {
 			return parseNegativeNumber(buf, position, len);

@@ -33,6 +33,9 @@ public enum JavaPath implements CompileParameter {
 	private static Either<String> getCommand(final Context context, final String name, final String description) {
 		if (context.contains(INSTANCE)) {
 			final String file = context.load(CACHE_FILE_PREFIX + name);
+			if (file == null) {
+				return Either.fail("Java path is specified, but " + name + " was not verified. Please check the java parameter.");
+			}
 			return Either.success(file);
 		}
 		final String envJH = System.getenv("JAVA_HOME");

@@ -137,7 +137,11 @@ public class Main {
 		}
 		final List<String> errors = new ArrayList<String>();
 		for (String a : args) {
-			if (a.startsWith("-") || a.startsWith("/")) a = a.substring(1);
+			int prefix = 0;
+			while (prefix < a.length() && (a.charAt(prefix) == '-' || a.charAt(prefix) == '/')) {
+				prefix++;
+			}
+			if (prefix > 0) a = a.substring(prefix);
 			final int eq = a.indexOf('=');
 			final String name = a.substring(0, eq != -1 ? eq : a.length());
 			final String value = eq == -1 ? null : a.substring(eq + 1);

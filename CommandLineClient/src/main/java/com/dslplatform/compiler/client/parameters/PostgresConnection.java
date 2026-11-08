@@ -4,6 +4,10 @@ import com.dslplatform.compiler.client.CompileParameter;
 import com.dslplatform.compiler.client.Context;
 import com.dslplatform.compiler.client.ExitException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+
 import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
@@ -248,11 +252,17 @@ public enum PostgresConnection implements CompileParameter {
 		final String[] args = connectionString.substring(questionIndex + 1).split("&");
 		final Properties map = new Properties();
 		for (final String a : args) {
-			final String[] vals = a.split("=");
-			if (vals.length != 2) {
+			// split on the first '=' only, so values may contain '=' themselves
+			final int eq = a.indexOf('=');
+			if (eq <= 0) {
 				return null;
 			}
-			map.put(vals[0], vals[1]);
+			try {
+				// driver URL-decodes connection string parameters, so decode them here as well
+				map.put(a.substring(0, eq), URLDecoder.decode(a.substring(eq + 1), "UTF-8"));
+			} catch (Exception ex) {
+				return null;
+			}
 		}
 		return map;
 	}
@@ -363,9 +373,15 @@ public enum PostgresConnection implements CompileParameter {
 					? connectionString + "?"
 					: connectionString.substring(0, questionIndex + 1);
 			final StringBuilder csBuilder = new StringBuilder(newCs);
-			for (final Map.Entry<Object, Object> kv : args.entrySet()) {
-				csBuilder.append(kv.getKey()).append("=").append(kv.getValue());
-				csBuilder.append("&");
+			try {
+				for (final Map.Entry<Object, Object> kv : args.entrySet()) {
+					// encode values so special characters ('&', '=', spaces, ...) don't break the connection string
+					csBuilder.append(kv.getKey()).append("=").append(URLEncoder.encode((String) kv.getValue(), "UTF-8"));
+					csBuilder.append("&");
+				}
+			} catch (UnsupportedEncodingException ex) {
+				context.error("Unable to encode connection string parameters.");
+				throw new ExitException();
 			}
 			context.put(INSTANCE, csBuilder.toString());
 			return testConnection(context);

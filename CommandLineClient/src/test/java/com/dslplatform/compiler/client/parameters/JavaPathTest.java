@@ -1,6 +1,7 @@
 package com.dslplatform.compiler.client.parameters;
 
 import com.dslplatform.compiler.client.Context;
+import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.Utils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,6 +40,13 @@ public class JavaPathTest {
 	@Before
 	public void initContext() {
 		context = new Context();
+	}
+
+	@Test
+	public void testJavaPathNotVerified() {
+		context.put(JavaPath.INSTANCE, "/some/unused/path");
+		final Either<String> tryCompiler = JavaPath.findCompiler(context);
+		assertFalse(tryCompiler.isSuccess());
 	}
 
 	@Test
@@ -106,9 +114,10 @@ public class JavaPathTest {
 	@Test
 	public void testSh() {
 		assumeFalse(Utils.isWindows());
-		final File javacSh = new File(fakeJavaFolder, "sh/javac.sh");
+		final File javacSh = new File(fakeJavaFolder, "sh/javac");
 		assertTrue(javacSh.exists());
 		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "sh").getPath());
+		assertTrue(JavaPath.INSTANCE.check(context));
 		assertTrue(JavaPath.findCompiler(context).isSuccess());
 	}
 
@@ -118,6 +127,7 @@ public class JavaPathTest {
 		final File javacEmpty = new File(fakeJavaFolder, "empty/javac");
 		assertTrue(javacEmpty.exists());
 		context.put(JavaPath.INSTANCE, new File(fakeJavaFolder, "empty").getPath());
+		assertTrue(JavaPath.INSTANCE.check(context));
 		assertTrue(JavaPath.findCompiler(context).isSuccess());
 	}
 

@@ -111,7 +111,7 @@ final class JsonReader {
 		byte bb = 0;
 		int ci = currentIndex;
 		try {
-			for (int i = 0; i < tmp.length; i++) {
+			for (int i = 0; i < tmp.length && ci < length; i++) {
 				bb = buffer[ci++];
 				if (bb == '"') {
 					currentIndex = ci;
@@ -134,7 +134,7 @@ final class JsonReader {
 		// If the buffer contains an ASCII string (no high bit set) without any escape codes "\n", "\t", etc...,
 		// there is no need to instantiate any temporary buffers, we just decode the original buffer directly
 		// via ISO-8859-1 encoding since it is the fastest encoding which is guaranteed to retain all ASCII characters
-		while (ci < buffer.length) {
+		while (ci < length) {
 			// If we encounter a backslash, which is a beginning of an escape sequence
 			// or a high bit was set - indicating an UTF-8 encoded multibyte character,
 			// there is no chance that we can decode the string without instantiating
@@ -230,6 +230,7 @@ final class JsonReader {
 							final int sup = bc - 0x10000;
 							chars[soFar++] = (char) ((sup >>> 10) + 0xd800);
 							chars[soFar++] = (char) ((sup & 0x3ff) + 0xdc00);
+							continue;
 						}
 					}
 				}

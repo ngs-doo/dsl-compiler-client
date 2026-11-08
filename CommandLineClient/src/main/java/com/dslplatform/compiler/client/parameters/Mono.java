@@ -33,7 +33,7 @@ public enum Mono implements CompileParameter {
 	public boolean check(final Context context) {
 		if (context.contains(INSTANCE)) {
 			final String compiler = context.get(INSTANCE);
-			if (Utils.testCommand(context, compiler, "Mono", Collections.singletonList("--version"))) {
+			if (!Utils.testCommand(context, compiler, "Mono", Collections.singletonList("--version"))) {
 				context.error("mono parameter is set, but Mono not found/doesn't work. Please check specified mono parameter.");
 				return false;
 			}

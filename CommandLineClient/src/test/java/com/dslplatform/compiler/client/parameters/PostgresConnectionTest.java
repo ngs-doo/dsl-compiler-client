@@ -6,10 +6,37 @@ import com.dslplatform.compiler.client.TestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
+import java.util.Properties;
+
 import static com.dslplatform.compiler.client.parameters.PostgresConnection.extractPostgresVersion;
 import static org.junit.Assert.*;
 
 public class PostgresConnectionTest {
+	private Properties parse(final String connectionString) throws Exception {
+		final Method method = PostgresConnection.class.getDeclaredMethod("parse", String.class);
+		method.setAccessible(true);
+		return (Properties) method.invoke(null, connectionString);
+	}
+
+	@Test
+	public void testConnectionStringParameters() throws Exception {
+		final Properties normal = parse("host/db?user=u&password=secret");
+		assertNotNull(normal);
+		assertEquals("u", normal.getProperty("user"));
+		assertEquals("secret", normal.getProperty("password"));
+
+		final Properties withEquals = parse("host/db?user=u&password=a=b");
+		assertNotNull(withEquals);
+		assertEquals("a=b", withEquals.getProperty("password"));
+
+		final Properties encoded = parse("host/db?user=u&password=x%26y");
+		assertNotNull(encoded);
+		assertEquals("x&y", encoded.getProperty("password"));
+
+		assertNull(parse("host/db?user=u&badparam"));
+	}
+
 	@Test
 	public void testPostgresStrings() {
 		assertEquals("9.3", extractPostgresVersion("PostgreSQL 9.3.5 on x86_64-unknown-linux-gnu, compiled by gcc (Debian 4.7.2-5) 4.7.2, 64-bit", null));

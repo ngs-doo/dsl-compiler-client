@@ -97,12 +97,13 @@ public enum Diff implements CompileParameter {
 						} else {
 							if (lines.length <= 5) {
 								sb.append(text);
+							} else {
+								int width = 0;
+								for (int i = 0; i < 5; i++) {
+									width += lines[i].length() + 1;
+								}
+								sb.append(text.substring(0, width));
 							}
-							int width = 0;
-							for (int i = 0; i < 5; i++) {
-								width += lines[i].length() + 1;
-							}
-							sb.append(text.substring(0, width));
 						}
 						break;
 				}
