@@ -408,10 +408,16 @@ public class DslLexerParser extends Lexer {
 				}
 			} else actualDsl = dsl;
 			rebaseToNewText(actualDsl, start);
-			delayUntil = System.currentTimeMillis() + RETRY_DELAY_MS;
-			if (!waitingForSync && project.isOpen()) {
-				waitingForSync = true;
-				application.executeOnPooledThread(waitForDslSync);
+			if (actualDsl.equals(lastParsedDsl) && lastParsedAnalysis != null
+					&& actualDsl.equals(document.getText())) {
+				// text reverted to a state we already fully parsed - reuse the cached AST
+				changeAst(start, lastParsedAnalysis);
+			} else {
+				delayUntil = System.currentTimeMillis() + RETRY_DELAY_MS;
+				if (!waitingForSync && project.isOpen()) {
+					waitingForSync = true;
+					application.executeOnPooledThread(waitForDslSync);
+				}
 			}
 		} else if (start == 0 && end == dsl.length()) {
 			position = 0;

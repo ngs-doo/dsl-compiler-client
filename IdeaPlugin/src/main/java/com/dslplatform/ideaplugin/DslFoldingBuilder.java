@@ -14,18 +14,20 @@ import java.util.List;
 
 public class DslFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
+	private static final FoldingDescriptor[] EMPTY_DESCRIPTOR = new FoldingDescriptor[0];
+
 	@Override
 	public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
-		if (!(root instanceof DslFile)) return FoldingDescriptor.EMPTY;
+		if (!(root instanceof DslFile)) return EMPTY_DESCRIPTOR;
 		final DslFile dslFile = (DslFile) root;
 		final String text = document.getText();
-		if (!dslFile.hasFreshRegions(text)) return FoldingDescriptor.EMPTY;
+		if (!dslFile.hasFreshRegions(text)) return EMPTY_DESCRIPTOR;
 
 		final List<DslCompilerService.RuleRegion> regions = dslFile.getRegions();
-		if (regions.isEmpty()) return FoldingDescriptor.EMPTY;
+		if (regions.isEmpty()) return EMPTY_DESCRIPTOR;
 
 		final ASTNode rootNode = root.getNode();
-		if (rootNode == null) return FoldingDescriptor.EMPTY;
+		if (rootNode == null) return EMPTY_DESCRIPTOR;
 
 		final int docLength = text.length();
 		List<FoldingDescriptor> descriptors = new ArrayList<>(regions.size());

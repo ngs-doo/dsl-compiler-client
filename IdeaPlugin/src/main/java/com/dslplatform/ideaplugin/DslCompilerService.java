@@ -23,6 +23,8 @@ public final class DslCompilerService {
 	private boolean parserVerified = false;
 	private boolean rulesReady = false;
 	private final Logger logger;
+	// separate monitor so rule lookups don't queue behind parseTokens socket I/O
+	private final Object rulesLock = new Object();
 
 	public DslCompilerService() {
 		logger = Logger.getInstance("DSL Platform");
@@ -49,7 +51,7 @@ public final class DslCompilerService {
 		final DslCompiler.TokenParser parser = tokenParser;
 		if (parser == null || !rulesReady) return Either.fail("DSL rules not loaded yet");
 		try {
-			synchronized (this) {
+			synchronized (rulesLock) {
 				return parser.findRule(name);
 			}
 		} catch (Exception e) {
@@ -246,7 +248,7 @@ public final class DslCompilerService {
 			}
 			if (tryRule.isSuccess() || isRulesTableLoaded(tryRule)) {
 				rulesReady = true;
-				logger.warn("DSL Platform rules loaded in " + (System.currentTimeMillis() - start) + " ms (attempt " + attempt + ")");
+				logger.info("DSL Platform rules loaded in " + (System.currentTimeMillis() - start) + " ms (attempt " + attempt + ")");
 				return;
 			}
 			attempt++;

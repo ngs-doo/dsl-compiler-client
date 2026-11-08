@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.dslplatform.ideaplugin</id>
   <name>DSL Platform</name>
-  <version>0.60.0</version>
+  <version>0.51.0</version>
   <vendor email="info@dsl-platform.com" url="https://dsl-platform.com">DSL Platform</vendor>
 
   <description><![CDATA[
@@ -20,7 +20,7 @@
 
   <change-notes><![CDATA[
     <ul>
-      <li>0.60.0 Modal popup fixing
+      <li>0.51.0 Modal popup fixing
       <li>0.50.0 Concept listing, autocomplete, folding, settings page
       <li>0.11.0 IDEA 2026 compatibility fix
       <li>0.10.1 IDEA 2024 compatibility fix

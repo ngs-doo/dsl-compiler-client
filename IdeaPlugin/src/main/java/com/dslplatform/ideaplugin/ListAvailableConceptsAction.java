@@ -1,9 +1,7 @@
 package com.dslplatform.ideaplugin;
 
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionUpdateThread;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareAction;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +18,14 @@ public class ListAvailableConceptsAction extends DumbAwareAction {
 	public void actionPerformed(@NotNull AnActionEvent e) {
 		AnAction codeCompletion = ActionManager.getInstance().getAction(CODE_COMPLETION_ACTION_ID);
 		if (codeCompletion != null) {
-			codeCompletion.actionPerformed(e);
+			Editor editor = e.getData(CommonDataKeys.EDITOR);
+			ActionManager.getInstance().tryToExecute(
+					codeCompletion,
+					e.getInputEvent(),
+					editor != null ? editor.getContentComponent() : null,
+					e.getPlace(),
+					true
+			);
 		}
 	}
 

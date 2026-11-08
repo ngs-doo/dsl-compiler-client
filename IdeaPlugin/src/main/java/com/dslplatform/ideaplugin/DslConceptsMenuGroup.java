@@ -8,7 +8,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareRunnable;
@@ -49,16 +48,14 @@ public class DslConceptsMenuGroup extends ActionGroup {
 		}
 
 		final DslFile dslFile = (DslFile) psi;
-		final int offset = ReadAction.compute(() -> editor.getCaretModel().getOffset());
-		final String text = ReadAction.compute(() -> editor.getDocument().getText());
+		// CaretModel must be read on the EDT
+		final int offset = e.getUpdateSession().compute(this, "get caret offset", ActionUpdateThread.EDT,
+				() -> editor.getCaretModel().getOffset());
+		final String text = editor.getDocument().getText();
 
 		final DslCompilerService service = ApplicationManager.getApplication().getService(DslCompilerService.class);
 		if (!service.areRulesReady()) {
-			return new AnAction[]{new AnAction("DSL Platform rules are still loading...") {
-				@Override
-				public void actionPerformed(@NotNull AnActionEvent event) {
-				}
-			}};
+			return new AnAction[]{disabledPlaceholder("DSL Platform rules are still loading...")};
 		}
 		if (!dslFile.hasFreshRegions(text) && dslFile.requestRefresh(text)) {
 			ApplicationManager.getApplication().executeOnPooledThread(new DumbAwareRunnable() {
@@ -79,11 +76,7 @@ public class DslConceptsMenuGroup extends ActionGroup {
 		}
 		if (parent == null) {
 			final String message = service.areRulesReady() ? "DSL Platform compiler not ready" : "DSL Platform rules are still loading...";
-			return new AnAction[]{new AnAction(message) {
-				@Override
-				public void actionPerformed(@NotNull AnActionEvent event) {
-				}
-			}};
+			return new AnAction[]{disabledPlaceholder(message)};
 		}
 
 		List<DslCompiler.RuleInfo> ordered = new ArrayList<DslCompiler.RuleInfo>();
@@ -115,6 +108,16 @@ public class DslConceptsMenuGroup extends ActionGroup {
 			}
 		}
 		return children;
+	}
+
+	private static AnAction disabledPlaceholder(String text) {
+		final AnAction action = new AnAction(text) {
+			@Override
+			public void actionPerformed(@NotNull AnActionEvent event) {
+			}
+		};
+		action.getTemplatePresentation().setEnabled(false);
+		return action;
 	}
 
 	private static DslCompiler.RuleInfo findRule(DslCompilerService service, String name) {

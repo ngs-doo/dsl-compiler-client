@@ -166,7 +166,6 @@ public class DslHoverListener implements EditorFactoryListener {
 						analysis = tryAnalysis.get();
 						cachedAnalysis = analysis;
 						analyzedText = text;
-						// Warm up the completion region cache while we are at it.
 						if (psi instanceof DslFile) {
 							((DslFile) psi).storeRegions(text, analysis.regions);
 						}
