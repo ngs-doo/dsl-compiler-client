@@ -1,6 +1,9 @@
 package com.dslplatform.compiler.client;
 
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -178,14 +181,33 @@ public abstract class Utils {
 	public static synchronized Either<Document> readXml(final InputStream stream) {
 		try {
 			final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			// harden against XXE: inputs (compiler responses, maven metadata) never contain DOCTYPE declarations
-			dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-			dbFactory.setXIncludeAware(false);
-			dbFactory.setExpandEntityReferences(false);
+			trySetFeature(dbFactory, "http://xml.org/sax/features/namespaces", false);
+			trySetFeature(dbFactory, "http://xml.org/sax/features/validation", false);
+			trySetFeature(dbFactory, "http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+			trySetFeature(dbFactory, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			trySetFeature(dbFactory, "http://apache.org/xml/features/dom/defer-node-expansion", false);
+			try {
+				dbFactory.setNamespaceAware(false);
+			} catch (Throwable ignore) {
+			}
+			trySetFeature(dbFactory, "http://javax.xml.XMLConstants/feature/secure-processing", true);
+			trySetFeature(dbFactory, "http://xml.org/sax/features/external-general-entities", false);
+			trySetFeature(dbFactory, "http://xml.org/sax/features/external-parameter-entities", false);
+			try {
+				dbFactory.setXIncludeAware(false);
+			} catch (Throwable ignore) {
+			}
 			final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			return Either.success(dBuilder.parse(stream));
 		} catch (Exception ex) {
 			return Either.fail(ex);
+		}
+	}
+
+	private static void trySetFeature(final DocumentBuilderFactory factory, final String feature, final boolean value) {
+		try {
+			factory.setFeature(feature, value);
+		} catch (Throwable ignore) {
 		}
 	}
 

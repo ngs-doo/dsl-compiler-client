@@ -27,3 +27,15 @@ intellij {
     // otherwise the packaged plugin would only install on 2020.x IDEs.
     updateSinceUntilBuild = false
 }
+
+patchPluginXml {
+    sinceBuild = '223.0'
+}
+
+runPluginVerifier {
+    ideVersions = [
+            '2022.3',
+            '2024.3',
+            '2025.3'
+    ]
+}

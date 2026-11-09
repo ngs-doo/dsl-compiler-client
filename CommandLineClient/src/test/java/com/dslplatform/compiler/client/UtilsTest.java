@@ -92,10 +92,47 @@ public class UtilsTest {
 	}
 
 	@Test
-	public void readXmlRejectsDoctypeDeclaration() throws Exception {
-		final String xxe = "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY x SYSTEM \"file:///etc/hostname\">]><r>&x;</r>";
-		final Either<Document> result = Utils.readXml(new ByteArrayInputStream(xxe.getBytes(StandardCharsets.UTF_8)));
+	public void readXmlAllowsDoctypeWithoutEntities() throws Exception {
+		final Either<Document> result = Utils.readXml(new ByteArrayInputStream("<?xml version=\"1.0\"?><!DOCTYPE r><r>ok</r>".getBytes(StandardCharsets.UTF_8)));
+		assertTrue(result.isSuccess());
+		assertEquals("ok", result.get().getDocumentElement().getTextContent());
+	}
+
+	@Test
+	public void readXmlAllowsHarmlessInternalEntity() throws Exception {
+		final Either<Document> result = Utils.readXml(new ByteArrayInputStream("<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY n 'world'>]><r>hello &n;</r>".getBytes(StandardCharsets.UTF_8)));
+		assertTrue(result.isSuccess());
+		assertEquals("hello world", result.get().getDocumentElement().getTextContent());
+	}
+
+	@Test
+	public void readXmlRejectsEntityBomb() throws Exception {
+		StringBuilder subset = new StringBuilder("<!ENTITY e0 'xxxxxxxxxx'>");
+		for (int i = 1; i <= 9; i++) {
+			StringBuilder refs = new StringBuilder();
+			for (int j = 0; j < 10; j++) refs.append("&e").append(i - 1).append(";");
+			subset.append("<!ENTITY e").append(i).append(" '").append(refs).append("'>");
+		}
+		final String bomb = "<?xml version=\"1.0\"?><!DOCTYPE b [" + subset + "]><b>&e9;</b>";
+		final Either<Document> result = Utils.readXml(new ByteArrayInputStream(bomb.getBytes(StandardCharsets.UTF_8)));
+		assertFalse("billion laughs must be rejected, got: " + (result.isSuccess() ? "success" : result.explainError()), result.isSuccess());
+	}
+
+	@Test
+	public void readXmlRejectsCyclicEntities() throws Exception {
+		final String cyclic = "<?xml version=\"1.0\"?><!DOCTYPE b [<!ENTITY a '&b;'> <!ENTITY b '&a;'>]><b>&a;</b>";
+		final Either<Document> result = Utils.readXml(new ByteArrayInputStream(cyclic.getBytes(StandardCharsets.UTF_8)));
 		assertFalse(result.isSuccess());
+	}
+
+	@Test
+	public void readXmlNeverReadsExternalEntities() throws Exception {
+		final File secret = folder.newFile("secret.txt");
+		Files.write(secret.toPath(), "TOP-SECRET-SENTINEL".getBytes(StandardCharsets.UTF_8));
+		final String xxe = "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY x SYSTEM \"" + secret.toURI() + "\">]><r>&x;</r>";
+		final Either<Document> result = Utils.readXml(new ByteArrayInputStream(xxe.getBytes(StandardCharsets.UTF_8)));
+		final String leaked = result.isSuccess() ? result.get().getDocumentElement().getTextContent() : result.explainError();
+		assertFalse("external entity content must not be readable: " + leaked, leaked.contains("TOP-SECRET-SENTINEL"));
 	}
 
 	@Test

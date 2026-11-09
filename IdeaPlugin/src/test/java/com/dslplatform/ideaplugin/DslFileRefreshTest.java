@@ -1,12 +1,13 @@
 package com.dslplatform.ideaplugin;
 
+import com.intellij.lang.Language;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiFile;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixture4TestCase;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,42 +17,122 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Regression tests for the DslFile refresh state machine.
- * <p>
- * The "forever refresh" bug lived in exactly this contract: every highlight pass requested a
- * region refresh, and without deduplication each refresh triggered another one. These tests pin
- * down that identical text never triggers a second refresh, stale results are dropped, and a
- * skipped/failed refresh can be retried.
+ * Regression tests for the DslFile refresh state machine: identical text must not trigger a second refresh, stale results are dropped, skipped/failed refreshes can be retried.
  */
-public class DslFileRefreshTest {
+public class DslFileRefreshTest extends LightPlatformCodeInsightFixture4TestCase {
 
-	private static DslFile newFile() {
+	private com.intellij.openapi.vfs.VirtualFile stubVirtualFile;
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		stubVirtualFile = myFixture.addFileToProject("Stub.dsl", "module A {\n}\n").getVirtualFile();
+	}
+
+	@Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+	}
+
+	private DslFile newFile() {
 		try {
 			Field theUnsafe = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafe.setAccessible(true);
 			sun.misc.Unsafe unsafe = (sun.misc.Unsafe) theUnsafe.get(null);
 			DslFile file = (DslFile) unsafe.allocateInstance(DslFile.class);
-			// no PSI behind this instance - a null-returning view provider keeps
-			// getProject()/getViewProvider() based code paths safe
-			installViewProvider(file, (FileViewProvider) Proxy.newProxyInstance(
-				DslFileRefreshTest.class.getClassLoader(), new Class<?>[]{FileViewProvider.class},
-				new InvocationHandler() {
-					@Override
-					public Object invoke(Object proxy, Method method, Object[] args) {
-						return method.getReturnType() == boolean.class ? Boolean.FALSE : null;
-					}
-				}));
+			// no PSI behind this instance; unsafe allocation skips the PsiFileImpl constructor, so myManager must be set up too
+			StubViewProvider provider = new StubViewProvider(
+					com.intellij.psi.PsiManager.getInstance(getProject()), stubVirtualFile);
+			installViewProvider(file, provider);
+			setInheritedField(DslFile.class, file, "myManager", provider.getManager());
 			return file;
 		} catch (Exception e) {
 			throw new ExceptionInInitializerError(e);
 		}
 	}
 
+	// PsiFileImpl casts its provider to AbstractFileViewProvider, so a plain interface proxy is not enough
+	private static final class StubViewProvider extends com.intellij.psi.AbstractFileViewProvider {
+		StubViewProvider(com.intellij.psi.PsiManager manager, com.intellij.openapi.vfs.VirtualFile virtualFile) {
+			super(manager, virtualFile, false);
+		}
+
+		@Override
+		protected PsiFile getPsiInner(Language language) {
+			return null;
+		}
+
+		@Override
+		public PsiFile getCachedPsi(Language language) {
+			return null;
+		}
+
+		@Override
+		public java.util.List<PsiFile> getCachedPsiFiles() {
+			return java.util.Collections.emptyList();
+		}
+
+		@Override
+		public java.util.List<com.intellij.lang.FileASTNode> getKnownTreeRoots() {
+			return java.util.Collections.emptyList();
+		}
+
+		@Override
+		public Language getBaseLanguage() {
+			return null;
+		}
+
+		@Override
+		public java.util.Set<Language> getLanguages() {
+			return java.util.Collections.emptySet();
+		}
+
+		@Override
+		public java.util.List<PsiFile> getAllFiles() {
+			return java.util.Collections.emptyList();
+		}
+
+		@Override
+		public com.intellij.psi.PsiElement findElementAt(int offset) {
+			return null;
+		}
+
+		@Override
+		public com.intellij.psi.PsiReference findReferenceAt(int offset) {
+			return null;
+		}
+
+		@Override
+		public com.intellij.psi.PsiElement findElementAt(int offset, java.lang.Class<? extends Language> languageClass) {
+			return null;
+		}
+
+		@Override
+		public FileViewProvider createCopy(com.intellij.openapi.vfs.VirtualFile virtualFile) {
+			return this;
+		}
+	}
+
+	private static void setInheritedField(Class<?> start, Object target, String name, Object value) throws Exception {
+		Class<?> type = start;
+		while (type != null) {
+			try {
+				Field field = type.getDeclaredField(name);
+				field.setAccessible(true);
+				field.set(target, value);
+				return;
+			} catch (NoSuchFieldException ignore) {
+				type = type.getSuperclass();
+			}
+		}
+		throw new IllegalStateException("field " + name + " not found on " + start.getName() + " hierarchy");
+	}
+
 	private static void installViewProvider(DslFile file, FileViewProvider provider) throws Exception {
 		Class<?> type = DslFile.class;
 		while (type != null) {
 			for (Field field : type.getDeclaredFields()) {
-				if (field.getType() == FileViewProvider.class) {
+				if (FileViewProvider.class.isAssignableFrom(field.getType())) {
 					field.setAccessible(true);
 					field.set(file, provider);
 					return;
@@ -124,7 +205,6 @@ public class DslFileRefreshTest {
 		String oldText = "module Foo {\n}\n";
 		file.storeRegions(oldText, regions(0, oldText.lastIndexOf('}'), "Foo"));
 
-		// user typed "bar" after "Foo" before the refresh finished - the offset must be mapped back
 		String newText = "module Foobar {\n}\n";
 		assertEquals("Foo", file.findEnclosingRuleBestEffort(newText, 12));
 	}

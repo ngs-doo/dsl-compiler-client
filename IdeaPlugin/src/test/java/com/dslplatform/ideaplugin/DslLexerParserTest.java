@@ -8,6 +8,9 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixture4TestCase;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -20,26 +23,39 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Regression tests for the DSL lexer that drives syntax highlighting.
- * <p>
- * These reproduce, without a human in front of the IDE, the bugs that used to be only visible in
- * the UI:
- * <ul>
- *   <li>"forever refresh": every highlight pass re-parsed and re-set the document text, so editing never settled;</li>
- *   <li>"file not loading at start": a file opened before the compiler was ready stayed unhighlighted until closed and re-opened;</li>
- *   <li>"lexer out of range": tokens beyond the end of the document made the highlighter crash.</li>
- * </ul>
- * The invariant asserted here is exactly what IntelliJ's highlighter requires: the token stream
- * must be contiguous, non-overlapping, never empty and always within [0, text.length()].
+ * Regression tests for the DSL lexer: the token stream must be contiguous, non-overlapping and within [0, text.length()] - violations used to crash the highlighter.
  */
 public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase {
 
-	private static final String MODULE = "module Foo {\n  String someString;\n}\n";
+	/** Valid in the real compiler's default DSL. */
+	private static final String MODULE = "module Foo {\n}\n";
+	private static final String TWO_MODULES = MODULE + "module Bar {\n}\n";
+
+	private static DslCompiler.TokenParser real;
 
 	private FakeDslCompiler fake;
 	private DslCompilerService service;
+	private com.intellij.psi.PsiFile psiFile;
 	private VirtualFile file;
 	private DslLexerParser lexer;
+
+	@BeforeClass
+	public static void bootRealCompiler() {
+		try {
+			real = RealDslCompiler.create();
+		} catch (Exception e) {
+			System.err.println("DSL compiler unavailable - integration tests will be skipped: " + e.getMessage());
+		}
+	}
+
+	private static void assumeRealCompiler() {
+		Assume.assumeTrue("real DSL compiler not available (mono/dotnet + dsl-compiler.exe required)", real != null);
+	}
+
+	@AfterClass
+	public static void stopRealCompiler() throws Exception {
+		if (real != null) real.close();
+	}
 
 	@Override
 	protected void setUp() throws Exception {
@@ -47,7 +63,8 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 		fake = new FakeDslCompiler();
 		service = (DslCompilerService) ApplicationManager.getApplication().getService(DslCompilerService.class);
 		injectParser(service, fake);
-		file = myFixture.addFileToProject("Sample.dsl", MODULE);
+		psiFile = myFixture.addFileToProject("Sample.dsl", MODULE);
+		file = psiFile.getVirtualFile();
 		lexer = new DslLexerParser(getProject(), file);
 	}
 
@@ -60,13 +77,12 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 		}
 	}
 
-	private static void injectParser(DslCompilerService service, FakeDslCompiler parser) throws Exception {
+	private static void injectParser(DslCompilerService service, DslCompiler.TokenParser parser) throws Exception {
 		Field field = DslCompilerService.class.getDeclaredField("tokenParser");
 		field.setAccessible(true);
 		field.set(service, parser);
 	}
 
-	/** Generic handler: every "module &lt;Name&gt; {" line yields a keyword + identifier token. */
 	private void parseModules() {
 		fake.handler = new FakeDslCompiler.ParseHandler() {
 			@Override
@@ -97,7 +113,7 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 	}
 
 	private Document document() {
-		return PsiDocumentManager.getInstance(getProject()).getDocument(myFixture.getFile());
+		return PsiDocumentManager.getInstance(getProject()).getDocument(psiFile);
 	}
 
 	private void setDocumentText(final String text) {
@@ -110,11 +126,12 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 		});
 	}
 
-	/** Wait until the background analysis has been applied to the lexer. */
 	private void waitForRealTokens(String text, long timeoutMs) throws Exception {
 		long deadline = System.currentTimeMillis() + timeoutMs;
 		while (System.currentTimeMillis() < deadline) {
 			if (hasRealTokens(text)) return;
+			// results are applied via invokeLater - in a headless test the IDE queue must be dispatched manually
+			com.intellij.testFramework.PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
 			Thread.sleep(50);
 		}
 		fail("lexer never received real tokens for: " + text.replace("\n", "\\n"));
@@ -129,7 +146,6 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 		return false;
 	}
 
-	/** The invariant IntelliJ's highlighter requires - violations used to crash the UI. */
 	private void assertFullCoverage(String text) {
 		lexer.start(text, 0, text.length(), 0);
 		int expected = 0;
@@ -153,26 +169,30 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 
 	@Test
 	public void testFirstHighlightingCoversWholeDocument() throws Exception {
-		makeReady();
-		assertFullCoverage(MODULE);   // holds even before the async analysis lands
-		waitForRealTokens(MODULE, 10000);
-		assertFullCoverage(MODULE);   // and still after it does
+		assumeRealCompiler();
+		injectParser(service, real);
+		service.warmUpParser();
+		assertTrue("service must become ready after warmup", service.isReady());
+		assertFullCoverage(MODULE);
+		waitForRealTokens(MODULE, 15000);
+		assertFullCoverage(MODULE);
 	}
 
 	@Test
 	public void testDocumentChangeKeepsFullCoverage() throws Exception {
-		makeReady();
-		waitForRealTokens(MODULE, 10000);
+		assumeRealCompiler();
+		injectParser(service, real);
+		service.warmUpParser();
+		assertTrue("service must become ready after warmup", service.isReady());
+		assertFullCoverage(MODULE);
+		waitForRealTokens(MODULE, 15000);
+		assertTrue("real tokens must include the module name", containsTokenValue("Foo"));
 
-		String shorter = "module Foo {\n}\n";
-		setDocumentText(shorter);
-		assertFullCoverage(shorter);   // rebase path: coverage must hold immediately
+		setDocumentText(TWO_MODULES);
+		assertFullCoverage(TWO_MODULES);
 
-		String longer = shorter + "module Bar {\n}\n";
-		setDocumentText(longer);
-		assertFullCoverage(longer);
-		waitForRealTokens(longer, 10000);
-		assertFullCoverage(longer);   // real tokens for both modules, still fully covered
+		waitForTokenValue("Bar", 15000);
+		assertFullCoverage(TWO_MODULES);
 	}
 
 	@Test
@@ -183,17 +203,15 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 			public Either<DslCompiler.ParseResult> parse(String dsl) {
 				if (!MODULE.equals(dsl)) return Either.fail("unexpected text: " + dsl);
 				return FakeDslCompiler.tokens(
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "someString", 2, 9),
-						// runs past the end of the document
+						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, "module", 1, 0),
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, MODULE + "EXTRA", 1, 0),
-						// line 9 does not exist in a 3-line document
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "Ghost", 9, 0));
 			}
 		};
 
 		assertFullCoverage(MODULE);
 		waitForRealTokens(MODULE, 10000);
-		assertFullCoverage(MODULE);   // garbage in - still a fully covered, in-range token stream out
+		assertFullCoverage(MODULE);
 	}
 
 	@Test
@@ -204,9 +222,9 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 		int parsesAfterFirstAnalysis = fake.parseCount.get();
 		assertTrue(parsesAfterFirstAnalysis >= 1);
 
-		// IntelliJ runs the highlighter over and over; none of these passes may re-parse the same text
 		for (int i = 0; i < 5; i++) {
 			assertFullCoverage(MODULE);
+			com.intellij.testFramework.PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
 			Thread.sleep(100);
 		}
 		assertEquals("repeated highlight passes must not re-parse the same text", parsesAfterFirstAnalysis, fake.parseCount.get());
@@ -214,20 +232,43 @@ public class DslLexerParserTest extends LightPlatformCodeInsightFixture4TestCase
 
 	@Test
 	public void testFileOpenedBeforeCompilerIsReadyRecoversWithoutReopen() throws Exception {
-		parseModules();
+		assumeRealCompiler();
+		injectParser(service, real);
 		Field ready = DslCompilerService.class.getDeclaredField("parserVerified");
 		ready.setAccessible(true);
 		ready.setBoolean(service, false);
 		assertFalse("service starts out not ready", service.isReady());
 
-		assertFullCoverage(MODULE);   // placeholder coverage must be immediate - no crash, no blank file
+		assertFullCoverage(MODULE);
 		assertFalse("no real tokens before the compiler is ready", hasRealTokens(MODULE));
 
-		// the compiler finishes starting up while the file stays open
 		service.warmUpParser();
 		assertTrue(service.isReady());
-		assertFullCoverage(MODULE);   // another highlight pass now picks the analysis up
+		assertFullCoverage(MODULE);
 		waitForRealTokens(MODULE, 15000);
 		assertTrue("real tokens must arrive without closing and re-opening the file", hasRealTokens(MODULE));
+	}
+
+	private void waitForTokenValue(String value, long timeoutMs) throws Exception {
+		long deadline = System.currentTimeMillis() + timeoutMs;
+		while (System.currentTimeMillis() < deadline) {
+			if (containsTokenValue(value)) return;
+			com.intellij.testFramework.PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+			Thread.sleep(50);
+		}
+		fail("lexer never produced a real token for: " + value);
+	}
+
+	private boolean containsTokenValue(String value) {
+		String text = document().getText();
+		lexer.start(text, 0, text.length(), 0);
+		while (lexer.getTokenType() != null) {
+			if (!TokenType.IGNORED.equals(lexer.getTokenType())
+					&& value.equals(lexer.getBufferSequence().subSequence(lexer.getTokenStart(), lexer.getTokenEnd()).toString())) {
+				return true;
+			}
+			lexer.advance();
+		}
+		return false;
 	}
 }

@@ -38,9 +38,8 @@ public class DslCompilerSocketTest {
 		responder.setDaemon(true);
 		responder.start();
 
+		// runCompilerSocket writes its own command - the responder's single read() must see exactly that one write, or leftover bytes make the server close with RST instead of EOF
 		final Socket client = new Socket("127.0.0.1", server.getLocalPort());
-		client.getOutputStream().write("tokens=3 format=json include-length keep-alive\nabc".getBytes(StandardCharsets.UTF_8));
-		client.getOutputStream().flush();
 		try {
 			final Method method = DslCompiler.class.getDeclaredMethod("runCompilerSocket", Context.class, Socket.class, List.class);
 			method.setAccessible(true);

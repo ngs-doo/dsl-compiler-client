@@ -164,6 +164,7 @@ public final class DslCompilerService {
 		Stack<AST> stack = new Stack<AST>();
 		AST current = null;
 		for (DslCompiler.SyntaxConcept c : parsed) {
+			if (c.line < 1 || c.line > linesTotal.length) continue;   // defensive: never index beyond the document
 			int off = linesTotal[c.line - 1] + c.column;
 			int len = c.value.length();
 			switch (c.type) {

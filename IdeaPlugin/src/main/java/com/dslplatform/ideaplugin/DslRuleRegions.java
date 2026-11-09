@@ -31,6 +31,7 @@ public final class DslRuleRegions {
 		ArrayList<Integer> levels = new ArrayList<Integer>();
 		ArrayList<Boolean> nested = new ArrayList<Boolean>();
 		for (DslCompiler.SyntaxConcept t : tokens) {
+			if (t.line < 1 || t.line > linesTotal.length) continue;   // defensive: never index beyond the document
 			int off = linesTotal[t.line - 1] + t.column;
 			if (t.type == DslCompiler.SyntaxType.RuleExtension) {
 				names.add(t.value);

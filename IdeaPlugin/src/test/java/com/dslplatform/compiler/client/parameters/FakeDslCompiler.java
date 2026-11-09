@@ -14,12 +14,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * In-memory stand-in for the DSL compiler server.
+ * In-memory stand-in for the DSL compiler server, kept for conditions a live compiler cannot produce or expose: out-of-range tokens, scripted parse failures and call counts.
  * <p>
- * Unit tests must not start a real mono/.NET process, so this fake answers parse/findRule calls
- * from a configurable handler instead of talking to dsl-compiler.exe over a socket. It lives in
- * the compiler client package on purpose: TokenParser's constructor and the ParseResult/
- * SyntaxConcept/RuleInfo constructors are package-private, which keeps the fake free of reflection.
+ * Lives in the compiler client package on purpose - TokenParser's constructor and ParseResult/SyntaxConcept/RuleInfo are package-private.
  */
 public class FakeDslCompiler extends DslCompiler.TokenParser {
 

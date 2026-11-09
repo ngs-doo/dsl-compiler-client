@@ -4,7 +4,10 @@ import com.dslplatform.compiler.client.Either;
 import com.dslplatform.compiler.client.parameters.DslCompiler;
 import com.dslplatform.compiler.client.parameters.FakeDslCompiler;
 import com.intellij.openapi.diagnostic.Logger;
+import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -16,17 +19,35 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Regression tests for the compiler service startup paths.
- * <p>
- * These cover the bugs that used to be only visible in the IDE: a file opened before the compiler
- * was ready had no highlighting at all (until it was closed and re-opened), and analysis while
- * the server was still warming up could crash or loop forever. The service is driven with an
- * in-memory fake parser, so no mono/.NET process is required.
+ * Regression tests for the compiler service startup paths; happy paths run against the real DSL compiler (see {@link RealDslCompiler}).
  */
 public class DslCompilerServiceTest {
 
+	/** Valid in the real compiler's default DSL. */
+	private static final String MODULE = "module Foo {\n}\n";
+
+	private static DslCompiler.TokenParser real;
+
 	private FakeDslCompiler fake;
 	private DslCompilerService service;
+
+	@BeforeClass
+	public static void bootRealCompiler() {
+		try {
+			real = RealDslCompiler.create();
+		} catch (Exception e) {
+			System.err.println("DSL compiler unavailable - integration tests will be skipped: " + e.getMessage());
+		}
+	}
+
+	private static void assumeRealCompiler() {
+		Assume.assumeTrue("real DSL compiler not available (mono/dotnet + dsl-compiler.exe required)", real != null);
+	}
+
+	@AfterClass
+	public static void stopRealCompiler() throws Exception {
+		if (real != null) real.close();
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -34,12 +55,12 @@ public class DslCompilerServiceTest {
 		service = newServiceWith(fake);
 	}
 
-	// The no-arg constructor would start the real compiler setup in a background thread, which is
-	// neither needed nor deterministic in a unit test - allocate the service without running it.
-	private static DslCompilerService newServiceWith(FakeDslCompiler parser) throws Exception {
+	// Unsafe allocation skips field initializers, so rulesLock must be set explicitly.
+	private static DslCompilerService newServiceWith(DslCompiler.TokenParser parser) throws Exception {
 		DslCompilerService created = allocateWithoutConstructor(DslCompilerService.class);
 		setField(created, "logger", Logger.getInstance("DslCompilerServiceTest"));
 		setField(created, "tokenParser", parser);
+		setField(created, "rulesLock", new Object());
 		return created;
 	}
 
@@ -67,35 +88,25 @@ public class DslCompilerServiceTest {
 	}
 
 	@Test
-	public void serviceIsNotReadyBeforeWarmupAndFailsGracefully() {
-		assertFalse("fresh service must not report readiness", service.isReady());
-
-		Either<DslCompiler.RuleInfo> tryRule = service.findRule("module_rule");
-		assertFalse(tryRule.isSuccess());
-		assertEquals("DSL rules not loaded yet", tryRule.explainError());
-
-		fake.handler = new FakeDslCompiler.ParseHandler() {
-			@Override
-			public Either<DslCompiler.ParseResult> parse(String dsl) {
-				return Either.fail("Parser not ready");
-			}
-		};
-		Either<DslCompilerService.Analysis> analysis = service.analyzeFull("module Foo {\n}\n");
-		assertFalse("analysis while the server is warming up must fail, not crash", analysis.isSuccess());
-		assertEquals("Parser not ready", analysis.explainError());
+	public void analyzeFullWithoutParserFailsGracefully() throws Exception {
+		DslCompilerService bare = newServiceWith(null);
+		Either<DslCompilerService.Analysis> analysis = bare.analyzeFull(MODULE);
+		assertFalse("analysis without a parser must fail, not crash", analysis.isSuccess());
+		assertEquals("Token parser not ready", analysis.explainError());
 	}
 
 	@Test
-	public void warmUpParserMarksServiceReady() {
-		fake.handler = new FakeDslCompiler.ParseHandler() {
-			@Override
-			public Either<DslCompiler.ParseResult> parse(String dsl) {
-				return FakeDslCompiler.tokens();
-			}
-		};
+	public void warmUpParserMarksServiceReady() throws Exception {
+		assumeRealCompiler();
+		service = newServiceWith(real);
+		assertFalse("fresh service must not report readiness", service.isReady());
 		service.warmUpParser();
 		assertTrue("warmup must flip the service to ready", service.isReady());
-		assertTrue(fake.parseCount.get() >= 1);
+
+		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(MODULE);
+		assertTrue(analysis.isSuccess());
+		// RuleStart/RuleEnd/RuleExtension do not enter the AST
+		assertEquals(2, analysis.get().ast.size());
 	}
 
 	@Test
@@ -116,29 +127,32 @@ public class DslCompilerServiceTest {
 	}
 
 	@Test
-	public void analyzeMapsTokensToDocumentOffsets() {
-		makeReady();
-		final String dsl = "module Foo {\n  String someString;\n}\n";
-		fake.handler = new FakeDslCompiler.ParseHandler() {
-			@Override
-			public Either<DslCompiler.ParseResult> parse(String text) {
-				if (!dsl.equals(text)) return Either.fail("unexpected text: " + text);
-				return FakeDslCompiler.tokens(
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, "module", 1, 0),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "Foo", 1, 7),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, "String", 2, 2),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "someString", 2, 9));
-			}
-		};
+	public void analyzeMapsTokensToDocumentOffsets() throws Exception {
+		assumeRealCompiler();
+		service = newServiceWith(real);
+		service.warmUpParser();
 
-		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(dsl);
+		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(MODULE);
 		assertTrue(analysis.isSuccess());
 		List<AST> ast = analysis.get().ast;
-		assertEquals(4, ast.size());
-		assertToken(ast.get(0), "module", dsl.indexOf("module"));
-		assertToken(ast.get(1), "Foo", dsl.indexOf("Foo"));
-		assertToken(ast.get(2), "String", dsl.indexOf("String"));
-		assertToken(ast.get(3), "someString", dsl.indexOf("someString"));
+		assertEquals(2, ast.size());
+		assertToken(ast.get(0), "module", MODULE.indexOf("module"));
+		assertToken(ast.get(1), "Foo", MODULE.indexOf("Foo"));
+	}
+
+	@Test
+	public void analyzeSurvivesCompilerParseError() throws Exception {
+		assumeRealCompiler();
+		service = newServiceWith(real);
+		service.warmUpParser();
+		// invalid DSL - assignment does not exist in this form, so the compiler reports an error with partial tokens
+		final String invalid = "module Foo {\n  Integer x = 1;\n}\n";
+		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(invalid);
+		assertTrue(analysis.isSuccess());
+		List<AST> ast = analysis.get().ast;
+		assertEquals(2, ast.size());
+		assertToken(ast.get(0), "module", invalid.indexOf("module"));
+		assertToken(ast.get(1), "Foo", invalid.indexOf("Foo"));
 	}
 
 	private static void assertToken(AST node, String value, int expectedOffset) {
@@ -149,30 +163,21 @@ public class DslCompilerServiceTest {
 	}
 
 	@Test
-	public void analyzeExtractsRuleRegions() {
-		makeReady();
-		final String dsl = "module Foo {\n  rule Bar {\n  }\n}\n";
-		fake.handler = new FakeDslCompiler.ParseHandler() {
-			@Override
-			public Either<DslCompiler.ParseResult> parse(String text) {
-				if (!dsl.equals(text)) return Either.fail("unexpected text: " + text);
-				return FakeDslCompiler.tokens(
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.RuleExtension, "Foo", 1, 0),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.RuleStart, "Bar", 2, 2),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.RuleEnd, "Bar", 3, 2),
-						FakeDslCompiler.concept(DslCompiler.SyntaxType.RuleEnd, "Foo", 4, 0));
-			}
-		};
+	public void analyzeExtractsRuleRegions() throws Exception {
+		assumeRealCompiler();
+		service = newServiceWith(real);
+		service.warmUpParser();
 
-		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(dsl);
+		Either<DslCompilerService.Analysis> analysis = service.analyzeFull(MODULE);
 		assertTrue(analysis.isSuccess());
 		List<DslCompilerService.RuleRegion> regions = analysis.get().regions;
 		assertEquals(1, regions.size());
 		DslCompilerService.RuleRegion region = regions.get(0);
-		assertEquals("Foo", region.name);
-		assertEquals(0, region.start);
-		assertEquals(dsl.lastIndexOf('}'), region.end);
-		assertTrue(region.nested);
+		// the region is named after the concept, not the module name
+		assertEquals("module_rule", region.name);
+		assertEquals(MODULE.indexOf('{'), region.start);
+		assertEquals(MODULE.lastIndexOf('}'), region.end);
+		assertFalse(region.nested);
 	}
 
 	@Test
@@ -185,7 +190,6 @@ public class DslCompilerServiceTest {
 				if (!dsl.equals(text)) return Either.fail("unexpected text: " + text);
 				return FakeDslCompiler.tokens(
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "Foo", 1, 7),
-						// value runs past the end of the document - the lexer must never emit such a token
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, dsl + "EXTRA", 1, 0));
 			}
 		};
@@ -212,7 +216,6 @@ public class DslCompilerServiceTest {
 				if (!dsl.equals(text)) return Either.fail("unexpected text: " + text);
 				return FakeDslCompiler.tokens(
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Keyword, "module", 1, 0),
-						// line 9 does not exist in a 2-line document - it must be skipped, not crash
 						FakeDslCompiler.concept(DslCompiler.SyntaxType.Identifier, "Ghost", 9, 0));
 			}
 		};
@@ -223,28 +226,33 @@ public class DslCompilerServiceTest {
 	}
 
 	@Test
-	public void rulesLoadOnceAndFindRuleDelegatesToParser() {
+	public void rulesLoadOnceAndFindRuleDelegatesToParser() throws Exception {
+		assumeRealCompiler();
+		service = newServiceWith(real);
+		Either<DslCompiler.RuleInfo> early = service.findRule("module_rule");
+		assertFalse(early.isSuccess());
+		assertEquals("DSL rules not loaded yet", early.explainError());
+
+		invokePrivate(service, "loadRulesInBackground");
+		assertTrue(service.areRulesReady());
+
+		Either<DslCompiler.RuleInfo> rule = service.findRule("module_rule");
+		assertTrue("findRule must succeed once rules are loaded: " + (rule.isSuccess() ? "" : rule.explainError()), rule.isSuccess());
+		assertEquals("module_rule", rule.get().rule);
+		assertNotNull(rule.get().description);
+		assertFalse(rule.get().description.isEmpty());
+
+		Either<DslCompiler.RuleInfo> unknown = service.findRule("no_such_rule_xyz");
+		assertFalse("unknown rules must fail gracefully, not throw", unknown.isSuccess());
+	}
+
+	@Test
+	public void findRuleMustNotTouchParserBeforeRulesLoaded() {
 		int findsBefore = fake.findRuleCount.get();
 		Either<DslCompiler.RuleInfo> early = service.findRule("module_rule");
 		assertFalse(early.isSuccess());
 		assertEquals("DSL rules not loaded yet", early.explainError());
 		assertEquals("findRule must not touch the parser before rules are loaded", findsBefore, fake.findRuleCount.get());
-
-		invokePrivate(service, "loadRulesInBackground");
-		assertTrue(service.areRulesReady());
-
-		fake.ruleHandler = new FakeDslCompiler.RuleHandler() {
-			@Override
-			public Either<DslCompiler.RuleInfo> findRule(String name) {
-				return "module_rule".equals(name)
-						? Either.success(FakeDslCompiler.rule("module_rule", "Module", "A module rule"))
-						: Either.fail("Unknown rule: " + name);
-			}
-		};
-		Either<DslCompiler.RuleInfo> rule = service.findRule("module_rule");
-		assertTrue(rule.isSuccess());
-		assertEquals("module_rule", rule.get().rule);
-		assertEquals("A module rule", rule.get().description);
 	}
 
 	private void makeReady() {
