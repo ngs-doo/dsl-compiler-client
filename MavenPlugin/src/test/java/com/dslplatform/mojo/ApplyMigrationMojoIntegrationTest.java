@@ -1,10 +1,10 @@
 package com.dslplatform.mojo;
 
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import ru.yandex.qatools.embed.service.PostgresEmbeddedService;
 
 import java.io.File;
 import java.sql.*;
@@ -12,14 +12,15 @@ import java.sql.*;
 @RunWith(JUnit4.class)
 public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 
-	private static PostgresEmbeddedService postgres;
+	private static final String DB = "test_db";
+
+	private static EmbeddedPostgres postgres;
 	private static Connection conn;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		postgres = new PostgresEmbeddedService("localhost", 5429, "test_user", "test_pass", "test_db", "target/db", true, 5000);
-		postgres.start();
-		conn = DriverManager.getConnection("jdbc:postgresql://localhost:5429/test_db?user=test_user&password=test_pass");
+		postgres = TestUtils.startPostgres(DB);
+		conn = DriverManager.getConnection(TestUtils.jdbcUrl(postgres, DB));
 	}
 
 	@Before
@@ -35,7 +36,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 	@AfterClass
 	public static void afterClass() throws Exception {
 		if (conn != null) conn.close();
-		if (postgres != null) postgres.stop();
+		if (postgres != null) postgres.close();
 	}
 
 	@Test
@@ -46,7 +47,7 @@ public class ApplyMigrationMojoIntegrationTest extends AbstractMojoTestCase {
 
 		SqlMigrationMojo mojo = (SqlMigrationMojo) lookupMojo(SqlMigrationMojo.GOAL, pom);
 		assertNotNull(mojo);
-
+		mojo.setPostgres(TestUtils.connectionParam(postgres, DB));
 		mojo.execute();
 
 		assertSchemaExists(conn, "MojoTestModule");

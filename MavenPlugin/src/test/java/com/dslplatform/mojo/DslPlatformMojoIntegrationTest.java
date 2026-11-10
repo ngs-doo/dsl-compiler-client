@@ -1,12 +1,12 @@
 package com.dslplatform.mojo;
 
 import com.dslplatform.compiler.client.parameters.TempPath;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import ru.yandex.qatools.embed.service.PostgresEmbeddedService;
 
 import java.io.File;
 import java.sql.*;
@@ -14,14 +14,15 @@ import java.sql.*;
 @RunWith(JUnit4.class)
 public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
 
-	private static PostgresEmbeddedService postgres;
+	private static final String DB = "dsl_platform_mojo_test_db";
+
+	private static EmbeddedPostgres postgres;
 	private static Connection conn;
 
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		postgres = new PostgresEmbeddedService("localhost", 5429, "test_user", "test_pass", "dsl_platform_mojo_test_db", "target/db", true, 5000);
-		postgres.start();
-		conn = DriverManager.getConnection("jdbc:postgresql://localhost:5429/dsl_platform_mojo_test_db?user=test_user&password=test_pass");
+		postgres = TestUtils.startPostgres(DB);
+		conn = DriverManager.getConnection(TestUtils.jdbcUrl(postgres, DB));
 	}
 
 	@Before
@@ -37,7 +38,7 @@ public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
 	@AfterClass
 	public static void afterClass() throws Exception {
 		if (conn != null) conn.close();
-		if (postgres != null) postgres.stop();
+		if (postgres != null) postgres.close();
 	}
 
 	@Test
@@ -48,7 +49,7 @@ public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
 
 		DslPlatformMojo mojo = (DslPlatformMojo) lookupMojo(DslPlatformMojo.GOAL, pom);
 		assertNotNull(mojo);
-
+		mojo.setProperties(TestUtils.migrationProperties(postgres, DB).getAbsolutePath());
 		mojo.execute();
 
 		assertSchemaExists(conn, "DslPlatformMojoTestModule");
@@ -68,6 +69,7 @@ public class DslPlatformMojoIntegrationTest extends AbstractMojoTestCase {
 
 		DslPlatformMojo mojo = (DslPlatformMojo) lookupMojo(DslPlatformMojo.GOAL, pom);
 		assertNotNull(mojo);
+		mojo.setProperties(TestUtils.migrationProperties(postgres, DB).getAbsolutePath());
 		mojo.setProject(new MavenProjectStub());
 		mojo.execute();
 
